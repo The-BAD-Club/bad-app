@@ -810,8 +810,10 @@ function renderStep(){
     const sp=mainSport(D);
     el.innerHTML=head(4)+`<p class="muted" style="margin-bottom:14px">One word for how you play. It goes on your card, whatever the sport.</p>
       <div class="sigs" role="group" aria-label="Your signature">${SIGS.map(([k,d])=>`<button type="button" class="sig" data-f="shot" data-val="${esc(k)}" aria-pressed="${D.shot===k}"><b>${esc(k)}</b><span>${esc(d)}</span></button>`).join('')}</div>
+      <div class="field" style="margin-top:14px"><label for="c-sig">Or write your own <span class="req">optional</span></label><input type="text" id="c-sig" maxlength="14" placeholder="e.g. Net ninja, Lefty, Clutch" value="${esc(SIGS.some(([k])=>k===D.shot)?'':D.shot||'')}"><p class="fine">Up to 14 characters. Keep it friendly, it’s on your card.</p></div>
       <p class="fine">You can edit your card any time.</p>`;
   }
+  if(step===4){const ci=$('c-sig');if(ci)ci.oninput=e=>{D.shot=e.target.value.replace(/\s+/g,' ').slice(0,14);el.querySelectorAll('.sig').forEach(x=>x.setAttribute('aria-pressed',x.dataset.val===D.shot));preview()}}
   if(step===5)el.innerHTML=`<h2 style="margin-bottom:12px">Thank you.</h2><div id="save-out" style="display:grid;gap:12px"><p class="muted">Saving your card…</p></div>`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const k=b.dataset.f;D[k]=D[k]===b.dataset.val?'':b.dataset.val;renderStep()});
   const inQuiz=step===3&&quiz&&quiz.i<QUIZ.length;
@@ -864,7 +866,7 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
-    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:D.shot,
+    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16)};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
