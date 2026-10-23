@@ -639,7 +639,13 @@ const slug=s=>keyOf(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'x';
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3200)}
 function hash(s){let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return h}
 function memberNo(k){return 'BAD-'+String(hash(k)%9000+1000)}
-function refCode(uid,p){return (String(p?.nickname||'BAD').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)||'BAD')+String(hash(uid)%90+10)}
+/* referral code: NAME#NUMBER, e.g. KENNY#08. Typing it without the # also works. */
+const normCode=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const refsOf=p=>[p.ref,...(p.refs||[])].filter(Boolean);
+function refCode(uid,p){const n=String(p?.nickname||'BAD').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10)||'BAD',num=String(p?.number??'').replace(/\D/g,'');
+  const base=`${n}#${num===''?String(hash(uid)%90+10):num.padStart(2,'0')}`;let c=base,i=0;
+  const taken=x=>Object.entries(S.profiles||{}).some(([id,q])=>id!==uid&&refsOf(q).some(r=>normCode(r)===normCode(x)))||((S.codes||{})[normCode(x)]);
+  while(taken(c)&&i<25)c=base+String.fromCharCode(65+i++);return c}
 const jersey=p=>(p.number===''||p.number==null)?'00':String(p.number).padStart(2,'0');
 const at=(date,time)=>new Date(`${date}T${time||'20:00'}:00+04:00`);
 const dParts=iso=>{const d=new Date(iso+'T12:00:00+04:00');return{d:d.getUTCDate(),m:MON[d.getUTCMonth()],w:DOW[d.getUTCDay()]}};
@@ -691,9 +697,9 @@ function loadImg(src,cors){return new Promise((res,rej)=>{const i=new Image();if
 function toBWUrl(url){return new Promise(res=>{if(!url)return res('');const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{try{res(bwSource(img))}catch(_){res('')}};img.onerror=()=>res('');img.src=url.replace(/=s\d+-c$/,'=s400-c')})}
 
 /* referral codes: a member's personal code, or a club code made by organisers */
-function codeInfo(raw){const c=String(raw||'').trim().toUpperCase();if(!c)return null;
+function codeInfo(raw){const c=normCode(raw);if(!c)return null;
   const a=(S.codes||{})[c];if(a)return a.off?{kind:'off',code:c}:{kind:'club',code:c,label:a.label||'BAD club code',pts:+a.pts||CFG.referee};
-  for(const [uid,p] of Object.entries(S.profiles||{}))if((p.ref||'').toUpperCase()===c)return{kind:'member',code:c,uid,name:p.nickname||'a BADDIE'};
+  for(const [uid,p] of Object.entries(S.profiles||{}))if(refsOf(p).some(r=>{const n=normCode(r);return n===c||n===c.replace(/^(.*\D)(\d)$/,'$10$2')}))return{kind:'member',code:c,uid,name:p.nickname||'a BADDIE'};
   return{kind:'none',code:c}}
 
 /* ---------- register / edit card ---------- */
@@ -731,12 +737,12 @@ function renderStep(){
       ${D._acctEmail&&!D._editing?`<div class="acct">${ic('mail')}<div><span class="label">Signed in as</span><div class="nm">${esc(D.email)}</div></div></div>`:`<div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>`}
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
       <div class="field"><label for="c-ig">Instagram <span class="req">optional</span></label>${inp('c-ig','at','text',D.instagram,'@yourhandle','maxlength="40"')}</div>
-      ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'From the member who invited you','maxlength="12" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
+      ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'e.g. KENNY#08','maxlength="16" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?`<div class="field"><label for="c-list">Played with us before? <span class="req">optional</span></label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the list</option>`).join('')}</select></div>`:''}
       <p class="fine">Your email and mobile number are only seen by BAD organisers. We use them for session updates and nothing else.</p>`;
     $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,2);e.target.value=D.number;$('c-num-hint').textContent=numHint(D.number);preview()};
     const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
-    on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase());
+    on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
     const rh=()=>{const el=$('c-ref-hint');if(!el)return;const i=codeInfo(D.referredBy);el.textContent=!i?'':i.kind==='club'?`✓ ${i.label}. +${i.pts} points when you join.`:i.kind==='member'?`✓ Invited by ${i.name}. +${CFG.referee} points for you, +${CFG.referrer} for them.`:i.kind==='off'?'This code has ended.':'We can’t find that code. Please check the spelling.'};
     if($('c-ref')){$('c-ref').addEventListener('input',rh);rh()}
     const l=$('c-list');if(l)l.onchange=e=>{D.listName=e.target.value;preview()};
@@ -843,7 +849,7 @@ async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:D.shot,
-    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:D.ref||refCode(S.uid||D.nickname,{nickname:D.nickname}),referredBy:(D.referredBy||'').toUpperCase().slice(0,12)};
+    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16)};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
     try{await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
@@ -1058,7 +1064,7 @@ function renderCard(){
       ${activityHTML()}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       <section class="hsec"><h3 class="ah">Recent points</h3><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(e.date||'')}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></section>
-      <section class="tile refer"><span class="label">Invite a friend</span><div class="row" style="justify-content:space-between;align-items:center"><div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">Your code · +${CFG.referrer} for you, +${CFG.referee} for them</span></div><button class="btn sm" id="copy-ref">${ic('copy')}Copy</button></div></section>
+      <section class="tile refer"><span class="label">Invite a friend</span><div class="row" style="justify-content:space-between;align-items:center"><div class="stat"><b class="num" id="my-ref">${esc(refCode(S.uid,p))}</b><span class="fine">Your code · +${CFG.referrer} for you, +${CFG.referee} for them</span></div><button class="btn sm" id="copy-ref">${ic('copy')}Copy</button></div></section>
       <details class="hsec how"><summary class="ah">How points work</summary><div class="list">${[['play','Join a session','+'+CFG.attend],['coin','Pay on the day','+'+CFG.paid],['guest','Bring a new guest','+'+CFG.newGuest],['gift','A friend joins with your code','+'+CFG.referrer],['ticket','A free session','−'+CFG.free]].map(([i,a,b])=>`<div class="li"><span class="ic-bub soft">${ic(i)}</span><span>${a}</span><b class="num">${b}</b></div>`).join('')}</div><p class="fine">${CFG.member} lifetime points turns your card silver.</p></details>
     </div></div>`;
   $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
@@ -1587,11 +1593,11 @@ async function awardApp(quiet,have){if(!S.canEdit||!S.db)return 0;if(S._awarding
   for(const [sid,s] of Object.entries(S.sessions)){if(sessStart(s)>Date.now())continue;
     for(const e of roster(sid).in.filter(e=>e.guest)){if(nsSet.has(`${sid}#g-${slug(e.guest)}`))continue;const nid=`newguest-${slug(e.key)}-${slug(e.guest)}`;if(have[nid])continue;have[nid]=1;
       try{await S.db.doc('ledger/'+nid).set({player:e.key,name:nameOf(e.uid,e.key),pts:CFG.newGuest,kind:'guest',date:s.date,reason:`New guest: ${e.guest}`});n++}catch(_){}}}
-  const byRef={};for(const [uid,p] of Object.entries(S.profiles))if(p.ref)byRef[p.ref.toUpperCase()]=[uid,p];
-  for(const [uid,p] of Object.entries(S.profiles)){const hit=p.referredBy&&byRef[p.referredBy.toUpperCase()];if(!hit||hit[0]===uid)continue;const day=(p.createdAt||'').slice(0,10);
+  const byRef={};for(const [uid,p] of Object.entries(S.profiles))for(const r of refsOf(p))byRef[normCode(r)]=[uid,p];
+  for(const [uid,p] of Object.entries(S.profiles)){const rc=normCode(p.referredBy),hit=p.referredBy&&(byRef[rc]||byRef[rc.replace(/^(.*\D)(\d)$/,'$10$2')]);if(!hit||hit[0]===uid)continue;const day=(p.createdAt||'').slice(0,10);
     if(!have['ref-'+uid]){try{await S.db.doc('ledger/ref-'+uid).set({player:hit[1].listKey,name:hit[1].nickname,pts:CFG.referrer,kind:'referral',date:day,reason:`${p.nickname} joined with your code`});n++}catch(_){}}
     if(!have['refw-'+uid]){try{await S.db.doc('ledger/refw-'+uid).set({player:p.listKey,name:p.nickname,pts:CFG.referee,kind:'referral',date:day,reason:'Joined with a referral code'});n++}catch(_){}}}
-  for(const [uid,p] of Object.entries(S.profiles)){const c=(p.referredBy||'').toUpperCase(),a=(S.codes||{})[c];if(!a||a.off||have['refc-'+uid]||byRef[c])continue;
+  for(const [uid,p] of Object.entries(S.profiles)){const c=normCode(p.referredBy),a=(S.codes||{})[c];if(!a||a.off||have['refc-'+uid]||byRef[c])continue;
     try{await S.db.doc('ledger/refc-'+uid).set({player:p.listKey,name:p.nickname,pts:+a.pts||CFG.referee,kind:'referral',date:(p.createdAt||'').slice(0,10),code:c,reason:`Joined with ${a.label||c}`});n++}catch(_){}}
   S._awarding=false;if(!quiet)toast(n?`${n} new point award${n===1?'':'s'}.`:'Points are up to date.');return n}
 async function syncPoints(){
@@ -1628,7 +1634,7 @@ async function exportSheet(){
 }
 
 /* ---------- club referral codes ---------- */
-function codesPanel(){const L=S.codes||{},used=c=>Object.values(S.profiles).filter(p=>(p.referredBy||'').toUpperCase()===c).length;
+function codesPanel(){const L=S.codes||{},used=c=>Object.values(S.profiles).filter(p=>normCode(p.referredBy)===c).length;
   return `<div class="panel"><h3 class="ah">Club codes</h3>
   <p class="hint">Codes from BAD for people who weren’t invited by a member: events, posters, Instagram, partners. New players type it in Referral code when they sign up.</p>
   <div class="list">${Object.entries(L).sort().map(([c,a])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto auto"><div><div class="nm num">${esc(c)}${a.off?' <span class="tagl">Ended</span>':''}</div><div class="sub">${esc(a.label||'')} · +${+a.pts||CFG.referee} points · used ${used(c)}</div></div>
@@ -1642,7 +1648,7 @@ async function saveCodes(L){try{await S.db.doc('config/codes').set({list:L});S.c
 function bindCodes(){
   const add=$('cc-add');if(!add)return;
   add.onclick=()=>{const c=$('cc-code').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length<3){toast('Codes need at least 3 letters or numbers.');return}
-    if(Object.values(S.profiles).some(p=>(p.ref||'').toUpperCase()===c)){toast('A member already uses that code. Please pick another.');return}
+    if(Object.values(S.profiles).some(p=>refsOf(p).some(r=>normCode(r)===c))){toast('A member already uses that code. Please pick another.');return}
     saveCodes({...S.codes,[c]:{label:$('cc-label').value.trim()||'BAD club code',pts:Math.max(0,Math.min(100,+$('cc-pts').value||0)),at:new Date().toISOString()}}).then(()=>toast(c+' is ready to share.'))};
   document.querySelectorAll('[data-coff]').forEach(b=>b.onclick=()=>{const c=b.dataset.coff,L={...S.codes};L[c]={...L[c],off:!L[c].off};saveCodes(L)});
   document.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=()=>{const c=b.dataset.cdel,L={...S.codes};delete L[c];saveCodes(L)});
