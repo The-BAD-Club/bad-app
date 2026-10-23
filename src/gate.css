@@ -12,3 +12,5 @@ html.gated .app,html.gated .tabs{visibility:hidden}
 .gate-card .or:before,.gate-card .or:after{content:"";flex:1;height:1px;background:var(--line)}
 .linkbtn{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;justify-self:start;padding:0}
 .signout{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:6px}
+.gate-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:.28em}
+.gate-h img{height:.74em;width:auto;transform:translateY(.02em)}

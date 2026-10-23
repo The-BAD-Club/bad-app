@@ -323,6 +323,8 @@ html.gated .app,html.gated .tabs{visibility:hidden}
 .gate-card .or:before,.gate-card .or:after{content:"";flex:1;height:1px;background:var(--line)}
 .linkbtn{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;justify-self:start;padding:0}
 .signout{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:6px}
+.gate-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:.28em}
+.gate-h img{height:.74em;width:auto;transform:translateY(.02em)}
 
 </style>
 
@@ -383,8 +385,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
   /* ---------- sign-in screen ---------- */
   const gate=document.createElement('div');gate.id='gate';gate.hidden=true;
   gate.innerHTML=`<div class="gate-card">
-    <img src="${typeof LOGO!=="undefined"?LOGO.badW:""}" alt="BAD" style="height:40px">
-    <h2>Welcome to BAD.</h2>
+    <h2 class="gate-h">Welcome to <img src="${typeof LOGO!=="undefined"?LOGO.badW:""}" alt="BAD"></h2>
     <p class="muted">Sign in to get your player card, join sessions and earn points.</p>
     <button class="btn wide" id="g-google"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5a4.3 4.3 0 0 1-1.9 2.8v2.3h3c1.8-1.6 2.9-4 2.9-6.8z" fill="none"/><circle cx="12" cy="12" r="8.5"/><path d="M12 12h8.4"/></svg>Continue with Google</button>
     <div class="or"><span>or use email</span></div>
