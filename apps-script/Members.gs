@@ -8,6 +8,7 @@
  */
 const PROJECT_ID = 'bad-app-ef601';
 const TAB = 'Members';
+const SHEET_ID = '1ATPRh9Z-voVhE_8a5PNQUZnrLoEHBhM9iZAIR-1FeRA'; // BAD APP – Master
 const WELCOME_POINTS = 20;
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Pro', 'National'];
 const CLUBS = {
@@ -18,7 +19,7 @@ const EDITIONS = { oncourt: 'On-Court', courtside: 'Courtside', offcourt: 'Off-C
 const STAFF = ['Crew', 'Community Manager', 'Founder'];
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('BAD App').addItem('Update members now', 'syncMembers').addToUi();
+  try { SpreadsheetApp.getUi().createMenu('BAD App').addItem('Update members now', 'syncMembers').addToUi(); } catch (e) {}
 }
 
 /** Run once: adds the 15-minute timer and fills the tab straight away. */
@@ -87,7 +88,7 @@ function syncMembers() {
     })
     .sort((a, b) => String(a[1]).localeCompare(String(b[1])));
 
-  const sh = SpreadsheetApp.getActive().getSheetByName(TAB);
+  const sh = (SpreadsheetApp.getActive() || SpreadsheetApp.openById(SHEET_ID)).getSheetByName(TAB);
   if (!sh) throw new Error('No tab called ' + TAB);
   const last = sh.getLastRow();
   if (last > 1) sh.getRange(2, 1, last - 1, 22).clearContent();
