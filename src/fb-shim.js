@@ -7,7 +7,7 @@
   if(!cfg||!cfg.apiKey){const g=document.createElement('div');g.id='gate';g.innerHTML=`<div class="gate-card"><img src="${typeof LOGO!=='undefined'?LOGO.badW:''}" alt="BAD" style="height:40px"><h2>The BAD App is on its way.</h2><p class="muted">We were all BAD players once. See you on court soon.</p></div>`;document.body.appendChild(g);document.documentElement.classList.add('gated');return}
   firebase.initializeApp(cfg);
   const auth=firebase.auth(),fs=firebase.firestore();
-  fs.settings({ignoreUndefinedProperties:true});
+  try{fs.settings({ignoreUndefinedProperties:true})}catch(e){console.warn(e)}
   try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(_){}
   const OWNER_EMAILS=(window.BAD_ADMINS||[]).map(e=>e.toLowerCase());
 

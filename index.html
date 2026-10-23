@@ -348,7 +348,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
       <div style="display:grid;gap:18px">
         <div class="steps" id="steps"></div>
         <div id="step"></div>
-        <div class="row" style="justify-content:space-between"><button class="btn ghost" id="back">Back</button><button class="btn" id="next">Next</button></div>
+        <div class="row" style="justify-content:space-between"><button class="btn ghost" id="back">Back</button><div class="row" style="gap:8px"><button class="btn ghost" id="skip" hidden>Finish now</button><button class="btn" id="next">Next</button></div></div>
       </div>
     </div>
   </section>
@@ -379,7 +379,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
   if(!cfg||!cfg.apiKey){const g=document.createElement('div');g.id='gate';g.innerHTML=`<div class="gate-card"><img src="${typeof LOGO!=='undefined'?LOGO.badW:''}" alt="BAD" style="height:40px"><h2>The BAD App is on its way.</h2><p class="muted">We were all BAD players once. See you on court soon.</p></div>`;document.body.appendChild(g);document.documentElement.classList.add('gated');return}
   firebase.initializeApp(cfg);
   const auth=firebase.auth(),fs=firebase.firestore();
-  fs.settings({ignoreUndefinedProperties:true});
+  try{fs.settings({ignoreUndefinedProperties:true})}catch(e){console.warn(e)}
   try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(_){}
   const OWNER_EMAILS=(window.BAD_ADMINS||[]).map(e=>e.toLowerCase());
 
@@ -597,12 +597,11 @@ function preview(){const k=keyOf(D.listName||D.nickname);const st=statsFor(k);if
 function chips(name,opts,cur,attr='f'){return `<div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-${attr}="${name}" data-val="${esc(o)}" aria-pressed="${o===cur}">${esc(o)}</button>`).join('')}</div>`}
 function stepValid(){
   if(step===0)return D.nickname.trim()&&okEmail(D.email)&&okMobile(D.mobile);
-  if(step===2)return D.sports.length>0;
   return true;
 }
 function renderStep(){
   $('steps').innerHTML=STEPS.map((_,i)=>`<i class="${i<=step?'on':''}"></i>`).join('');
-  const el=$('step'),head=i=>`<span class="label">Step ${i+1} of ${STEPS.length}</span><h2 style="margin:6px 0 18px">${STEPS[i]}</h2>`;
+  const el=$('step'),head=i=>`<span class="label">Step ${i+1} of ${STEPS.length}${i?' · Optional':' · The only required step'}</span><h2 style="margin:6px 0 18px">${STEPS[i]}</h2>`;
   const inp=(id,icon,type,val,ph,extra='')=>`<div class="inp">${ic(icon)}<input type="${type}" id="${id}" value="${esc(val)}" placeholder="${ph}" ${extra}></div>`;
   if(step===0){
     const free=Object.entries(allKeys()).filter(([k])=>{const pr=profileByKey(k);return!pr||pr[0]===S.uid}).sort((a,b)=>a[1].localeCompare(b[1]));
@@ -662,8 +661,8 @@ function renderStep(){
         ${acts.length?'':'<p class="fine">No levels needed for the activities you picked.</p>'}
         <div class="field"><span class="lbl">Hand</span>${chips('hand',['Right','Left'],D.hand)}</div>`;
       const qs=$('q-start');if(qs)qs.onclick=()=>{quiz={i:0,score:{}};renderStep()};
-      el.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{D.types[b.dataset.ty]=b.dataset.val;if(b.dataset.ty==='badminton')quiz=null;renderStep()});
-      el.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{D.levels[b.dataset.lv]=+b.dataset.i;renderStep()});
+      el.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{D.types[b.dataset.ty]=D.types[b.dataset.ty]===b.dataset.val?'':b.dataset.val;if(b.dataset.ty==='badminton')quiz=null;renderStep()});
+      el.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const k=b.dataset.lv,v=+b.dataset.i;if(D.levels[k]===v)delete D.levels[k];else D.levels[k]=v;renderStep()});
     }
   }
   if(step===4){
@@ -672,14 +671,15 @@ function renderStep(){
       <p class="fine">You can edit your card any time.</p>`;
   }
   if(step===5)el.innerHTML=`<h2 style="margin-bottom:12px">Thank you.</h2><div id="save-out" style="display:grid;gap:12px"><p class="muted">Saving your card…</p></div>`;
-  el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{D[b.dataset.f]=b.dataset.val;renderStep()});
+  el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const k=b.dataset.f;D[k]=D[k]===b.dataset.val?'':b.dataset.val;renderStep()});
   const inQuiz=step===3&&quiz&&quiz.i<QUIZ.length;
-  $('back').hidden=step===0||step===5||inQuiz;$('next').hidden=step===5||inQuiz;
+  $('back').hidden=step===0||step===5||inQuiz;$('next').hidden=step===5||inQuiz;$('skip').hidden=!(step>=1&&step<=3)||inQuiz;
   $('next').textContent=step===4?(D._editing?'Save my card':'Register'):'Continue';
   $('next').disabled=!stepValid();
   preview();
 }
 $('back').onclick=()=>{step=Math.max(0,step-1);quiz=null;renderStep()};
+$('skip').onclick=()=>{step=5;renderStep();saveProfile()};
 $('next').onclick=()=>{if(!stepValid())return;if(step<4){step++;if(step===2&&!D.sports.length)D.sports=[];renderStep()}else{step=5;renderStep();saveProfile()}};
 $('photo-in').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{D.photo=await toBW(f);renderStep()}catch(_){toast('Sorry, that image did not load. Please try a JPG or PNG.')}};
@@ -687,7 +687,7 @@ $('photo-in').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(
 async function saveProfile(){
   const now=new Date().toISOString();
   const data={nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number||''),edition:D.edition,photo:D.photo||'',
-    sports:D.sports,primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:D.shot,
+    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:D.shot,
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:D.ref||refCode(S.uid||D.nickname,{nickname:D.nickname}),referredBy:(D.referredBy||'').toUpperCase().slice(0,12)};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
