@@ -383,6 +383,9 @@ body:not(.wide) #v-create .grid2>div:first-child{position:static!important}
   #v-create .pc{max-width:320px;padding:20px 22px;border-radius:18px}
   #v-create .pc .jn{font-size:8rem}#v-create .pc .nick{font-size:1.35rem}#v-create .pc .stats{display:grid}
 }
+.namerow{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:12px;align-items:end}
+.namerow .field{margin:0}
+input.jnum{font-family:var(--f-serif);font-size:1.9rem;text-align:center;padding:4px 8px;height:52px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -668,8 +671,11 @@ let D={},step=0,quiz=null;
 const STEPS=['About you','Your look','Your activities','Your levels','Your signature'];
 const okEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim());
 const okMobile=v=>String(v||'').replace(/\D/g,'').length>=8;
+const numTaken=n=>{if(n==='')return null;for(const [uid,p] of Object.entries(S.profiles||{}))if(uid!==S.uid&&!p.sample&&String(p.number)===String(+n))return p.nickname||'another player';return null};
+function numHint(n){if(n==='')return 'Pick your jersey number, 0 to 99.';const t=numTaken(n);return t?`${t} also wears ${+n}. You can still use it, or pick another.`:`${+n} is yours. You can change it any time.`}
+function freeNumber(){for(let i=0;i<40;i++){const n=String(Math.floor(Math.random()*99)+1);if(!numTaken(n))return n}return String(Math.floor(Math.random()*99)+1)}
 function startCreator(existing){
-  D=existing?{...existing,types:{...(existing.types||{})},sports:[...(existing.sports||['badminton'])]}:{nickname:'',listName:'',number:String(Math.floor(Math.random()*99)+1),edition:'oncourt',photo:'',sports:[],primary:'',types:{},levels:{},level:1,hand:'Right',shot:'',email:'',mobile:'',instagram:'',referredBy:''};
+  D=existing?{...existing,types:{...(existing.types||{})},sports:[...(existing.sports||['badminton'])]}:{nickname:'',listName:'',number:freeNumber(),edition:'oncourt',photo:'',sports:[],primary:'',types:{},levels:{},level:1,hand:'Right',shot:'',email:'',mobile:'',instagram:'',referredBy:''};
   if(existing){const c=S.contacts[S.uid]||S.myContact||{};D.email=c.email||'';D.mobile=c.mobile||c.whatsapp||'';D.instagram=c.instagram||'';if(!D.types.badminton&&existing.style)D.types.badminton=existing.style;D.levels={...(existing.levels||{})};for(const k of D.sports)if(D.levels[k]==null&&!LEVEL_FREE.includes(k))D.levels[k]=existing.level??1}
   if(!existing){const U=window.BAD_USER||{},full=(U.name||'').trim();
     D.email=U.email||'';D.listName='';D.nickname=(full.split(/\s+/)[0]||'').slice(0,16);D._acctEmail=!!U.email;
@@ -689,13 +695,16 @@ function renderStep(){
   if(step===0){
     const free=Object.entries(allKeys()).filter(([k])=>{const pr=profileByKey(k);return!pr||pr[0]===S.uid}).sort((a,b)=>a[1].localeCompare(b[1]));
     el.innerHTML=head(0)+`
-      <div class="field"><label for="c-nick">Player name</label>${inp('c-nick','card','text',D.nickname,'What everyone calls you','maxlength="16"')}</div>
+      <div class="namerow"><div class="field"><label for="c-nick">Player name</label>${inp('c-nick','card','text',D.nickname,'What everyone calls you','maxlength="16"')}</div>
+        <div class="field"><label for="c-num">Number</label><input type="text" inputmode="numeric" id="c-num" maxlength="2" value="${esc(D.number)}" placeholder="00" class="jnum"></div></div>
+      <p class="fine" id="c-num-hint" role="status" style="margin:6px 0 18px">${numHint(D.number)}</p>
       ${D._acctEmail&&!D._editing?`<div class="acct">${ic('mail')}<div><span class="label">Signed in as</span><div class="nm">${esc(D.email)}</div></div></div>`:`<div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>`}
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
       <div class="field"><label for="c-ig">Instagram <span class="req">optional</span></label>${inp('c-ig','at','text',D.instagram,'@yourhandle','maxlength="40"')}</div>
       ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'From the member who invited you','maxlength="12" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?`<div class="field"><label for="c-list">Played with us before? <span class="req">optional</span></label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the list</option>`).join('')}</select></div>`:''}
       <p class="fine">Your email and mobile number are only seen by BAD organisers. We use them for session updates and nothing else.</p>`;
+    $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,2);e.target.value=D.number;$('c-num-hint').textContent=numHint(D.number);preview()};
     const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
     on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase());
     const rh=()=>{const el=$('c-ref-hint');if(!el)return;const i=codeInfo(D.referredBy);el.textContent=!i?'':i.kind==='club'?`✓ ${i.label}. +${i.pts} points when you join.`:i.kind==='member'?`✓ Invited by ${i.name}. +${CFG.referee} points for you, +${CFG.referrer} for them.`:i.kind==='off'?'This code has ended.':'We can’t find that code. Please check the spelling.'};
@@ -707,11 +716,9 @@ function renderStep(){
       <div class="field"><span class="lbl">Profile photo <span class="req">optional</span></span><div class="photo"><div class="pv">${D.photo?`<img src="${esc(D.photo)}" alt="Your photo">`:ic('camera')}</div>
         <div class="row"><button type="button" class="btn ghost sm" id="ph-add">${ic('camera')}${D.photo?'Change photo':'Add a photo'}</button>${D.photo?`<button type="button" class="btn ghost sm" id="ph-crop">${ic('edit')}Adjust</button><button type="button" class="btn ghost sm" id="ph-rm">${ic('x')}Remove</button>`:''}</div></div>
         <p class="fine">Photos are shown in black and white. We convert them for you. Until you add one, your card uses a BAD photo.</p></div>
-      <div class="field"><label for="c-num">Jersey number</label><input type="number" id="c-num" min="0" max="99" value="${esc(D.number)}" style="width:120px;font-family:var(--f-serif);font-size:2.2rem;text-align:center;padding:6px"></div>
       <div class="field"><span class="lbl">Card edition</span><div class="editions">${EDITIONS.map(([k,n,c,hex])=>`<button type="button" data-e="${k}" aria-pressed="${k===D.edition}"><i style="background:${hex}"></i><span>${n}</span><small>${c}</small></button>`).join('')}</div>
         <p class="fine">At ${CFG.member} lifetime points, your card turns silver.</p></div>`;
     $('ph-add').onclick=()=>$('photo-in').click();const rm=$('ph-rm');if(rm)rm.onclick=()=>{D.photo='';D._src='';renderStep()};const cr=$('ph-crop');if(cr)cr.onclick=()=>openCropper(D._src||D.photo);
-    $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,2);preview()};
     el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{D.edition=b.dataset.e;renderStep()});
   }
   if(step===2){
@@ -804,7 +811,7 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 
 async function saveProfile(){
   const now=new Date().toISOString();
-  const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number||''),edition:D.edition,photo:D.photo||'',
+  const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:D.shot,
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:D.ref||refCode(S.uid||D.nickname,{nickname:D.nickname}),referredBy:(D.referredBy||'').toUpperCase().slice(0,12)};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
