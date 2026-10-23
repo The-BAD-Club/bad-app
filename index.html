@@ -379,6 +379,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
   if(!cfg||!cfg.apiKey){const g=document.createElement('div');g.id='gate';g.innerHTML=`<div class="gate-card"><img src="${typeof LOGO!=='undefined'?LOGO.badW:''}" alt="BAD" style="height:40px"><h2>The BAD App is on its way.</h2><p class="muted">We were all BAD players once. See you on court soon.</p></div>`;document.body.appendChild(g);document.documentElement.classList.add('gated');return}
   firebase.initializeApp(cfg);
   const auth=firebase.auth(),fs=firebase.firestore();
+  fs.settings({ignoreUndefinedProperties:true});
   try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(_){}
   const OWNER_EMAILS=(window.BAD_ADMINS||[]).map(e=>e.toLowerCase());
 
@@ -691,14 +692,15 @@ async function saveProfile(){
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
     try{await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
-      toast(D._editing?'Your card is updated.':'Welcome to BAD. Thank you for registering.');setView('card');setTimeout(processCheckin,800);return}catch(e){}
+      toast(D._editing?'Your card is updated.':'Welcome to BAD. Thank you for registering.');setView('card');setTimeout(processCheckin,800);return}catch(e){console.error('BAD save failed',e);S.saveErr=(e&&(e.code||e.message))||''}
   }
   const code='BAD1-'+btoa(unescape(encodeURIComponent(JSON.stringify({...data,photo:'',contact}))));
-  $('save-out').innerHTML=`<p>Your card is ready, but we couldn't save it to your account from here. Please send this code to a BAD organiser and they will add you.</p>
+  $('save-out').innerHTML=`<p>Your card is ready, but we couldn't save it to your account from here. Please tap Try again. If it still doesn't work, send this code to a BAD organiser and they will add you.</p>${S.saveErr?`<p class="fine">Reason: ${esc(S.saveErr)}</p>`:''}<div class="row"><button class="btn" id="save-retry">Try again</button></div>
     <div class="code" id="code">${esc(code)}</div>
     <div class="row"><button class="btn" id="copy">${ic('copy')}Copy code</button><button class="btn ghost" id="redo">Edit card</button></div>`;
   $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Copied. Thank you.')}catch(e){const r=document.createRange();r.selectNodeContents($('code'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected. Please copy it now.')}};
   $('redo').onclick=()=>{step=4;renderStep()};
+  if($('save-retry'))$('save-retry').onclick=()=>{S.saveErr='';saveProfile()};
 }
 
 /* ---------- navigation ---------- */
