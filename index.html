@@ -1534,9 +1534,12 @@ async function showQR(sid){
 async function setLevel(uid,sp,v){try{const cur={...((S.levels[uid]||{}).levels||{})};if(v==='')delete cur[sp];else cur[sp]=+v;await S.db.doc('levels/'+uid).set({levels:cur,at:new Date().toISOString()});toast('Level saved. Only organisers see this.')}catch(e){toast('Sorry, that didn’t save.')}}
 
 /* sample players (for trying the app) */
-async function removeSamples(){
-  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);
-  try{for(const id of ids){await S.db.doc('profiles/'+id).delete();await S.db.doc('bookings/'+id).delete()}toast(`${ids.length} sample players removed.`)}catch(e){toast('Sorry, some sample players were not removed.')}
+async function removeSamples(quiet){
+  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);if(!ids.length)return;const set=new Set(ids);
+  try{for(const id of ids){await S.db.doc('profiles/'+id).delete();await S.db.doc('bookings/'+id).delete()}
+    for(const [gid,g] of Object.entries(S.games||{}))if([...(g.a||[]),...(g.b||[])].some(x=>set.has(x)))await S.db.doc('games/'+gid).delete();
+    for(const [sid,lv] of Object.entries(S.live||{})){const j=JSON.stringify(lv);if(ids.some(i=>j.includes('"'+i+'"')))await S.db.doc('live/'+sid).delete()}
+    toast(`${ids.length} sample players removed.`)}catch(e){if(!quiet)toast('Sorry, some sample players were not removed.')}
 }
 
 /* ---------- organiser ---------- */
@@ -1857,7 +1860,7 @@ S.contacts={};S.brand={};
   if(S.canEdit){C.use('mcp').then(m=>{S.mcp=m});C.use('assets').then(a=>{S.assets=a})}
   if(!db){S.loaded=true;render();return}
   let pending=10;
-  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;seedWeb();fixups();fixups2();if(S.canEdit)setTimeout(()=>awardApp(true),1500)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
+  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;seedWeb();fixups();fixups2();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>awardApp(true),1500)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
   /* hosted version: first organiser sign-in on an empty database loads the starter sessions, posts and sample players */
   /* one-off content fixes, applied once by an organiser's app */
   async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];
