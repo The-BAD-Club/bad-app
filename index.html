@@ -523,7 +523,7 @@ const QUIZ=[
   {q:'After the session you are…',a:[['Replaying that one smash.','Smasher'],['Still talking about that net kill.','Net Ninja'],['Last to leave. One more game.','The Wall'],['Teaching someone your fake.','Trickster'],['Fine. Could go another two hours.','Rally Machine']]}
 ];
 
-const S={payCfg:{},payments:{},uid:null,canEdit:false,db:null,mcp:null,profiles:{},ledger:[],requests:{},sessions:{},bookings:{},posts:{},noshows:{},contacts:{},brand:{},loaded:false,view:'card',sport:'all',clubFilter:'all'};
+const S={codes:{},payCfg:{},payments:{},uid:null,canEdit:false,db:null,mcp:null,profiles:{},ledger:[],requests:{},sessions:{},bookings:{},posts:{},noshows:{},contacts:{},brand:{},loaded:false,view:'card',sport:'all',clubFilter:'all'};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const keyOf=s=>String(s||'').trim().toLowerCase();
@@ -576,6 +576,12 @@ function toBW(file){return new Promise((res,rej)=>{const r=new FileReader();r.on
   const d=x.getImageData(0,0,s,s),a=d.data;for(let i=0;i<a.length;i+=4){let y=.299*a[i]+.587*a[i+1]+.114*a[i+2];y=Math.max(0,Math.min(255,(y-128)*1.12+128));a[i]=a[i+1]=a[i+2]=y}
   x.putImageData(d,0,0);res(c.toDataURL('image/jpeg',.72))};img.src=r.result};r.readAsDataURL(file)})}
 
+/* referral codes: a member's personal code, or a club code made by organisers */
+function codeInfo(raw){const c=String(raw||'').trim().toUpperCase();if(!c)return null;
+  const a=(S.codes||{})[c];if(a)return a.off?{kind:'off',code:c}:{kind:'club',code:c,label:a.label||'BAD club code',pts:+a.pts||CFG.referee};
+  for(const [uid,p] of Object.entries(S.profiles||{}))if((p.ref||'').toUpperCase()===c)return{kind:'member',code:c,uid,name:p.nickname||'a BADDIE'};
+  return{kind:'none',code:c}}
+
 /* ---------- register / edit card ---------- */
 let D={},step=0,quiz=null;
 const STEPS=['About you','Your look','Your activities','Your levels','Your signature'];
@@ -604,11 +610,13 @@ function renderStep(){
       <div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
       <div class="field"><label for="c-ig">Instagram <span class="req">optional</span></label>${inp('c-ig','at','text',D.instagram,'@yourhandle','maxlength="40"')}</div>
-      ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'From the member who invited you','maxlength="12" style="text-transform:uppercase"')}</div>`}
+      ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'From the member who invited you','maxlength="12" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?`<div class="field"><label for="c-list">Played with us before? <span class="req">optional</span></label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the list</option>`).join('')}</select></div>`:''}
       <p class="fine">Your email and mobile number are only seen by BAD organisers. We use them for session updates and nothing else.</p>`;
     const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();if(k==='nickname')preview()}};
     on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase());
+    const rh=()=>{const el=$('c-ref-hint');if(!el)return;const i=codeInfo(D.referredBy);el.textContent=!i?'':i.kind==='club'?`✓ ${i.label}. +${i.pts} points when you join.`:i.kind==='member'?`✓ Invited by ${i.name}. +${CFG.referee} points for you, +${CFG.referrer} for them.`:i.kind==='off'?'This code has ended.':'We can’t find that code. Please check the spelling.'};
+    if($('c-ref')){$('c-ref').addEventListener('input',rh);rh()}
     const l=$('c-list');if(l)l.onchange=e=>{D.listName=e.target.value;preview()};
   }
   if(step===1){
@@ -1277,6 +1285,7 @@ function renderAdmin(){
     <div class="field" style="flex:2;min-width:160px;margin:0"><label for="bp-reason">Reason</label><input type="text" id="bp-reason" value="Brought a friend"></div>
     <button class="btn ghost" id="bp-go">Add</button></div><datalist id="names">${Object.values(allKeys()).map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
 
+  ${codesPanel()}
   <div class="panel"><h2>Add a player from a join code</h2><textarea id="imp-code" placeholder="BAD1-…"></textarea><div class="row"><button class="btn ghost" id="imp-go">Add player</button></div></div>`;
   bindAdmin();
 }
@@ -1315,7 +1324,7 @@ function bindAdmin(){
   $('imp-go').onclick=async()=>{const raw=$('imp-code').value.trim();
     try{if(!raw.startsWith('BAD1-'))throw 0;const d=JSON.parse(decodeURIComponent(escape(atob(raw.slice(5)))));if(!d.nickname)throw 0;const id='imp-'+slug(d.nickname)+'-'+Date.now().toString(36);const c=d.contact;delete d.contact;
       await S.db.doc('profiles/'+id).set(d);if(c)await S.db.doc('contacts/'+id).set(c);$('imp-code').value='';toast(d.nickname+' added.')}catch(e){toast('That code is not valid. Ask them to copy it again.')}};
-  $('sync').onclick=syncPoints;$('export').onclick=exportSheet;bindBrand();
+  $('sync').onclick=syncPoints;bindCodes();$('export').onclick=exportSheet;bindBrand();
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
     try{await S.db.doc('payments/'+adminSid).set(cur);toast(was?'Marked as unpaid.':'Payment confirmed.')}catch(e){toast("Sorry, that didn't save.")}});
   const ps=$('pc-save');if(ps)ps.onclick=async()=>{const d={accName:$('pc-acc').value.trim(),bankName:$('pc-bank').value.trim(),iban:$('pc-iban').value.trim(),ziinaLink:$('pc-ziina').value.trim()};
@@ -1328,15 +1337,8 @@ async function approve(id){const r=S.requests[id];if(!r)return;
 
 function parseDate(s){const m=String(s).match(/(\d{1,2})\s+([A-Za-z]{3})\w*\s+(\d{4})/);if(!m)return null;const mo=MONTHS[m[2].toLowerCase()];if(!mo)return null;return `${m[3]}-${String(mo).padStart(2,'0')}-${m[1].padStart(2,'0')}`}
 const isTrue=v=>v===true||String(v).toUpperCase()==='TRUE';
-async function syncPoints(){
-  const st=$('sheet-status'),btn=$('sync');if(!S.mcp){st.textContent='Syncing needs the Claude app with Google Sheets connected.';return}
-  btn.disabled=true;st.textContent='Reading trackers…';const have={};for(const e of S.ledger)have[e._id]=e;let n=0;const probs=[];
-  for(const sh of SHEETS){let values;
-    try{const res=await S.mcp.callTool('Google Sheets','get_values',{spreadsheetId:sh.id,range:"'Attendance Log'!A2:H3000"},{cache:false});let p=res.payload;if(typeof p==='string'){try{p=JSON.parse(p)}catch(_){}}values=(p&&p.values)||[]}
-    catch(e){probs.push(sh.label+': '+mcpErr(e));continue}
-    for(const r of values){const name=String(r[1]||'').trim(),iso=parseDate(r[0]);if(!name||!iso||!isTrue(r[2]))continue;
-      const paid=isTrue(r[3]),id=`${sh.day}-${iso}-${slug(name)}`,pts=CFG.attend+(paid?CFG.paid:0);if(have[id]&&have[id].pts===pts)continue;
-      try{await S.db.doc('ledger/'+id).set({player:keyOf(name),name,pts,kind:'session',day:sh.day,date:iso,reason:`${sh.label} session${paid?' + paid on the day':''}`});n++}catch(e){probs.push('Could not save '+name);break}}}
+/* points the app can award on its own: new guests, member referrals and club codes. Nothing counted twice. */
+async function awardApp(quiet,have){if(!S.canEdit||!S.db)return 0;if(S._awarding)return 0;S._awarding=true;have=have||Object.fromEntries(S.ledger.map(e=>[e._id,e]));let n=0;
   /* guests who played earn their host points; referrals reward both sides */
   const nsSet=new Set(Object.values(S.noshows).flatMap(x=>(x.dates||[])));
   for(const [sid,s] of Object.entries(S.sessions)){if(sessStart(s)>Date.now())continue;
@@ -1346,6 +1348,19 @@ async function syncPoints(){
   for(const [uid,p] of Object.entries(S.profiles)){const hit=p.referredBy&&byRef[p.referredBy.toUpperCase()];if(!hit||hit[0]===uid)continue;const day=(p.createdAt||'').slice(0,10);
     if(!have['ref-'+uid]){try{await S.db.doc('ledger/ref-'+uid).set({player:hit[1].listKey,name:hit[1].nickname,pts:CFG.referrer,kind:'referral',date:day,reason:`${p.nickname} joined with your code`});n++}catch(_){}}
     if(!have['refw-'+uid]){try{await S.db.doc('ledger/refw-'+uid).set({player:p.listKey,name:p.nickname,pts:CFG.referee,kind:'referral',date:day,reason:'Joined with a referral code'});n++}catch(_){}}}
+  for(const [uid,p] of Object.entries(S.profiles)){const c=(p.referredBy||'').toUpperCase(),a=(S.codes||{})[c];if(!a||a.off||have['refc-'+uid]||byRef[c])continue;
+    try{await S.db.doc('ledger/refc-'+uid).set({player:p.listKey,name:p.nickname,pts:+a.pts||CFG.referee,kind:'referral',date:(p.createdAt||'').slice(0,10),code:c,reason:`Joined with ${a.label||c}`});n++}catch(_){}}
+  S._awarding=false;if(!quiet)toast(n?`${n} new point award${n===1?'':'s'}.`:'Points are up to date.');return n}
+async function syncPoints(){
+  const st=$('sheet-status'),btn=$('sync');if(!S.mcp){const k=await awardApp(true);st.textContent=(k?`${k} new point award${k===1?'':'s'} for guests and referrals.`:'Guests and referrals are up to date.')+' Tracker points need the Google Sheets link, coming soon.';return}
+  btn.disabled=true;st.textContent='Reading trackers…';const have={};for(const e of S.ledger)have[e._id]=e;let n=0;const probs=[];
+  for(const sh of SHEETS){let values;
+    try{const res=await S.mcp.callTool('Google Sheets','get_values',{spreadsheetId:sh.id,range:"'Attendance Log'!A2:H3000"},{cache:false});let p=res.payload;if(typeof p==='string'){try{p=JSON.parse(p)}catch(_){}}values=(p&&p.values)||[]}
+    catch(e){probs.push(sh.label+': '+mcpErr(e));continue}
+    for(const r of values){const name=String(r[1]||'').trim(),iso=parseDate(r[0]);if(!name||!iso||!isTrue(r[2]))continue;
+      const paid=isTrue(r[3]),id=`${sh.day}-${iso}-${slug(name)}`,pts=CFG.attend+(paid?CFG.paid:0);if(have[id]&&have[id].pts===pts)continue;
+      try{await S.db.doc('ledger/'+id).set({player:keyOf(name),name,pts,kind:'session',day:sh.day,date:iso,reason:`${sh.label} session${paid?' + paid on the day':''}`});n++}catch(e){probs.push('Could not save '+name);break}}}
+  n+=await awardApp(true,have);
   btn.disabled=false;st.textContent=(n?`${n} new point award${n===1?'':'s'}.`:'Already up to date.')+(probs.length?' '+probs.join(' '):'');
 }
 async function exportSheet(){
@@ -1367,6 +1382,27 @@ async function exportSheet(){
     st.textContent=`Sheet updated: ${players.length} players, ${signups.length} session sign-ups, ${games.length} games, ${ns.length} on the no-show list.`;
   }catch(e){st.textContent=mcpErr(e)}
   btn.disabled=false;
+}
+
+/* ---------- club referral codes ---------- */
+function codesPanel(){const L=S.codes||{},used=c=>Object.values(S.profiles).filter(p=>(p.referredBy||'').toUpperCase()===c).length;
+  return `<div class="panel"><h2>Club codes</h2>
+  <p class="hint">Codes from BAD for people who weren’t invited by a member: events, posters, Instagram, partners. New players type it in Referral code when they sign up.</p>
+  <div class="list">${Object.entries(L).sort().map(([c,a])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto auto"><div><div class="nm num">${esc(c)}${a.off?' <span class="tagl">Ended</span>':''}</div><div class="sub">${esc(a.label||'')} · +${+a.pts||CFG.referee} points · used ${used(c)}</div></div>
+    <button class="btn ghost sm" data-coff="${esc(c)}">${a.off?'Turn on':'End'}</button><button class="btn ghost sm" data-cdel="${esc(c)}" aria-label="Delete ${esc(c)}">Delete</button></div>`).join('')||'<div class="empty">No club codes yet.</div>'}</div>
+  <div class="row" style="margin-top:12px;align-items:flex-end">
+    <div class="field" style="flex:1;min-width:140px;margin:0"><label for="cc-code">Code</label><input type="text" id="cc-code" placeholder="THEBADCLUB" maxlength="12" style="text-transform:uppercase"></div>
+    <div class="field" style="flex:2;min-width:160px;margin:0"><label for="cc-label">What it’s for</label><input type="text" id="cc-label" placeholder="BADoween poster"></div>
+    <div class="field" style="width:90px;margin:0"><label for="cc-pts">Points</label><input type="number" id="cc-pts" min="0" max="100" value="${CFG.referee}"></div>
+    <button class="btn" id="cc-add">Add code</button></div></div>`}
+async function saveCodes(L){try{await S.db.doc('config/codes').set({list:L});S.codes=L;render()}catch(e){toast('Sorry, that didn’t save.')}}
+function bindCodes(){
+  const add=$('cc-add');if(!add)return;
+  add.onclick=()=>{const c=$('cc-code').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length<3){toast('Codes need at least 3 letters or numbers.');return}
+    if(Object.values(S.profiles).some(p=>(p.ref||'').toUpperCase()===c)){toast('A member already uses that code. Please pick another.');return}
+    saveCodes({...S.codes,[c]:{label:$('cc-label').value.trim()||'BAD club code',pts:Math.max(0,Math.min(100,+$('cc-pts').value||0)),at:new Date().toISOString()}}).then(()=>toast(c+' is ready to share.'))};
+  document.querySelectorAll('[data-coff]').forEach(b=>b.onclick=()=>{const c=b.dataset.coff,L={...S.codes};L[c]={...L[c],off:!L[c].off};saveCodes(L)});
+  document.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=()=>{const c=b.dataset.cdel,L={...S.codes};delete L[c];saveCodes(L)});
 }
 
 /* ---------- brand: official BAD logos (BAD ASSETS folder, files 03 white / 04 black) built in; brand fonts by upload ---------- */
@@ -1411,7 +1447,7 @@ S.contacts={};S.brand={};
   if(S.canEdit){C.use('mcp').then(m=>{S.mcp=m});C.use('assets').then(a=>{S.assets=a})}
   if(!db){S.loaded=true;render();return}
   let pending=10;
-  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;seedWeb()}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
+  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;seedWeb();if(S.canEdit)setTimeout(()=>awardApp(true),1500)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
   /* hosted version: first organiser sign-in on an empty database loads the starter sessions, posts and sample players */
   async function seedWeb(){if(!window.BAD_WEB||!S.canEdit||Object.keys(S.sessions||{}).length)return;
     try{const seed=await (await fetch('seed.json',{cache:'no-store'})).json();
@@ -1429,6 +1465,7 @@ S.contacts={};S.brand={};
   col('games',s=>S.games=map(s));
   col('scores',s=>S.scores=map(s));
   if(S.uid)db.doc('checkins/'+S.uid).onSnapshot(d=>{S.myCI=d.exists?d.data():{};render()},()=>{});
+  db.doc('config/codes').onSnapshot(d=>{S.codes=d.exists?(d.data().list||{}):{};render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});
   db.collection('payments').onSnapshot(s=>{S.payments=map(s);render()},()=>{});
   db.doc('config/brand').onSnapshot(d=>{S.brand=d.exists?d.data():{};applyBrand();done()},()=>done());
