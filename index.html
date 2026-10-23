@@ -426,6 +426,15 @@ details.how[open] summary::after{content:"–"}
 .stepnav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #finish{justify-self:center}
 .post .btn{width:auto;text-decoration:none}
+.lvl-pick{grid-template-columns:1fr!important;gap:6px}
+.lvl-pick button{display:grid!important;grid-template-columns:auto minmax(0,1fr);gap:14px!important;align-items:center;justify-items:start!important;text-align:left!important;padding:10px 14px!important;font-size:.9rem!important;color:var(--ink)}
+.lvl-pick .t{display:grid;gap:2px}
+.lvl-pick .t small{font-size:.76rem;font-weight:500;color:var(--muted)}
+.lvl-pick button[aria-pressed="true"] .t small{color:inherit;opacity:.7}
+.lvl-pick .bars{display:flex;align-items:flex-end;gap:2px;height:18px}
+.lvl-pick .bars i{width:4px;border-radius:2px;background:var(--rule)}
+.lvl-pick .bars i:nth-child(1){height:6px}.lvl-pick .bars i:nth-child(2){height:9px}.lvl-pick .bars i:nth-child(3){height:12px}.lvl-pick .bars i:nth-child(4){height:15px}.lvl-pick .bars i:nth-child(5){height:18px}
+.lvl-pick .bars i.on{background:currentColor}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -566,7 +575,10 @@ const CFG={attend:10,paid:5,welcome:20,guest:10,newGuest:10,referrer:25,referee:
 const TIERS=[{k:'Guest',at:0,d:'Everyone starts here. We were all BAD players once.'},{k:'Regular',at:100,d:'You keep showing up. A free session is on us.'},{k:'Member',at:250,d:'Your card turns silver. Officially one of us.'},{k:'Crew',at:500,d:'For the ones who stay after the game.'}];
 const SHEETS=[{id:'1xKhAHUrprXUPyrpGrKL6hQKDGxY7GUNCnhsEDFRjUzY',day:'wed',label:'Wednesday Rally'},{id:'1V7Ps7jnQ5KpDEB2E7B1WK9aSvwt_3l_mehe4fokgxV4',day:'fri',label:'Friday Rally'}];
 const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','White','#fff'],['courtside','Courtside','Grey','#969696']];
-const LEVELS=['Just started','Casual','Club','Competitive','Tournament'];
+const LEVELS=['Beginner','Intermediate','Advanced','Pro','National'];
+const LEVEL_SHORT=LEVELS;
+const LEVEL_DESC=['New to the sport or still learning the rules','Plays regularly and can keep a rally going','Strong all-round game with good tactics','Competes in leagues or tournaments','Has played at national level'];
+const lvlOf=(p,sp)=>{const v=p?.levels?.[sp];return v==null||v===''?null:+v};
 const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -696,7 +708,7 @@ function cardHTML(p,st){
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     <div class="style">${ic(sportOf(sp).icon)}${esc(ty||sportOf(sp).club)}</div>
-    <div class="stats"><div><b class="num">${st.sessions}</b>Sessions</div><div><b>${esc(p.shot||'—')}</b>Signature</div><div><b>${esc(LEVELS[(p.levels&&p.levels[sp]!=null)?p.levels[sp]:(p.level??1)])}</b>Level</div></div>
+    <div class="stats"><div><b class="num">${st.sessions}</b>Sessions</div><div><b>${esc(p.shot||'—')}</b>Signature</div><div><b>${esc(lvlOf(p,sp)==null?'—':LEVEL_SHORT[lvlOf(p,sp)])}</b>Level</div></div>
     <div class="ft"><span class="sps">${(p.sports&&p.sports.length?p.sports:['badminton']).map(s=>ic(sportOf(s).icon)).join('')}</span><span class="num">${member?memberNo(p.listKey||p.nickname):'Est. 2024'}</span></div>
   </div>`;
 }
@@ -730,7 +742,7 @@ function numHint(n){if(n==='')return 'Pick your jersey number, 0 to 99.';const t
 function freeNumber(){for(let i=0;i<40;i++){const n=String(Math.floor(Math.random()*99)+1);if(!numTaken(n))return n}return String(Math.floor(Math.random()*99)+1)}
 function startCreator(existing){
   D=existing?{...existing,types:{...(existing.types||{})},sports:[...(existing.sports||['badminton'])]}:{nickname:'',listName:'',number:freeNumber(),edition:'oncourt',photo:'',sports:[],primary:'',types:{},levels:{},level:1,hand:'Right',shot:'',email:'',mobile:'',instagram:'',referredBy:''};
-  if(existing){const c=S.contacts[S.uid]||S.myContact||{};D.email=c.email||'';D.mobile=c.mobile||c.whatsapp||'';D.instagram=c.instagram||'';if(!D.types.badminton&&existing.style)D.types.badminton=existing.style;D.levels={...(existing.levels||{})};for(const k of D.sports)if(D.levels[k]==null&&!LEVEL_FREE.includes(k))D.levels[k]=existing.level??1}
+  if(existing){const c=S.contacts[S.uid]||S.myContact||{};D.email=c.email||'';D.mobile=c.mobile||c.whatsapp||'';D.instagram=c.instagram||'';if(!D.types.badminton&&existing.style)D.types.badminton=existing.style;D.levels={...(existing.levels||{})};for(const k of D.sports)if(D.levels[k]==null&&!LEVEL_FREE.includes(k)&&existing.level!=null)D.levels[k]=existing.level}
   if(!existing){const U=window.BAD_USER||{},full=(U.name||'').trim();
     D.email=U.email||'';D.listName='';D.nickname=(full.split(/\s+/)[0]||'').slice(0,16);D._acctEmail=!!U.email;
     if(U.photo)toBWUrl(U.photo).then(async src=>{if(!src||D.photo)return;D._src=src;D._crop={z:1,x:0,y:0,b:0};try{D.photo=await renderCrop(src,D._crop)}catch(_){return}if(S.view==='create'){preview();if(step===1)renderStep()}})}
@@ -781,7 +793,6 @@ function renderStep(){
       <div class="checklist">${Object.keys(SPORTS).map(k=>`<label class="chk"><input type="checkbox" data-sp="${k}" ${D.sports.includes(k)?'checked':''}><span class="ic-bub soft">${ic(SPORTS[k].icon)}</span><span><b>${SPORTS[k].club}</b><span class="fine">${ACT_DESC[k]}</span></span><span class="box" aria-hidden="true">${ic('check')}</span></label>`).join('')}</div>
       ${cardable.length>1?`<div class="field" style="margin-top:18px"><span class="lbl">Main sport, shown on your card</span>${chips('primary',cardable.map(s=>SPORTS[s].club),SPORTS[mainSport(D)].club,'pr')}</div>`:''}`;
     el.querySelectorAll('[data-sp]').forEach(b=>b.onchange=()=>{const k=b.dataset.sp;D.sports=b.checked?[...new Set([...D.sports,k])]:D.sports.filter(x=>x!==k);
-      if(b.checked&&!LEVEL_FREE.includes(k)&&D.levels[k]==null)D.levels[k]=1;
       const cd=D.sports.filter(x=>PLAYABLE.includes(x));if(!D.sports.includes(D.primary))D.primary=cd[0]||D.sports[0]||'';renderStep()});
     el.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>{D.primary=Object.keys(SPORTS).find(k=>SPORTS[k].club===b.dataset.val);renderStep()});
   }
@@ -797,7 +808,7 @@ function renderStep(){
     }else{
       const acts=D.sports.filter(k=>!LEVEL_FREE.includes(k));
       el.innerHTML=head(3)+`<p class="muted" style="margin-bottom:14px">Your level for each activity helps us balance games. Be honest, there's no wrong answer.</p>`+acts.map(sp=>{const T=TYPES[sp]||{},cur=D.types[sp]||'';return `<div class="act-card"><div class="ic-row"><span class="ic-bub">${ic(SPORTS[sp].icon)}</span><b>${SPORTS[sp].club}</b></div>
-        <div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="dots">${'●'.repeat(i+1)}${'○'.repeat(4-i)}</span>${l}</button>`).join('')}</div></div>
+        <div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${l}</b><small>${LEVEL_DESC[i]}</small></span></button>`).join('')}</div></div>
         ${Object.keys(T).length?`<div class="field" style="margin:0"><span class="lbl">Play style</span>
           ${sp==='badminton'?(quiz&&quiz.done&&cur?`<div class="result"><span class="label">You're a</span><b class="big">${esc(cur)}</b><p>${esc(T[cur]||'')}</p></div>`:`<div class="row"><button type="button" class="btn sm" id="q-start">${ic('star')}Take the 30-second test</button><span class="fine">Five questions. No wrong answers.</span></div>`):''}
           <div class="chips" role="group">${Object.entries(T).map(([k,d])=>`<button type="button" class="chip" data-ty="${sp}" data-val="${esc(k)}" aria-pressed="${k===cur}" title="${esc(d)}">${esc(k)}</button>`).join('')}</div>
@@ -875,7 +886,7 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
-    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),
+    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16)};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
@@ -1087,7 +1098,7 @@ function renderCard(){
           ${statT('Lifetime',st.earned,'Points earned')}
         </div></section>
       <section class="hsec"><h3 class="ah">Your activities</h3>
-        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
+        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       <section class="hsec"><h3 class="ah">Recent points</h3><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(e.date||'')}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></section>
