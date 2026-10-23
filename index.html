@@ -366,6 +366,14 @@ details.panel[open] summary::after{content:"–"}
 .nextcard .tiles.t4{grid-template-columns:repeat(2,minmax(0,1fr))}
 .acct{margin-bottom:16px}
 @media (min-width:700px){.nextcard .tiles.t4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.crop-ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.86);display:grid;place-items:center;padding:16px;overflow:auto}
+.crop-box{width:100%;max-width:420px;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:12px}
+.crop-frame{position:relative;width:100%;aspect-ratio:600/520;overflow:hidden;border-radius:12px;background:#000;touch-action:none;cursor:grab;user-select:none}
+.crop-frame:active{cursor:grabbing}
+.crop-frame img{position:absolute;max-width:none;pointer-events:none}
+.crop-fade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 30%,transparent 65%,rgba(0,0,0,.75) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.crop-sl{display:grid;grid-template-columns:90px minmax(0,1fr);align-items:center;gap:12px}
+.crop-sl input{width:100%;accent-color:#fff}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -633,8 +641,12 @@ function bwFromImg(img){const s=360,c=document.createElement('canvas');c.width=s
   const d=x.getImageData(0,0,s,s),a=d.data;for(let i=0;i<a.length;i+=4){let y=.299*a[i]+.587*a[i+1]+.114*a[i+2];y=Math.max(0,Math.min(255,(y-128)*1.12+128));a[i]=a[i+1]=a[i+2]=y}
   x.putImageData(d,0,0);return c.toDataURL('image/jpeg',.72)}
 function toBW(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{try{res(bwFromImg(img))}catch(e){rej(e)}};img.src=r.result};r.readAsDataURL(file)})}
+/* full black-and-white source (keeps shape) for the cropper */
+function bwSource(img,max=1100){const k=Math.min(1,max/Math.max(img.width,img.height)),w=Math.round(img.width*k),h=Math.round(img.height*k),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(img,0,0,w,h);
+  const d=x.getImageData(0,0,w,h),a=d.data;for(let i=0;i<a.length;i+=4){let y=.299*a[i]+.587*a[i+1]+.114*a[i+2];y=Math.max(0,Math.min(255,(y-128)*1.12+128));a[i]=a[i+1]=a[i+2]=y}x.putImageData(d,0,0);return c.toDataURL('image/jpeg',.85)}
+function loadImg(src,cors){return new Promise((res,rej)=>{const i=new Image();if(cors)i.crossOrigin='anonymous';i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 /* account photo (e.g. Google) turned black and white; quietly skipped if the browser won't allow it */
-function toBWUrl(url){return new Promise(res=>{if(!url)return res('');const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{try{res(bwFromImg(img))}catch(_){res('')}};img.onerror=()=>res('');img.src=url.replace(/=s\d+-c$/,'=s400-c')})}
+function toBWUrl(url){return new Promise(res=>{if(!url)return res('');const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{try{res(bwSource(img))}catch(_){res('')}};img.onerror=()=>res('');img.src=url.replace(/=s\d+-c$/,'=s400-c')})}
 
 /* referral codes: a member's personal code, or a club code made by organisers */
 function codeInfo(raw){const c=String(raw||'').trim().toUpperCase();if(!c)return null;
@@ -652,7 +664,7 @@ function startCreator(existing){
   if(existing){const c=S.contacts[S.uid]||S.myContact||{};D.email=c.email||'';D.mobile=c.mobile||c.whatsapp||'';D.instagram=c.instagram||'';if(!D.types.badminton&&existing.style)D.types.badminton=existing.style;D.levels={...(existing.levels||{})};for(const k of D.sports)if(D.levels[k]==null&&!LEVEL_FREE.includes(k))D.levels[k]=existing.level??1}
   if(!existing){const U=window.BAD_USER||{},full=(U.name||'').trim();
     D.email=U.email||'';D.listName='';D.nickname=(full.split(/\s+/)[0]||'').slice(0,16);D._acctEmail=!!U.email;
-    if(U.photo)toBWUrl(U.photo).then(ph=>{if(ph&&!D.photo){D.photo=ph;if(S.view==='create')preview()}})}
+    if(U.photo)toBWUrl(U.photo).then(async src=>{if(!src||D.photo)return;D._src=src;D._crop={z:1,x:0,y:0,b:0};try{D.photo=await renderCrop(src,D._crop)}catch(_){return}if(S.view==='create'){preview();if(step===1)renderStep()}})}
   D._editing=!!existing;step=0;quiz=null;setView('create');
 }
 function preview(){const k=keyOf(D.listName||D.nickname);const st=statsFor(k);if(!profileByKey(k)){st.earned+=CFG.welcome;st.balance+=CFG.welcome}$('preview').innerHTML=cardHTML(D,st)}
@@ -684,12 +696,12 @@ function renderStep(){
   if(step===1){
     el.innerHTML=head(1)+`
       <div class="field"><span class="lbl">Profile photo <span class="req">optional</span></span><div class="photo"><div class="pv">${D.photo?`<img src="${esc(D.photo)}" alt="Your photo">`:ic('camera')}</div>
-        <div class="row"><button type="button" class="btn ghost sm" id="ph-add">${ic('camera')}${D.photo?'Change photo':'Add a photo'}</button>${D.photo?`<button type="button" class="btn ghost sm" id="ph-rm">${ic('x')}Remove</button>`:''}</div></div>
+        <div class="row"><button type="button" class="btn ghost sm" id="ph-add">${ic('camera')}${D.photo?'Change photo':'Add a photo'}</button>${D.photo?`<button type="button" class="btn ghost sm" id="ph-crop">${ic('edit')}Adjust</button><button type="button" class="btn ghost sm" id="ph-rm">${ic('x')}Remove</button>`:''}</div></div>
         <p class="fine">Photos are shown in black and white. We convert them for you. Until you add one, your card uses a BAD photo.</p></div>
       <div class="field"><label for="c-num">Jersey number</label><input type="number" id="c-num" min="0" max="99" value="${esc(D.number)}" style="width:120px;font-family:var(--f-serif);font-size:2.2rem;text-align:center;padding:6px"></div>
       <div class="field"><span class="lbl">Card edition</span><div class="editions">${EDITIONS.map(([k,n,c,hex])=>`<button type="button" data-e="${k}" aria-pressed="${k===D.edition}"><i style="background:${hex}"></i><span>${n}</span><small>${c}</small></button>`).join('')}</div>
         <p class="fine">At ${CFG.member} lifetime points, your card turns silver.</p></div>`;
-    $('ph-add').onclick=()=>$('photo-in').click();const rm=$('ph-rm');if(rm)rm.onclick=()=>{D.photo='';renderStep()};
+    $('ph-add').onclick=()=>$('photo-in').click();const rm=$('ph-rm');if(rm)rm.onclick=()=>{D.photo='';D._src='';renderStep()};const cr=$('ph-crop');if(cr)cr.onclick=()=>openCropper(D._src||D.photo);
     $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,2);preview()};
     el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{D.edition=b.dataset.e;renderStep()});
   }
@@ -744,11 +756,46 @@ $('back').onclick=()=>{step=Math.max(0,step-1);quiz=null;renderStep()};
 $('skip').onclick=()=>{if(!stepValid())return;step=5;renderStep();saveProfile()};
 $('next').onclick=()=>{if(!stepValid())return;if(step<4){step++;if(step===2&&!D.sports.length)D.sports=[];renderStep()}else{step=5;renderStep();saveProfile()}};
 $('photo-in').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{D.photo=await toBW(f);renderStep()}catch(_){toast('Sorry, that image did not load. Please try a JPG or PNG.')}};
+  try{const url=URL.createObjectURL(f),img=await loadImg(url);URL.revokeObjectURL(url);D._src=bwSource(img);D._crop={z:1,x:0,y:0,b:0};openCropper(D._src)}catch(_){toast('Sorry, that image did not load. Please try a JPG or PNG.')}};
+
+/* ---------- crop & adjust: drag to move, pinch or slider to zoom, brightness ---------- */
+const CROP_W=600,CROP_H=520;
+async function renderCrop(src,c){const img=await loadImg(src),cv=document.createElement('canvas');cv.width=CROP_W;cv.height=CROP_H;const x=cv.getContext('2d');
+  const base=Math.max(CROP_W/img.width,CROP_H/img.height),sc=base*c.z,w=img.width*sc,h=img.height*sc;
+  x.filter=`brightness(${100+c.b}%)`;x.fillStyle='#000';x.fillRect(0,0,CROP_W,CROP_H);x.drawImage(img,(CROP_W-w)/2+c.x*CROP_W,(CROP_H-h)/2+c.y*CROP_H,w,h);
+  return cv.toDataURL('image/jpeg',.8)}
+function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._crop:{z:1,x:0,y:0,b:0})};
+  const ov=document.createElement('div');ov.className='crop-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','Adjust your photo');
+  ov.innerHTML=`<div class="crop-box"><div class="row" style="justify-content:space-between"><h3 class="ah">Adjust your photo</h3><button class="btn ghost sm" data-cx>${ic('x')}Cancel</button></div>
+    <div class="crop-frame" id="cf"><img id="ci" src="${src}" alt="" draggable="false"><div class="crop-fade"></div></div>
+    <p class="fine" style="text-align:center">Drag to move. Pinch or use the slider to zoom.</p>
+    <label class="crop-sl"><span class="label">Zoom</span><input type="range" id="cz" min="1" max="3" step="0.01" value="${c.z}"></label>
+    <label class="crop-sl"><span class="label">Brightness</span><input type="range" id="cb" min="-40" max="40" step="1" value="${c.b}"></label>
+    <div class="row" style="justify-content:space-between"><button class="btn ghost sm" id="crst">Reset</button><button class="btn" id="cok">${ic('check')}Use photo</button></div></div>`;
+  document.body.appendChild(ov);document.body.style.overflow='hidden';
+  const f=ov.querySelector('#cf'),im=ov.querySelector('#ci');
+  const clamp=()=>{const fw=f.clientWidth,fh=f.clientHeight,base=Math.max(fw/im.naturalWidth,fh/im.naturalHeight),w=im.naturalWidth*base*c.z,h=im.naturalHeight*base*c.z;
+    const mx=Math.max(0,(w-fw)/2/fw),my=Math.max(0,(h-fh)/2/fh);c.x=Math.max(-mx,Math.min(mx,c.x));c.y=Math.max(-my,Math.min(my,c.y));return{w,h,fw,fh}};
+  const draw=()=>{if(!im.naturalWidth)return;const {w,h,fw,fh}=clamp();im.style.width=w+'px';im.style.height=h+'px';im.style.left=((fw-w)/2+c.x*fw)+'px';im.style.top=((fh-h)/2+c.y*fh)+'px';im.style.filter=`brightness(${100+c.b}%)`};
+  im.onload=draw;if(im.complete)draw();addEventListener('resize',draw);
+  const pts=new Map();let last=null,pinch=null;
+  f.addEventListener('pointerdown',e=>{f.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});last={x:e.clientX,y:e.clientY};if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:c.z}}});
+  f.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2&&pinch){const [a,b]=[...pts.values()];c.z=Math.max(1,Math.min(3,pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d));ov.querySelector('#cz').value=c.z}
+    else if(last){c.x+=(e.clientX-last.x)/f.clientWidth;c.y+=(e.clientY-last.y)/f.clientHeight;last={x:e.clientX,y:e.clientY}}draw()});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;const r=[...pts.values()][0];last=r?{...r}:null};
+  f.addEventListener('pointerup',up);f.addEventListener('pointercancel',up);
+  f.addEventListener('wheel',e=>{e.preventDefault();c.z=Math.max(1,Math.min(3,c.z*(e.deltaY<0?1.06:1/1.06)));ov.querySelector('#cz').value=c.z;draw()},{passive:false});
+  ov.querySelector('#cz').oninput=e=>{c.z=+e.target.value;draw()};ov.querySelector('#cb').oninput=e=>{c.b=+e.target.value;draw()};
+  const close=()=>{removeEventListener('resize',draw);ov.remove();document.body.style.overflow=''};
+  ov.querySelector('[data-cx]').onclick=()=>{close();if(!D.photo&&D._src===src)D._src=''};
+  ov.querySelector('#crst').onclick=()=>{Object.assign(c,{z:1,x:0,y:0,b:0});ov.querySelector('#cz').value=1;ov.querySelector('#cb').value=0;draw()};
+  ov.querySelector('#cok').onclick=async()=>{try{D.photo=await renderCrop(src,c);D._src=src;D._crop={...c};close();renderStep();preview()}catch(_){toast('Sorry, that didn’t work. Please try another photo.')}};
+}
 
 async function saveProfile(){
   const now=new Date().toISOString();
-  const data={nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number||''),edition:D.edition,photo:D.photo||'',
+  const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number||''),edition:D.edition,photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??D.level??1,hand:D.hand,shot:D.shot,
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:D.ref||refCode(S.uid||D.nickname,{nickname:D.nickname}),referredBy:(D.referredBy||'').toUpperCase().slice(0,12)};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
