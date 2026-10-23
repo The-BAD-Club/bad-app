@@ -642,7 +642,7 @@ const QUIZ=[
   {q:'After the session you are…',a:[['Replaying that one smash.','Smasher'],['Still talking about that net kill.','Net Ninja'],['Last to leave. One more game.','The Wall'],['Teaching someone your fake.','Trickster'],['Fine. Could go another two hours.','Rally Machine']]}
 ];
 
-const S={codes:{},payCfg:{},payments:{},uid:null,canEdit:false,db:null,mcp:null,profiles:{},ledger:[],requests:{},sessions:{},bookings:{},posts:{},noshows:{},contacts:{},brand:{},loaded:false,view:'card',sport:'all',clubFilter:'all'};
+const S={site:{},codes:{},payCfg:{},payments:{},uid:null,canEdit:false,db:null,mcp:null,profiles:{},ledger:[],requests:{},sessions:{},bookings:{},posts:{},noshows:{},contacts:{},brand:{},loaded:false,view:'card',sport:'all',clubFilter:'all'};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const keyOf=s=>String(s||'').trim().toLowerCase();
@@ -1109,7 +1109,7 @@ function renderClub(){
   const card=([id,p])=>{const d=p.date?dParts(p.date):null,sp=SPORTS[p.club];return `<article class="post"><div class="sess" style="padding:0;background:none;display:block"><div class="dt" style="background:var(--bg)">${d?`<small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small>`:`<span style="padding:10px 0">${ic('club')}</span>`}</div></div><div style="display:grid;gap:8px;min-width:0">
     <span class="ic-row label">${sp?ic(sp.icon)+esc(sp.club):ic('users')+'All of BAD'}</span><h3>${esc(p.title)}</h3>
     ${p.type==='event'?`<div class="meta">${p.time?`<span>${ic('clock')}${esc(p.time)}</span>`:''}${p.place?`<span>${ic('pin')}${esc(p.place)}</span>`:''}</div>`:''}<p>${esc(p.body||'')}</p>
-    ${p.link?`<a class="btn ghost sm" style="justify-self:start" href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.linkLabel||'Details')}${ic('arrow')}</a>`:''}</div></article>`};
+    ${(()=>{const u=p.link||S.site?.url;return u?`<a class="btn ghost sm" style="justify-self:start" href="${esc(u)}" target="_blank" rel="noopener">${esc(p.link?(p.linkLabel||'Find out more'):'Visit the BAD site')}${ic('arrow')}</a>`:''})()}</div></article>`};
   el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>What's on at BAD.</h2></div>${sportBar(f,'cf',Object.keys(SPORTS))}
     <div class="view" style="gap:12px">${events.map(card).join('')}${news.map(card).join('')}${!events.length&&!news.length?`<div class="empty">${ic('club')}<span>Nothing posted here yet. Please check back soon.</span></div>`:''}</div>`;
   el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});
@@ -1462,6 +1462,7 @@ function aToday(list,up){
   const past=list.filter(([id,x])=>sessStart(x)<Date.now()&&sessStart(x)>Date.now()-14*864e5);
   for(const [id,x] of past){const o=owedOf(id);if(o)alerts.push(['coin',`AED ${o} unpaid from ${esc(x.title)} · ${fmtS(x)}`,'sessions',id])}
   const pc=S.payCfg||{};if(!pc.iban&&!pc.ziinaLink)alerts.push(['bank','Add your bank details and Ziina link so players know where to pay','settings']);
+  if(!S.site?.url)alerts.push(['arrow','Add the BAD website link so every Club post links to it','settings']);
   const sm=Object.values(S.profiles).filter(p=>p.sample).length;if(sm)alerts.push(['users',`${sm} sample players are still in the app`,'settings']);
   const players=Object.values(S.profiles).filter(p=>!p.sample).length;
   const nsN=Object.values(S.noshows).filter(n=>(n.dates||[]).length).length;
@@ -1536,7 +1537,8 @@ function aPosts(){
     <div class="fgrid">
       <div class="field wide"><label for="p-title">Title</label><input type="text" id="p-title"></div>
       <div class="field"><label for="p-club">For</label><select id="p-club"><option value="all">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}">${SPORTS[k].club}</option>`).join('')}</select></div>
-      <div class="field"><label for="p-link">Link <span class="muted">(optional)</span></label><input type="text" id="p-link" placeholder="https://"></div></div>
+      <div class="field"><label for="p-link">Link</label><input type="url" id="p-link" placeholder="https://" value="${esc(S.site?.url||'')}"></div></div>
+    <p class="fine">Every post links somewhere. It starts as the BAD site, change it for a sign-up form, map or ticket page.</p>
     <div class="fgrid" id="p-evt" ${postType==='event'?'':'hidden'}>
       <div class="field"><label for="p-date">Date</label><input type="date" id="p-date"></div>
       <div class="field"><label for="p-time">Time</label><input type="text" id="p-time" placeholder="4pm–10pm"></div>
@@ -1548,7 +1550,8 @@ function aPosts(){
 
 function aSettings(){
   const own=(window.BAD_ADMINS||[]),extra=Object.keys(S.admins||{});
-  return `${payPanel()}
+  return `${box('BAD website',`<p class="hint">Every Club post links here unless you add a different link.</p><div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="site-url">Website link</label><input type="url" id="site-url" placeholder="https://" value="${esc(S.site?.url||'')}"></div><button class="btn" id="site-go">Save</button></div>`)}
+  ${payPanel()}
   ${window.BAD_WEB?box('Organisers',`<p class="hint">Organisers see this tab, run the courts and confirm payments. They sign in with this email.</p>
     <div class="list">${own.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><span class="tagl">Owner</span></div>`).join('')}${extra.filter(e=>!own.includes(e)).map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><button class="btn ghost sm" data-unadmin="${esc(e)}">Remove</button></div>`).join('')}</div>
     <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="ad-email">Add an organiser</label><input type="email" id="ad-email" placeholder="name@email.com"></div><button class="btn" id="ad-go">Add</button></div>`):''}
@@ -1585,6 +1588,7 @@ function bindAdmin(){
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
     try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,venue:$('n-venue').value.trim()});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
+    const lk=$('p-link').value.trim()||S.site?.url||'';if(!/^https:\/\//.test(lk)){toast(S.site?.url?'Please use a full https:// link.':'Please add a link, or set the BAD site link in Settings.');return}$('p-link').value=lk;
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};
     if(postType==='event'){d.date=$('p-date').value;d.time=$('p-time').value.trim();d.place=$('p-place').value.trim()}
     try{await S.db.collection('posts').add(d);toast('Posted.')}catch(e){toast("Didn't post.")}});
@@ -1603,6 +1607,7 @@ function bindAdmin(){
     if(d.ziinaLink&&!/^https:\/\//.test(d.ziinaLink)){toast('Please use a full https:// link for Ziina.');return}
     try{await S.db.doc('config/payments').set(d);toast('Payment details saved.')}catch(e){toast("Sorry, that didn't save.")}});
   on('rm-samples',removeSamples);
+  on('site-go',async()=>{const u=$('site-url').value.trim();if(u&&!/^https:\/\//.test(u)){toast('Please use a full https:// link.');return}try{await S.db.doc('config/site').set({url:u});toast('Website link saved.')}catch(e){toast("Sorry, that didn't save.")}});
   on('ad-go',async()=>{const e=$('ad-email').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e)){toast('Please enter a full email address.');return}
     try{await S.db.doc('admins/'+e).set({addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(e+' is now an organiser.')}catch(x){toast("Sorry, that didn't save.")}});
   q('[data-unadmin]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('admins/'+b.dataset.unadmin).delete();toast('Removed.')}catch(x){toast("Sorry, that didn't save.")}});
@@ -1742,6 +1747,7 @@ S.contacts={};S.brand={};
   col('scores',s=>S.scores=map(s));
   if(S.uid)db.doc('checkins/'+S.uid).onSnapshot(d=>{S.myCI=d.exists?d.data():{};render()},()=>{});
   db.doc('config/codes').onSnapshot(d=>{S.codes=d.exists?(d.data().list||{}):{};render()},()=>{});
+  db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});
   db.collection('payments').onSnapshot(s=>{S.payments=map(s);render()},()=>{});
   db.doc('config/brand').onSnapshot(d=>{S.brand=d.exists?d.data():{};applyBrand();done()},()=>done());
