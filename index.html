@@ -425,6 +425,7 @@ details.how[open] summary::after{content:"–"}
 @media (min-width:700px){.sigs{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .stepnav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #finish{justify-self:center}
+.post .btn{width:auto;text-decoration:none}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1109,7 +1110,7 @@ function renderClub(){
   const card=([id,p])=>{const d=p.date?dParts(p.date):null,sp=SPORTS[p.club];return `<article class="post"><div class="sess" style="padding:0;background:none;display:block"><div class="dt" style="background:var(--bg)">${d?`<small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small>`:`<span style="padding:10px 0">${ic('club')}</span>`}</div></div><div style="display:grid;gap:8px;min-width:0">
     <span class="ic-row label">${sp?ic(sp.icon)+esc(sp.club):ic('users')+'All of BAD'}</span><h3>${esc(p.title)}</h3>
     ${p.type==='event'?`<div class="meta">${p.time?`<span>${ic('clock')}${esc(p.time)}</span>`:''}${p.place?`<span>${ic('pin')}${esc(p.place)}</span>`:''}</div>`:''}<p>${esc(p.body||'')}</p>
-    ${(()=>{const u=p.link||S.site?.url;return u?`<a class="btn ghost sm" style="justify-self:start" href="${esc(u)}" target="_blank" rel="noopener">${esc(p.link?(p.linkLabel||'Find out more'):'Visit the BAD site')}${ic('arrow')}</a>`:''})()}</div></article>`};
+    <div class="row" style="gap:8px">${(()=>{const u=p.link||S.site?.url;return u?`<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener">${esc(p.link?(p.linkLabel&&p.linkLabel!=='Directions'?p.linkLabel:'Find out more'):'Visit the BAD site')}${ic('arrow')}</a>`:''})()}${p.mapLink?`<a class="btn ghost sm" href="${esc(p.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}</div></div></article>`};
   el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>What's on at BAD.</h2></div>${sportBar(f,'cf',Object.keys(SPORTS))}
     <div class="view" style="gap:12px">${events.map(card).join('')}${news.map(card).join('')}${!events.length&&!news.length?`<div class="empty">${ic('club')}<span>Nothing posted here yet. Please check back soon.</span></div>`:''}</div>`;
   el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});
@@ -1542,7 +1543,8 @@ function aPosts(){
     <div class="fgrid" id="p-evt" ${postType==='event'?'':'hidden'}>
       <div class="field"><label for="p-date">Date</label><input type="date" id="p-date"></div>
       <div class="field"><label for="p-time">Time</label><input type="text" id="p-time" placeholder="4pm–10pm"></div>
-      <div class="field wide"><label for="p-place">Place</label><input type="text" id="p-place"></div></div>
+      <div class="field"><label for="p-place">Place</label><input type="text" id="p-place"></div>
+      <div class="field"><label for="p-map">Map link <span class="muted">(optional)</span></label><input type="url" id="p-map" placeholder="https://maps.app.goo.gl/…"></div></div>
     <div class="field" style="margin:0"><label for="p-body">Text</label><textarea id="p-body"></textarea></div>
     <div class="row"><button class="btn" id="p-go">Post</button></div>`)}
   ${box('Posted',`<div class="list">${Object.entries(S.posts).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'} · ${esc(p.club&&p.club!=='all'?SPORTS[p.club]?.club||'':'All of BAD')}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')||'<p class="hint">Nothing posted yet.</p>'}</div>`)}`;
@@ -1590,7 +1592,7 @@ function bindAdmin(){
   on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
     const lk=$('p-link').value.trim()||S.site?.url||'';if(!/^https:\/\//.test(lk)){toast(S.site?.url?'Please use a full https:// link.':'Please add a link, or set the BAD site link in Settings.');return}$('p-link').value=lk;
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};
-    if(postType==='event'){d.date=$('p-date').value;d.time=$('p-time').value.trim();d.place=$('p-place').value.trim()}
+    if(postType==='event'){d.date=$('p-date').value;d.time=$('p-time').value.trim();d.place=$('p-place').value.trim();const m=$('p-map').value.trim();if(m)d.mapLink=m}
     try{await S.db.collection('posts').add(d);toast('Posted.')}catch(e){toast("Didn't post.")}});
   q('[data-delpost]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('posts/'+b.dataset.delpost).delete();toast('Removed.')}catch(e){toast("Didn't remove.")}});
   q('[data-ok]').forEach(b=>b.onclick=()=>approve(b.dataset.ok));q('[data-no]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('requests/'+b.dataset.no).delete();toast('Declined.')}catch(e){}});
@@ -1728,8 +1730,12 @@ S.contacts={};S.brand={};
   if(S.canEdit){C.use('mcp').then(m=>{S.mcp=m});C.use('assets').then(a=>{S.assets=a})}
   if(!db){S.loaded=true;render();return}
   let pending=10;
-  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;seedWeb();if(S.canEdit)setTimeout(()=>awardApp(true),1500)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
+  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;seedWeb();fixups();fixups2();if(S.canEdit)setTimeout(()=>awardApp(true),1500)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
   /* hosted version: first organiser sign-in on an empty database loads the starter sessions, posts and sample players */
+  /* one-off content fixes, applied once by an organiser's app */
+  async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];
+    if(b&&b.link!=='https://bad-o-ween.thebadclub-co.workers.dev/')try{await db.doc('posts/badoween-2026').update({link:'https://bad-o-ween.thebadclub-co.workers.dev/',linkLabel:'Event site',mapLink:b.mapLink||(String(b.link||'').includes('maps')?b.link:'https://maps.app.goo.gl/LFCfLBWaK19X63vY9')})}catch(e){console.warn(e)}}
+  async function fixups2(){if(!S.canEdit)return;const a=S.posts['app-live'];if(a&&/every BAD club/.test(a.body||''))try{await db.doc('posts/app-live').update({body:a.body.replace('every BAD club','every BADDIE')})}catch(_){}}
   async function seedWeb(){if(!window.BAD_WEB||!S.canEdit||Object.keys(S.sessions||{}).length)return;
     try{const seed=await (await fetch('seed.json',{cache:'no-store'})).json();
       for(const [c,docs] of Object.entries(seed))for(const [id,d] of Object.entries(docs))await db.doc(c+'/'+id).set(d);
