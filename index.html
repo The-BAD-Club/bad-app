@@ -470,6 +470,56 @@ details.how[open] summary::after{content:"–"}
 #a-plist .adm,#a-plist .memset{grid-column:2/-1;justify-self:start}
 #a-plist .adm{margin-top:2px}
 .chip.adm[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* ---- review pass ---- */
+.sess .dt{align-self:start}
+.slist{display:grid;gap:12px}
+.wkh{font-size:.7rem;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-weight:700;margin:10px 0 0}
+.wkh:first-child{margin-top:0}
+.faces{align-items:center}
+.faces .more{font-size:.75rem;color:var(--muted);margin-left:12px;font-weight:600}
+details.rules{border-top:1px solid var(--line);padding-top:12px}
+details.rules summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:var(--muted)}
+details.rules summary::-webkit-details-marker{display:none}
+details.rules summary::after{content:"+";margin-left:auto}
+details.rules[open] summary::after{content:"–"}
+details.rules p{margin-top:10px}
+.hstats.h4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+@media (min-width:700px){.hstats.h4{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+.tile.hs .fine{line-height:1.35}
+.perks{display:grid;gap:2px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 0}
+.perks>div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;padding:10px 0}
+.perks b{display:block;font-size:.95rem}
+.perks small{color:var(--muted);font-size:.82rem}
+/* steps: primary action full width on phones */
+@media (max-width:560px){
+  .stepnav{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stepnav>.row{display:contents}
+  .stepnav #next{grid-column:1/-1;order:-1;width:100%;justify-content:center}
+  .stepnav #back,.stepnav #skip{width:100%;justify-content:center}
+  .stepnav #back[hidden]+.row #skip{grid-column:1/-1}
+}
+/* admin */
+details.fold summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+details.fold summary::-webkit-details-marker{display:none}
+details.fold summary::after{content:"+";margin-left:auto;font-weight:400;font-size:1.1rem}
+details.fold[open] summary::after{content:"–"}
+details.fold .foldin{display:grid;gap:14px;margin-top:14px}
+details.fold .foldin>.panel{padding:0;background:none}
+details.fold .foldin>.panel>.ah:first-child{display:none}
+.li.mlv{grid-template-columns:minmax(0,1fr) auto}
+.li.mlv>.row{grid-column:1/-1;order:3}
+details.manage summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:var(--muted);text-decoration:underline}
+details.manage summary::-webkit-details-marker{display:none}
+#a-plist details.manage{grid-column:2/-1}
+#a-plist .adm,#a-plist .memset{grid-column:auto;justify-self:auto}
+.li.req{grid-template-columns:auto minmax(0,1fr)}
+.li.req>.row{grid-column:2/-1}
+/* footer */
+.sign{align-items:center}
+.sign .signout{margin:0 0 0 auto;letter-spacing:.04em;text-transform:none;font-size:.78rem}
+@media (max-width:560px){.sign{display:grid;grid-template-columns:1fr auto;row-gap:6px}.sign>span:nth-child(2){grid-column:1}.sign .signout{grid-row:1;grid-column:2}}
+@media (max-width:760px){.mini{display:flex;justify-content:center}.mini .pc{max-width:220px;padding:12px 14px;border-radius:14px}.mini .pc .jn{font-size:5rem}.mini .pc .nick{font-size:1rem}.mini .pc .stats{display:none}}
+details.fold:not([open]){gap:0}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -786,6 +836,7 @@ const uidOfProfile=p=>Object.keys(S.profiles||{}).find(k=>S.profiles[k]===p);
 /* admin access: owner emails from config, plus anyone in admins/{email} */
 const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||!!(S.admins||{})[e])};
 const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_DEFAULT.find(d=>d.k===k)||{}).admin};
+const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
 
 /* ---------- register / edit card ---------- */
 let D={},step=0,quiz=null;
@@ -1033,9 +1084,10 @@ function renderPlay(){
   const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
     ${sportBar(S.sport,'flt',used)}`;
-  const rules=`<p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p>`;
+  const rules=`<details class="rules"><summary>${ic('clock')}How joining and dropping out works</summary><p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p></details>`;
   if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>No sessions posted for this club yet. Please check back soon.</span></div>`+rules;bindPlay(el);return}
-  el.innerHTML=head+`<div class="view" style="gap:12px">`+list.map(([sid,s])=>{
+  const wk=sx=>{const t=new Date();t.setHours(0,0,0,0);const d=(sessStart(sx)-t)/864e5;return d<7-((t.getDay()+6)%7)?'This week':d<14-((t.getDay()+6)%7)?'Next week':'Later'};let lastWk='';
+  el.innerHTML=head+`<div class="slist">`+list.map(([sid,s])=>{const w=wk(s),hdr=w!==lastWk?`<h3 class="wkh">${w}</h3>`:'';lastWk=w;
     const r=roster(sid),d=dParts(s.date),mine=S.bookings[S.uid]?.s?.[sid],started=Date.now()>sessStart(s),sp=sportOf(s.sport);
     const pos=r.in.findIndex(e=>e.uid===S.uid&&!e.guest),wpos=r.wait.findIndex(e=>e.uid===S.uid&&!e.guest);
     const myG=[...r.in.map(e=>({...e,st:'In'})),...r.wait.map(e=>({...e,st:'Waitlist'}))].filter(e=>e.uid===S.uid&&e.guest);
@@ -1052,12 +1104,12 @@ function renderPlay(){
       ${myG.map(g=>`<div class="row" style="justify-content:space-between"><span class="ic-row">${ic('guest')}${esc(g.guest)} <span class="fine">your guest · ${g.st}</span></span><button class="btn ghost sm" data-gout="${sid}" data-gi="${g.gi}">Remove</button></div>`).join('')}
       ${guestFor===sid?`<div class="row"><input type="text" id="g-name" maxlength="24" placeholder="Guest's name" style="flex:1;min-width:150px"><button class="btn sm" data-gadd="${sid}">Add</button><button class="btn ghost sm" data-gcancel="1">Cancel</button></div>`
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
-    return `<article class="sess"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
+    return hdr+`<article class="sess"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
       <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span><span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span></div>
       ${s.note?`<p>${esc(s.note)}</p>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
-      <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,12).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
+      <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
       ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}).join('')+`</div>`+rules;
   bindPlay(el);
 }
@@ -1104,7 +1156,7 @@ function activityHTML(){
   const rows=myActivity(),due=rows.filter(r=>r.payState==='pending'||r.payState==='sent');
   const total=due.reduce((a,r)=>a+r.amount,0);
   const badge=st=>({paid:'<span class="tagl solid">'+ic('check')+'Paid</span>',sent:'<span class="tagl">Sent · checking</span>',pending:'<span class="tagl warn">Pending</span>',none:''}[st]);
-  return `<div class="sec"><div class="sec-h"><span class="label">My activity</span>${rows.length?`<span class="fine">${rows.length} session${rows.length===1?'':'s'}</span>`:''}</div>
+  return `<div class="sec hsec"><div class="sec-h"><h3 class="ah">Bookings and payments</h3>${rows.length?`<span class="fine">${rows.length} session${rows.length===1?'':'s'}</span>`:''}</div>
     ${total?`<div class="tile owe"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div></div>`
       :rows.length?`<div class="tile"><span class="ic-row">${ic('check')}<b>All paid up.</b></span><span class="fine">Thank you.</span></div>`:''}
     <div class="list">${rows.slice(0,12).map(r=>{const d=dParts(r.s.date),sp=sportOf(r.s.sport);return `<div class="li act" style="grid-template-columns:auto minmax(0,1fr) auto">
@@ -1116,13 +1168,13 @@ function activityHTML(){
 function renderCard(){
   const el=$('v-card'),p=myProfile();
   if(!p){
-    el.innerHTML=`<div class="grid2"><div>${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{earned:CFG.welcome,balance:CFG.welcome,sessions:0})}</div>
-      <div class="hero"><span class="label">Register here</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
-        <p class="muted">One player card for every BADDIE. Please take a minute to register. It's how you join sessions, earn points and meet the community.</p>
-        <div class="tiles">
-          <div class="tile">${ic('play')}<b>Join in one tap</b><span class="fine">Badminton, volleyball, pickleball and more</span></div>
-          <div class="tile">${ic('coin')}<b>Earn points</b><span class="fine">${CFG.free} points is a free session</span></div>
-          <div class="tile">${ic('star')}<b>Go silver</b><span class="fine">${CFG.member} lifetime points for a Member card</span></div>
+    el.innerHTML=`<div class="grid2"><div class="mini">${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{earned:CFG.welcome,balance:CFG.welcome,sessions:0})}</div>
+      <div class="hero"><span class="label">One card for every BADDIE</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
+        <p class="muted">Please take a minute to register. It's how you join sessions, earn points and meet the community.</p>
+        <div class="perks">
+          <div>${ic('play')}<span><b>Join in one tap</b><small>Badminton, volleyball, pickleball and more</small></span></div>
+          <div>${ic('coin')}<span><b>Earn points</b><small>${CFG.free} points is a free session</small></span></div>
+          <div>${ic('star')}<span><b>Go silver</b><small>${CFG.member} lifetime points turns your card silver</small></span></div>
         </div>
         <button class="btn wide" id="start">${ic('card')}Register here</button>
         <p class="fine">We were all BAD players once. Every level is welcome.</p>${S.loaded?'':'<p class="fine">Loading…</p>'}</div></div>`;
@@ -1148,13 +1200,11 @@ function renderCard(){
       <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>
       ${next}
       <section class="hsec"><h3 class="ah">Your stats</h3>
-        <div class="tiles hstats">
-          ${statT('Points',st.balance,can?'A free session is ready':`${CFG.free-st.balance} to a free session`,`<div class="bar"><i style="width:${Math.min(100,st.balance/CFG.free*100)}%"></i></div>${req?'<span class="tagl">Request sent</span>':can?`<button class="btn sm" id="redeem">${ic('ticket')}Use ${CFG.free}</button>`:''}`)}
-          ${statT('Points tier',esc(tier.k),tNext?`${tNext.at-st.earned} to ${esc(tNext.k)}`:'Top tier',`<div class="bar"><i style="width:${tNext?Math.min(100,(st.earned-tier.at)/(tNext.at-tier.at)*100):100}%"></i></div>`)}
+        <div class="tiles hstats h4">
+          ${statT('Points',st.balance,(can?'A free session is ready':`${CFG.free-st.balance} to a free session`)+`<br>${esc(tier.k)} tier${tNext?` · ${tNext.at-st.earned} to ${esc(tNext.k)}`:''}`,`<div class="bar"><i style="width:${Math.min(100,st.balance/CFG.free*100)}%"></i></div>${req?'<span class="tagl">Request sent</span>':can?`<button class="btn sm" id="redeem">${ic('ticket')}Use ${CFG.free}</button>`:''}`)}
           ${statT('Sessions',attended,'Played with BAD')}
           ${statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
           ${statT('Club rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked')}
-          ${statT('Lifetime',st.earned,'Points earned')}
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
@@ -1163,7 +1213,7 @@ function renderCard(){
         <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
-      <section class="hsec"><h3 class="ah">Recent points</h3><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(e.date||'')}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></section>
+      <section class="hsec"><h3 class="ah">Recent points</h3><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(fmtD(e.date))}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></section>
       <section class="tile refer"><span class="label">Invite a friend</span>
         <div class="inv">${p.ref&&qrData(inviteUrl(p.ref))?`<img class="invqr" src="${qrData(inviteUrl(p.ref),360)}" alt="QR code to join BAD with your code">`:''}<div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">Friends scan this or use your code when they register. +${CFG.referrer} for you, +${CFG.referee} for them.</span>
           <div class="row" style="margin-top:6px"><button class="btn sm" id="share-inv">${ic('arrow')}Share invite</button><button class="btn ghost sm" id="copy-ref">${ic('copy')}Copy code</button></div></div></div></section>
@@ -1477,7 +1527,7 @@ function renderBoard(){
     body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Club rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
   }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,st:statsFor(p.listKey)})).sort((a,b)=>b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));
     body=rows.map((r,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(r.p)}
-      <div><div class="nm">${esc(r.p.nickname)} ${r.st.earned>=CFG.member?'<span class="tagl">Member</span>':''}${r.p.sample?' <span class="tagl">Sample</span>':''}</div><div class="sub ic-row" style="gap:6px">${(r.p.sports||['badminton']).map(s=>ic(SPORTS[s]?.icon||'badminton')).join('')}<span>${esc(typeOf(r.p)||'Player')} · ${r.st.sessions} sessions</span></div></div>
+      <div><div class="nm">${esc(r.p.nickname)} ${r.st.earned>=CFG.member?'<span class="tagl">Silver</span>':''}${r.p.sample?' <span class="tagl">Sample</span>':''}</div><div class="sub ic-row" style="gap:6px">${(r.p.sports||['badminton']).map(s=>ic(SPORTS[s]?.icon||'badminton')).join('')}<span>${esc(typeOf(r.p)||'Player')}${r.st.sessions?` · ${r.st.sessions} session${r.st.sessions===1?'':'s'}`:''}</span></div></div>
       <b class="num">${r.st.earned}</b></div>`).join('')||`<div class="empty">${ic('board')}<span>No one on the board yet. You could be first.</span></div>`}
   $('v-board').innerHTML=`<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'} Community over competition, always.</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;
   document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.bf;renderBoard()});
@@ -1561,6 +1611,7 @@ const ATABS=[['today','Today','clock'],['sessions','Sessions','ticket'],['player
 const fmtS=x=>{const d=dParts(x.date);return `${d.w} ${d.d} ${d.m}`};
 const unpaidOf=sid=>{const r=roster(sid);return r.in.filter(e=>!e.guest&&!S.payments[sid]?.[e.uid]?.ok)};
 const owedOf=sid=>{const s=S.sessions[sid],r=roster(sid);return unpaidOf(sid).length*(+s.fee||0)+r.late.filter(e=>e.guest||!S.payments[sid]?.[e.uid]?.ok).reduce((t,e)=>t+(+e.fee.amount||0),0)};
+const boxD=(title,inner)=>`<details class="panel fold"><summary class="ah">${title}</summary><div class="foldin">${inner}</div></details>`;
 const box=(title,inner,extra='')=>`<div class="panel ${extra}">${title?`<h3 class="ah">${title}</h3>`:''}${inner}</div>`;
 const tile=(n,l)=>`<div class="tile"><div class="stat"><b class="num">${n}</b><span class="label">${l}</span></div></div>`;
 
@@ -1572,7 +1623,7 @@ function renderAdmin(){
   const nav=`<nav class="anav" aria-label="Admin sections">${ATABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
   const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,settings:aSettings}[aTab]||aToday)(list,up);
   el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">Admin</span><h2>${T[1]}</h2></div>${nav}<div class="abody">${body}</div></div>`;
-  bindAdmin();
+  bindAdmin();const act=el.querySelector('.anav [aria-current="page"]');if(act&&innerWidth<1000)act.scrollIntoView({block:'nearest',inline:'center'});
 }
 
 function aToday(list,up){
@@ -1635,15 +1686,15 @@ function aPlayers(){
   const nsBy={};for(const n of Object.values(S.noshows))nsBy[n.player]=(n.dates||[]).length;
   const nsKeys=Object.values(S.noshows).filter(n=>(n.dates||[]).length).sort((a,b)=>b.dates.length-a.dates.length);
   const mp=memPending();
-  return `${box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(String(m.at).slice(0,10)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
+  return `${box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
   <div class="field" style="margin:0"><label for="a-q" class="sr">Search players</label><input type="search" id="a-q" placeholder="Search name, email or mobile"></div>
-  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div>${window.BAD_WEB&&!p.sample?(()=>{const em=(S.contacts[uid]||{}).email||'',on=isAdminEmail(em),own=(window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(em.toLowerCase());return em?`<button class="chip sm adm" data-adm="${esc(uid)}" aria-pressed="${on}" ${own?'disabled title="Main admin account"':''}>${on?ic('check')+'Admin':'Make admin'}</button>`:''})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
+  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div><details class="manage"><summary>Manage</summary><div class="row" style="gap:8px;margin-top:8px">${window.BAD_WEB&&!p.sample?(()=>{const em=(S.contacts[uid]||{}).email||'',on=isAdminEmail(em),own=(window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(em.toLowerCase());return em?`<button class="chip sm adm" data-adm="${esc(uid)}" aria-pressed="${on}" ${own?'disabled title="Main admin account"':''}>${on?ic('check')+'Admin':'Make admin'}</button>`:''})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div></details></div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
   ${box('No-show list <span class="tagl">Admins only</span>',`<p class="hint">Players never see this. Mark no-shows from a session’s player list.</p><div class="list">${nsKeys.map(n=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(n.name||n.player)}</div><div class="sub num">${n.dates.map(d=>{const [sd,g]=d.split('#');return esc((S.sessions[sd]?fmtS(S.sessions[sd]):sd)+(g?' (guest)':''))}).join(' · ')}</div></div><b class="num">${n.dates.length}</b></div>`).join('')||'<div class="empty">Clean sheet so far.</div>'}</div>`,'secret')}
   <details class="panel"><summary class="ah">Add a player from a join code</summary><p class="hint">Only needed if a player couldn’t save their card and sent you a BAD1- code.</p><textarea id="imp-code" placeholder="BAD1-…"></textarea><div class="row"><button class="btn ghost" id="imp-go">Add player</button></div></details>`;
 }
 
 function aPoints(){
-  return `${box(`Free session requests${Object.keys(S.requests).length?` <span class="badge num">${Object.keys(S.requests).length}</span>`:''}`,`<div class="list">${Object.entries(S.requests).map(([id,q])=>{const p=S.profiles[id];return `<div class="li">${avatar(p,q.player)}<div><div class="nm">${esc(p?.nickname||q.player)}</div><div class="sub">${statsFor(q.player).balance} points · asked ${esc((q.at||'').slice(0,10))}</div></div><div class="row"><button class="btn sm" data-ok="${esc(id)}">Approve</button><button class="btn ghost sm" data-no="${esc(id)}">Decline</button></div></div>`}).join('')||'<p class="hint">None right now.</p>'}</div>`)}
+  return `${box(`Free session requests${Object.keys(S.requests).length?` <span class="badge num">${Object.keys(S.requests).length}</span>`:''}`,`<div class="list">${Object.entries(S.requests).map(([id,q])=>{const p=S.profiles[id];return `<div class="li req">${avatar(p,q.player)}<div><div class="nm">${esc(p?.nickname||q.player)}</div><div class="sub">${statsFor(q.player).balance} points · asked ${esc(fmtD(q.at))}</div></div><div class="row"><button class="btn sm" data-ok="${esc(id)}">Approve</button><button class="btn ghost sm" data-no="${esc(id)}">Decline</button></div></div>`}).join('')||'<p class="hint">None right now.</p>'}</div>`)}
   ${box('Give bonus points',`<div class="fgrid">
     <div class="field wide"><label for="bp-player">Player</label><input type="text" id="bp-player" list="names" placeholder="Start typing a name"></div>
     <div class="field"><label for="bp-pts">Points</label><input type="number" id="bp-pts" value="15"></div>
@@ -1675,17 +1726,17 @@ function aPosts(){
 function aSettings(){
   const own=(window.BAD_ADMINS||[]),extra=Object.keys(S.admins||{});
   const gs=id=>`https://docs.google.com/spreadsheets/d/${id}/edit`;
-  return `${box('Google Sheets',`<p class="hint">The trackers feed attendance and payments into the Master, which works out points.</p><div class="list">${[['BAD APP – Master',SIGNUP_SHEET,'Players, sign-ups, points and every tracker'],...SHEETS.map(x=>[x.label,x.id,'Attendance and payments']),['Tuesday Training Tracker','1gwP-s7QP93-0qOzRu_RH2q664Onpsrz1crWjneDa5Oo','Training attendance, payments and coach fees']].map(([n,id,d])=>`<a class="li" style="grid-template-columns:auto minmax(0,1fr) auto;text-decoration:none;color:inherit" href="${gs(id)}" target="_blank" rel="noopener">${ic('sheet')}<div><div class="nm">${esc(n)}</div><div class="sub">${esc(d)}</div></div>${ic('arrow')}</a>`).join('')}<a class="li" style="grid-template-columns:auto minmax(0,1fr) auto;text-decoration:none;color:inherit" href="https://drive.google.com/drive/folders/1E_EmlRuVN-zhlGosz8Fvd5oWNGGS-lsk" target="_blank" rel="noopener">${ic('image')}<div><div class="nm">BAD APP folder</div><div class="sub">Google Drive folder with all of the above</div></div>${ic('arrow')}</a></div>`)}
-  ${box('BAD website',`<p class="hint">Every Club post links here unless you add a different link.</p><div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="site-url">Website link</label><input type="url" id="site-url" placeholder="https://" value="${esc(S.site?.url||'')}"></div><button class="btn" id="site-go">Save</button></div>`)}
-  ${box('Membership levels',`<p class="hint">Membership levels. Players can request the open ones. “Admins assign” levels (like Crew or Founder) are only given from the Players list. “Needs verifying” waits for an admin before it shows on the card.</p>
-    <div class="list">${memTypes().map((t,i)=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto auto"><div><div class="nm">${esc(t.k)}</div><div class="sub">${esc(t.d||'')}</div></div><div class="row" style="gap:6px"><label class="chip sm"><input type="checkbox" data-mverify="${i}" ${t.verify?'checked':''}> Needs verifying</label><label class="chip sm"><input type="checkbox" data-mstaff="${i}" ${t.staff?'checked':''}> Admins assign</label><label class="chip sm"><input type="checkbox" data-madmin="${i}" ${lvAdmin(t.k)?'checked':''}> Gets Admin tab</label></div>${t.k==='Guest'?'':`<button class="btn ghost sm" data-mdel="${i}">Remove</button>`}</div>`).join('')}</div>
-    <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:150px;margin:0"><label for="mt-name">New type</label><input type="text" id="mt-name" maxlength="24" placeholder="e.g. Student"></div><div class="field" style="flex:2;min-width:160px;margin:0"><label for="mt-desc">Short description</label><input type="text" id="mt-desc" maxlength="40"></div><button class="btn" id="mt-add">Add</button></div>`)}
-  ${payPanel()}
-  ${window.BAD_WEB?box('Admins',`<p class="hint">Admins see this tab, run the courts and confirm payments. They sign in with this email.</p>
+  return `${window.BAD_WEB?box('Admins',`<p class="hint">Admins see this tab, run the courts and confirm payments. They sign in with this email.</p>
     <div class="list">${own.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><span class="tagl">Owner</span></div>`).join('')}${extra.filter(e=>!own.includes(e)).map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><button class="btn ghost sm" data-unadmin="${esc(e)}">Remove</button></div>`).join('')}</div>
     <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="ad-email">Add an admin</label><input type="email" id="ad-email" placeholder="name@email.com"></div><button class="btn" id="ad-go">Add</button></div>`):''}
+  ${payPanel()}
+  ${box('BAD website',`<p class="hint">Every Club post links here unless you add a different link.</p><div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="site-url">Website link</label><input type="url" id="site-url" placeholder="https://" value="${esc(S.site?.url||'')}"></div><button class="btn" id="site-go">Save</button></div>`)}
+  ${boxD('Membership levels',`<p class="hint">Membership levels. Players can request the open ones. “Admins assign” levels (like Crew or Founder) are only given from the Players list. “Needs verifying” waits for an admin before it shows on the card.</p>
+    <div class="list">${memTypes().map((t,i)=>`<div class="li mlv"><div><div class="nm">${esc(t.k)}</div><div class="sub">${esc(t.d||'')}</div></div><div class="row" style="gap:6px"><label class="chip sm"><input type="checkbox" data-mverify="${i}" ${t.verify?'checked':''}> Needs verifying</label><label class="chip sm"><input type="checkbox" data-mstaff="${i}" ${t.staff?'checked':''}> Admins assign</label><label class="chip sm"><input type="checkbox" data-madmin="${i}" ${lvAdmin(t.k)?'checked':''}> Gets Admin tab</label></div>${t.k==='Guest'?'':`<button class="btn ghost sm" data-mdel="${i}">Remove</button>`}</div>`).join('')}</div>
+    <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:150px;margin:0"><label for="mt-name">New type</label><input type="text" id="mt-name" maxlength="24" placeholder="e.g. Student"></div><div class="field" style="flex:2;min-width:160px;margin:0"><label for="mt-desc">Short description</label><input type="text" id="mt-desc" maxlength="40"></div><button class="btn" id="mt-add">Add</button></div>`)}
+  ${boxD('Google Sheets',`<p class="hint">The trackers feed attendance and payments into the Master, which works out points.</p><div class="list">${[['BAD APP – Master',SIGNUP_SHEET,'Players, sign-ups, points and every tracker'],...SHEETS.map(x=>[x.label,x.id,'Attendance and payments']),['Tuesday Training Tracker','1gwP-s7QP93-0qOzRu_RH2q664Onpsrz1crWjneDa5Oo','Training attendance, payments and coach fees']].map(([n,id,d])=>`<a class="li" style="grid-template-columns:auto minmax(0,1fr) auto;text-decoration:none;color:inherit" href="${gs(id)}" target="_blank" rel="noopener">${ic('sheet')}<div><div class="nm">${esc(n)}</div><div class="sub">${esc(d)}</div></div>${ic('arrow')}</a>`).join('')}<a class="li" style="grid-template-columns:auto minmax(0,1fr) auto;text-decoration:none;color:inherit" href="https://drive.google.com/drive/folders/1E_EmlRuVN-zhlGosz8Fvd5oWNGGS-lsk" target="_blank" rel="noopener">${ic('image')}<div><div class="nm">BAD APP folder</div><div class="sub">Google Drive folder with all of the above</div></div>${ic('arrow')}</a></div>`)}
   ${Object.values(S.profiles).some(p=>p.sample)?box(`Sample players <span class="tagl">${Object.values(S.profiles).filter(p=>p.sample).length}</span>`,`<p class="hint">Sample players from the 21 Oct session are here so you can try the courts and check-in. Remove them before going live.</p><button class="btn ghost sm" id="rm-samples" style="justify-self:start">${ic('x')}Remove sample players</button>`,'secret'):''}
-  ${brandPanel()}`;
+  ${boxD('Brand and logos',brandPanel())}`;
 }
 let postType='event',newSport='badminton';
 function payTag(sid,uid){const b=S.bookings[uid]?.s?.[sid]||{},k=b.pay||'cash',ok=S.payments[sid]?.[uid]?.ok;
