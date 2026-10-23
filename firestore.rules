@@ -23,6 +23,12 @@ service cloud.firestore {
     // Private: contact details and check-ins (own + organisers).
     match /contacts/{id} { allow read, write: if isSelf(id) || isAdmin(); }
     match /checkins/{id} { allow read, write: if isSelf(id) || isAdmin(); }
+    // Referral codes: each code is claimed once, by one player, for good.
+    match /refcodes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
     // Organisers only.
     match /noshows/{id} { allow read, write: if isAdmin(); }
     match /qr/{id}      { allow read, write: if isAdmin(); }

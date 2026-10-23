@@ -416,6 +416,13 @@ details.how[open] summary::after{content:"–"}
   .home{grid-template-columns:300px minmax(0,1fr);gap:48px;align-items:start}
   .home-card{position:sticky;top:100px}
 }
+.sigs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sig{display:grid;gap:2px;text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;color:var(--ink);font:inherit;cursor:pointer}
+.sig b{font-family:var(--f-serif);font-weight:400;font-size:1.5rem;line-height:1.1}
+.sig span{font-size:.8rem;color:var(--muted)}
+.sig[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sig[aria-pressed="true"] span{color:inherit;opacity:.7}
+@media (min-width:700px){.sigs{grid-template-columns:repeat(4,minmax(0,1fr))}}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -622,6 +629,8 @@ const TYPES={
  run:{'Sprinter':'Short, fast, gone.','Tempo Runner':'Steady and strong.','Long Hauler':'Half marathons for fun.','Trail Runner':'Off-road when possible.','Social Pacer':'Here for the chat.'},
  basketball:{'Shooter':'Lives behind the arc.','Playmaker':'Sees the pass first.','Slasher':'Straight to the rim.','Rim Protector':'Nothing gets in.','Glue':'Does all the little things.'}
 };
+/* signature: one word that sums up how you play, any sport */
+const SIGS=[['Power','Hits hard, plays big'],['Speed','First to every ball'],['Precision','Places it exactly'],['Defence','Gets everything back'],['Strategy','Reads the game'],['Endurance','Still going at 10pm'],['Teamwork','Makes everyone better'],['Hype','Brings the energy']];
 const SHOTS={badminton:['Jump smash','Net kill','Drop shot','Clear','Drive','Net spin'],volleyball:['Spike','Jump serve','Dig','Set','Block'],pickleball:['Dink','Third-shot drop','Erne','Drive','Lob'],run:['5K','10K','Half marathon','Hill reps','Intervals'],basketball:['Three-pointer','Layup','Crossover','Block','Fadeaway']};
 const QUIZ=[
   {q:'Long rally. Your move?',a:[['Wait for the short one, then smash.','Smasher'],['Creep to the net.','Net Ninja'],['Keep it going, all night if needed.','Rally Machine'],['Fake the drop, flick it deep.','Trickster'],['Defend. They will tire first.','The Wall']]},
@@ -641,6 +650,12 @@ function hash(s){let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;r
 function memberNo(k){return 'BAD-'+String(hash(k)%9000+1000)}
 /* referral code: NAME#NUMBER, e.g. KENNY#08. Typing it without the # also works. */
 const normCode=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+/* reserve a code for good in refcodes/{CODE}: first come, first served, never reused */
+async function claimRef(uid,base){const db=S.db;if(!db||!db.runTransaction)return base;
+  for(let i=0;i<27;i++){const c=i?base+String.fromCharCode(64+i):base,ref=db.doc('refcodes/'+normCode(c));
+    try{await db.runTransaction(async t=>{const d=await t.get(ref);if(d.exists){if(d.data().uid!==uid)throw new Error('taken')}else t.set(ref,{uid,code:c,at:new Date().toISOString()})});return c}
+    catch(e){if(e&&e.message==='taken')continue;console.warn('refcode claim',e);return base}}
+  return base+'-'+String(Date.now()).slice(-4)}
 const refsOf=p=>[p.ref,...(p.refs||[])].filter(Boolean);
 function refCode(uid,p){const n=String(p?.nickname||'BAD').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10)||'BAD',num=String(p?.number??'').replace(/\D/g,'');
   const base=`${n}#${num===''?String(hash(uid)%90+10):num.padStart(2,'0')}`;let c=base,i=0;
@@ -765,7 +780,7 @@ function renderStep(){
     el.querySelectorAll('[data-sp]').forEach(b=>b.onchange=()=>{const k=b.dataset.sp;D.sports=b.checked?[...new Set([...D.sports,k])]:D.sports.filter(x=>x!==k);
       if(b.checked&&!LEVEL_FREE.includes(k)&&D.levels[k]==null)D.levels[k]=1;
       const cd=D.sports.filter(x=>PLAYABLE.includes(x));if(!D.sports.includes(D.primary))D.primary=cd[0]||D.sports[0]||'';renderStep()});
-    el.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>{D.primary=Object.keys(SPORTS).find(k=>SPORTS[k].club===b.dataset.val);D.shot='';renderStep()});
+    el.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>{D.primary=Object.keys(SPORTS).find(k=>SPORTS[k].club===b.dataset.val);renderStep()});
   }
   if(step===3){
     if(quiz&&quiz.i<QUIZ.length){
@@ -793,7 +808,8 @@ function renderStep(){
   }
   if(step===4){
     const sp=mainSport(D);
-    el.innerHTML=head(4)+`<div class="field"><div class="ic-row">${ic(SPORTS[sp].icon)}<span class="lbl">Signature ${SPORTS[sp].sport==='Run club'?'distance':'shot'}</span></div>${chips('shot',SHOTS[sp]||[],D.shot)}</div>
+    el.innerHTML=head(4)+`<p class="muted" style="margin-bottom:14px">One word for how you play. It goes on your card, whatever the sport.</p>
+      <div class="sigs" role="group" aria-label="Your signature">${SIGS.map(([k,d])=>`<button type="button" class="sig" data-f="shot" data-val="${esc(k)}" aria-pressed="${D.shot===k}"><b>${esc(k)}</b><span>${esc(d)}</span></button>`).join('')}</div>
       <p class="fine">You can edit your card any time.</p>`;
   }
   if(step===5)el.innerHTML=`<h2 style="margin-bottom:12px">Thank you.</h2><div id="save-out" style="display:grid;gap:12px"><p class="muted">Saving your card…</p></div>`;
@@ -852,7 +868,7 @@ async function saveProfile(){
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16)};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
-    try{await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
+    try{data.ref=await claimRef(S.uid,data.ref);await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
       toast(D._editing?'Your card is updated.':'Welcome to BAD. Thank you for registering.');setView('card');setTimeout(processCheckin,800);return}catch(e){console.error('BAD save failed',e);S.saveErr=(e&&(e.code||e.message))||''}
   }
   if(window.BAD_WEB){
@@ -1064,7 +1080,7 @@ function renderCard(){
       ${activityHTML()}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       <section class="hsec"><h3 class="ah">Recent points</h3><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(e.date||'')}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></section>
-      <section class="tile refer"><span class="label">Invite a friend</span><div class="row" style="justify-content:space-between;align-items:center"><div class="stat"><b class="num" id="my-ref">${esc(refCode(S.uid,p))}</b><span class="fine">Your code · +${CFG.referrer} for you, +${CFG.referee} for them</span></div><button class="btn sm" id="copy-ref">${ic('copy')}Copy</button></div></section>
+      <section class="tile refer"><span class="label">Invite a friend</span><div class="row" style="justify-content:space-between;align-items:center"><div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">Your code · +${CFG.referrer} for you, +${CFG.referee} for them</span></div><button class="btn sm" id="copy-ref">${ic('copy')}Copy</button></div></section>
       <details class="hsec how"><summary class="ah">How points work</summary><div class="list">${[['play','Join a session','+'+CFG.attend],['coin','Pay on the day','+'+CFG.paid],['guest','Bring a new guest','+'+CFG.newGuest],['gift','A friend joins with your code','+'+CFG.referrer],['ticket','A free session','−'+CFG.free]].map(([i,a,b])=>`<div class="li"><span class="ic-bub soft">${ic(i)}</span><span>${a}</span><b class="num">${b}</b></div>`).join('')}</div><p class="fine">${CFG.member} lifetime points turns your card silver.</p></details>
     </div></div>`;
   $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
@@ -1649,7 +1665,8 @@ function bindCodes(){
   const add=$('cc-add');if(!add)return;
   add.onclick=()=>{const c=$('cc-code').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length<3){toast('Codes need at least 3 letters or numbers.');return}
     if(Object.values(S.profiles).some(p=>refsOf(p).some(r=>normCode(r)===c))){toast('A member already uses that code. Please pick another.');return}
-    saveCodes({...S.codes,[c]:{label:$('cc-label').value.trim()||'BAD club code',pts:Math.max(0,Math.min(100,+$('cc-pts').value||0)),at:new Date().toISOString()}}).then(()=>toast(c+' is ready to share.'))};
+    (async()=>{if(S.db.runTransaction){try{const d=await S.db.doc('refcodes/'+c).get();if(d.exists&&d.data().uid!=='club'){toast('A member already uses that code. Please pick another.');return}await S.db.doc('refcodes/'+c).set({uid:'club',code:c,at:new Date().toISOString()})}catch(_){}}
+    saveCodes({...S.codes,[c]:{label:$('cc-label').value.trim()||'BAD club code',pts:Math.max(0,Math.min(100,+$('cc-pts').value||0)),at:new Date().toISOString()}}).then(()=>toast(c+' is ready to share.'))})()};
   document.querySelectorAll('[data-coff]').forEach(b=>b.onclick=()=>{const c=b.dataset.coff,L={...S.codes};L[c]={...L[c],off:!L[c].off};saveCodes(L)});
   document.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=()=>{const c=b.dataset.cdel,L={...S.codes};delete L[c];saveCodes(L)});
 }
