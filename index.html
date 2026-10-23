@@ -386,6 +386,36 @@ body:not(.wide) #v-create .grid2>div:first-child{position:static!important}
 .namerow{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:12px;align-items:end}
 .namerow .field{margin:0}
 input.jnum{font-family:var(--f-serif);font-size:1.9rem;text-align:center;padding:4px 8px;height:52px}
+/* home */
+.home{display:grid;gap:24px}
+.home-card{display:grid;gap:12px;justify-items:center}
+.home-card .pc{max-width:300px}
+.home-main{display:grid;gap:22px;min-width:0}
+.hsec{display:grid;gap:12px}
+.hstats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.tile.hs .stat b{font-size:2rem}
+.nexts{display:grid;gap:12px;border:1px solid var(--rule);background:var(--bg)}
+.nexts .dt{display:grid;justify-items:center;background:var(--soft);border-radius:12px;padding:8px 12px;min-width:58px;line-height:1.05}
+.nexts .dt b{font-family:var(--f-serif);font-weight:400;font-size:1.8rem}
+.nexts .dt small{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.nexts .ic-row{align-items:center;gap:14px}
+.nexts .fine svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.nexts.cta{cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.nexts.cta .ic-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto}
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.act{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;background:var(--soft);border-radius:var(--r);padding:10px 12px}
+.act .ic-bub{width:34px;height:34px}
+.refer .stat b{font-size:1.6rem;letter-spacing:.04em}
+details.how summary{cursor:pointer;list-style:none}
+details.how summary::-webkit-details-marker{display:none}
+details.how summary::after{content:"+";margin-left:auto;font-weight:400}
+details.how[open] summary::after{content:"–"}
+@media (min-width:600px){.hstats{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (min-width:900px){
+  body:not(.wide) #v-card{max-width:1040px}
+  .home{grid-template-columns:300px minmax(0,1fr);gap:48px;align-items:start}
+  .home-card{position:sticky;top:100px}
+}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -835,7 +865,7 @@ async function saveProfile(){
 }
 
 /* ---------- navigation ---------- */
-const NAV={card:['card','My card'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],board:['board','Board'],admin:['admin','Organiser']};
+const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],board:['board','Board'],admin:['admin','Organiser']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 function setView(v){S.view=v;
   for(const id of ['card','play','courts','create','club','board','admin'])$('v-'+id).hidden=id!==v;
@@ -995,26 +1025,43 @@ function renderCard(){
         <p class="fine">We were all BAD players once. Every level is welcome.</p>${S.loaded?'':'<p class="fine">Loading…</p>'}</div></div>`;
     $('start').onclick=()=>startCreator();return;
   }
-  const st=statsFor(p.listKey),can=st.balance>=CFG.free,tNext=TIERS.find(t=>t.at>st.earned),req=S.requests[S.uid];
-  const nextS=upcoming().find(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out});
-  el.innerHTML=`<div class="grid2"><div style="display:grid;gap:12px">${cardHTML(p,st)}<button class="btn ghost" id="edit">${ic('edit')}Edit my card</button></div>
-    <div class="view" style="gap:16px">
-      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)}</span><h2>${nextS?'See you soon.':'Ready to play?'}</h2></div>
-      ${nextS?(()=>{const [sid,s]=nextS,d=dParts(s.date),sp=sportOf(s.sport);return `<div class="tile"><span class="label">Your next session</span><div class="ic-row"><span class="ic-bub">${ic(sp.icon)}</span><div><b>${esc(s.title||sp.club)}</b><div class="fine">${d.w} ${d.d} ${d.m} · ${s.timeTbc?'time to be confirmed':fmtTime(s.start)}</div></div></div></div>`})()
-        :`<button class="tile" id="go-play" style="border:0;text-align:left;cursor:pointer"><span class="label">No session booked</span><span class="ic-row">${ic('play')}<b>Find a session</b>${ic('arrow')}</span></button>`}
-      <div class="tiles">
-        <div class="tile"><span class="label">Points</span><div class="stat"><b class="num">${st.balance}</b><span class="fine">${can?'A free session is ready':`${CFG.free-st.balance} to a free session`}</span></div><div class="bar"><i style="width:${Math.min(100,st.balance/CFG.free*100)}%"></i></div>
-          ${req?'<span class="tagl">Request sent</span>':`<button class="btn sm" id="redeem" ${can?'':'disabled'}>${ic('ticket')}Use ${CFG.free}</button>`}</div>
-        <div class="tile"><span class="label">Level</span><div class="stat"><b>${esc(tierOf(st.earned).k)}</b><span class="fine">${tNext?`${tNext.at-st.earned} to ${esc(tNext.k)}`:'Top level'}</span></div><div class="bar"><i style="width:${Math.min(100,st.earned/CFG.member*100)}%"></i></div></div>
-        <div class="tile"><span class="label">Referral code</span><div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">+${CFG.referrer} for you, +${CFG.referee} for them</span></div><button class="btn ghost sm" id="copy-ref">${ic('copy')}Copy</button></div>
-      </div>
+  const st=statsFor(p.listKey),can=st.balance>=CFG.free,tier=tierOf(st.earned),tNext=TIERS.find(t=>t.at>st.earned),req=S.requests[S.uid];
+  const mine=myActivity(),nextS=upcoming().find(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out});
+  const rk=rankRows('all'),ri=rk.findIndex(r=>r.pid===S.uid),me=ri>=0?rk[ri]:{g:0,w:0};
+  const myGames=Object.entries(S.games).filter(([,g])=>[...g.a,...g.b].includes(S.uid)).sort((a,b)=>(b[1].at||'').localeCompare(a[1].at||''));
+  const attended=Math.max(st.sessions,mine.filter(r=>r.status==='Played').length);
+  const sports=(p.sports&&p.sports.length?p.sports:['badminton']);
+  const statT=(lbl,val,sub,extra='')=>`<div class="tile hs"><span class="label">${lbl}</span><div class="stat"><b class="num">${val}</b>${sub?`<span class="fine">${sub}</span>`:''}</div>${extra}</div>`;
+  let next;
+  if(nextS){const [sid,s]=nextS,d=dParts(s.date),sp=sportOf(s.sport),r=roster(sid),inside=r.in.some(e=>e.uid===S.uid&&!e.guest),pos=r.wait.findIndex(e=>e.uid===S.uid&&!e.guest),ok=S.payments[sid]?.[S.uid]?.ok,bk=S.bookings[S.uid].s[sid];
+    next=`<div class="tile nexts"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="label">Your next session</span>${inside?`<span class="tagl solid">${ic('check')}You’re in</span>`:pos>=0?`<span class="tagl">Waitlist #${pos+1}</span>`:''}</div>
+      <div class="ic-row"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><b class="nm">${esc(s.title||sp.club)}</b><div class="fine">${ic(sp.icon)}${esc(sp.club)} · ${s.timeTbc?'Time to be confirmed':fmtTime(s.start)+(s.end?'–'+fmtTime(s.end):'')}${s.venue?' · '+esc(s.venue):''}</div>
+      <div class="fine">${ok?'Paid':(PAY[bk.pay||'cash']?.label||'Cash')+(bk.sent?' · sent, checking':' · AED '+esc(s.fee)+' to pay')}</div></div></div>
+      <button class="btn ghost sm" data-goview="play" style="justify-self:start">Session details${ic('arrow')}</button></div>`}
+  else next=`<button class="tile nexts cta" data-goview="play"><span class="label">No session booked</span><span class="ic-row"><span class="ic-bub">${ic('play')}</span><span><b>Find your next game</b><span class="fine" style="display:block">${upcoming().length} sessions coming up</span></span>${ic('arrow')}</span></button>`;
+  el.innerHTML=`<div class="home">
+    <aside class="home-card">${cardHTML(p,st)}<div class="row" style="justify-content:center"><button class="btn ghost sm" id="edit">${ic('edit')}Edit my card</button></div></aside>
+    <div class="home-main">
+      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(tier.k)}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>
+      ${next}
+      <section class="hsec"><h3 class="ah">Your stats</h3>
+        <div class="tiles hstats">
+          ${statT('Points',st.balance,can?'A free session is ready':`${CFG.free-st.balance} to a free session`,`<div class="bar"><i style="width:${Math.min(100,st.balance/CFG.free*100)}%"></i></div>${req?'<span class="tagl">Request sent</span>':can?`<button class="btn sm" id="redeem">${ic('ticket')}Use ${CFG.free}</button>`:''}`)}
+          ${statT('Tier',esc(tier.k),tNext?`${tNext.at-st.earned} to ${esc(tNext.k)}`:'Top tier',`<div class="bar"><i style="width:${tNext?Math.min(100,(st.earned-tier.at)/(tNext.at-tier.at)*100):100}%"></i></div>`)}
+          ${statT('Sessions',attended,'Played with BAD')}
+          ${statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
+          ${statT('Club rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked')}
+          ${statT('Lifetime',st.earned,'Points earned')}
+        </div></section>
+      <section class="hsec"><h3 class="ah">Your activities</h3>
+        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
-      ${(()=>{const mg=Object.entries(S.games).filter(([,g])=>[...g.a,...g.b].includes(S.uid)).sort((a,b)=>(b[1].at||'').localeCompare(a[1].at||'')).slice(0,5);
-        return mg.length?`<div class="sec"><span class="label">Your recent games</span><div class="list">${mg.map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></div>`:''})()}
-      <div class="sec"><span class="label">Recent points</span><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(e.date||'')}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></div>
-      <div class="sec"><span class="label">How points work</span><div class="list">${[['play','Join a session','+'+CFG.attend],['coin','Pay on the day','+'+CFG.paid],['guest','Bring a new guest','+'+CFG.newGuest],['gift','A friend joins with your code','+'+CFG.referrer],['ticket','A free session','−'+CFG.free]].map(([i,a,b])=>`<div class="li"><span class="ic-bub soft">${ic(i)}</span><span>${a}</span><b class="num">${b}</b></div>`).join('')}</div></div>
+      ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
+      <section class="hsec"><h3 class="ah">Recent points</h3><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(e.date||'')}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></section>
+      <section class="tile refer"><span class="label">Invite a friend</span><div class="row" style="justify-content:space-between;align-items:center"><div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">Your code · +${CFG.referrer} for you, +${CFG.referee} for them</span></div><button class="btn sm" id="copy-ref">${ic('copy')}Copy</button></div></section>
+      <details class="hsec how"><summary class="ah">How points work</summary><div class="list">${[['play','Join a session','+'+CFG.attend],['coin','Pay on the day','+'+CFG.paid],['guest','Bring a new guest','+'+CFG.newGuest],['gift','A friend joins with your code','+'+CFG.referrer],['ticket','A free session','−'+CFG.free]].map(([i,a,b])=>`<div class="li"><span class="ic-bub soft">${ic(i)}</span><span>${a}</span><b class="num">${b}</b></div>`).join('')}</div><p class="fine">${CFG.member} lifetime points turns your card silver.</p></details>
     </div></div>`;
-  $('edit').onclick=()=>startCreator(p);const gp=$('go-play');if(gp)gp.onclick=()=>setView('play');
+  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
   const r=$('redeem');if(r)r.onclick=requestFree;
 }
