@@ -30,7 +30,7 @@
   document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(gate));
   if(document.body)document.body.appendChild(gate);
   const msg=t=>{const m=document.getElementById('g-msg');if(m)m.textContent=t};
-  const nice=e=>({'auth/invalid-credential':'That email and password don’t match. Please try again.','auth/user-not-found':'No account with that email yet. Tap Create account.','auth/wrong-password':'That password isn’t right. Please try again.','auth/email-already-in-use':'You already have an account. Tap Sign in.','auth/weak-password':'Please use at least 6 characters.','auth/invalid-email':'Please check the email address.','auth/popup-closed-by-user':'Sign-in was closed. Please try again.','auth/unauthorized-domain':'This web address isn’t allowed yet. An organiser needs to add it in Firebase.'}[e&&e.code]||'Sorry, that didn’t work. Please try again.');
+  const nice=e=>({'auth/invalid-credential':'That email and password don’t match. Please try again.','auth/user-not-found':'No account with that email yet. Tap Create account.','auth/wrong-password':'That password isn’t right. Please try again.','auth/email-already-in-use':'You already have an account. Tap Sign in.','auth/weak-password':'Please use at least 6 characters.','auth/invalid-email':'Please check the email address.','auth/popup-closed-by-user':'Sign-in was closed. Please try again.','auth/unauthorized-domain':'This web address isn’t allowed yet. An admin needs to add it in Firebase.'}[e&&e.code]||'Sorry, that didn’t work. Please try again.');
   gate.addEventListener('click',async ev=>{
     const id=ev.target.closest('button')?.id;if(!id)return;
     const email=document.getElementById('g-email').value.trim(),pass=document.getElementById('g-pass').value;

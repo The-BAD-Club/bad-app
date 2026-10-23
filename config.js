@@ -7,5 +7,5 @@ window.BAD_FIREBASE = {
   messagingSenderId: "116277208407",
   appId: "1:116277208407:web:1dd895bb847dc46260ca12"
 };
-/* Organiser emails: these people see the Organiser tab. More can be added in Firestore → admins/{email}. */
+/* Admin emails: these people see the Admin tab. More can be added in Firestore → admins/{email}. */
 window.BAD_ADMINS = ["thebadclub.co@gmail.com"];
