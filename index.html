@@ -423,6 +423,8 @@ details.how[open] summary::after{content:"–"}
 .sig[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .sig[aria-pressed="true"] span{color:inherit;opacity:.7}
 @media (min-width:700px){.sigs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.stepnav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#finish{justify-self:center}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -462,7 +464,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
       <div style="display:grid;gap:18px">
         <div class="steps" id="steps"></div>
         <div id="step"></div>
-        <div class="row" style="justify-content:space-between"><button class="btn ghost" id="back">Back</button><div class="row" style="gap:8px"><button class="btn ghost" id="skip" hidden>Finish now</button><button class="btn" id="next">Next</button></div></div>
+        <div class="stepnav"><button class="btn ghost" id="back">Back</button><div class="row" style="gap:8px;margin-left:auto"><button class="btn ghost" id="skip" hidden>Skip</button><button class="btn" id="next">Next</button></div></div><button class="linkbtn" id="finish" hidden>Finish and save my card now</button>
       </div>
     </div>
   </section>
@@ -756,7 +758,7 @@ function renderStep(){
       ${free.length?`<div class="field"><label for="c-list">Played with us before? <span class="req">optional</span></label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the list</option>`).join('')}</select></div>`:''}
       <p class="fine">Your email and mobile number are only seen by BAD organisers. We use them for session updates and nothing else.</p>`;
     $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,2);e.target.value=D.number;$('c-num-hint').textContent=numHint(D.number);preview()};
-    const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
+    const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();if(step===0)$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
     on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
     const rh=()=>{const el=$('c-ref-hint');if(!el)return;const i=codeInfo(D.referredBy);el.textContent=!i?'':i.kind==='club'?`✓ ${i.label}. +${i.pts} points when you join.`:i.kind==='member'?`✓ Invited by ${i.name}. +${CFG.referee} points for you, +${CFG.referrer} for them.`:i.kind==='off'?'This code has ended.':'We can’t find that code. Please check the spelling.'};
     if($('c-ref')){$('c-ref').addEventListener('input',rh);rh()}
@@ -817,13 +819,19 @@ function renderStep(){
   if(step===5)el.innerHTML=`<h2 style="margin-bottom:12px">Thank you.</h2><div id="save-out" style="display:grid;gap:12px"><p class="muted">Saving your card…</p></div>`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const k=b.dataset.f;D[k]=D[k]===b.dataset.val?'':b.dataset.val;renderStep()});
   const inQuiz=step===3&&quiz&&quiz.i<QUIZ.length;
-  $('back').hidden=step===0||step===5||inQuiz;$('next').hidden=step===5||inQuiz;$('skip').hidden=!(step<=3)||inQuiz||(step===0&&D._editing);$('skip').textContent=step===0?'Save my card':'Finish now';$('skip').disabled=!stepValid();
+  const done=step===5;
+  $('back').hidden=done||inQuiz;$('back').textContent=step===0?'Cancel':'Back';
+  $('next').hidden=done||inQuiz;
+  $('skip').hidden=done||inQuiz;$('skip').textContent=step===0?'Save my card':step===4?'Skip & save':'Skip';$('skip').disabled=step===0&&!stepValid();
+  $('finish').hidden=done||inQuiz||step===0||step===4;
   $('next').textContent=step===4?(D._editing?'Save my card':'Register'):'Continue';
   $('next').disabled=!stepValid();
   preview();
 }
-$('back').onclick=()=>{step=Math.max(0,step-1);quiz=null;renderStep()};
-$('skip').onclick=()=>{if(!stepValid())return;step=5;renderStep();saveProfile()};
+$('back').onclick=()=>{if(step===0){setView('card');return}step=Math.max(0,step-1);quiz=null;renderStep()};
+const saveNow=()=>{if(step===0&&!stepValid())return;step=5;renderStep();saveProfile()};
+$('skip').onclick=()=>{if(step===0||step===4)return saveNow();if(step===4&&D.shot==null)D.shot='';step++;quiz=null;renderStep()};
+$('finish').onclick=saveNow;
 $('next').onclick=()=>{if(!stepValid())return;if(step<4){step++;if(step===2&&!D.sports.length)D.sports=[];renderStep()}else{step=5;renderStep();saveProfile()}};
 $('photo-in').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const url=URL.createObjectURL(f),img=await loadImg(url);URL.revokeObjectURL(url);D._src=bwSource(img);D._crop={z:1,x:0,y:0,b:0};openCropper(D._src)}catch(_){toast('Sorry, that image did not load. Please try a JPG or PNG.')}};
