@@ -803,13 +803,19 @@ async function saveProfile(){
     try{await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
       toast(D._editing?'Your card is updated.':'Welcome to BAD. Thank you for registering.');setView('card');setTimeout(processCheckin,800);return}catch(e){console.error('BAD save failed',e);S.saveErr=(e&&(e.code||e.message))||''}
   }
+  if(window.BAD_WEB){
+    $('save-out').innerHTML=`<p>Sorry, we couldn’t save your card just now. Your details are still here, so nothing is lost.</p>
+      <p class="fine">Please try again in a moment. If it keeps happening, let a BAD organiser know.${S.saveErr?` (${esc(S.saveErr)})`:''}</p>
+      <div class="row"><button class="btn" id="save-retry">Try again</button><button class="btn ghost" id="redo">Edit card</button></div>`;
+    $('redo').onclick=()=>{step=0;renderStep()};
+    $('save-retry').onclick=async e=>{e.target.disabled=true;e.target.textContent='Saving…';S.saveErr='';await saveProfile()};
+    return}
   const code='BAD1-'+btoa(unescape(encodeURIComponent(JSON.stringify({...data,photo:'',contact}))));
-  $('save-out').innerHTML=`<p>Your card is ready, but we couldn't save it to your account from here. Please tap Try again. If it still doesn't work, send this code to a BAD organiser and they will add you.</p>${S.saveErr?`<p class="fine">Reason: ${esc(S.saveErr)}</p>`:''}<div class="row"><button class="btn" id="save-retry">Try again</button></div>
+  $('save-out').innerHTML=`<p>Your card is ready, but we couldn't save it to your account from here. Please send this code to a BAD organiser and they will add you.</p>
     <div class="code" id="code">${esc(code)}</div>
     <div class="row"><button class="btn" id="copy">${ic('copy')}Copy code</button><button class="btn ghost" id="redo">Edit card</button></div>`;
-  $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Copied. Thank you.')}catch(e){const r=document.createRange();r.selectNodeContents($('code'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected. Please copy it now.')}};
+  $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Copied. Thank you.')}catch(e){toast('Please select the code and copy it.')}};
   $('redo').onclick=()=>{step=4;renderStep()};
-  if($('save-retry'))$('save-retry').onclick=()=>{S.saveErr='';saveProfile()};
 }
 
 /* ---------- navigation ---------- */
