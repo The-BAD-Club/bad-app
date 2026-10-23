@@ -464,6 +464,8 @@ details.how[open] summary::after{content:"–"}
 @media (min-width:761px){.themebtn{order:3;margin-left:0}}
 /* saved image: html2canvas skips box-shadow, so draw the white edge as a real border */
 .pc.snap{box-shadow:none!important;transform:none!important}
+.pc.snap{background:transparent!important}
+.pc.snap .ph{visibility:hidden!important}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1171,13 +1173,22 @@ function renderCard(){
 function loadScript(src){return new Promise((res,rej)=>{if([...document.scripts].some(x=>x.src===src))return res();const x=document.createElement('script');x.src=src;x.onload=res;x.onerror=rej;document.head.appendChild(x)})}
 async function saveCardImage(){const b=$('save-card'),node=$('my-card')?.querySelector('.pc');if(!node)return;b.disabled=true;const t=b.innerHTML;b.textContent='Making your card…';
   try{if(!window.html2canvas)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    const SC=3,rad=(parseFloat(getComputedStyle(node).borderTopLeftRadius)||18)*SC;
+    const SC=3,cs=getComputedStyle(node),rad=(parseFloat(cs.borderTopLeftRadius)||18)*SC,bgc=cs.backgroundColor||'#000';
+    /* 1) text and logos only: the photo and its fades are drawn below by hand, since the image tool can't draw CSS fades */
+    const ph=node.querySelector('.ph'),nr=node.getBoundingClientRect(),pr=ph?ph.getBoundingClientRect():null;
+    const url=ph?(getComputedStyle(ph).backgroundImage.match(/url\(["']?(.*?)["']?\)/)||[])[1]:'';const placeholder=ph&&ph.classList.contains('placeholder');
     node.classList.add('snap');let shot;try{shot=await html2canvas(node,{backgroundColor:null,scale:SC,useCORS:true,logging:false})}finally{node.classList.remove('snap')}
-    /* draw the card inside a rounded white frame ourselves, so the border is always there */
-    const bw=3*SC,cv=document.createElement('canvas');cv.width=shot.width+bw*2;cv.height=shot.height+bw*2;const x=cv.getContext('2d');
+    /* 2) compose: white frame, card colour, photo with fades, then the text layer */
+    const bw=3*SC,W=shot.width,Hh=shot.height,cv=document.createElement('canvas');cv.width=W+bw*2;cv.height=Hh+bw*2;const x=cv.getContext('2d');
     const rr=(px,py,w,h,r)=>{x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath()};
     rr(0,0,cv.width,cv.height,rad+bw);x.fillStyle='#FFFFFF';x.fill();
-    x.save();rr(bw,bw,shot.width,shot.height,rad);x.clip();x.drawImage(shot,bw,bw);x.restore();
+    x.save();rr(bw,bw,W,Hh,rad);x.clip();x.fillStyle=bgc;x.fillRect(bw,bw,W,Hh);
+    if(pr&&url){try{const img=await loadImg(url);const px=Math.floor(bw+(pr.left-nr.left)*SC),py=Math.floor(bw+(pr.top-nr.top)*SC),pw=Math.ceil(pr.width*SC),phh=Math.round(pr.height*SC),k=Math.max(pw/img.width,phh/img.height),dw=img.width*k,dh=img.height*k;
+      x.save();x.beginPath();x.rect(px,py,pw,phh);x.clip();x.globalAlpha=placeholder?.85:1;x.filter='grayscale(1) contrast(1.05)';x.drawImage(img,px+(pw-dw)/2,py+(phh-dh)/2,dw,dh);x.filter='none';x.globalAlpha=1;
+      const m=bgc.match(/\d+(\.\d+)?/g)||[0,0,0],c=`${m[0]},${m[1]},${m[2]}`;
+      let g=x.createLinearGradient(0,py,0,py+phh*.34);g.addColorStop(0,`rgba(${c},.85)`);g.addColorStop(1,`rgba(${c},0)`);x.fillStyle=g;x.fillRect(px,py,pw,phh*.34);
+      g=x.createLinearGradient(0,py,0,py+phh);g.addColorStop(0,`rgba(${c},0)`);g.addColorStop(.35,`rgba(${c},0)`);g.addColorStop(.94,`rgba(${c},1)`);g.addColorStop(1,`rgba(${c},1)`);x.fillStyle=g;x.fillRect(px,py,pw,phh+1);x.restore();x.fillStyle=bgc;x.fillRect(px,py+phh-1,pw,3)}catch(_){}}
+    x.drawImage(shot,bw,bw);x.restore();
     const blob=await new Promise(r=>cv.toBlob(r,'image/png'));const name=`BAD-card-${slug(myProfile()?.nickname||'player')}.png`,file=new File([blob],name,{type:'image/png'});
     if(navigator.canShare&&navigator.canShare({files:[file]})&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){try{await navigator.share({files:[file],title:'My BAD card'})}catch(e){if(e.name!=='AbortError')throw e}}
     else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('Card saved.')}}
