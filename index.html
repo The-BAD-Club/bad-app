@@ -309,6 +309,63 @@ input.sc{width:58px;padding:7px;text-align:center;font-variant-numeric:tabular-n
 @media (min-width:761px){.selbar{bottom:24px}}
 .secret{border:1px dashed var(--rule);border-radius:var(--r);padding:16px;display:grid;gap:10px}
 .sign{margin-top:48px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+/* organiser */
+.admin{display:grid;gap:18px}
+.ahead h2{font-size:clamp(2rem,6vw,2.8rem)}
+.anav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(68px + env(safe-area-inset-top,0px));z-index:4;background:var(--bg);padding:8px 16px;margin:0 -16px;border-bottom:1px solid var(--line)}
+.anav::-webkit-scrollbar{display:none}
+.anav button{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:none;color:var(--muted);border-radius:999px;padding:9px 14px;font:inherit;font-size:.84rem;font-weight:600;white-space:nowrap;cursor:pointer}
+.anav button:hover{color:var(--ink)}
+.anav button[aria-current="page"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.anav svg.i{width:18px;height:18px}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:.7rem;font-weight:700}
+.anav button[aria-current="page"] .badge{background:var(--bg);color:var(--ink)}
+.abody{display:grid;gap:16px;min-width:0;align-content:start}
+.abody .panel,.nextcard{background:var(--soft);border-radius:var(--r);padding:18px;display:grid;gap:14px;min-width:0}
+.abody .panel.secret{background:none}
+.nextcard{border:1px solid var(--rule)}
+.ah{font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ah .hint{letter-spacing:0;font-weight:500}
+h3.big{font-family:var(--f-serif);font-weight:400;font-size:2rem;line-height:1.05;margin:4px 0 0}
+.abody .tiles{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.abody .tile{background:var(--bg);border:1px solid var(--line);padding:14px}
+.nextcard .tile{background:var(--soft)}
+.abody .stat b{font-size:1.9rem}
+.abody .stat b small{font-size:.5em;color:var(--muted);margin-left:2px}
+.alert{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 0;color:var(--ink);font:inherit;cursor:pointer}
+.alert:last-child{border-bottom:0}
+.alert svg.i:last-child{color:var(--muted)}
+.qa{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.qa .btn{justify-content:flex-start}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.fgrid .field{margin:0}
+.fgrid .field.wide{grid-column:1/-1}
+.li.pl{grid-template-columns:auto auto minmax(0,1fr) auto}
+.li .pts{display:grid;justify-items:end}
+.li .pts b{font-family:var(--f-serif);font-weight:400;font-size:1.5rem;line-height:1}
+.li .pts .label{font-size:.6rem}
+.nsb{white-space:nowrap}
+details.panel summary{cursor:pointer;list-style:none}
+details.panel summary::-webkit-details-marker{display:none}
+details.panel summary::after{content:"+";float:right;font-weight:400}
+details.panel[open] summary::after{content:"–"}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:520px){.li.pl{grid-template-columns:auto minmax(0,1fr) auto}.li.pl .rank{display:none}}
+@media (min-width:1000px){
+  .admin{grid-template-columns:230px minmax(0,1fr);column-gap:32px;align-items:start}
+  .ahead{grid-column:2}
+  .anav{grid-row:1/span 2;grid-column:1;flex-direction:column;position:sticky;top:100px;margin:0;padding:0;border:0;overflow:visible}
+  .anav button{border:0;border-radius:12px;justify-content:flex-start;padding:11px 14px}
+  .anav .badge{margin-left:auto}
+  .abody{grid-column:2}
+}
+.acct{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;background:var(--soft);border-radius:var(--r);padding:12px 14px}
+.acct .nm{font-weight:600;overflow-wrap:anywhere}
+.nextcard .tiles,.abody>.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.nextcard .tiles.t4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.acct{margin-bottom:16px}
+@media (min-width:700px){.nextcard .tiles.t4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -423,7 +480,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
     gate.hidden=true;document.documentElement.classList.remove('gated');
     const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email);
     if(!admin&&email){try{admin=(await fs.doc('admins/'+email).get()).exists}catch(_){}}
-    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',admin};
+    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin};
     resolveUser(window.BAD_USER);
   });
   window.badSignOut=()=>auth.signOut().then(()=>location.reload());
@@ -571,11 +628,13 @@ function cardHTML(p,st){
 }
 
 /* ---------- photo: always black and white ---------- */
-function toBW(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{
-  const s=360,c=document.createElement('canvas');c.width=s;c.height=s;const x=c.getContext('2d');
+function bwFromImg(img){const s=360,c=document.createElement('canvas');c.width=s;c.height=s;const x=c.getContext('2d');
   const m=Math.min(img.width,img.height);x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);
   const d=x.getImageData(0,0,s,s),a=d.data;for(let i=0;i<a.length;i+=4){let y=.299*a[i]+.587*a[i+1]+.114*a[i+2];y=Math.max(0,Math.min(255,(y-128)*1.12+128));a[i]=a[i+1]=a[i+2]=y}
-  x.putImageData(d,0,0);res(c.toDataURL('image/jpeg',.72))};img.src=r.result};r.readAsDataURL(file)})}
+  x.putImageData(d,0,0);return c.toDataURL('image/jpeg',.72)}
+function toBW(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{try{res(bwFromImg(img))}catch(e){rej(e)}};img.src=r.result};r.readAsDataURL(file)})}
+/* account photo (e.g. Google) turned black and white; quietly skipped if the browser won't allow it */
+function toBWUrl(url){return new Promise(res=>{if(!url)return res('');const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{try{res(bwFromImg(img))}catch(_){res('')}};img.onerror=()=>res('');img.src=url.replace(/=s\d+-c$/,'=s400-c')})}
 
 /* referral codes: a member's personal code, or a club code made by organisers */
 function codeInfo(raw){const c=String(raw||'').trim().toUpperCase();if(!c)return null;
@@ -591,6 +650,9 @@ const okMobile=v=>String(v||'').replace(/\D/g,'').length>=8;
 function startCreator(existing){
   D=existing?{...existing,types:{...(existing.types||{})},sports:[...(existing.sports||['badminton'])]}:{nickname:'',listName:'',number:String(Math.floor(Math.random()*99)+1),edition:'oncourt',photo:'',sports:[],primary:'',types:{},levels:{},level:1,hand:'Right',shot:'',email:'',mobile:'',instagram:'',referredBy:''};
   if(existing){const c=S.contacts[S.uid]||S.myContact||{};D.email=c.email||'';D.mobile=c.mobile||c.whatsapp||'';D.instagram=c.instagram||'';if(!D.types.badminton&&existing.style)D.types.badminton=existing.style;D.levels={...(existing.levels||{})};for(const k of D.sports)if(D.levels[k]==null&&!LEVEL_FREE.includes(k))D.levels[k]=existing.level??1}
+  if(!existing){const U=window.BAD_USER||{},full=(U.name||'').trim();
+    D.email=U.email||'';D.listName='';D.nickname=(full.split(/\s+/)[0]||'').slice(0,16);D._acctEmail=!!U.email;
+    if(U.photo)toBWUrl(U.photo).then(ph=>{if(ph&&!D.photo){D.photo=ph;if(S.view==='create')preview()}})}
   D._editing=!!existing;step=0;quiz=null;setView('create');
 }
 function preview(){const k=keyOf(D.listName||D.nickname);const st=statsFor(k);if(!profileByKey(k)){st.earned+=CFG.welcome;st.balance+=CFG.welcome}$('preview').innerHTML=cardHTML(D,st)}
@@ -607,13 +669,13 @@ function renderStep(){
     const free=Object.entries(allKeys()).filter(([k])=>{const pr=profileByKey(k);return!pr||pr[0]===S.uid}).sort((a,b)=>a[1].localeCompare(b[1]));
     el.innerHTML=head(0)+`
       <div class="field"><label for="c-nick">Player name</label>${inp('c-nick','card','text',D.nickname,'What everyone calls you','maxlength="16"')}</div>
-      <div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>
+      ${D._acctEmail&&!D._editing?`<div class="acct">${ic('mail')}<div><span class="label">Signed in as</span><div class="nm">${esc(D.email)}</div></div></div>`:`<div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>`}
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
       <div class="field"><label for="c-ig">Instagram <span class="req">optional</span></label>${inp('c-ig','at','text',D.instagram,'@yourhandle','maxlength="40"')}</div>
       ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'From the member who invited you','maxlength="12" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?`<div class="field"><label for="c-list">Played with us before? <span class="req">optional</span></label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the list</option>`).join('')}</select></div>`:''}
       <p class="fine">Your email and mobile number are only seen by BAD organisers. We use them for session updates and nothing else.</p>`;
-    const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();if(k==='nickname')preview()}};
+    const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
     on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase());
     const rh=()=>{const el=$('c-ref-hint');if(!el)return;const i=codeInfo(D.referredBy);el.textContent=!i?'':i.kind==='club'?`✓ ${i.label}. +${i.pts} points when you join.`:i.kind==='member'?`✓ Invited by ${i.name}. +${CFG.referee} points for you, +${CFG.referrer} for them.`:i.kind==='off'?'This code has ended.':'We can’t find that code. Please check the spelling.'};
     if($('c-ref')){$('c-ref').addEventListener('input',rh);rh()}
@@ -673,13 +735,13 @@ function renderStep(){
   if(step===5)el.innerHTML=`<h2 style="margin-bottom:12px">Thank you.</h2><div id="save-out" style="display:grid;gap:12px"><p class="muted">Saving your card…</p></div>`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const k=b.dataset.f;D[k]=D[k]===b.dataset.val?'':b.dataset.val;renderStep()});
   const inQuiz=step===3&&quiz&&quiz.i<QUIZ.length;
-  $('back').hidden=step===0||step===5||inQuiz;$('next').hidden=step===5||inQuiz;$('skip').hidden=!(step>=1&&step<=3)||inQuiz;
+  $('back').hidden=step===0||step===5||inQuiz;$('next').hidden=step===5||inQuiz;$('skip').hidden=!(step<=3)||inQuiz||(step===0&&D._editing);$('skip').textContent=step===0?'Save my card':'Finish now';$('skip').disabled=!stepValid();
   $('next').textContent=step===4?(D._editing?'Save my card':'Register'):'Continue';
   $('next').disabled=!stepValid();
   preview();
 }
 $('back').onclick=()=>{step=Math.max(0,step-1);quiz=null;renderStep()};
-$('skip').onclick=()=>{step=5;renderStep();saveProfile()};
+$('skip').onclick=()=>{if(!stepValid())return;step=5;renderStep();saveProfile()};
 $('next').onclick=()=>{if(!stepValid())return;if(step<4){step++;if(step===2&&!D.sports.length)D.sports=[];renderStep()}else{step=5;renderStep();saveProfile()}};
 $('photo-in').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{D.photo=await toBW(f);renderStep()}catch(_){toast('Sorry, that image did not load. Please try a JPG or PNG.')}};
@@ -1226,77 +1288,130 @@ let adminSid=null;
 const nameOf=(uid,key)=>S.profiles[uid]?.nickname||allKeys()[key]||key||'Unknown';
 function mcpErr(e){const c=e&&e.code;return c==='server_not_connected'?'Add Google Sheets in claude.ai Settings → Connectors.':c==='needs_reauth'?'Reconnect Google Sheets in claude.ai Settings → Connectors.':(c==='not_in_manifest'||c==='approval_required')?'Allow Google Sheets for this page, then try again.':(e&&e.message)||'Something went wrong.'}
 
+let aTab='today',showNew=false,showPast=false,adminPicked=false;
+const ATABS=[['today','Today','clock'],['sessions','Sessions','ticket'],['players','Players','users'],['points','Points & codes','coin'],['posts','Club posts','club'],['settings','Settings','admin']];
+const fmtS=x=>{const d=dParts(x.date);return `${d.w} ${d.d} ${d.m}`};
+const unpaidOf=sid=>{const r=roster(sid);return r.in.filter(e=>!e.guest&&!S.payments[sid]?.[e.uid]?.ok)};
+const owedOf=sid=>{const s=S.sessions[sid],r=roster(sid);return unpaidOf(sid).length*(+s.fee||0)+r.late.filter(e=>e.guest||!S.payments[sid]?.[e.uid]?.ok).reduce((t,e)=>t+(+e.fee.amount||0),0)};
+const box=(title,inner,extra='')=>`<div class="panel ${extra}">${title?`<h3 class="ah">${title}</h3>`:''}${inner}</div>`;
+const tile=(n,l)=>`<div class="tile"><div class="stat"><b class="num">${n}</b><span class="label">${l}</span></div></div>`;
+
 function renderAdmin(){
   const el=$('v-admin'),list=Object.entries(S.sessions).sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
-  const up=upcoming();if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
-  const s=adminSid&&S.sessions[adminSid],r=s?roster(adminSid):null;
-  const ns=S.noshows,nsKeys=Object.values(ns).sort((a,b)=>(b.dates||[]).length-(a.dates||[]).length);
-  const nsId=e=>e.guest?`${adminSid}#g-${slug(e.guest)}`:adminSid;const isNS=(e)=>Object.values(ns).some(n=>n.player===e.key&&(n.dates||[]).includes(nsId(e)));
-  el.innerHTML=`
-  <div class="panel"><div class="row" style="justify-content:space-between"><h2>Session list</h2>
-    <select id="a-sid" style="width:auto">${list.map(([id,x])=>{const d=dParts(x.date);return `<option value="${id}" ${id===adminSid?'selected':''}>${d.w} ${d.d} ${d.m} · ${esc(x.title||sportOf(x.sport).club)}</option>`}).join('')}</select></div>
-    ${s?`<p class="muted num">${r.in.length} of ${r.cap} in · ${r.wait.length} waiting · AED ${esc(s.fee)} · ${r.in.filter(e=>!e.guest&&S.payments[adminSid]?.[e.uid]?.ok).length} paid</p>
-    <div class="list">${r.in.map((e,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)}<div><div class="nm">${esc(e.guest||nameOf(e.uid,e.key))}</div><div class="sub">${e.guest?'Guest of '+esc(nameOf(e.uid,e.key))+' · on them':esc(S.contacts[e.uid]?.mobile||S.contacts[e.uid]?.whatsapp||'')} · ${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)} games</div>${e.guest?'':payTag(adminSid,e.uid)}</div>
-      <button class="btn sm ${isNS(e)?'':'ghost'}" data-ns="${esc(e.key)}" data-uid="${esc(e.uid)}" data-d="${esc(nsId(e))}">${isNS(e)?'No-show ✕':'Mark no-show'}</button></div>`).join('')||'<div class="empty">No one yet.</div>'}</div>
-    ${r.wait.length?`<span class="label">Waitlist</span><div class="list">${r.wait.map((e,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="rank num">${i+1}</span><div class="nm">${esc(e.guest?e.guest+' (guest of '+nameOf(e.uid,e.key)+')':nameOf(e.uid,e.key))}</div></div>`).join('')}</div>`:''}
-    ${r.late.length?`<span class="label">Dropped late. Fee owed</span><div class="list">${r.late.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(e.guest?e.guest+' (guest of '+nameOf(e.uid,e.key)+')':nameOf(e.uid,e.key))}</div><div class="sub">${esc(e.fee.label)}${e.guest?' · host pays':''} · dropped ${esc(new Date(e.out).toLocaleString('en-GB',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}))}</div>${e.guest?'':payTag(adminSid,e.uid)}</div><b class="num">AED ${e.fee.amount}</b></div>`).join('')}</div>`:''}`:'<div class="empty">No sessions yet. Add one below.</div>'}
-  </div>
-
-  <div class="secret"><div class="row" style="justify-content:space-between"><h3>No-show list</h3><span class="tagl">Organisers only</span></div>
-    <p class="hint">Players never see this. Mark no-shows from the session list above.</p>
-    <div class="list">${nsKeys.filter(n=>(n.dates||[]).length).map(n=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(n.name||n.player)}</div><div class="sub num">${(n.dates||[]).map(d=>{const [sd,g]=d.split('#');return esc((S.sessions[sd]?.date||sd)+(g?' (guest)':''))}).join(' · ')}</div></div><b class="num">${n.dates.length}</b></div>`).join('')||'<div class="empty">Clean sheet so far.</div>'}</div></div>
-
-  <div class="panel"><h2>Google Sheets</h2>
-    <div class="row"><button class="btn" id="sync">Pull points</button><button class="btn ghost" id="export">Update sign-ups sheet</button></div>
-    <p class="hint" id="sheet-status">Pull awards points from both Attendance Logs, guests who played and referrals. Nothing counted twice. Update writes every player card, session sign-up and no-show to <a href="https://docs.google.com/spreadsheets/d/${SIGNUP_SHEET}/edit" target="_blank" rel="noopener">BAD App – Player Sign-ups</a>.</p></div>
-
-  <div class="panel"><h2>Add a session</h2>
-    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===newSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
-    <div class="row" style="align-items:flex-end">
-      <div class="field" style="margin:0;flex:1;min-width:150px"><label for="n-date">Date</label><input type="date" id="n-date"></div>
-      <div class="field" style="margin:0;width:120px"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
-      <div class="field" style="margin:0;width:120px"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
-      <label class="chip" style="margin-bottom:2px"><input type="checkbox" id="n-tbc"> Time to be confirmed</label></div>
-    <div class="row" style="align-items:flex-end">
-      <div class="field" style="margin:0;flex:2;min-width:180px"><label for="n-title">Name</label><input type="text" id="n-title" value="${esc(defaultTitle(newSport))}"></div>
-      <div class="field" style="margin:0;width:100px"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
-      <div class="field" style="margin:0;width:100px"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:20}"></div></div>
-    <div class="field" style="margin:0"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div>
-    <div class="row"><button class="btn" id="n-go">${ic('plus')}Post session</button></div></div>
-
-  <div class="panel"><h2>Post to Club</h2>
-    <div class="chips" role="group"><button type="button" class="chip" data-pt="event" aria-pressed="${postType==='event'}">Event</button><button type="button" class="chip" data-pt="news" aria-pressed="${postType!=='event'}">Announcement</button></div>
-    <div class="field" style="margin:0"><label for="p-club">For</label><select id="p-club"><option value="all">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}">${SPORTS[k].club}</option>`).join('')}</select></div>
-    <div class="field" style="margin:0"><label for="p-title">Title</label><input type="text" id="p-title"></div>
-    <div class="row" id="p-evt"><div class="field" style="margin:0;flex:1;min-width:150px"><label for="p-date">Date</label><input type="date" id="p-date"></div>
-      <div class="field" style="margin:0;flex:1;min-width:150px"><label for="p-time">Time</label><input type="text" id="p-time" placeholder="4pm–10pm"></div>
-      <div class="field" style="margin:0;flex:2;min-width:180px"><label for="p-place">Place</label><input type="text" id="p-place"></div></div>
-    <div class="field" style="margin:0"><label for="p-body">Text</label><textarea id="p-body"></textarea></div>
-    <div class="field" style="margin:0"><label for="p-link">Link <span class="muted">(optional)</span></label><input type="text" id="p-link" placeholder="https://"></div>
-    <div class="row"><button class="btn" id="p-go">Post</button></div>
-    <div class="list">${Object.entries(S.posts).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')}</div></div>
-
-  <div class="panel"><h2>Free session requests</h2><div class="list">${Object.entries(S.requests).map(([id,q])=>{const p=S.profiles[id];return `<div class="li">${avatar(p,q.player)}<div><div class="nm">${esc(p?.nickname||q.player)}</div><div class="sub">${statsFor(q.player).balance} points · asked ${esc((q.at||'').slice(0,10))}</div></div><div class="row"><button class="btn sm" data-ok="${esc(id)}">Approve</button><button class="btn ghost sm" data-no="${esc(id)}">Decline</button></div></div>`}).join('')||'<div class="empty">None right now.</div>'}</div></div>
-
-  ${Object.values(S.profiles).some(p=>p.sample)?`<div class="secret"><div class="row" style="justify-content:space-between"><h3>Sample players</h3><span class="tagl">${Object.values(S.profiles).filter(p=>p.sample).length}</span></div><p class="fine">Sample players from the 21 Oct session are here so you can try the courts and check-in. Remove them before going live.</p><button class="btn ghost sm" id="rm-samples" style="justify-self:start">${ic('x')}Remove sample players</button></div>`:''}
-  ${payPanel()}
-  ${brandPanel()}
-  <div class="panel"><h2>Bonus points</h2><div class="row" style="align-items:flex-end">
-    <div class="field" style="flex:2;min-width:160px;margin:0"><label for="bp-player">Player</label><input type="text" id="bp-player" list="names"></div>
-    <div class="field" style="width:100px;margin:0"><label for="bp-pts">Points</label><input type="number" id="bp-pts" value="15"></div>
-    <div class="field" style="flex:2;min-width:160px;margin:0"><label for="bp-reason">Reason</label><input type="text" id="bp-reason" value="Brought a friend"></div>
-    <button class="btn ghost" id="bp-go">Add</button></div><datalist id="names">${Object.values(allKeys()).map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
-
-  ${codesPanel()}
-  <div class="panel"><h2>Add a player from a join code</h2><textarea id="imp-code" placeholder="BAD1-…"></textarea><div class="row"><button class="btn ghost" id="imp-go">Add player</button></div></div>`;
+  const up=upcoming();if(!adminPicked&&up[0])adminSid=up[0][0];if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
+  const badge={points:Object.keys(S.requests).length};
+  const T=ATABS.find(t=>t[0]===aTab)||ATABS[0];
+  const nav=`<nav class="anav" aria-label="Organiser sections">${ATABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
+  const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,settings:aSettings}[aTab]||aToday)(list,up);
+  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">Organiser</span><h2>${T[1]}</h2></div>${nav}<div class="abody">${body}</div></div>`;
   bindAdmin();
 }
 
+function aToday(list,up){
+  const nx=up[0],s=nx&&S.sessions[nx[0]];
+  const alerts=[];const rq=Object.keys(S.requests).length;
+  if(rq)alerts.push(['gift',`${rq} free session request${rq>1?'s':''} waiting`,'points']);
+  const past=list.filter(([id,x])=>sessStart(x)<Date.now()&&sessStart(x)>Date.now()-14*864e5);
+  for(const [id,x] of past){const o=owedOf(id);if(o)alerts.push(['coin',`AED ${o} unpaid from ${esc(x.title)} · ${fmtS(x)}`,'sessions',id])}
+  const pc=S.payCfg||{};if(!pc.iban&&!pc.ziinaLink)alerts.push(['bank','Add your bank details and Ziina link so players know where to pay','settings']);
+  const sm=Object.values(S.profiles).filter(p=>p.sample).length;if(sm)alerts.push(['users',`${sm} sample players are still in the app`,'settings']);
+  const players=Object.values(S.profiles).filter(p=>!p.sample).length;
+  const nsN=Object.values(S.noshows).filter(n=>(n.dates||[]).length).length;
+  let next='<div class="empty">No upcoming sessions. <button class="btn sm" data-go="sessions" data-new="1">'+ic('plus')+'Add a session</button></div>';
+  if(s){const r=roster(nx[0]),paid=r.in.filter(e=>!e.guest&&S.payments[nx[0]]?.[e.uid]?.ok).length;
+    next=`<div class="nextcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><span class="label">Next up · ${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))}</span><h3 class="big">${esc(s.title)}</h3>${s.venue?`<p class="hint">${ic('pin')}${esc(s.venue)}</p>`:''}</div>${ic(sportOf(s.sport).icon)}</div>
+      <div class="tiles">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}</div>
+      <div class="row"><button class="btn" data-go="sessions" data-sid="${esc(nx[0])}">${ic('users')}See players</button><button class="btn ghost" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button></div></div>`}
+  return `${next}
+  ${box('Needs attention',alerts.length?`<div class="list">${alerts.map(([i,t,go,sid])=>`<button type="button" class="alert" data-go="${go}" ${sid?`data-sid="${esc(sid)}"`:''}>${ic(i)}<span>${t}</span>${ic('arrow')}</button>`).join('')}</div>`:'<p class="hint">All clear. Nice one.</p>')}
+  <div class="tiles">${tile(players,'Players')}${tile(up.length,'Upcoming sessions')}${tile(nsN,'On no-show list')}</div>
+  ${box('Quick actions',`<div class="qa"><button class="btn ghost" data-go="sessions" data-new="1">${ic('plus')}Add a session</button><button class="btn ghost" data-go="posts">${ic('club')}Post to Club</button><button class="btn ghost" data-go="points">${ic('star')}Give bonus points</button><button class="btn ghost" data-go="points">${ic('gift')}Club codes</button></div>`)}`;
+}
+
+function aSessions(list,up){
+  const s=adminSid&&S.sessions[adminSid],r=s?roster(adminSid):null;
+  const ns=S.noshows,nsId=e=>e.guest?`${adminSid}#g-${slug(e.guest)}`:adminSid,isNS=e=>Object.values(ns).some(n=>n.player===e.key&&(n.dates||[]).includes(nsId(e)));
+  const shown=showPast?list.slice().reverse():up.concat(s&&!up.some(([i])=>i===adminSid)?[[adminSid,s]]:[]);
+  const picker=`<div class="sports" role="group" aria-label="Pick a session">${shown.map(([id,x])=>`<button type="button" class="sp" data-sid="${esc(id)}" aria-pressed="${id===adminSid}">${ic(sportOf(x.sport).icon)}${fmtS(x)} · ${esc(x.title)}</button>`).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
+    <div class="row" style="justify-content:space-between"><label class="chip sm"><input type="checkbox" id="a-past" ${showPast?'checked':''}> Show past sessions</label><button class="btn sm${showNew?' ghost':''}" id="a-new">${showNew?ic('x')+'Close':ic('plus')+'Add a session'}</button></div>`;
+  const form=showNew?box('Add a session',`
+    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===newSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
+    <div class="fgrid">
+      <div class="field"><label for="n-title">Name</label><input type="text" id="n-title" value="${esc(defaultTitle(newSport))}"></div>
+      <div class="field"><label for="n-date">Date</label><input type="date" id="n-date"></div>
+      <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
+      <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
+      <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:20}"></div>
+      <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div></div>
+    <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc"> Time to be confirmed</label>
+    <div class="row"><button class="btn" id="n-go">${ic('plus')}Post session</button></div>`,'formbox'):'';
+  if(!s)return picker+form+'<div class="empty">No sessions yet.</div>';
+  const paid=r.in.filter(e=>!e.guest&&S.payments[adminSid]?.[e.uid]?.ok).length,owed=owedOf(adminSid);
+  const nm=e=>e.guest?`${esc(e.guest)} <span class="tagl">Guest of ${esc(nameOf(e.uid,e.key))}</span>`:esc(nameOf(e.uid,e.key));
+  const rosterHTML=r.in.map((e,i)=>`<div class="li pl"><span class="rank num">${i+1}</span>${e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)}<div><div class="nm">${nm(e)}</div><div class="sub">${e.guest?'Host is responsible':esc(S.contacts[e.uid]?.mobile||S.contacts[e.uid]?.whatsapp||'')}${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)?` · ${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)} games`:''}</div>${e.guest?'':payTag(adminSid,e.uid)}</div>
+      <button class="btn sm ${isNS(e)?'':'ghost'} nsb" data-ns="${esc(e.key)}" data-uid="${esc(e.uid)}" data-d="${esc(nsId(e))}" title="Hidden from players">${isNS(e)?'No-show ✕':'No-show'}</button></div>`).join('')||'<div class="empty">No one yet.</div>';
+  return `${picker}${form}
+  <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))+'–'+esc(fmtTime(s.end||''))} · AED ${esc(s.fee)}</span><h3 class="big">${esc(s.title)}</h3>
+    <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
+    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button></div></div>
+  ${box(`Players <span class="hint num">${r.in.length}</span>`,`<div class="list">${rosterHTML}</div>`)}
+  ${r.wait.length?box('Waitlist',`<div class="list">${r.wait.map((e,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="rank num">${i+1}</span><div class="nm">${nm(e)}</div></div>`).join('')}</div>`):''}
+  ${r.late.length?box('Dropped late · fee owed',`<div class="list">${r.late.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${nm(e)}</div><div class="sub">${esc(e.fee.label)}${e.guest?' · host pays':''} · dropped ${esc(new Date(e.out).toLocaleString('en-GB',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}))}</div>${e.guest?'':payTag(adminSid,e.uid)}</div><b class="num">AED ${e.fee.amount}</b></div>`).join('')}</div>`):''}`;
+}
+
+function aPlayers(){
+  const ps=Object.entries(S.profiles).sort((a,b)=>(!!a[1].sample-!!b[1].sample)||(a[1].nickname||'').localeCompare(b[1].nickname||''));
+  const nsBy={};for(const n of Object.values(S.noshows))nsBy[n.player]=(n.dates||[]).length;
+  const nsKeys=Object.values(S.noshows).filter(n=>(n.dates||[]).length).sort((a,b)=>b.dates.length-a.dates.length);
+  return `<div class="field" style="margin:0"><label for="a-q" class="sr">Search players</label><input type="search" id="a-q" placeholder="Search name, email or mobile"></div>
+  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div></div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
+  ${box('No-show list <span class="tagl">Organisers only</span>',`<p class="hint">Players never see this. Mark no-shows from a session’s player list.</p><div class="list">${nsKeys.map(n=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(n.name||n.player)}</div><div class="sub num">${n.dates.map(d=>{const [sd,g]=d.split('#');return esc((S.sessions[sd]?fmtS(S.sessions[sd]):sd)+(g?' (guest)':''))}).join(' · ')}</div></div><b class="num">${n.dates.length}</b></div>`).join('')||'<div class="empty">Clean sheet so far.</div>'}</div>`,'secret')}
+  <details class="panel"><summary class="ah">Add a player from a join code</summary><p class="hint">Only needed if a player couldn’t save their card and sent you a BAD1- code.</p><textarea id="imp-code" placeholder="BAD1-…"></textarea><div class="row"><button class="btn ghost" id="imp-go">Add player</button></div></details>`;
+}
+
+function aPoints(){
+  return `${box(`Free session requests${Object.keys(S.requests).length?` <span class="badge num">${Object.keys(S.requests).length}</span>`:''}`,`<div class="list">${Object.entries(S.requests).map(([id,q])=>{const p=S.profiles[id];return `<div class="li">${avatar(p,q.player)}<div><div class="nm">${esc(p?.nickname||q.player)}</div><div class="sub">${statsFor(q.player).balance} points · asked ${esc((q.at||'').slice(0,10))}</div></div><div class="row"><button class="btn sm" data-ok="${esc(id)}">Approve</button><button class="btn ghost sm" data-no="${esc(id)}">Decline</button></div></div>`}).join('')||'<p class="hint">None right now.</p>'}</div>`)}
+  ${box('Give bonus points',`<div class="fgrid">
+    <div class="field wide"><label for="bp-player">Player</label><input type="text" id="bp-player" list="names" placeholder="Start typing a name"></div>
+    <div class="field"><label for="bp-pts">Points</label><input type="number" id="bp-pts" value="15"></div>
+    <div class="field"><label for="bp-reason">Reason</label><input type="text" id="bp-reason" value="Brought a friend"></div></div>
+    <p class="fine">Use a minus number to take points away.</p>
+    <div class="row"><button class="btn" id="bp-go">Give points</button></div><datalist id="names">${Object.values(allKeys()).map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`)}
+  ${codesPanel()}
+  ${box('Update points',`<div class="row"><button class="btn ghost" id="sync">${ic('star')}Award points now</button>${S.mcp?`<button class="btn ghost" id="export">${ic('sheet')}Update sign-ups sheet</button>`:''}</div>
+    <p class="hint" id="sheet-status">Adds points for new guests and referrals. This also runs on its own each time you open the app. Nothing is counted twice.${S.mcp?' Also pulls attendance from both Google Sheets trackers.':''}</p>`)}`;
+}
+
+function aPosts(){
+  return `${box('New post',`<div class="chips" role="group"><button type="button" class="chip" data-pt="event" aria-pressed="${postType==='event'}">Event</button><button type="button" class="chip" data-pt="news" aria-pressed="${postType!=='event'}">Announcement</button></div>
+    <div class="fgrid">
+      <div class="field wide"><label for="p-title">Title</label><input type="text" id="p-title"></div>
+      <div class="field"><label for="p-club">For</label><select id="p-club"><option value="all">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}">${SPORTS[k].club}</option>`).join('')}</select></div>
+      <div class="field"><label for="p-link">Link <span class="muted">(optional)</span></label><input type="text" id="p-link" placeholder="https://"></div></div>
+    <div class="fgrid" id="p-evt" ${postType==='event'?'':'hidden'}>
+      <div class="field"><label for="p-date">Date</label><input type="date" id="p-date"></div>
+      <div class="field"><label for="p-time">Time</label><input type="text" id="p-time" placeholder="4pm–10pm"></div>
+      <div class="field wide"><label for="p-place">Place</label><input type="text" id="p-place"></div></div>
+    <div class="field" style="margin:0"><label for="p-body">Text</label><textarea id="p-body"></textarea></div>
+    <div class="row"><button class="btn" id="p-go">Post</button></div>`)}
+  ${box('Posted',`<div class="list">${Object.entries(S.posts).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'} · ${esc(p.club&&p.club!=='all'?SPORTS[p.club]?.club||'':'All of BAD')}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')||'<p class="hint">Nothing posted yet.</p>'}</div>`)}`;
+}
+
+function aSettings(){
+  const own=(window.BAD_ADMINS||[]),extra=Object.keys(S.admins||{});
+  return `${payPanel()}
+  ${window.BAD_WEB?box('Organisers',`<p class="hint">Organisers see this tab, run the courts and confirm payments. They sign in with this email.</p>
+    <div class="list">${own.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><span class="tagl">Owner</span></div>`).join('')}${extra.filter(e=>!own.includes(e)).map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><button class="btn ghost sm" data-unadmin="${esc(e)}">Remove</button></div>`).join('')}</div>
+    <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="ad-email">Add an organiser</label><input type="email" id="ad-email" placeholder="name@email.com"></div><button class="btn" id="ad-go">Add</button></div>`):''}
+  ${Object.values(S.profiles).some(p=>p.sample)?box(`Sample players <span class="tagl">${Object.values(S.profiles).filter(p=>p.sample).length}</span>`,`<p class="hint">Sample players from the 21 Oct session are here so you can try the courts and check-in. Remove them before going live.</p><button class="btn ghost sm" id="rm-samples" style="justify-self:start">${ic('x')}Remove sample players</button>`,'secret'):''}
+  ${brandPanel()}`;
+}
 let postType='event',newSport='badminton';
 function payTag(sid,uid){const b=S.bookings[uid]?.s?.[sid]||{},k=b.pay||'cash',ok=S.payments[sid]?.[uid]?.ok;
   return `<div class="row" style="gap:6px;margin-top:4px"><span class="tagl${ok?' solid':''}">${ic(PAY[k].icon)}${PAY[k].label}${ok?' · Paid':b.sent?' · Sent':''}</span><button class="chip sm" data-paid="${esc(uid)}" aria-pressed="${!!ok}">${ok?'Undo paid':'Mark paid'}</button></div>`}
 function payPanel(){const c=S.payCfg||{};
-  return `<div class="panel sec"><h2>Payments</h2><p class="muted">Players choose how they pay when they join a session. Bank details and the Ziina link are shown only to players who pick that option.</p>
+  return `<div class="panel"><h3 class="ah">Payments</h3><p class="muted">Players choose how they pay when they join a session. Bank details and the Ziina link are shown only to players who pick that option.</p>
     <div class="chips">${Object.entries(PAY).map(([k,m])=>`<label class="chip"><input type="checkbox" data-pon="${k}" ${c[k]!==false?'checked':''}> ${ic(m.icon)}${m.label}</label>`).join('')}</div>
     <div class="row" style="align-items:flex-end"><div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-acc">Account name</label><input type="text" id="pc-acc" value="${esc(c.accName||'')}"></div>
       <div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-bank">Bank</label><input type="text" id="pc-bank" value="${esc(c.bankName||'')}"></div></div>
@@ -1305,34 +1420,44 @@ function payPanel(){const c=S.payCfg||{};
     <div class="row"><button class="btn" id="pc-save">Save payment details</button></div></div>`}
 const defaultTitle=k=>({badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BADDINK Pickleball',run:'Runaways Run',basketball:'BADSHOTS Run',training:'Training',retreat:'BAD Retreat'}[k]||'Session');
 function bindAdmin(){
-  const q=s=>document.querySelectorAll(s);
-  $('a-sid')&&($('a-sid').onchange=e=>{adminSid=e.target.value;renderAdmin()});
+  const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+  q('[data-at]').forEach(b=>b.onclick=()=>{aTab=b.dataset.at;renderAdmin();scrollTo({top:0})});
+  q('[data-go]').forEach(b=>b.onclick=()=>{aTab=b.dataset.go;if(b.dataset.sid){adminSid=b.dataset.sid;adminPicked=true}if(b.dataset.new)showNew=true;renderAdmin();scrollTo({top:0})});
+  q('[data-courts]').forEach(b=>b.onclick=()=>{S.courtSport=b.dataset.courts;setView('courts')});
+  q('.sp[data-sid]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sid;adminPicked=true;renderAdmin()});
+  const past=$('a-past');if(past)past.onchange=()=>{showPast=past.checked;renderAdmin()};
+  on('a-new',()=>{showNew=!showNew;renderAdmin()});
+  const aq=$('a-q');if(aq)aq.oninput=()=>{const v=aq.value.trim().toLowerCase();q('#a-plist [data-q]').forEach(li=>li.hidden=!!v&&!li.dataset.q.includes(v))};
   q('[data-ns]').forEach(b=>b.onclick=async()=>{const key=b.dataset.ns,id='ns-'+slug(key),cur=S.noshows[id]||{player:key,name:nameOf(b.dataset.uid,key),dates:[]};
     const dates=new Set(cur.dates||[]),d=b.dataset.d;dates.has(d)?dates.delete(d):dates.add(d);
     try{await S.db.doc('noshows/'+id).set({player:key,name:cur.name,dates:[...dates]})}catch(e){toast("Didn't save.")}});
   q('[data-pt]').forEach(b=>b.onclick=()=>{postType=b.dataset.pt;q('[data-pt]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('p-evt').hidden=postType!=='event'});
   q('[data-nsp]').forEach(b=>b.onclick=()=>{newSport=b.dataset.nsp;renderAdmin()});
-  $('n-go').onclick=async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
+  on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
-    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,venue:$('n-venue').value.trim()});toast('Session posted.')}catch(e){toast("Sorry, that didn't save.")}};
-  $('p-go').onclick=async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
+    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,venue:$('n-venue').value.trim()});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+  on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};
     if(postType==='event'){d.date=$('p-date').value;d.time=$('p-time').value.trim();d.place=$('p-place').value.trim()}
-    try{await S.db.collection('posts').add(d);toast('Posted.')}catch(e){toast("Didn't post.")}};
+    try{await S.db.collection('posts').add(d);toast('Posted.')}catch(e){toast("Didn't post.")}});
   q('[data-delpost]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('posts/'+b.dataset.delpost).delete();toast('Removed.')}catch(e){toast("Didn't remove.")}});
   q('[data-ok]').forEach(b=>b.onclick=()=>approve(b.dataset.ok));q('[data-no]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('requests/'+b.dataset.no).delete();toast('Declined.')}catch(e){}});
-  $('bp-go').onclick=async()=>{const name=$('bp-player').value.trim(),pts=parseInt($('bp-pts').value,10),reason=$('bp-reason').value.trim()||'Bonus';if(!name||!pts){toast('Pick a player and points.');return}
-    try{await S.db.doc('ledger/bonus-'+Date.now()+'-'+slug(name)).set({player:keyOf(name),name,pts,kind:'bonus',reason,date:new Date().toISOString().slice(0,10)});toast(`${pts>0?'+':''}${pts} for ${name}.`)}catch(e){toast("Didn't save.")}};
-  $('imp-go').onclick=async()=>{const raw=$('imp-code').value.trim();
+  on('bp-go',async()=>{const name=$('bp-player').value.trim(),pts=parseInt($('bp-pts').value,10),reason=$('bp-reason').value.trim()||'Bonus';if(!name||!pts){toast('Pick a player and points.');return}
+    try{await S.db.doc('ledger/bonus-'+Date.now()+'-'+slug(name)).set({player:keyOf(name),name,pts,kind:'bonus',reason,date:new Date().toISOString().slice(0,10)});toast(`${pts>0?'+':''}${pts} for ${name}.`);$('bp-player').value=''}catch(e){toast("Didn't save.")}});
+  on('imp-go',async()=>{const raw=$('imp-code').value.trim();
     try{if(!raw.startsWith('BAD1-'))throw 0;const d=JSON.parse(decodeURIComponent(escape(atob(raw.slice(5)))));if(!d.nickname)throw 0;const id='imp-'+slug(d.nickname)+'-'+Date.now().toString(36);const c=d.contact;delete d.contact;
-      await S.db.doc('profiles/'+id).set(d);if(c)await S.db.doc('contacts/'+id).set(c);$('imp-code').value='';toast(d.nickname+' added.')}catch(e){toast('That code is not valid. Ask them to copy it again.')}};
-  $('sync').onclick=syncPoints;bindCodes();$('export').onclick=exportSheet;bindBrand();
+      await S.db.doc('profiles/'+id).set(d);if(c)await S.db.doc('contacts/'+id).set(c);$('imp-code').value='';toast(d.nickname+' added.')}catch(e){toast('That code is not valid. Ask them to copy it again.')}});
+  on('sync',syncPoints);on('export',exportSheet);bindCodes();if(aTab==='settings')bindBrand();
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
     try{await S.db.doc('payments/'+adminSid).set(cur);toast(was?'Marked as unpaid.':'Payment confirmed.')}catch(e){toast("Sorry, that didn't save.")}});
-  const ps=$('pc-save');if(ps)ps.onclick=async()=>{const d={accName:$('pc-acc').value.trim(),bankName:$('pc-bank').value.trim(),iban:$('pc-iban').value.trim(),ziinaLink:$('pc-ziina').value.trim()};
-    document.querySelectorAll('[data-pon]').forEach(x=>d[x.dataset.pon]=x.checked);
+  on('pc-save',async()=>{const d={accName:$('pc-acc').value.trim(),bankName:$('pc-bank').value.trim(),iban:$('pc-iban').value.trim(),ziinaLink:$('pc-ziina').value.trim()};
+    q('[data-pon]').forEach(x=>d[x.dataset.pon]=x.checked);
     if(d.ziinaLink&&!/^https:\/\//.test(d.ziinaLink)){toast('Please use a full https:// link for Ziina.');return}
-    try{await S.db.doc('config/payments').set(d);toast('Payment details saved.')}catch(e){toast("Sorry, that didn't save.")}};const rs=$('rm-samples');if(rs)rs.onclick=removeSamples;
+    try{await S.db.doc('config/payments').set(d);toast('Payment details saved.')}catch(e){toast("Sorry, that didn't save.")}});
+  on('rm-samples',removeSamples);
+  on('ad-go',async()=>{const e=$('ad-email').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e)){toast('Please enter a full email address.');return}
+    try{await S.db.doc('admins/'+e).set({addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(e+' is now an organiser.')}catch(x){toast("Sorry, that didn't save.")}});
+  q('[data-unadmin]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('admins/'+b.dataset.unadmin).delete();toast('Removed.')}catch(x){toast("Sorry, that didn't save.")}});
 }
 async function approve(id){const r=S.requests[id];if(!r)return;
   try{await S.db.doc('ledger/redeem-'+Date.now()+'-'+slug(r.player)).set({player:r.player,name:r.player,pts:-CFG.free,kind:'redeem',reason:'Free session',date:new Date().toISOString().slice(0,10)});await S.db.doc('requests/'+id).delete();toast('Approved.')}catch(e){toast("Didn't save.")}}
@@ -1388,7 +1513,7 @@ async function exportSheet(){
 
 /* ---------- club referral codes ---------- */
 function codesPanel(){const L=S.codes||{},used=c=>Object.values(S.profiles).filter(p=>(p.referredBy||'').toUpperCase()===c).length;
-  return `<div class="panel"><h2>Club codes</h2>
+  return `<div class="panel"><h3 class="ah">Club codes</h3>
   <p class="hint">Codes from BAD for people who weren’t invited by a member: events, posters, Instagram, partners. New players type it in Referral code when they sign up.</p>
   <div class="list">${Object.entries(L).sort().map(([c,a])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto auto"><div><div class="nm num">${esc(c)}${a.off?' <span class="tagl">Ended</span>':''}</div><div class="sub">${esc(a.label||'')} · +${+a.pts||CFG.referee} points · used ${used(c)}</div></div>
     <button class="btn ghost sm" data-coff="${esc(c)}">${a.off?'Turn on':'End'}</button><button class="btn ghost sm" data-cdel="${esc(c)}" aria-label="Delete ${esc(c)}">Delete</button></div>`).join('')||'<div class="empty">No club codes yet.</div>'}</div>
@@ -1421,7 +1546,7 @@ applyBrand();
 function brandPanel(){
   const b=S.brand||{};
   const sw=(src,bg,label)=>`<figure style="margin:0;display:grid;gap:6px"><div style="aspect-ratio:3/2;display:grid;place-items:center;background:${bg};border:1px solid var(--line);border-radius:var(--r)"><img src="${src}" alt="${label}" style="max-width:70%;max-height:60%"></div><figcaption class="fine">${label}</figcaption></figure>`;
-  return `<div class="panel sec"><h2>Brand</h2>
+  return `<div class="panel"><h3 class="ah">Brand</h3>
     <p class="muted">The official BAD logos from the ASSETS folder are built into the app: the black BAD wordmark on light screens and cards, the white one on dark screens and On-Court cards.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">${sw(LOGO.badK,'#fff','BAD · black (04)')}${sw(LOGO.badW,'#000','BAD · white (03)')}${sw(LOGO.clubK,'#fff','The BAD Club · black (02)')}${sw(LOGO.clubW,'#000','The BAD Club · white (01)')}</div>
     <span class="label">Brand fonts</span>
@@ -1476,6 +1601,7 @@ S.contacts={};S.brand={};
     db.collection('checkins').onSnapshot(s=>{S.checkins=map(s);syncCheckins()},()=>{});
     db.collection('qr').onSnapshot(s=>{S.qr=map(s);syncCheckins()},()=>{});
     db.collection('levels').onSnapshot(s=>{S.levels=map(s);render()},()=>{});
+    if(window.BAD_WEB)db.collection('admins').onSnapshot(s=>{S.admins=map(s);if(S.view==='admin')render()},()=>{});
     db.collection('noshows').onSnapshot(s=>{S.noshows=map(s);if(S.view==='admin')render()},()=>{});
   }
 })();

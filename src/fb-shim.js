@@ -51,7 +51,7 @@
     gate.hidden=true;document.documentElement.classList.remove('gated');
     const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email);
     if(!admin&&email){try{admin=(await fs.doc('admins/'+email).get()).exists}catch(_){}}
-    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',admin};
+    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin};
     resolveUser(window.BAD_USER);
   });
   window.badSignOut=()=>auth.signOut().then(()=>location.reload());
