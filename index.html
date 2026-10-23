@@ -462,6 +462,8 @@ details.how[open] summary::after{content:"–"}
 :root[data-theme="light"] .themebtn .sun{display:none}
 :root[data-theme="light"] .themebtn .moon{display:block}
 @media (min-width:761px){.themebtn{order:3;margin-left:0}}
+/* saved image: html2canvas skips box-shadow, so draw the white edge as a real border */
+.pc.snap{box-shadow:none!important;border:2px solid #FFFFFF;transform:none!important}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1169,7 +1171,7 @@ function renderCard(){
 function loadScript(src){return new Promise((res,rej)=>{if([...document.scripts].some(x=>x.src===src))return res();const x=document.createElement('script');x.src=src;x.onload=res;x.onerror=rej;document.head.appendChild(x)})}
 async function saveCardImage(){const b=$('save-card'),node=$('my-card')?.querySelector('.pc');if(!node)return;b.disabled=true;const t=b.innerHTML;b.textContent='Making your card…';
   try{if(!window.html2canvas)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    const cv=await html2canvas(node,{backgroundColor:null,scale:3,useCORS:true,logging:false});
+    node.classList.add('snap');let cv;try{cv=await html2canvas(node,{backgroundColor:null,scale:3,useCORS:true,logging:false})}finally{node.classList.remove('snap')}
     const blob=await new Promise(r=>cv.toBlob(r,'image/png'));const name=`BAD-card-${slug(myProfile()?.nickname||'player')}.png`,file=new File([blob],name,{type:'image/png'});
     if(navigator.canShare&&navigator.canShare({files:[file]})&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){try{await navigator.share({files:[file],title:'My BAD card'})}catch(e){if(e.name!=='AbortError')throw e}}
     else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('Card saved.')}}
