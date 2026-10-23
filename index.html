@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <title>BAD App</title>
+<script>try{var t=localStorage.getItem("badTheme");if(t==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -155,7 +156,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .inp{display:flex;align-items:center;gap:10px;border:1px solid var(--rule);border-radius:var(--r);padding:0 12px;background:var(--bg)}
 .inp svg.i{color:var(--muted)}
 .inp input{border:0!important;padding:12px 0!important;outline:none}
-input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=time],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:var(--r);padding:12px;width:100%}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=time],input[type=search],input[type=url],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:var(--r);padding:12px;width:100%}
 textarea{resize:vertical;min-height:80px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--rule);background:none;color:var(--ink);border-radius:999px;padding:9px 15px;font-weight:500;text-align:left}
@@ -447,6 +448,20 @@ details.how[open] summary::after{content:"–"}
 .inv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
 .invqr{width:120px;height:120px;border-radius:10px;background:#fff;padding:8px}
 @media (max-width:400px){.inv{grid-template-columns:1fr;justify-items:start}}
+#a-plist .li{grid-template-columns:auto minmax(0,1fr) auto auto}
+.memset{width:auto;padding:6px 8px;font-size:.78rem}
+@media (max-width:560px){#a-plist .li{grid-template-columns:auto minmax(0,1fr) auto}#a-plist .memset{grid-column:2/-1;justify-self:start}}
+:root[data-theme="light"]{--bg:#FFFFFF;--ink:#000000;--muted:#6E6E6E;--line:#E6E6E6;--soft:#F4F4F4;--rule:#BDBDBD;--chip:#EDEDED;color-scheme:light}
+:root[data-theme="light"] .wordmark .logo-l,:root[data-theme="light"] .inline-logo.logo-l{display:block}
+:root[data-theme="light"] .inline-logo.logo-l{display:inline-block}
+:root[data-theme="light"] .wordmark .logo-d,:root[data-theme="light"] .inline-logo.logo-d{display:none}
+.top{gap:12px}
+.themebtn{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink);cursor:pointer;flex:none;margin-left:auto}
+.themebtn:hover{border-color:var(--ink)}
+.themebtn .moon{display:none}
+:root[data-theme="light"] .themebtn .sun{display:none}
+:root[data-theme="light"] .themebtn .moon{display:block}
+@media (min-width:761px){.themebtn{order:3;margin-left:0}}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -469,6 +484,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
 <div class="wrap">
   <header class="top">
     <div class="wordmark"><b>BAD</b></div>
+    <button class="themebtn" id="theme" type="button" aria-label="Switch to light theme" title="Light or dark"><svg class="sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <nav class="tabs" aria-label="Sections">
       <button data-v="card"></button>
       <button data-v="play"></button>
@@ -524,7 +540,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
   /* ---------- sign-in screen ---------- */
   const gate=document.createElement('div');gate.id='gate';gate.hidden=true;
   gate.innerHTML=`<div class="gate-card">
-    <h2 class="gate-h">Welcome to <img src="${typeof LOGO!=="undefined"?LOGO.badW:""}" alt="BAD"></h2>
+    <h2 class="gate-h">Welcome to <img class="inline-logo logo-l" src="${typeof LOGO!=="undefined"?LOGO.badK:""}" alt="BAD"><img class="inline-logo logo-d" src="${typeof LOGO!=="undefined"?LOGO.badW:""}" alt="BAD"></h2>
     <p class="muted">Sign in to get your player card, join sessions and earn points.</p>
     <button class="btn wide" id="g-google"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5a4.3 4.3 0 0 1-1.9 2.8v2.3h3c1.8-1.6 2.9-4 2.9-6.8z" fill="none"/><circle cx="12" cy="12" r="8.5"/><path d="M12 12h8.4"/></svg>Continue with Google</button>
     <div class="or"><span>or use email</span></div>
@@ -584,7 +600,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 })();
 
 const CFG={attend:10,paid:5,welcome:20,guest:10,newGuest:10,referrer:25,referee:10,free:100,member:250,freeHours:48,halfHours:24};
-const TIERS=[{k:'Guest',at:0,d:'Everyone starts here. We were all BAD players once.'},{k:'Regular',at:100,d:'You keep showing up. A free session is on us.'},{k:'Member',at:250,d:'Your card turns silver. Officially one of us.'},{k:'Crew',at:500,d:'For the ones who stay after the game.'}];
+const TIERS=[{k:'Starter',at:0,d:'Everyone starts here. We were all BAD players once.'},{k:'Rising',at:100,d:'You keep showing up. A free session is on us.'},{k:'Silver',at:250,d:'Your card turns silver.'},{k:'Gold',at:500,d:'For the ones who never miss a session.'}];
 const SHEETS=[{id:'1xKhAHUrprXUPyrpGrKL6hQKDGxY7GUNCnhsEDFRjUzY',day:'wed',label:'Wednesday Rally'},{id:'1V7Ps7jnQ5KpDEB2E7B1WK9aSvwt_3l_mehe4fokgxV4',day:'fri',label:'Friday Rally'}];
 const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','White','#fff'],['courtside','Courtside','Grey','#969696']];
 const LEVELS=['Beginner','Intermediate','Advanced','Pro','National'];
@@ -717,7 +733,7 @@ function cardHTML(p,st,opt){
   const logo=ed==='oncourt'?LOGO.badW:LOGO.badK;
   const img=p.photo||PH[hash(p.listKey||p.nickname||'BAD')%PH.length];
   return `<div class="pc ${ed}${opt&&opt.qr&&p.ref?' hasqr':''}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD">${member?'Member':edName}</span><span class="num">${st.balance} pts<br>${(()=>{const u=uidOfProfile(p),m=u?memStatus(u):null;return m&&m.state==='verified'&&m.type!=='Drop-in'?`<span class="mv">${ic('check')}${esc(m.type)}</span>`:esc(tier.k)})()}</span></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD">${member?'Member':edName}</span><span class="num">${st.balance} pts<br>${(()=>{const u=uidOfProfile(p),m=u?memStatus(u):null;return m&&m.state==='verified'&&m.type!=='Guest'?`<span class="mv">${ic('check')}${esc(m.type)}</span>`:'Guest'})()}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     <div class="style">${ic(sportOf(sp).icon)}${esc(ty||sportOf(sp).club)}</div>
@@ -746,10 +762,13 @@ function codeInfo(raw){const c=normCode(raw);if(!c)return null;
   return{kind:'none',code:c}}
 
 /* ---------- membership: players pick a type, organisers verify it ---------- */
-const MEM_DEFAULT=[{k:'Drop-in',verify:false,d:'Pay per session'},{k:'Monthly member',verify:true,d:'Monthly plan'},{k:'Annual member',verify:true,d:'Yearly plan'},{k:'Crew',verify:true,d:'BAD crew and volunteers'},{k:'Coach',verify:true,d:'Coaches and trainers'}];
+const MEM_DEFAULT=[{k:'Guest',verify:false,d:'New, or dropping in now and then'},{k:'Baddie',verify:true,d:'Plays with us regularly'},{k:'Crew',verify:true,staff:true,d:'Helps run sessions and events'},{k:'Community Manager',verify:true,staff:true,d:'Looks after the community'},{k:'Founder',verify:true,staff:true,d:'Started BAD'}];
+const MEM_OLD={'Drop-in':'Guest'};
 const memTypes=()=>(S.memCfg&&S.memCfg.types&&S.memCfg.types.length)?S.memCfg.types:MEM_DEFAULT;
-const memType=k=>memTypes().find(t=>t.k===k);
-function memStatus(uid){const p=S.profiles[uid]||{},v=(S.members||{})[uid]||{},want=p.memReq?.type||'Drop-in',t=memType(want);
+const memType=k=>memTypes().find(t=>t.k===(MEM_OLD[k]||k));
+const memPick=()=>memTypes().filter(t=>!t.staff);
+const memLabel=uid=>{const m=uid&&memStatus(uid);return m&&m.state==='verified'?m.type:'Guest'};
+function memStatus(uid){const p=S.profiles[uid]||{},v=(S.members||{})[uid]||{},want=MEM_OLD[p.memReq?.type]||p.memReq?.type||'Guest',t=memType(want);
   if(v.type&&v.type===want)return{type:want,state:'verified',at:v.at};
   if(!t||!t.verify)return{type:want,state:'open'};
   if(v.declined===want)return{type:want,state:'declined'};
@@ -771,7 +790,7 @@ function startCreator(existing){
   if(!existing){const U=window.BAD_USER||{},full=(U.name||'').trim();if(S.pendingRef)D.referredBy=S.pendingRef;
     D.email=U.email||'';D.listName='';D.nickname=(full.split(/\s+/)[0]||'').slice(0,16);D._acctEmail=!!U.email;
     if(U.photo)toBWUrl(U.photo).then(async src=>{if(!src||D.photo)return;D._src=src;D._crop={z:1,x:0,y:0,b:0};try{D.photo=await renderCrop(src,D._crop)}catch(_){return}if(S.view==='create'){preview();if(step===1)renderStep()}})}
-  D.memType=(existing&&existing.memReq&&existing.memReq.type)||D.memType||'Drop-in';
+  D.memType=(existing&&existing.memReq&&existing.memReq.type)||D.memType||'Guest';if(MEM_OLD[D.memType])D.memType=MEM_OLD[D.memType];
   D._editing=!!existing;step=0;quiz=null;setView('create');
 }
 function preview(){const k=keyOf(D.listName||D.nickname);const st=statsFor(k);if(!profileByKey(k)){st.earned+=CFG.welcome;st.balance+=CFG.welcome}$('preview').innerHTML=cardHTML(D,st)}
@@ -792,7 +811,7 @@ function renderStep(){
       <p class="fine" id="c-num-hint" role="status" style="margin:6px 0 18px">${numHint(D.number)}</p>
       ${D._acctEmail&&!D._editing?`<div class="acct">${ic('mail')}<div><span class="label">Signed in as</span><div class="nm">${esc(D.email)}</div></div></div>`:`<div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>`}
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
-      <div class="field"><label for="c-mem">Membership</label><select id="c-mem">${memTypes().map(t=>`<option value="${esc(t.k)}" ${t.k===D.memType?'selected':''}>${esc(t.k)}${t.d?' · '+esc(t.d):''}</option>`).join('')}</select><p class="fine" id="c-mem-hint">${memHint(D.memType)}</p></div>
+      <div class="field"><label for="c-mem">Membership</label><select id="c-mem">${(memType(D.memType)?.staff?[memType(D.memType),...memPick()]:memPick()).map(t=>`<option value="${esc(t.k)}" ${t.k===D.memType?'selected':''}>${esc(t.k)}${t.d?' · '+esc(t.d):''}</option>`).join('')}</select><p class="fine" id="c-mem-hint">${memHint(D.memType)}</p></div>
       <div class="field"><label for="c-ig">Instagram <span class="req">optional</span></label>${inp('c-ig','at','text',D.instagram,'@yourhandle','maxlength="40"')}</div>
       ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'e.g. KENNY#08','maxlength="16" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?`<div class="field"><label for="c-list">Played with us before? <span class="req">optional</span></label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the list</option>`).join('')}</select></div>`:''}
@@ -915,7 +934,7 @@ async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:(D.listName||'').trim(),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),
-    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Drop-in',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
+    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
     try{data.ref=await claimRef(S.uid,data.ref);await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
@@ -1114,12 +1133,12 @@ function renderCard(){
   el.innerHTML=`<div class="home">
     <aside class="home-card"><div id="my-card">${cardHTML(p,st,{qr:true})}</div><div class="row" style="justify-content:center"><button class="btn sm" id="save-card">${ic('image')}Save card</button><button class="btn ghost sm" id="edit">${ic('edit')}Edit my card</button></div></aside>
     <div class="home-main">
-      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(tier.k)}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>
+      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>
       ${next}
       <section class="hsec"><h3 class="ah">Your stats</h3>
         <div class="tiles hstats">
           ${statT('Points',st.balance,can?'A free session is ready':`${CFG.free-st.balance} to a free session`,`<div class="bar"><i style="width:${Math.min(100,st.balance/CFG.free*100)}%"></i></div>${req?'<span class="tagl">Request sent</span>':can?`<button class="btn sm" id="redeem">${ic('ticket')}Use ${CFG.free}</button>`:''}`)}
-          ${statT('Tier',esc(tier.k),tNext?`${tNext.at-st.earned} to ${esc(tNext.k)}`:'Top tier',`<div class="bar"><i style="width:${tNext?Math.min(100,(st.earned-tier.at)/(tNext.at-tier.at)*100):100}%"></i></div>`)}
+          ${statT('Points tier',esc(tier.k),tNext?`${tNext.at-st.earned} to ${esc(tNext.k)}`:'Top tier',`<div class="bar"><i style="width:${tNext?Math.min(100,(st.earned-tier.at)/(tNext.at-tier.at)*100):100}%"></i></div>`)}
           ${statT('Sessions',attended,'Played with BAD')}
           ${statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
           ${statT('Club rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked')}
@@ -1127,7 +1146,7 @@ function renderCard(){
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an organiser</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an organiser.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
-          <details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memTypes().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details></section>`})()}
+          ${memType(m.type)?.staff?'':`<details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memPick().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details>`}</section>`})()}
       <section class="hsec"><h3 class="ah">Your activities</h3>
         <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
@@ -1174,6 +1193,10 @@ function renderClub(){
   el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});
 }
 
+
+/* light / dark toggle, remembered on this device */
+(function(){const b=$('theme');if(!b)return;const set=t=>{if(t==='light')document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');b.setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');try{localStorage.setItem('badTheme',t)}catch(_){}};
+  b.onclick=()=>set(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');set(document.documentElement.getAttribute('data-theme')==='light'?'light':'dark')})();
 
 /* ---------- Courts: live board for badminton, volleyball, pickleball, basketball ---------- */
 /* Organisers place every player. Flow: Bench (fewest games first) → Waiting courts → Courts → Game done → back to Bench. */
@@ -1582,9 +1605,9 @@ function aPlayers(){
   const nsBy={};for(const n of Object.values(S.noshows))nsBy[n.player]=(n.dates||[]).length;
   const nsKeys=Object.values(S.noshows).filter(n=>(n.dates||[]).length).sort((a,b)=>b.dates.length-a.dates.length);
   const mp=memPending();
-  return `${box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(String(m.at).slice(0,10)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Drop-in needs no check.</p>')}
+  return `${box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(String(m.at).slice(0,10)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
   <div class="field" style="margin:0"><label for="a-q" class="sr">Search players</label><input type="search" id="a-q" placeholder="Search name, email or mobile"></div>
-  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Drop-in'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div></div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
+  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div><select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
   ${box('No-show list <span class="tagl">Organisers only</span>',`<p class="hint">Players never see this. Mark no-shows from a session’s player list.</p><div class="list">${nsKeys.map(n=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(n.name||n.player)}</div><div class="sub num">${n.dates.map(d=>{const [sd,g]=d.split('#');return esc((S.sessions[sd]?fmtS(S.sessions[sd]):sd)+(g?' (guest)':''))}).join(' · ')}</div></div><b class="num">${n.dates.length}</b></div>`).join('')||'<div class="empty">Clean sheet so far.</div>'}</div>`,'secret')}
   <details class="panel"><summary class="ah">Add a player from a join code</summary><p class="hint">Only needed if a player couldn’t save their card and sent you a BAD1- code.</p><textarea id="imp-code" placeholder="BAD1-…"></textarea><div class="row"><button class="btn ghost" id="imp-go">Add player</button></div></details>`;
 }
@@ -1622,8 +1645,8 @@ function aPosts(){
 function aSettings(){
   const own=(window.BAD_ADMINS||[]),extra=Object.keys(S.admins||{});
   return `${box('BAD website',`<p class="hint">Every Club post links here unless you add a different link.</p><div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="site-url">Website link</label><input type="url" id="site-url" placeholder="https://" value="${esc(S.site?.url||'')}"></div><button class="btn" id="site-go">Save</button></div>`)}
-  ${box('Membership types',`<p class="hint">Players pick one when they register. Types marked “Needs verifying” wait for an organiser before they show on the card.</p>
-    <div class="list">${memTypes().map((t,i)=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto auto"><div><div class="nm">${esc(t.k)}</div><div class="sub">${esc(t.d||'')}</div></div><label class="chip sm"><input type="checkbox" data-mverify="${i}" ${t.verify?'checked':''}> Needs verifying</label>${t.k==='Drop-in'?'':`<button class="btn ghost sm" data-mdel="${i}">Remove</button>`}</div>`).join('')}</div>
+  ${box('Membership levels',`<p class="hint">Membership levels. Players can request the open ones. “Organisers assign” levels (like Crew or Founder) are only given from the Players list. “Needs verifying” waits for an organiser before it shows on the card.</p>
+    <div class="list">${memTypes().map((t,i)=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto auto"><div><div class="nm">${esc(t.k)}</div><div class="sub">${esc(t.d||'')}</div></div><div class="row" style="gap:6px"><label class="chip sm"><input type="checkbox" data-mverify="${i}" ${t.verify?'checked':''}> Needs verifying</label><label class="chip sm"><input type="checkbox" data-mstaff="${i}" ${t.staff?'checked':''}> Organisers assign</label></div>${t.k==='Guest'?'':`<button class="btn ghost sm" data-mdel="${i}">Remove</button>`}</div>`).join('')}</div>
     <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:150px;margin:0"><label for="mt-name">New type</label><input type="text" id="mt-name" maxlength="24" placeholder="e.g. Student"></div><div class="field" style="flex:2;min-width:160px;margin:0"><label for="mt-desc">Short description</label><input type="text" id="mt-desc" maxlength="40"></div><button class="btn" id="mt-add">Add</button></div>`)}
   ${payPanel()}
   ${window.BAD_WEB?box('Organisers',`<p class="hint">Organisers see this tab, run the courts and confirm payments. They sign in with this email.</p>
@@ -1686,6 +1709,8 @@ function bindAdmin(){
   q('[data-mno]').forEach(b=>b.onclick=()=>{const uid=b.dataset.mno,m=memStatus(uid);setMem(uid,{...(S.members[uid]||{}),declined:m.type,at:new Date().toISOString()})});
   const saveTypes=async L=>{try{await S.db.doc('config/membership').set({types:L});S.memCfg={types:L};renderAdmin()}catch(e){toast("Sorry, that didn't save.")}};
   q('[data-mverify]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mverify].verify=x.checked;saveTypes(L)});
+  q('[data-mstaff]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mstaff].staff=x.checked;saveTypes(L)});
+  q('[data-memset]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.memset,k=x.value;try{await S.db.doc('profiles/'+uid).update({memReq:{type:k,at:new Date().toISOString()}});await setMem(uid,{type:k,at:new Date().toISOString(),by:window.BAD_USER?.email||''});toast(`${S.profiles[uid]?.nickname||'Player'} is now ${k}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-mdel]').forEach(b=>b.onclick=()=>{const L=memTypes().filter((_,i)=>i!==+b.dataset.mdel);saveTypes(L)});
   on('mt-add',()=>{const k=$('mt-name').value.trim();if(!k){toast('Please name the type.');return}if(memTypes().some(t=>t.k.toLowerCase()===k.toLowerCase())){toast('That type already exists.');return}saveTypes([...memTypes(),{k,d:$('mt-desc').value.trim(),verify:true}])});
   on('site-go',async()=>{const u=$('site-url').value.trim();if(u&&!/^https:\/\//.test(u)){toast('Please use a full https:// link.');return}try{await S.db.doc('config/site').set({url:u});toast('Website link saved.')}catch(e){toast("Sorry, that didn't save.")}});

@@ -14,7 +14,7 @@
   /* ---------- sign-in screen ---------- */
   const gate=document.createElement('div');gate.id='gate';gate.hidden=true;
   gate.innerHTML=`<div class="gate-card">
-    <h2 class="gate-h">Welcome to <img src="${typeof LOGO!=="undefined"?LOGO.badW:""}" alt="BAD"></h2>
+    <h2 class="gate-h">Welcome to <img class="inline-logo logo-l" src="${typeof LOGO!=="undefined"?LOGO.badK:""}" alt="BAD"><img class="inline-logo logo-d" src="${typeof LOGO!=="undefined"?LOGO.badW:""}" alt="BAD"></h2>
     <p class="muted">Sign in to get your player card, join sessions and earn points.</p>
     <button class="btn wide" id="g-google"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5a4.3 4.3 0 0 1-1.9 2.8v2.3h3c1.8-1.6 2.9-4 2.9-6.8z" fill="none"/><circle cx="12" cy="12" r="8.5"/><path d="M12 12h8.4"/></svg>Continue with Google</button>
     <div class="or"><span>or use email</span></div>
