@@ -520,6 +520,14 @@ details.manage summary::-webkit-details-marker{display:none}
 @media (max-width:560px){.sign{display:grid;grid-template-columns:1fr auto;row-gap:6px}.sign>span:nth-child(2){grid-column:1}.sign .signout{grid-row:1;grid-column:2}}
 @media (max-width:760px){.mini{display:flex;justify-content:center}.mini .pc{max-width:220px;padding:12px 14px;border-radius:14px}.mini .pc .jn{font-size:5rem}.mini .pc .nick{font-size:1rem}.mini .pc .stats{display:none}}
 details.fold:not([open]){gap:0}
+.pc .inf{font-size:1.5em;line-height:.8;vertical-align:-.08em;letter-spacing:0}
+.li .inf{font-size:1.3em}
+.mystrip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;background:var(--ink);color:var(--bg);border:0;border-radius:var(--r);padding:14px 16px;font:inherit;cursor:pointer}
+.mystrip b{display:block;font-size:.95rem}
+.mystrip small{opacity:.7;font-size:.8rem}
+.mysess .sec-h{display:flex;justify-content:space-between;align-items:center}
+.mysess .linkbtn{display:inline-flex;align-items:center;gap:4px}
+.mysess .linkbtn svg.i{width:14px;height:14px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -791,7 +799,7 @@ function cardHTML(p,st,opt){
   const logo=ed==='oncourt'?LOGO.badW:LOGO.badK;
   const img=p.photo||PH[hash(p.listKey||p.nickname||'BAD')%PH.length];
   return `<div class="pc ${ed}${opt&&opt.qr&&p.ref?' hasqr':''}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD">${member?'Member':edName}</span><span class="num">${st.balance} pts<br>${(()=>{const u=uidOfProfile(p),m=u?memStatus(u):null;return m&&m.state==='verified'&&m.type!=='Guest'?`<span class="mv">${ic('check')}${esc(m.type)}</span>`:'Guest'})()}</span></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD">${member?'Member':edName}</span><span class="num">${isFounder(uidOfProfile(p))?'<span class="inf">∞</span>':st.balance} pts<br>${(()=>{const u=uidOfProfile(p),m=u?memStatus(u):null;return m&&m.state==='verified'&&m.type!=='Guest'?`<span class="mv">${ic('check')}${esc(m.type)}</span>`:'Guest'})()}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     <div class="style">${ic(sportOf(sp).icon)}${esc(ty||sportOf(sp).club)}</div>
@@ -837,6 +845,7 @@ const uidOfProfile=p=>Object.keys(S.profiles||{}).find(k=>S.profiles[k]===p);
 const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||!!(S.admins||{})[e])};
 const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_DEFAULT.find(d=>d.k===k)||{}).admin};
 const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
+const isFounder=uid=>!!uid&&memStatus(uid).state==='verified'&&memStatus(uid).type==='Founder';
 
 /* ---------- register / edit card ---------- */
 let D={},step=0,quiz=null;
@@ -1083,11 +1092,16 @@ function renderPlay(){
   const list=upcoming().filter(([,s])=>S.sport==='all'||(s.sport||'badminton')===S.sport);
   const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
+    ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from Home</small></span>${ic('arrow')}</button>`:''})()}
     ${sportBar(S.sport,'flt',used)}`;
   const rules=`<details class="rules"><summary>${ic('clock')}How joining and dropping out works</summary><p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p></details>`;
   if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>No sessions posted for this club yet. Please check back soon.</span></div>`+rules;bindPlay(el);return}
   const wk=sx=>{const t=new Date();t.setHours(0,0,0,0);const d=(sessStart(sx)-t)/864e5;return d<7-((t.getDay()+6)%7)?'This week':d<14-((t.getDay()+6)%7)?'Next week':'Later'};let lastWk='';
   el.innerHTML=head+`<div class="slist">`+list.map(([sid,s])=>{const w=wk(s),hdr=w!==lastWk?`<h3 class="wkh">${w}</h3>`:'';lastWk=w;
+    return hdr+sessCard(sid,s)}).join('')+`</div>`+rules;
+  bindPlay(el);
+}
+function sessCard(sid,s){const me=myProfile();
     const r=roster(sid),d=dParts(s.date),mine=S.bookings[S.uid]?.s?.[sid],started=Date.now()>sessStart(s),sp=sportOf(s.sport);
     const pos=r.in.findIndex(e=>e.uid===S.uid&&!e.guest),wpos=r.wait.findIndex(e=>e.uid===S.uid&&!e.guest);
     const myG=[...r.in.map(e=>({...e,st:'In'})),...r.wait.map(e=>({...e,st:'Waitlist'}))].filter(e=>e.uid===S.uid&&e.guest);
@@ -1104,34 +1118,33 @@ function renderPlay(){
       ${myG.map(g=>`<div class="row" style="justify-content:space-between"><span class="ic-row">${ic('guest')}${esc(g.guest)} <span class="fine">your guest · ${g.st}</span></span><button class="btn ghost sm" data-gout="${sid}" data-gi="${g.gi}">Remove</button></div>`).join('')}
       ${guestFor===sid?`<div class="row"><input type="text" id="g-name" maxlength="24" placeholder="Guest's name" style="flex:1;min-width:150px"><button class="btn sm" data-gadd="${sid}">Add</button><button class="btn ghost sm" data-gcancel="1">Cancel</button></div>`
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
-    return hdr+`<article class="sess"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
+    return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
       <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span><span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span></div>
       ${s.note?`<p>${esc(s.note)}</p>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
-      ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}).join('')+`</div>`+rules;
-  bindPlay(el);
-}
+      ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}
 function bindPlay(el){
   const q=s=>el.querySelectorAll(s),now=()=>new Date().toISOString();
-  q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderPlay()});
-  q('[data-joinask]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.joinask,change:false};renderPlay()});
+  q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderNow()});
+  q('[data-joinask]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.joinask,change:false};renderNow()});
   q('[data-pay]').forEach(b=>b.onclick=()=>b.dataset.change==='1'?setPay(b.dataset.sid,b.dataset.pay):join(b.dataset.sid,b.dataset.pay));
-  q('[data-paycancel]').forEach(b=>b.onclick=()=>{payFor=null;renderPlay()});
-  q('[data-paychange]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.paychange,change:true};renderPlay()});
+  q('[data-paycancel]').forEach(b=>b.onclick=()=>{payFor=null;renderNow()});
+  q('[data-paychange]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.paychange,change:true};renderNow()});
   q('[data-sent]').forEach(b=>b.onclick=()=>markSent(b.dataset.sent));
   q('[data-copy]').forEach(b=>b.onclick=async()=>{const t=$(b.dataset.copy).textContent;try{await navigator.clipboard.writeText(t);toast('IBAN copied.')}catch(e){const r=document.createRange();r.selectNodeContents($(b.dataset.copy));const x=getSelection();x.removeAllRanges();x.addRange(r);toast('Selected. Please copy it now.')}});
   q('[data-wout]').forEach(b=>b.onclick=()=>leave(b.dataset.wout,false));
-  q('[data-out]').forEach(b=>b.onclick=()=>{const sid=b.dataset.out;if(feeFor(S.sessions[sid],now()).amount===0)leave(sid,false);else{pendingOut={sid};renderPlay()}});
+  q('[data-out]').forEach(b=>b.onclick=()=>{const sid=b.dataset.out;if(feeFor(S.sessions[sid],now()).amount===0)leave(sid,false);else{pendingOut={sid};renderNow()}});
   q('[data-gout]').forEach(b=>b.onclick=()=>{const sid=b.dataset.gout,gi=+b.dataset.gi;const w=roster(sid).wait.find(e=>e.uid===S.uid&&e.gi===gi);
-    if(w||feeFor(S.sessions[sid],now()).amount===0)dropGuest(sid,gi,false);else{pendingOut={sid,gi};renderPlay()}});
+    if(w||feeFor(S.sessions[sid],now()).amount===0)dropGuest(sid,gi,false);else{pendingOut={sid,gi};renderNow()}});
   q('[data-yes]').forEach(b=>b.onclick=()=>{const p=pendingOut;p.gi!=null?dropGuest(p.sid,p.gi,true):leave(p.sid,true)});
-  q('[data-no]').forEach(b=>b.onclick=()=>{pendingOut=null;renderPlay()});
-  q('[data-gnew]').forEach(b=>b.onclick=()=>{guestFor=b.dataset.gnew;renderPlay();const i=$('g-name');if(i)i.focus()});
-  q('[data-gcancel]').forEach(b=>b.onclick=()=>{guestFor=null;renderPlay()});
-  q('[data-gadd]').forEach(b=>b.onclick=()=>addGuest(b.dataset.gadd,$('g-name').value));
+  q('[data-no]').forEach(b=>b.onclick=()=>{pendingOut=null;renderNow()});
+  q('[data-gnew]').forEach(b=>b.onclick=()=>{guestFor=b.dataset.gnew;renderNow();const i=el.querySelector('#g-name');if(i)i.focus()});
+  q('[data-gcancel]').forEach(b=>b.onclick=()=>{guestFor=null;renderNow()});
+  q('[data-gadd]').forEach(b=>b.onclick=()=>addGuest(b.dataset.gadd,el.querySelector('#g-name').value));
   const g=$('go-card');if(g)g.onclick=()=>startCreator();
+  q('.mystrip').forEach(b=>b.onclick=()=>{setView('card');scrollTo({top:0})});
 }
 
 /* ---------- my card (home) ---------- */
@@ -1187,12 +1200,9 @@ function renderCard(){
   const attended=Math.max(st.sessions,mine.filter(r=>r.status==='Played').length);
   const sports=(p.sports&&p.sports.length?p.sports:['badminton']);
   const statT=(lbl,val,sub,extra='')=>`<div class="tile hs"><span class="label">${lbl}</span><div class="stat"><b class="num">${val}</b>${sub?`<span class="fine">${sub}</span>`:''}</div>${extra}</div>`;
+  const mySess=upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out});
   let next;
-  if(nextS){const [sid,s]=nextS,d=dParts(s.date),sp=sportOf(s.sport),r=roster(sid),inside=r.in.some(e=>e.uid===S.uid&&!e.guest),pos=r.wait.findIndex(e=>e.uid===S.uid&&!e.guest),ok=S.payments[sid]?.[S.uid]?.ok,bk=S.bookings[S.uid].s[sid];
-    next=`<div class="tile nexts"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="label">Your next session</span>${inside?`<span class="tagl solid">${ic('check')}You’re in</span>`:pos>=0?`<span class="tagl">Waitlist #${pos+1}</span>`:''}</div>
-      <div class="ic-row"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><b class="nm">${esc(s.title||sp.club)}</b><div class="fine">${ic(sp.icon)}${esc(sp.club)} · ${s.timeTbc?'Time to be confirmed':fmtTime(s.start)+(s.end?'–'+fmtTime(s.end):'')}${s.venue?' · '+esc(s.venue):''}</div>
-      <div class="fine">${ok?'Paid':(PAY[bk.pay||'cash']?.label||'Cash')+(bk.sent?' · sent, checking':' · AED '+esc(s.fee)+' to pay')}</div></div></div>
-      <button class="btn ghost sm" data-goview="play" style="justify-self:start">Session details${ic('arrow')}</button></div>`}
+  if(mySess.length)next=`<section class="hsec mysess"><div class="sec-h"><h3 class="ah">Your sessions</h3><button class="linkbtn" data-goview="play">Find more${ic('arrow')}</button></div><div class="slist">${mySess.map(([sid,x])=>sessCard(sid,x)).join('')}</div></section>`;
   else next=`<button class="tile nexts cta" data-goview="play"><span class="label">No session booked</span><span class="ic-row"><span class="ic-bub">${ic('play')}</span><span><b>Find your next game</b><span class="fine" style="display:block">${upcoming().length} sessions coming up</span></span>${ic('arrow')}</span></button>`;
   el.innerHTML=`<div class="home">
     <aside class="home-card"><div id="my-card">${cardHTML(p,st,{qr:true})}</div><div class="row" style="justify-content:center"><button class="btn sm" id="save-card">${ic('image')}Save card</button><button class="btn ghost sm" id="edit">${ic('edit')}Edit my card</button></div></aside>
@@ -1201,7 +1211,7 @@ function renderCard(){
       ${next}
       <section class="hsec"><h3 class="ah">Your stats</h3>
         <div class="tiles hstats h4">
-          ${statT('Points',st.balance,(can?'A free session is ready':`${CFG.free-st.balance} to a free session`)+`<br>${esc(tier.k)} tier${tNext?` · ${tNext.at-st.earned} to ${esc(tNext.k)}`:''}`,`<div class="bar"><i style="width:${Math.min(100,st.balance/CFG.free*100)}%"></i></div>${req?'<span class="tagl">Request sent</span>':can?`<button class="btn sm" id="redeem">${ic('ticket')}Use ${CFG.free}</button>`:''}`)}
+          ${isFounder(S.uid)?statT('Points','∞','Founder. Points never run out.'):statT('Points',st.balance,(can?'A free session is ready':`${CFG.free-st.balance} to a free session`)+`<br>${esc(tier.k)} tier${tNext?` · ${tNext.at-st.earned} to ${esc(tNext.k)}`:''}`,`<div class="bar"><i style="width:${Math.min(100,st.balance/CFG.free*100)}%"></i></div>${req?'<span class="tagl">Request sent</span>':can?`<button class="btn sm" id="redeem">${ic('ticket')}Use ${CFG.free}</button>`:''}`)}
           ${statT('Sessions',attended,'Played with BAD')}
           ${statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
           ${statT('Club rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked')}
@@ -1219,7 +1229,7 @@ function renderCard(){
           <div class="row" style="margin-top:6px"><button class="btn sm" id="share-inv">${ic('arrow')}Share invite</button><button class="btn ghost sm" id="copy-ref">${ic('copy')}Copy code</button></div></div></div></section>
       <details class="hsec how"><summary class="ah">How points work</summary><div class="list">${[['play','Join a session','+'+CFG.attend],['coin','Pay on the day','+'+CFG.paid],['guest','Bring a new guest','+'+CFG.newGuest],['gift','A friend joins with your code','+'+CFG.referrer],['ticket','A free session','−'+CFG.free]].map(([i,a,b])=>`<div class="li"><span class="ic-bub soft">${ic(i)}</span><span>${a}</span><b class="num">${b}</b></div>`).join('')}</div><p class="fine">${CFG.member} lifetime points turns your card silver.</p></details>
     </div></div>`;
-  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  bindPlay(el);$('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
   const r=$('redeem');if(r)r.onclick=requestFree;
   $('save-card').onclick=saveCardImage;
@@ -1525,10 +1535,10 @@ function renderBoard(){
   let body;
   if(mode==='rank'){const rows=rankRows(f);
     body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Club rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
-  }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,st:statsFor(p.listKey)})).sort((a,b)=>b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));
-    body=rows.map((r,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(r.p)}
+  }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,uid,st:statsFor(p.listKey),fd:isFounder(uid)})).sort((a,b)=>(b.fd-a.fd)||b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));let rk=0;
+    body=rows.map((r,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${r.fd?'':++rk}</span>${avatar(r.p)}
       <div><div class="nm">${esc(r.p.nickname)} ${r.st.earned>=CFG.member?'<span class="tagl">Silver</span>':''}${r.p.sample?' <span class="tagl">Sample</span>':''}</div><div class="sub ic-row" style="gap:6px">${(r.p.sports||['badminton']).map(s=>ic(SPORTS[s]?.icon||'badminton')).join('')}<span>${esc(typeOf(r.p)||'Player')}${r.st.sessions?` · ${r.st.sessions} session${r.st.sessions===1?'':'s'}`:''}</span></div></div>
-      <b class="num">${r.st.earned}</b></div>`).join('')||`<div class="empty">${ic('board')}<span>No one on the board yet. You could be first.</span></div>`}
+      <b class="num">${r.fd?'<span class="inf">∞</span>':r.st.earned}</b></div>`).join('')||`<div class="empty">${ic('board')}<span>No one on the board yet. You could be first.</span></div>`}
   $('v-board').innerHTML=`<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'} Community over competition, always.</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;
   document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.bf;renderBoard()});
   document.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{S.boardMode=b.dataset.bm;renderBoard()});
