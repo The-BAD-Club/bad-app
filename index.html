@@ -615,6 +615,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink)}
 .toast{border-radius:999px;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
 @media (prefers-reduced-motion:reduce){.view:not([hidden]){animation:none}.btn:active,.chip:active,.sp:active{transform:none}}
 .inv.one{grid-template-columns:1fr}
+/* one button size everywhere */
+.btn,.btn.sm{min-height:44px;padding:0 18px;font-size:.86rem;font-weight:600;gap:8px}
+.chip,.chip.sm,.sp{min-height:44px;padding:0 16px;font-size:.86rem}
+.sp{padding-left:12px}
+.btn svg.i,.chip svg.i,.sp svg.i{width:18px;height:18px}
+select.memset{min-height:44px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -728,9 +734,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
   auth.onAuthStateChanged(async u=>{
     if(!u){gate.hidden=false;document.documentElement.classList.add('gated');return}
     gate.hidden=true;document.documentElement.classList.remove('gated');
-    const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email);
-    if(!admin&&email){try{admin=(await fs.doc('admins/'+email).get()).exists}catch(_){}}
-    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin};
+    const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email),role=admin?'owner':'',sports=[];
+    if(!admin&&email){try{const d=await fs.doc('admins/'+email).get();if(d.exists){admin=true;const x=d.data()||{};role=x.role||'founder';sports=x.sports||[]}}catch(_){}}
+    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin,role,sports};
     resolveUser(window.BAD_USER);
   });
   window.badSignOut=()=>auth.signOut().then(()=>location.reload());
@@ -946,6 +952,20 @@ function cardBackHTML(p,st){
     <div class="ft"><span>${m&&m.state==='verified'?esc(m.type):'Guest'}</span><span class="num">${since?'Since '+esc(since):'Est. 2024'}</span></div>
   </div>`}
 
+/* ---------- admin roles ----------
+   owner: everything, set in config.js
+   founder: everything, can add and remove admins (not owners)
+   app: helps build the app: everything except managing admins
+   cm: community manager for chosen sports: their sessions, courts, players and posts */
+const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins.'},cm:{k:'Community manager',d:'Runs their own sport: sessions, courts, players and posts.'}};
+const myRole=()=>S.canEdit?((window.BAD_USER&&window.BAD_USER.role)||'owner'):'';
+const mySports=()=>(window.BAD_USER&&window.BAD_USER.sports)||[];
+const fullAdmin=()=>['owner','founder','app'].includes(myRole());
+const canManageAdmins=()=>['owner','founder'].includes(myRole());
+const canSport=k=>fullAdmin()||(myRole()==='cm'&&mySports().includes(k||'badminton'));
+const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a?{role:a.role||'founder',sports:a.sports||[]}:null};
+const roleLabel=r=>!r?'':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';
+
 /* ---------- register / edit card ---------- */
 let D={},step=0,quiz=null;
 const STEPS=['About you','Your look','Your activities','Your levels','Your signature'];
@@ -1141,7 +1161,7 @@ function render(){
   if(S.view==='courts')return renderCourts();
   renderNow();
 }
-function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&!S.asPlayer));
+function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canSport(S.courtSport)&&!S.asPlayer));
   ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,board:renderBoard,admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by club"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
@@ -1490,15 +1510,15 @@ function stepper(){const st=[['Set up','Courts'],['Check in','Who has arrived'],
 
 function renderCourts(){
   const el=$('v-courts');if(!el||S.view!=='courts')return;
-  document.body.classList.toggle('wide',S.canEdit&&!S.asPlayer);
-  const org=S.canEdit&&!S.asPlayer,me=myProfile();
+  const me=myProfile();
   if(!S.courtSport){const liveS=Object.keys(S.live).map(k=>S.sessions[k]).filter(Boolean).find(x=>sessStart(x)>Date.now()-18*36e5);S.courtSport=(liveS&&liveS.sport)||(me&&COURT_SPORTS.find(k=>(me.sports||[]).includes(k)))||'badminton'}
+  const ED=S.canEdit&&canSport(S.courtSport),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const list=courtSessions();
   const sportChips=`<div class="sports">${COURT_SPORTS.map(k=>`<button class="sp" data-act="sport" data-v="${k}" aria-pressed="${k===S.courtSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`;
   if(!list.find(([sid])=>sid===S.courtSid))S.courtSid=(list.find(([sid])=>S.live[sid])||list[0]||[null])[0];
   const sid=S.courtSid,s=sid&&S.sessions[sid],lv0=sid&&S.live[sid];
   const pick=list.length>1?`<div class="sports">${list.map(([id,x])=>{const d=dParts(x.date);return `<button class="sp" data-act="pick" data-sid="${id}" aria-pressed="${id===sid}">${ic(sportOf(x.sport).icon)}${esc(x.title)} · ${d.w} ${d.d}${S.live[id]?' ●':''}</button>`}).join('')}</div>`:'';
-  const viewToggle=S.canEdit?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button></div>`:'';
+  const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button></div>`:'';
   const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · Courts</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
     el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&!nxt?`<button class="btn ghost sm" data-act="goadmin">${ic('plus')}Add a session</button>`:''}</div>`;bindCourts(el);return}
@@ -1563,7 +1583,7 @@ function renderCourts(){
 }
 function gameRow(sid,gid,g,i,mine,bare){
   const sc=scoreOf(gid,g),names=t=>t.map(p=>esc(nm(sid,p))).join(' & ');
-  const my=S.scores[S.uid]?.g?.[gid],edit=(mine&&!g.final)||(!mine&&S.canEdit),v=my||sc?.s||[];
+  const my=S.scores[S.uid]?.g?.[gid],edit=(mine&&!g.final)||(!mine&&S.canEdit&&canSport(g.sport)),v=my||sc?.s||[];
   return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${names(g.a)} <span class="muted">vs</span> ${names(g.b)}</div><div class="sub">${esc(g.court)}${sc?(sc.st==='disputed'?' · Scores differ':sc.st==='confirmed'?' · Confirmed':''):''}</div>
       ${edit?`<div class="row" style="gap:6px;margin-top:6px"><input type="number" min="0" class="sc" id="ga-${gid}" value="${esc(v[0]??'')}" aria-label="Score for ${names(g.a)}"><span class="muted">–</span><input type="number" min="0" class="sc" id="gb-${gid}" value="${esc(v[1]??'')}" aria-label="Score for ${names(g.b)}"><button class="btn ghost sm" data-act="${mine?'myscore':'final'}" data-gid="${gid}">${ic('check')}${mine?'Save':'Confirm'}</button></div>`:''}</div>
     <b class="num big" style="font-size:1.6rem">${sc?sc.s.join('–'):'—'}</b></div>`;
@@ -1581,7 +1601,7 @@ function bindCourts(el){el.onclick=async ev=>{
   if(act==='myscore'||act==='final'){const gid=b.dataset.gid,a=$('ga-'+gid).value,bb=$('gb-'+gid).value;if(a===''||bb===''){toast('Please enter both scores.');return}
     const v=[Number(a),Number(bb)];
     try{if(act==='final')await S.db.doc('games/'+gid).update({final:v});else{const cur=S.scores[S.uid]?.g||{};await S.db.doc('scores/'+S.uid).set({g:{...cur,[gid]:v}})}toast('Score saved. Thank you.')}catch(e){toast("Sorry, the score didn't save.")}return}
-  if(!S.canEdit)return;
+  if(!S.canEdit||!canSport(S.courtSport))return;
   if(act==='start'){S.courtStep=1;return startBoard(sid)}
   const lv=norm(clone(S.live[sid])),arr=k=>k==='w'?lv.waiting:lv.courts,sp=S.sessions[sid].sport||'badminton';
   if(act==='bench'){sel=sel===b.dataset.pid?null:b.dataset.pid;return renderCourts()}
@@ -1725,27 +1745,29 @@ const boxD=(title,inner)=>`<details class="panel fold"><summary class="ah">${tit
 const box=(title,inner,extra='')=>`<div class="panel ${extra}">${title?`<h3 class="ah">${title}</h3>`:''}${inner}</div>`;
 const tile=(n,l)=>`<div class="tile"><div class="stat"><b class="num">${n}</b><span class="label">${l}</span></div></div>`;
 
+const TABS_CM=['today','sessions','players','posts'];
 function renderAdmin(){
-  const el=$('v-admin'),list=Object.entries(S.sessions).sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
-  const up=upcoming();if(!adminPicked&&up[0])adminSid=up[0][0];if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
-  const badge={points:Object.keys(S.requests).length,players:memPending().length};
+  if(!fullAdmin()&&!TABS_CM.includes(aTab))aTab='today';const TABS=fullAdmin()?ATABS:ATABS.filter(t=>TABS_CM.includes(t[0]));
+  const el=$('v-admin'),list=Object.entries(S.sessions).filter(([,x])=>canSport(x.sport)).sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
+  const up=upcoming().filter(([,x])=>canSport(x.sport));if(!adminPicked&&up[0])adminSid=up[0][0];if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
+  const badge=fullAdmin()?{points:Object.keys(S.requests).length,players:memPending().length}:{};
   const T=ATABS.find(t=>t[0]===aTab)||ATABS[0];
-  const nav=`<nav class="anav" aria-label="Admin sections">${ATABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
+  const nav=`<nav class="anav" aria-label="Admin sections">${TABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
   const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,settings:aSettings}[aTab]||aToday)(list,up);
-  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">Admin</span><h2>${T[1]}</h2></div>${nav}<div class="abody">${body}</div></div>`;
+  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><h2>${T[1]}</h2></div>${nav}<div class="abody">${body}</div></div>`;
   bindAdmin();const act=el.querySelector('.anav [aria-current="page"]');if(act&&innerWidth<1000)act.scrollIntoView({block:'nearest',inline:'center'});
 }
 
 function aToday(list,up){
   const nx=up[0],s=nx&&S.sessions[nx[0]];
-  const alerts=[];const rq=Object.keys(S.requests).length;
-  const mq=memPending().length;if(mq)alerts.push(['check',`${mq} membership${mq>1?'s':''} to verify`,'players']);
+  const alerts=[];const rq=fullAdmin()?Object.keys(S.requests).length:0;
+  const mq=fullAdmin()?memPending().length:0;if(mq)alerts.push(['check',`${mq} membership${mq>1?'s':''} to verify`,'players']);
   if(rq)alerts.push(['gift',`${rq} free session request${rq>1?'s':''} waiting`,'points']);
   const past=list.filter(([id,x])=>sessStart(x)<Date.now()&&sessStart(x)>Date.now()-14*864e5);
   for(const [id,x] of past){const o=owedOf(id);if(o)alerts.push(['coin',`AED ${o} unpaid from ${esc(x.title)} · ${fmtS(x)}`,'sessions',id])}
-  const pc=S.payCfg||{};if(!pc.iban&&!pc.ziinaLink)alerts.push(['bank','Add your bank details and Ziina link so players know where to pay','settings']);
-  if(!S.site?.url)alerts.push(['arrow','Add the BAD website link so every Club post links to it','settings']);
-  const sm=Object.values(S.profiles).filter(p=>p.sample).length;if(sm)alerts.push(['users',`${sm} sample players are still in the app`,'settings']);
+  const pc=S.payCfg||{};if(fullAdmin()&&!pc.iban&&!pc.ziinaLink)alerts.push(['bank','Add your bank details and Ziina link so players know where to pay','settings']);
+  if(fullAdmin()&&!S.site?.url)alerts.push(['arrow','Add the BAD website link so every Club post links to it','settings']);
+  const sm=fullAdmin()?Object.values(S.profiles).filter(p=>p.sample).length:0;if(sm)alerts.push(['users',`${sm} sample players are still in the app`,'settings']);
   const players=Object.values(S.profiles).filter(p=>!p.sample).length;
   const nsN=Object.values(S.noshows).filter(n=>(n.dates||[]).length).length;
   let next='<div class="empty">No upcoming sessions. <button class="btn sm" data-go="sessions" data-new="1">'+ic('plus')+'Add a session</button></div>';
@@ -1756,17 +1778,18 @@ function aToday(list,up){
   return `${next}
   ${box('Needs attention',alerts.length?`<div class="list">${alerts.map(([i,t,go,sid])=>`<button type="button" class="alert" data-go="${go}" ${sid?`data-sid="${esc(sid)}"`:''}>${ic(i)}<span>${t}</span>${ic('arrow')}</button>`).join('')}</div>`:'<p class="hint">All clear. Nice one.</p>')}
   <div class="tiles">${tile(players,'Players')}${tile(up.length,'Upcoming sessions')}${tile(nsN,'On no-show list')}</div>
-  ${box('Quick actions',`<div class="qa"><button class="btn ghost" data-go="sessions" data-new="1">${ic('plus')}Add a session</button><button class="btn ghost" data-go="posts">${ic('club')}Post to Club</button><button class="btn ghost" data-go="points">${ic('star')}Give bonus points</button><button class="btn ghost" data-go="points">${ic('gift')}Club codes</button></div>`)}`;
+  ${box('Quick actions',`<div class="qa"><button class="btn ghost" data-go="sessions" data-new="1">${ic('plus')}Add a session</button><button class="btn ghost" data-go="posts">${ic('club')}Post to Club</button>${fullAdmin()?`<button class="btn ghost" data-go="points">${ic('star')}Give bonus points</button><button class="btn ghost" data-go="points">${ic('gift')}Club codes</button>`:''}</div>`)}`;
 }
 
 function aSessions(list,up){
+  if(!canSport(newSport))newSport=Object.keys(SPORTS).find(canSport)||'badminton';
   const s=adminSid&&S.sessions[adminSid],r=s?roster(adminSid):null;
   const ns=S.noshows,nsId=e=>e.guest?`${adminSid}#g-${slug(e.guest)}`:adminSid,isNS=e=>Object.values(ns).some(n=>n.player===e.key&&(n.dates||[]).includes(nsId(e)));
   const shown=showPast?list.slice().reverse():up.concat(s&&!up.some(([i])=>i===adminSid)?[[adminSid,s]]:[]);
   const picker=`<div class="sports" role="group" aria-label="Pick a session">${shown.map(([id,x])=>`<button type="button" class="sp" data-sid="${esc(id)}" aria-pressed="${id===adminSid}">${ic(sportOf(x.sport).icon)}${fmtS(x)} · ${esc(x.title)}</button>`).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
     <div class="row" style="justify-content:space-between"><label class="chip sm"><input type="checkbox" id="a-past" ${showPast?'checked':''}> Show past sessions</label><button class="btn sm${showNew?' ghost':''}" id="a-new">${showNew?ic('x')+'Close':ic('plus')+'Add a session'}</button></div>`;
   const form=showNew?box('Add a session',`
-    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===newSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
+    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).filter(canSport).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===newSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
     <div class="fgrid">
       <div class="field"><label for="n-title">Name</label><input type="text" id="n-title" value="${esc(defaultTitle(newSport))}"></div>
       <div class="field"><label for="n-date">Date</label><input type="date" id="n-date"></div>
@@ -1792,13 +1815,13 @@ function aSessions(list,up){
 }
 
 function aPlayers(){
-  const ps=Object.entries(S.profiles).sort((a,b)=>(!!a[1].sample-!!b[1].sample)||(a[1].nickname||'').localeCompare(b[1].nickname||''));
+  const ps=Object.entries(S.profiles).filter(([,p])=>fullAdmin()||(p.sports||['badminton']).some(canSport)).sort((a,b)=>(!!a[1].sample-!!b[1].sample)||(a[1].nickname||'').localeCompare(b[1].nickname||''));
   const nsBy={};for(const n of Object.values(S.noshows))nsBy[n.player]=(n.dates||[]).length;
   const nsKeys=Object.values(S.noshows).filter(n=>(n.dates||[]).length).sort((a,b)=>b.dates.length-a.dates.length);
   const mp=memPending();
-  return `${box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
+  return `${fullAdmin()?'':`<p class="hint">Players in ${esc(mySports().map(k=>SPORTS[k]?.club).join(', '))}.</p>`}${!fullAdmin()?'':box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
   <div class="field" style="margin:0"><label for="a-q" class="sr">Search players</label><input type="search" id="a-q" placeholder="Search name, email or mobile"></div>
-  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div><details class="manage"><summary>Manage</summary><div class="row" style="gap:8px;margin-top:8px">${window.BAD_WEB&&!p.sample?(()=>{const em=(S.contacts[uid]||{}).email||'',on=isAdminEmail(em),own=(window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(em.toLowerCase());return em?`<button class="chip sm adm" data-adm="${esc(uid)}" aria-pressed="${on}" ${own?'disabled title="Main admin account"':''}>${on?ic('check')+'Admin':'Make admin'}</button>`:''})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div></details></div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
+  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div>${fullAdmin()?`<details class="manage"><summary>Manage</summary><div class="row" style="gap:8px;margin-top:8px">${window.BAD_WEB&&!p.sample&&canManageAdmins()?(()=>{const em=((S.contacts[uid]||{}).email||'').toLowerCase(),r=adminRec(em),cur=!r?'':r.role==='cm'?'cm:'+((r.sports||[])[0]||''):r.role;if(!em)return '';if(r&&r.role==='owner')return `<span class="tagl solid">${ic('check')}Owner</span>`;return `<select class="memset adm" data-access="${esc(uid)}" aria-label="Admin access for ${esc(p.nickname||'player')}"><option value="">No admin access</option>${Object.keys(SPORTS).map(k=>`<option value="cm:${k}" ${cur==='cm:'+k?'selected':''}>Community manager · ${esc(SPORTS[k].club)}</option>`).join('')}<option value="app" ${cur==='app'?'selected':''}>App admin</option><option value="founder" ${cur==='founder'?'selected':''}>Founder admin</option></select>`})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div></details>`:''}</div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
   ${box('No-show list <span class="tagl">Admins only</span>',`<p class="hint">Players never see this. Mark no-shows from a session’s player list.</p><div class="list">${nsKeys.map(n=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(n.name||n.player)}</div><div class="sub num">${n.dates.map(d=>{const [sd,g]=d.split('#');return esc((S.sessions[sd]?fmtS(S.sessions[sd]):sd)+(g?' (guest)':''))}).join(' · ')}</div></div><b class="num">${n.dates.length}</b></div>`).join('')||'<div class="empty">Clean sheet so far.</div>'}</div>`,'secret')}
   <details class="panel"><summary class="ah">Add a player from a join code</summary><p class="hint">Only needed if a player couldn’t save their card and sent you a BAD1- code.</p><textarea id="imp-code" placeholder="BAD1-…"></textarea><div class="row"><button class="btn ghost" id="imp-go">Add player</button></div></details>`;
 }
@@ -1820,7 +1843,7 @@ function aPosts(){
   return `${box('New post',`<div class="chips" role="group"><button type="button" class="chip" data-pt="event" aria-pressed="${postType==='event'}">Event</button><button type="button" class="chip" data-pt="news" aria-pressed="${postType!=='event'}">Announcement</button></div>
     <div class="fgrid">
       <div class="field wide"><label for="p-title">Title</label><input type="text" id="p-title"></div>
-      <div class="field"><label for="p-club">For</label><select id="p-club"><option value="all">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}">${SPORTS[k].club}</option>`).join('')}</select></div>
+      <div class="field"><label for="p-club">For</label><select id="p-club">${fullAdmin()?'<option value="all">All of BAD</option>':''}${Object.keys(SPORTS).filter(canSport).map(k=>`<option value="${k}">${SPORTS[k].club}</option>`).join('')}</select></div>
       <div class="field"><label for="p-link">Link</label><input type="url" id="p-link" placeholder="https://" value="${esc(S.site?.url||'')}"></div></div>
     <p class="fine">Every post links somewhere. It starts as the BAD site, change it for a sign-up form, map or ticket page.</p>
     <div class="fgrid" id="p-evt" ${postType==='event'?'':'hidden'}>
@@ -1830,15 +1853,18 @@ function aPosts(){
       <div class="field"><label for="p-map">Map link <span class="muted">(optional)</span></label><input type="url" id="p-map" placeholder="https://maps.app.goo.gl/…"></div></div>
     <div class="field" style="margin:0"><label for="p-body">Text</label><textarea id="p-body"></textarea></div>
     <div class="row"><button class="btn" id="p-go">Post</button></div>`)}
-  ${box('Posted',`<div class="list">${Object.entries(S.posts).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'} · ${esc(p.club&&p.club!=='all'?SPORTS[p.club]?.club||'':'All of BAD')}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')||'<p class="hint">Nothing posted yet.</p>'}</div>`)}`;
+  ${box('Posted',`<div class="list">${Object.entries(S.posts).filter(([,p])=>fullAdmin()||canSport(p.club)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'} · ${esc(p.club&&p.club!=='all'?SPORTS[p.club]?.club||'':'All of BAD')}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')||'<p class="hint">Nothing posted yet.</p>'}</div>`)}`;
 }
 
 function aSettings(){
   const own=(window.BAD_ADMINS||[]),extra=Object.keys(S.admins||{});
   const gs=id=>`https://docs.google.com/spreadsheets/d/${id}/edit`;
-  return `${window.BAD_WEB?box('Admins',`<p class="hint">Admins see this tab, run the courts and confirm payments. They sign in with this email.</p>
-    <div class="list">${own.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><span class="tagl">Owner</span></div>`).join('')}${extra.filter(e=>!own.includes(e)).map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm">${esc(e)}</div><button class="btn ghost sm" data-unadmin="${esc(e)}">Remove</button></div>`).join('')}</div>
-    <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="ad-email">Add an admin</label><input type="email" id="ad-email" placeholder="name@email.com"></div><button class="btn" id="ad-go">Add</button></div>`):''}
+  return `${window.BAD_WEB&&canManageAdmins()?box('Admins',`<p class="hint">Each admin signs in with this email. Give someone access here, or from Players → Manage.</p>
+    <div class="list">${own.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(e)}</div><div class="sub">${ROLES.owner.d}</div></div><span class="tagl solid">Owner</span></div>`).join('')}${extra.filter(e=>!own.includes(e)).map(e=>{const r=adminRec(e);return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(e)}</div><div class="sub">${esc(roleLabel(r))}</div></div><button class="btn ghost sm" data-unadmin="${esc(e)}">Remove</button></div>`}).join('')}</div>
+    <div class="fgrid"><div class="field wide"><label for="ad-email">Email</label><input type="email" id="ad-email" placeholder="name@email.com"></div>
+      <div class="field wide"><label for="ad-role">Role</label><select id="ad-role">${Object.keys(SPORTS).map(k=>`<option value="cm:${k}">Community manager · ${esc(SPORTS[k].club)}</option>`).join('')}<option value="app">App admin</option><option value="founder">Founder admin</option></select></div></div>
+    <div class="row"><button class="btn" id="ad-go">Add admin</button></div>
+    <details class="manage"><summary>What each role can do</summary><div class="list" style="margin-top:8px">${Object.values(ROLES).map(r=>`<div class="li" style="grid-template-columns:1fr"><div><div class="nm">${r.k}</div><div class="sub">${r.d}</div></div></div>`).join('')}</div></details>`):''}
   ${payPanel()}
   ${box('BAD website',`<p class="hint">Every Club post links here unless you add a different link.</p><div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="site-url">Website link</label><input type="url" id="site-url" placeholder="https://" value="${esc(S.site?.url||'')}"></div><button class="btn" id="site-go">Save</button></div>`)}
   ${boxD('Membership levels',`<p class="hint">Membership levels. Players can request the open ones. “Admins assign” levels (like Crew or Founder) are only given from the Players list. “Needs verifying” waits for an admin before it shows on the card.</p>
@@ -1903,15 +1929,18 @@ function bindAdmin(){
   const saveTypes=async L=>{try{await S.db.doc('config/membership').set({types:L});S.memCfg={types:L};renderAdmin()}catch(e){toast("Sorry, that didn't save.")}};
   q('[data-mverify]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mverify].verify=x.checked;saveTypes(L)});
   q('[data-mstaff]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mstaff].staff=x.checked;saveTypes(L)});
-  q('[data-memset]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.memset,k=x.value;try{const em=((S.contacts[uid]||{}).email||'').toLowerCase();if(window.BAD_WEB&&lvAdmin(k)&&em&&!isAdminEmail(em)){await S.db.doc('admins/'+em).set({addedBy:window.BAD_USER?.email||'',at:new Date().toISOString(),via:k});toast(`${S.profiles[uid]?.nickname||'Player'} can now use the Admin tab.`)}await S.db.doc('profiles/'+uid).update({memReq:{type:k,at:new Date().toISOString()}});await setMem(uid,{type:k,at:new Date().toISOString(),by:window.BAD_USER?.email||''});toast(`${S.profiles[uid]?.nickname||'Player'} is now ${k}.`)}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-memset]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.memset,k=x.value;try{const em=((S.contacts[uid]||{}).email||'').toLowerCase();if(window.BAD_WEB&&canManageAdmins()&&lvAdmin(k)&&em&&!isAdminEmail(em)){const pr=S.profiles[uid]||{},r=k==='Community Manager'?{role:'cm',sports:[pr.primary||(pr.sports||['badminton'])[0]]}:k==='Founder'?{role:'founder',sports:[]}:{role:'app',sports:[]};await S.db.doc('admins/'+em).set({...r,addedBy:window.BAD_USER?.email||'',at:new Date().toISOString(),via:k});toast(`${S.profiles[uid]?.nickname||'Player'} can now use the Admin tab.`)}await S.db.doc('profiles/'+uid).update({memReq:{type:k,at:new Date().toISOString()}});await setMem(uid,{type:k,at:new Date().toISOString(),by:window.BAD_USER?.email||''});toast(`${S.profiles[uid]?.nickname||'Player'} is now ${k}.`)}catch(e){toast("Sorry, that didn't save.")}});
+  const accessVal=v=>v==='app'?{role:'app',sports:[]}:v==='founder'?{role:'founder',sports:[]}:v.startsWith('cm:')?{role:'cm',sports:[v.slice(3)]}:null;
+  q('[data-access]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.access,em=((S.contacts[uid]||{}).email||'').toLowerCase(),nm=S.profiles[uid]?.nickname||'Player',r=accessVal(x.value);if(!em)return;
+    try{if(!r){await S.db.doc('admins/'+em).delete();toast(`${nm} no longer has admin access.`)}else{await S.db.doc('admins/'+em).set({...r,addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} is now ${roleLabel(r)}. They may need to reopen the app.`)}}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-adm]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.adm,em=((S.contacts[uid]||{}).email||'').toLowerCase(),nm=S.profiles[uid]?.nickname||'Player';if(!em)return;
     try{if(isAdminEmail(em)){await S.db.doc('admins/'+em).delete();toast(`${nm} no longer has admin access.`)}else{await S.db.doc('admins/'+em).set({addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} can now use the Admin tab. They may need to reopen the app.`)}}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-madmin]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.madmin].admin=x.checked;saveTypes(L)});
   q('[data-mdel]').forEach(b=>b.onclick=()=>{const L=memTypes().filter((_,i)=>i!==+b.dataset.mdel);saveTypes(L)});
   on('mt-add',()=>{const k=$('mt-name').value.trim();if(!k){toast('Please name the type.');return}if(memTypes().some(t=>t.k.toLowerCase()===k.toLowerCase())){toast('That type already exists.');return}saveTypes([...memTypes(),{k,d:$('mt-desc').value.trim(),verify:true}])});
   on('site-go',async()=>{const u=$('site-url').value.trim();if(u&&!/^https:\/\//.test(u)){toast('Please use a full https:// link.');return}try{await S.db.doc('config/site').set({url:u});toast('Website link saved.')}catch(e){toast("Sorry, that didn't save.")}});
-  on('ad-go',async()=>{const e=$('ad-email').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e)){toast('Please enter a full email address.');return}
-    try{await S.db.doc('admins/'+e).set({addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(e+' is now an admin.')}catch(x){toast("Sorry, that didn't save.")}});
+  on('ad-go',async()=>{const e=$('ad-email').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e)){toast('Please enter a full email address.');return}const r=accessVal($('ad-role').value);
+    try{await S.db.doc('admins/'+e).set({...r,addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${e} is now ${roleLabel(r)}.`);$('ad-email').value=''}catch(x){toast("Sorry, that didn't save.")}});
   q('[data-unadmin]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('admins/'+b.dataset.unadmin).delete();toast('Removed.')}catch(x){toast("Sorry, that didn't save.")}});
 }
 async function approve(id){const r=S.requests[id];if(!r)return;

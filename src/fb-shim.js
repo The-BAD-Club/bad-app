@@ -49,9 +49,9 @@
   auth.onAuthStateChanged(async u=>{
     if(!u){gate.hidden=false;document.documentElement.classList.add('gated');return}
     gate.hidden=true;document.documentElement.classList.remove('gated');
-    const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email);
-    if(!admin&&email){try{admin=(await fs.doc('admins/'+email).get()).exists}catch(_){}}
-    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin};
+    const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email),role=admin?'owner':'',sports=[];
+    if(!admin&&email){try{const d=await fs.doc('admins/'+email).get();if(d.exists){admin=true;const x=d.data()||{};role=x.role||'founder';sports=x.sports||[]}}catch(_){}}
+    window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin,role,sports};
     resolveUser(window.BAD_USER);
   });
   window.badSignOut=()=>auth.signOut().then(()=>location.reload());
