@@ -658,6 +658,11 @@ select.memset{min-height:38px}
 .btn.wide{min-height:46px;font-size:.92rem}
 .stepnav #next{min-height:46px}
 .linkbtn{background:none;border:0;padding:0;cursor:pointer;font-family:inherit}
+/* ONE corner radius everywhere (circles stay circles: avatars, jersey dots, count badges) */
+:root{--R:14px;--r-xl:var(--R);--r-lg:var(--R);--r-md:var(--R);--r-sm:var(--R);--r:var(--R)}
+.btn,.btn.sm,.btn.wide,.chip,.chip.sm,.sp,.tabs button,.anav button,.toast,.mystrip,.tile,.note,.empty,.sess,.post,.panel,.abody .panel,.nextcard,.secret,.acct,.memb,.refer,.court,.act,.sig,.confirm,.wait,.paypick>*,.sess .dt,.nexts .dt,.dt,.mini-dt,.editions button,.lvl-pick button,.paydet,#qrbox,.invqr,.crop-frame,.crop-box,.qrcard,.gate-card,.pl,.chk .box,.court-body,.cback .qrbox,.pc,#v-create .pc,.mini .pc,.flip:focus-visible .flip-in,
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=time],input[type=search],input[type=url],select,textarea,.gate-card input,select.memset,.photo .pv{border-radius:var(--R)!important}
+.tagl{border-radius:var(--R)}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
