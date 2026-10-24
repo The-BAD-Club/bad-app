@@ -1,2 +1,5 @@
 export/
 build/
+tests/tap.txt
+tests/node_modules/
+firestore-debug.log
