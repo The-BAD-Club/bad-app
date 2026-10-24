@@ -644,6 +644,10 @@ details.payrow .paybody{padding:4px 0 16px 56px;display:grid;gap:10px}
 details.payrow:not(:last-child){border-bottom:.5px solid var(--line)}
 details.payrow summary .li{border-bottom:0}
 a.btn{text-decoration:none}
+.payall{display:grid;gap:14px;border-top:.5px solid var(--line);padding-top:14px}
+.payall .li{padding:10px 0}
+.payall .li.total{border-top:.5px solid var(--rule);border-bottom:0}
+.tile.owe .row .btn{flex:1;min-width:150px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1309,12 +1313,26 @@ function myActivity(){
   }
   return rows.sort((a,b)=>sessStart(b.s)-sessStart(a.s));
 }
+function payAllHTML(due,total){
+  const c=S.payCfg||{},opts=Object.keys(PAY).filter(payOn),k=opts.includes(S.payAllM)?S.payAllM:(opts.includes('ziina')?'ziina':opts[0]||'cash'),todo=due.filter(r=>r.payState==='pending');
+  const ref=`${myProfile()?.nickname||''} · ${due.length} session${due.length===1?'':'s'}`;
+  let det='';
+  if(k==='bank')det=c.iban?`<div class="paydet"><span class="fine">Account name</span><b>${esc(c.accName||'')}</b><span class="fine">Bank</span><b>${esc(c.bankName||'')}</b><span class="fine">IBAN</span><b class="num" id="iban-all">${esc(c.iban)}</b><span class="fine">Amount</span><b class="num">AED ${total}</b><span class="fine">Reference</span><b>${esc(ref)}</b></div><button class="btn ghost" data-copy="iban-all">${ic('copy')}Copy IBAN</button>`:'<p class="fine">An admin will share the bank details with you.</p>';
+  if(k==='ziina')det=c.ziinaLink?`<a class="btn" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Open Ziina and send AED ${total}</a>`:'<p class="fine">An admin will send you a Ziina link for AED '+total+'.</p>';
+  if(k==='cash')det=`<p class="fine">Please bring AED ${total} in cash to your next session. An admin will confirm it there.</p>`;
+  return `<div class="payall"><div class="list">${due.map(r=>{const d=dParts(r.s.date);return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><span>${esc(r.s.title||sportOf(r.s.sport).club)} <span class="fine">· ${d.d} ${d.m}${r.status==='Dropped late'?' · late drop fee':''}${r.guests?` · +${r.guests} guest${r.guests>1?'s':''}`:''}</span></span><b class="num">AED ${r.amount}</b></div>`}).join('')}
+    <div class="li total" style="grid-template-columns:minmax(0,1fr) auto"><b>Total</b><b class="num">AED ${total}</b></div></div>
+    <div class="chips" role="group" aria-label="How you'll pay">${opts.map(o=>`<button class="chip" data-pam="${o}" aria-pressed="${o===k}">${ic(PAY[o].icon)}${PAY[o].label}</button>`).join('')}</div>
+    ${det}
+    ${k!=='cash'&&todo.length?`<button class="btn ghost" data-payalldone="${k}">${ic('check')}I've paid all AED ${total}</button>`:k==='cash'?'':'<p class="fine">Sent. An admin will confirm it soon.</p>'}</div>`}
 function activityHTML(){
   const rows=myActivity(),due=rows.filter(r=>r.payState==='pending'||r.payState==='sent');
   const total=due.reduce((a,r)=>a+r.amount,0);
   const badge=st=>({paid:'<span class="tagl solid">'+ic('check')+'Paid</span>',sent:'<span class="tagl">Sent · checking</span>',pending:'<span class="tagl warn">Pending</span>',none:''}[st]);
   return `<div class="sec hsec"><div class="sec-h"><h3 class="ah">Bookings and payments</h3>${rows.length?`<span class="fine">${rows.length} session${rows.length===1?'':'s'}</span>`:''}</div>
-    ${total?`<button class="tile owe" data-payjump="1"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div><span class="paygo">See how to pay ›</span></button>`
+    ${total?`<div class="tile owe"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div>
+      <div class="row"><button class="btn" data-payall="1">${ic('wallet')}Pay all AED ${total}</button><button class="btn ghost" data-payjump="1">Pay one by one</button></div>
+      ${S.payAll?payAllHTML(due,total):''}</div>`
       :rows.length?`<div class="tile"><span class="ic-row">${ic('check')}<b>All paid up.</b></span><span class="fine">Thank you.</span></div>`:''}
     <div class="list">${rows.slice(0,12).map(r=>{const d=dParts(r.s.date),sp=sportOf(r.s.sport),due=r.payState==='pending'||r.payState==='sent',open=S.openPay===r.sid||(!S.openPay&&S.payJump&&due&&r===rows.find(x=>x.payState==='pending'||x.payState==='sent'));const row=`<div class="li act" style="grid-template-columns:auto minmax(0,1fr) auto">
       <div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div>
@@ -1376,6 +1394,10 @@ function renderCard(){
     </div></div>`;
   bindPlay(el);
   el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
+  el.querySelectorAll('[data-payall]').forEach(b=>b.onclick=()=>{S.payAll=!S.payAll;renderCard()});
+  el.querySelectorAll('[data-pam]').forEach(b=>b.onclick=()=>{S.payAllM=b.dataset.pam;renderCard()});
+  el.querySelectorAll('[data-payalldone]').forEach(b=>b.onclick=async()=>{const k=b.dataset.payalldone,ids=myActivity().filter(r=>r.payState==='pending').map(r=>r.sid),at=new Date().toISOString();
+    try{await saveBooking(x=>{ids.forEach(id=>{x[id]={...x[id],pay:k,sent:at}})});S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-payjump]').forEach(b=>b.onclick=()=>{const d=el.querySelector('.payrow');if(!d)return;d.open=true;S.openPay=d.dataset.payrow;d.scrollIntoView({behavior:'smooth',block:'center'})});
   $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
