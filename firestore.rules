@@ -15,6 +15,9 @@ service cloud.firestore {
     // Founders and crew: membership level Founder, Crew or Community Manager, verified by an admin
     function isStaff() { return signedIn() &&
         get(/databases/$(database)/documents/config/members).data.get(request.auth.uid, {}).get('type', '') in ['Founder','Crew','Community Manager']; }
+    // Game Master of a session: picked by an admin in Sessions
+    function isGM(sid) { return signedIn() && sid is string && exists(/databases/$(database)/documents/sessions/$(sid)) &&
+        request.auth.uid in get(/databases/$(database)/documents/sessions/$(sid)).data.get('gms', []); }
     function isSelf(id) { return signedIn() && request.auth.uid == id; }
 
     // Everyone signed in can see these; only admins change them.
@@ -44,6 +47,9 @@ service cloud.firestore {
       allow read: if signedIn() && (resource.data.uid == request.auth.uid || isShopAdmin());
       allow update, delete: if isShopAdmin();
     }
+    // Game Masters run the courts for their session.
+    match /live/{sid}  { allow write: if isGM(sid); }
+    match /games/{gid} { allow create, update: if isGM(request.resource.data.sid); allow delete: if isGM(resource.data.sid); }
     // BADges: given by founders and crew, seen by everyone signed in. The sheet sync marks them as sent.
     match /badges/{id} {
       allow read: if signedIn();

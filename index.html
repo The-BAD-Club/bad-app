@@ -344,7 +344,7 @@ h3.big{font-family:var(--f-serif);font-weight:400;font-size:2rem;line-height:1.0
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .fgrid .field{margin:0}
 .fgrid .field.wide{grid-column:1/-1}
-.li.pl{grid-template-columns:auto auto minmax(0,1fr) auto}
+.li.pl{grid-template-columns:auto auto minmax(0,1fr) auto;width:auto;justify-items:stretch;text-align:left;padding:12px 0;border-radius:0;align-items:start}.li.pl>.row{align-self:center}.addp{display:grid;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .li .pts{display:grid;justify-items:end}
 .li .pts b{font-family:var(--f-serif);font-weight:400;font-size:1.5rem;line-height:1}
 .li .pts .label{font-size:.6rem}
@@ -1453,7 +1453,7 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span><span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span></div>
+      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span>${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span></div>
       ${s.note?`<p>${esc(s.note)}</p>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
@@ -1693,7 +1693,7 @@ function people(sid){
   const m={},r=roster(sid);
   for(const e of [...r.in,...r.wait]){
     if(e.guest)m[gpid(e.uid,e.guest)]={name:e.guest,guestOf:e.uid};
-    else{const p=S.profiles[e.uid];m[e.uid]={name:p?.nickname||allKeys()[e.key]||e.key||'Player',p,uid:e.uid}}
+    else{const p=S.profiles[e.uid];m[e.uid]={name:p?.nickname||S.bookings[e.uid]?.name||allKeys()[e.key]||e.key||'Player',p,uid:e.uid}}
   }
   for(const w of (S.live[sid]?.walkins||[]))m['w~'+w.id]={name:w.name,walk:true};
   return m;
@@ -1720,9 +1720,12 @@ function rankRows(sport){
 }
 
 /* ---------- board state helpers ---------- */
+/* admins for their department, or the session's Game Master */
+const isGM=sid=>!!sid&&!!S.uid&&(S.sessions[sid]?.gms||[]).includes(S.uid);
+const courtEd=sid=>(S.canEdit&&canSport(S.courtSport))||isGM(sid);
 function courtSessions(){
   const now=Date.now();
-  return Object.entries(S.sessions).filter(([sid,s])=>(s.sport||'badminton')===S.courtSport&&(S.live[sid]?sessStart(s)>now-18*36e5:(S.canEdit?sessStart(s)>now-12*36e5&&sessStart(s)<now+7*864e5:Math.abs(sessStart(s)-now)<12*36e5)))
+  return Object.entries(S.sessions).filter(([sid,s])=>(s.sport||'badminton')===S.courtSport&&(S.live[sid]?sessStart(s)>now-18*36e5:((S.canEdit||isGM(sid))?sessStart(s)>now-12*36e5&&sessStart(s)<now+7*864e5:Math.abs(sessStart(s)-now)<12*36e5)))
     .sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
 }
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -1780,11 +1783,11 @@ function renderCourts(){
   const el=$('v-courts');if(!el||S.view!=='courts')return;
   const me=myProfile();
   if(!S.courtSport){const liveS=Object.keys(S.live).map(k=>S.sessions[k]).filter(Boolean).find(x=>sessStart(x)>Date.now()-18*36e5);S.courtSport=(liveS&&liveS.sport)||(me&&COURT_SPORTS.find(k=>(me.sports||[]).includes(k)))||'badminton'}
-  const ED=S.canEdit&&canSport(S.courtSport),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const list=courtSessions();
   const sportChips=`<div class="sports">${COURT_SPORTS.map(k=>`<button class="sp" data-act="sport" data-v="${k}" aria-pressed="${k===S.courtSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`;
   if(!list.find(([sid])=>sid===S.courtSid))S.courtSid=(list.find(([sid])=>S.live[sid])||list[0]||[null])[0];
   const sid=S.courtSid,s=sid&&S.sessions[sid],lv0=sid&&S.live[sid];
+  const ED=courtEd(sid),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const pick=list.length>1?`<div class="sports">${list.map(([id,x])=>{const d=dParts(x.date);return `<button class="sp" data-act="pick" data-sid="${id}" aria-pressed="${id===sid}">${ic(sportOf(x.sport).icon)}${esc(x.title)} · ${d.w} ${d.d}${S.live[id]?' ●':''}</button>`}).join('')}</div>`:'';
   const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button></div>`:'';
   const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · Courts</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
@@ -1867,7 +1870,7 @@ function bindCourts(el){el.onclick=async ev=>{
   if(act==='myscore'||act==='final'){const gid=b.dataset.gid,a=$('ga-'+gid).value,bb=$('gb-'+gid).value;if(a===''||bb===''){toast('Please enter both scores.');return}
     const v=[Number(a),Number(bb)];
     try{if(act==='final')await S.db.doc('games/'+gid).update({final:v});else{const cur=S.scores[S.uid]?.g||{};await S.db.doc('scores/'+S.uid).set({g:{...cur,[gid]:v}})}toast('Score saved. Thank you.')}catch(e){toast("Sorry, the score didn't save.")}return}
-  if(!S.canEdit||!canSport(S.courtSport))return;
+  if(!courtEd(sid))return;
   if(act==='start'){S.courtStep=1;return startBoard(sid)}
   const lv=norm(clone(S.live[sid])),arr=k=>k==='w'?lv.waiting:lv.courts,sp=S.sessions[sid].sport||'badminton';
   if(act==='bench'){sel=sel===b.dataset.pid?null:b.dataset.pid;return renderCourts()}
@@ -1999,7 +2002,7 @@ async function removeSamples(quiet){
 /* ---------- admin ---------- */
 const SIGNUP_SHEET='1ATPRh9Z-voVhE_8a5PNQUZnrLoEHBhM9iZAIR-1FeRA';
 let adminSid=null;
-const nameOf=(uid,key)=>S.profiles[uid]?.nickname||allKeys()[key]||key||'Unknown';
+const nameOf=(uid,key)=>S.profiles[uid]?.nickname||S.bookings[uid]?.name||allKeys()[key]||key||'Unknown';
 function mcpErr(e){const c=e&&e.code;return c==='server_not_connected'?'Add Google Sheets in claude.ai Settings → Connectors.':c==='needs_reauth'?'Reconnect Google Sheets in claude.ai Settings → Connectors.':(c==='not_in_manifest'||c==='approval_required')?'Allow Google Sheets for this page, then try again.':(e&&e.message)||'Something went wrong.'}
 
 let aTab='today',showNew=false,showPast=false,adminPicked=false;
@@ -2048,6 +2051,20 @@ function aToday(list,up){
   ${box('Quick actions',`<div class="qa"><button class="btn ghost" data-go="sessions" data-new="1">${ic('plus')}Add a session</button><button class="btn ghost" data-go="posts">${ic('club')}Post to Club</button>${fullAdmin()?`<button class="btn ghost" data-go="points">${ic('star')}Give bonus points</button><button class="btn ghost" data-go="points">${ic('gift')}Club codes</button>`:''}</div>`)}`;
 }
 
+/* Game Master: runs the courts for one session, even without admin access */
+function gmPanel(sid,s){const gms=s.gms||[],ps=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&!gms.includes(u)).sort((a,b)=>{const st=u=>memType(memLabel(u))?.staff?0:1;return st(a[0])-st(b[0])||(a[1].nickname||'').localeCompare(b[1].nickname||'')});
+  return box(`Game Master${gms.length>1?'s':''}`,`<p class="hint" style="margin-top:0">Runs the courts and the queue for this session. They can open the board and log games, even without admin access.</p>
+    ${gms.length?`<div class="list">${gms.map(u=>{const p=S.profiles[u]||{};return `<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'Player')}</div><div class="sub">${esc(memLabel(u))}</div></div><button class="rmx" data-gmrm="${esc(u)}" aria-label="Remove ${esc(p.nickname||'')} as Game Master">${ic('x')}</button></div>`}).join('')}</div>`:''}
+    <div class="row" style="margin-top:10px"><select id="gm-pick" style="flex:1;min-width:180px" aria-label="Pick a Game Master"><option value="">${gms.length?'Add another Game Master':'Pick a Game Master'}</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${memType(memLabel(u))?.staff?' · '+esc(memLabel(u)):''}</option>`).join('')}</select><button class="btn sm" id="gm-add">${ic('plus')}Add</button></div>`)}
+/* add people by hand: a registered player, or a guest (with or without a host) */
+function addPlayerPanel(sid,r){const inIds=new Set([...r.in,...r.wait].filter(e=>!e.guest).map(e=>e.uid)),ps=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&!inIds.has(u)).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||'')),hosts=Object.entries(S.profiles).filter(([u])=>inIds.has(u));
+  const m=S.addMode||'player';
+  return `<div class="addp"><div class="chips" role="group" aria-label="Add someone"><button type="button" class="chip sm" data-addmode="player" aria-pressed="${m==='player'}">${ic('plus')}Add a player</button><button type="button" class="chip sm" data-addmode="guest" aria-pressed="${m==='guest'}">${ic('guest')}Add a guest</button></div>
+    ${m==='player'?`<div class="row"><select id="ap-uid" style="flex:1;min-width:180px" aria-label="Player to add"><option value="">Pick a registered player</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${p.listName&&p.listName!==p.nickname?' ('+esc(p.listName)+')':''}</option>`).join('')}</select><button class="btn sm" id="ap-go">Add</button></div>`
+      :`<div class="row"><input type="text" id="ag-name" maxlength="30" placeholder="Guest's name" style="flex:1;min-width:140px" aria-label="Guest's name"><select id="ag-host" style="flex:1;min-width:160px" aria-label="Guest of"><option value="">No host · BAD guest</option>${hosts.map(([u,p])=>`<option value="${esc(u)}">Guest of ${esc(p.nickname||'')}</option>`).join('')}</select><button class="btn sm" id="ag-go">Add</button></div>
+      <p class="fine">With a host, the fee goes under the host's name. With no host, the guest shows on Payments under their own name.</p>`}
+    <p class="fine">Added by an admin. Payment starts as cash.</p></div>`}
+function rmRosterBtn(e){const k=`${e.uid}|${e.guest==null?'':e.gi}`;return S.rosterRm===k?`<button class="chip sm" data-rrm="${esc(k)}">Remove?</button>`:`<button class="rmx" data-rrarm="${esc(k)}" aria-label="Take ${esc(e.guest||nameOf(e.uid,e.key))} off this session">${ic('x')}</button>`}
 function aSessions(list,up){
   if(!canSport(newSport))newSport=Object.keys(SPORTS).find(canSport)||'badminton';
   const s=adminSid&&S.sessions[adminSid],r=s?roster(adminSid):null;
@@ -2070,15 +2087,16 @@ function aSessions(list,up){
     <div class="row"><button class="btn" id="n-go">${ic('plus')}Post session</button></div>`,'formbox'):'';
   if(!s)return picker+form+'<div class="empty">No sessions yet.</div>';
   const paid=r.in.filter(e=>!e.guest&&S.payments[adminSid]?.[e.uid]?.ok).length,owed=owedOf(adminSid);
-  const nm=e=>e.guest?`${esc(e.guest)} <span class="tagl">Guest of ${esc(nameOf(e.uid,e.key))}</span>`:esc(nameOf(e.uid,e.key));
+  const nm=e=>e.guest?`${esc(e.guest)} <span class="tagl">Guest of ${esc(nameOf(e.uid,e.key))}</span>`:esc(nameOf(e.uid,e.key))+(S.bookings[e.uid]?.guest?' <span class="tagl">Guest</span>':'')+(S.bookings[e.uid]?.s?.[adminSid]?.byAdmin?' <span class="tagl">Added by admin</span>':'');
   const rosterHTML=r.in.map((e,i)=>`<div class="li pl"><span class="rank num">${i+1}</span>${e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)}<div><div class="nm">${nm(e)}</div><div class="sub">${e.guest?'Host is responsible':esc(S.contacts[e.uid]?.mobile||S.contacts[e.uid]?.whatsapp||'')}${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)?` · ${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)} games`:''}</div>${e.guest?'':payTag(adminSid,e.uid)}</div>
-      <button class="btn sm ${isNS(e)?'':'ghost'} nsb" data-ns="${esc(e.key)}" data-uid="${esc(e.uid)}" data-d="${esc(nsId(e))}" title="Hidden from players">${isNS(e)?'No-show ✕':'No-show'}</button></div>`).join('')||'<div class="empty">No one yet.</div>';
+      <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm ${isNS(e)?'':'ghost'} nsb" data-ns="${esc(e.key)}" data-uid="${esc(e.uid)}" data-d="${esc(nsId(e))}" title="Hidden from players">${isNS(e)?'No-show ✕':'No-show'}</button>${rmRosterBtn(e)}</div></div>`).join('')||'<div class="empty">No one yet.</div>';
   return `${picker}${form}
   <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))+'–'+esc(fmtTime(s.end||''))} · AED ${esc(s.fee)}</span><h3 class="big">${esc(s.title)}</h3>
     <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
     <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button></div></div>
-  ${box(`Players <span class="hint num">${r.in.length}</span>`,`<div class="list">${rosterHTML}</div>`)}
-  ${r.wait.length?box('Waitlist',`<div class="list">${r.wait.map((e,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="rank num">${i+1}</span><div class="nm">${nm(e)}</div></div>`).join('')}</div>`):''}
+  ${gmPanel(adminSid,s)}
+  ${box(`Players <span class="hint num">${r.in.length}</span>`,`<div class="list">${rosterHTML}</div>${addPlayerPanel(adminSid,r)}`)}
+  ${r.wait.length?box('Waitlist',`<div class="list">${r.wait.map((e,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span><div class="nm">${nm(e)}</div>${rmRosterBtn(e)}</div>`).join('')}</div>`):''}
   ${r.late.length?box('Dropped late · fee owed',`<div class="list">${r.late.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${nm(e)}</div><div class="sub">${esc(e.fee.label)}${e.guest?' · host pays':''} · dropped ${esc(new Date(e.out).toLocaleString('en-GB',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}))}</div>${e.guest?'':payTag(adminSid,e.uid)}</div><b class="num">AED ${e.fee.amount}</b></div>`).join('')}</div>`):''}`;
 }
 
@@ -2224,6 +2242,19 @@ function bindAdmin(){
   q('[data-tracker]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.tracker,v=x.value.trim().slice(0,30),clash=Object.entries(S.profiles).find(([u])=>u!==uid&&normName(trackerName(u))===normName(v));
     if(v&&clash){toast(`${clash[1].nickname} already uses that name.`);x.value=S.profiles[uid]?.listName||'';return}
     try{await S.db.doc('profiles/'+uid).update({listName:v,updatedAt:new Date().toISOString()});toast(v?`Saved. ${S.profiles[uid]?.nickname||'They'} match${S.profiles[uid]?'es':''} "${v}" on the tracker.`:'Cleared.')}catch(e){toast("Sorry, that didn't save.")}});
+  on('gm-add',async()=>{const u=$('gm-pick').value;if(!u){toast('Please pick someone.');return}const s=S.sessions[adminSid];try{await S.db.doc('sessions/'+adminSid).update({gms:[...new Set([...(s.gms||[]),u])]});toast(`${S.profiles[u]?.nickname||'They'} is Game Master for ${s.title}.`)}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-gmrm]').forEach(b=>b.onclick=async()=>{const s=S.sessions[adminSid];try{await S.db.doc('sessions/'+adminSid).update({gms:(s.gms||[]).filter(x=>x!==b.dataset.gmrm)});toast('Removed.')}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-addmode]').forEach(b=>b.onclick=()=>{S.addMode=b.dataset.addmode;renderNow()});
+  on('ap-go',async()=>{const u=$('ap-uid').value;if(!u){toast('Please pick a player.');return}const cur=S.bookings[u]||{s:{}},sid=adminSid;
+    try{await S.db.doc('bookings/'+u).set({...cur,key:S.profiles[u]?.listKey||cur.key||'',s:{...(cur.s||{}),[sid]:{at:new Date().toISOString(),guests:[],pay:'cash',byAdmin:window.BAD_USER?.email||''}}});toast(`${S.profiles[u]?.nickname||'Player'} is in.`)}catch(e){toast("Sorry, that didn't save.")}});
+  on('ag-go',async()=>{const n=$('ag-name').value.trim().slice(0,30),host=$('ag-host').value,sid=adminSid,at=new Date().toISOString();if(!n){toast("Please type the guest's name.");return}
+    try{if(host){const cur=S.bookings[host];const x={...cur.s[sid]};x.guests=[...(x.guests||[]),{n,at,byAdmin:true}];await S.db.doc('bookings/'+host).set({...cur,s:{...cur.s,[sid]:x}})}
+      else{const id='g-'+slug(n)+'-'+Date.now().toString(36);await S.db.doc('bookings/'+id).set({key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{[sid]:{at,guests:[],pay:'cash',byAdmin:true}}})}
+      toast(`${n} is in.`);$('ag-name').value=''}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-rrarm]').forEach(b=>b.onclick=()=>{S.rosterRm=b.dataset.rrarm;renderNow();setTimeout(()=>{if(S.rosterRm===b.dataset.rrarm){S.rosterRm=null;renderNow()}},4000)});
+  q('[data-rrm]').forEach(b=>b.onclick=async()=>{const [uid,gi]=b.dataset.rrm.split('|'),sid=adminSid,cur=S.bookings[uid];S.rosterRm=null;if(!cur)return;const s={...cur.s};
+    if(gi===''){delete s[sid]}else{const x={...s[sid]};x.guests=(x.guests||[]).filter((_,i)=>i!==+gi);s[sid]=x}
+    try{if(cur.guest&&!Object.keys(s).length)await S.db.doc('bookings/'+uid).delete();else await S.db.doc('bookings/'+uid).set({...cur,s});toast('Taken off the session.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-freeall]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.freeall,list=pendingFor(uid),at=new Date().toISOString();
     try{for(const r of list){const cur={...(S.payments[r.sid]||{})};cur[uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
