@@ -1404,7 +1404,7 @@ function activityHTML(){
   const badge=st=>({free:'<span class="tagl solid">'+ic('check')+'Free</span>',paid:'<span class="tagl solid">'+ic('check')+'Paid</span>',sent:'<span class="tagl">Sent · checking</span>',pending:'<span class="tagl warn">Pending</span>',none:''}[st]);
   return `<div class="sec hsec"><div class="sec-h"><h3 class="ah">Bookings and payments</h3>${rows.length?`<span class="fine">${rows.length} session${rows.length===1?'':'s'}</span>`:''}</div>
     ${total?`<div class="tile owe"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div>
-      <div class="row"><button class="btn" data-payall="1">${ic('wallet')}Pay all AED ${total}</button><button class="btn ghost" data-payjump="1">Pay one by one</button></div>
+      <div class="row"><button class="btn" data-payall="1">${ic('wallet')}Pay all AED ${total}</button><button class="btn ghost" data-payjump="1">Pay one by one</button></div>${S.canEdit&&fullAdmin()?`<button class="linkbtn" data-clearmine="1">Admin: clear my AED ${total} pending</button>`:''}
       ${S.payAll?payAllHTML(due,total):''}</div>`
       :rows.length?`<div class="tile"><span class="ic-row">${ic('check')}<b>All paid up.</b></span><span class="fine">Thank you.</span></div>`:''}
     <div class="list">${rows.slice(0,12).map(r=>{const d=dParts(r.s.date),sp=sportOf(r.s.sport),due=r.payState==='pending'||r.payState==='sent',open=S.openPay===r.sid||(!S.openPay&&S.payJump&&due&&r===rows.find(x=>x.payState==='pending'||x.payState==='sent'));const row=`<div class="li act" style="grid-template-columns:auto minmax(0,1fr) auto">
@@ -1469,6 +1469,8 @@ function renderCard(){
   el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
   el.querySelectorAll('[data-payall]').forEach(b=>b.onclick=()=>{S.payAll=!S.payAll;renderCard()});
   el.querySelectorAll('[data-pam]').forEach(b=>b.onclick=()=>{S.payAllM=b.dataset.pam;renderCard()});
+  el.querySelectorAll('[data-clearmine]').forEach(b=>b.onclick=async()=>{const due=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent'),at=new Date().toISOString();
+    try{for(const r of due){const cur={...(S.payments[r.sid]||{})};cur[S.uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}S.payAll=false;toast('Cleared. Nothing pending.')}catch(e){toast("Sorry, that didn't save. Please publish the latest rules and try again.")}});
   el.querySelectorAll('[data-payalldone]').forEach(b=>b.onclick=async()=>{const k=b.dataset.payalldone,ids=myActivity().filter(r=>r.payState==='pending').map(r=>r.sid),at=new Date().toISOString();
     try{await saveBooking(x=>{ids.forEach(id=>{x[id]={...x[id],pay:k,sent:at}})});S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-payjump]').forEach(b=>b.onclick=()=>{const d=el.querySelector('.payrow');if(!d)return;d.open=true;S.openPay=d.dataset.payrow;d.scrollIntoView({behavior:'smooth',block:'center'})});
@@ -2154,7 +2156,7 @@ function memPending(){return Object.entries(S.profiles).filter(([,p])=>!p.sample
 /* a player's unpaid sessions (for admins) */
 function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
   for(const [sid,x] of Object.entries(b)){const s=S.sessions[sid];if(!s)continue;const r=roster(sid),P=S.payments[sid]?.[uid];if(P&&P.ok)continue;
-    let amount=0;if(x.out)amount=feeFor(s,x.out).amount;else if(r.in.some(e=>e.uid===uid&&!e.guest)){const g=(x.guests||[]).filter(g=>!g.out).length;amount=(Number(s.fee)||0)*(1+g)}
+    let amount=0;if(x.out)amount=feeFor(s,x.out).amount;else if(r.in.some(e=>e.uid===uid&&!e.guest)){const g=(x.guests||[]).filter(g=>!g.out||r.late.some(e=>e.uid===uid&&e.guest===g.n)).length;amount=(Number(s.fee)||0)*(1+g)}
     if(amount)out.push({sid,amount})}
   return out}
 
