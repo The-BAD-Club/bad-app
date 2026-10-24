@@ -1,5 +1,7 @@
-"""Builds index.html for GitHub Pages from the shared app source in /home/claude/src."""
-SRC='/home/claude/src/'
+"""Builds index.html for GitHub Pages from the app source in src/app (run: python3 build.py)."""
+import os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+SRC='src/app/'
 FB='https://www.gstatic.com/firebasejs/10.12.2/'
 h=open(SRC+'1-head.html').read()
 css=open('src/gate.css').read()
@@ -13,5 +15,6 @@ js+=open('src/fb-shim.js').read()+"\n"
 js+="".join(open(SRC+f).read()+"\n" for f in ['12-version.js','2-core.js','11-points.js','3-create.js','4-views.js','8-courts.js','9-checkin.js','5-admin.js','10-shop.js','6-brand.js','7-boot.js'])
 doc=h if h.lstrip().lower().startswith('<!doctype') else '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#000000">\n'+h
 out=doc+"\n"+head+"<script>\n"+js+"</script>\n"
-open('index.html','w').write(out);open('/tmp/claude-0/-home-claude/f6b3cde0-93ca-5963-9c82-01167234d9c2/scratchpad/web.js','w').write(js)
+open('index.html','w').write(out)
+os.makedirs('build',exist_ok=True);open('build/app.js','w').write(js)  # for syntax checks: node --check build/app.js
 print(len(out))
