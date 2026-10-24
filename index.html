@@ -621,6 +621,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink)}
 .sp{padding-left:12px}
 .btn svg.i,.chip svg.i,.sp svg.i{width:18px;height:18px}
 select.memset{min-height:44px}
+/* badges: small, quiet, sentence case */
+.tagl{gap:4px;font-size:.72rem;font-weight:600;letter-spacing:0;text-transform:none;border:0;padding:2px 9px 2px 8px;border-radius:999px;line-height:1.4;background:color-mix(in srgb,var(--ink) 10%,transparent);color:var(--ink);vertical-align:middle}
+.tagl svg.i{width:12px;height:12px;flex:none}
+.tagl.solid{background:color-mix(in srgb,var(--ink) 16%,transparent);color:var(--ink);border:0}
+.tagl.warn{background:transparent;box-shadow:inset 0 0 0 1px var(--rule);color:var(--muted)}
+.li .nm .tagl{margin-left:6px;position:relative;top:-1px}
+.pc .tagl{background:rgba(255,255,255,.14)}
+/* text buttons */
+details.manage summary,.linkbtn{text-decoration:none;color:var(--muted);font-weight:600;font-size:.82rem}
+details.manage summary::after{content:"›";font-size:1.1em;line-height:1;margin-left:2px;transition:transform .2s}
+details.manage[open] summary::after{transform:rotate(90deg)}
+details.manage summary:hover,.linkbtn:hover{color:var(--ink)}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -633,7 +645,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
 .gate-card .wide{width:100%}
 .gate-card .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
 .gate-card .or:before,.gate-card .or:after{content:"";flex:1;height:1px;background:var(--line)}
-.linkbtn{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;justify-self:start;padding:0}
+.gate-card .linkbtn{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;justify-self:start;padding:0}
 .signout{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:6px}
 .gate-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:.28em}
 .gate-h img{height:.74em;width:auto;transform:translateY(.02em)}
