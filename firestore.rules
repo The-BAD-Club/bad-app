@@ -90,7 +90,7 @@ service cloud.firestore {
     match /bookings/{id} {
       allow read: if signedIn();
       allow create, update: if (isSelf(id) && validOwnBooking()) || staffBooking();
-      allow delete: if resource.data.get('guest', false) == true && isAdminAny();
+      allow delete: if (resource.data.get('guest', false) == true && isAdminAny()) || isFull();
     }
     function oldEntries() { return resource == null ? {} : resource.data.get('s', {}); }
     function validOwnBooking() {
@@ -102,12 +102,12 @@ service cloud.firestore {
       return d.keys().hasOnly(['key', 's', 'op', 'u']) && str(d.key, 40) && d.u == request.time
         && d.op.keys().hasOnly(['sid', 'kind']) && str(sid, 80) && exists(sessionPath(sid))
         && d.s.diff(olds).affectedKeys().hasOnly([sid])
-        && e is map && e.keys().hasOnly(['at', 't', 'pay', 'sent', 'ask', 'out', 'tout', 'guests'])
+        && e is map && e.keys().hasOnly(['at', 't', 'pay', 'sent', 'ask', 'out', 'tout', 'guests', 'gin', 'gout'])
         && e.pay in ['cash', 'bank', 'ziina', 'careem'] && e.guests is list && e.guests.size() <= 3
         && (
           (d.op.kind == 'join' && e.t == request.time && !('out' in e) && !('tout' in e) && !('sent' in e) && !('ask' in e) && e.guests.size() == 0)
-          || (o != null && d.op.kind == 'leave' && e.t == o.t && e.tout == request.time && e.diff(o).affectedKeys().hasOnly(['out', 'tout', 'guests']))
-          || (o != null && d.op.kind == 'guest' && e.t == o.t && !('tout' in o) && e.diff(o).affectedKeys().hasOnly(['guests']))
+          || (o != null && d.op.kind == 'leave' && e.t == o.t && e.tout == request.time && e.diff(o).affectedKeys().hasOnly(['out', 'tout', 'guests', 'gout']))
+          || (o != null && d.op.kind == 'guest' && e.t == o.t && !('tout' in o) && e.diff(o).affectedKeys().hasOnly(['guests', 'gin', 'gout']))
           || (o != null && d.op.kind == 'pay' && e.diff(o).affectedKeys().hasOnly(['pay', 'sent', 'ask']))
         );
     }
@@ -187,9 +187,9 @@ service cloud.firestore {
     // and only in the same transaction that creates their own new order.
     match /stock/{id} {
       allow read: if signedIn();
-      allow create, update: if isShop() || validReserve();
+      allow create, update: if isShop() || validReserve(id);
     }
-    function validReserve() {
+    function validReserve(id) {
       let d = request.resource.data;
       let before = resource == null ? 0 : resource.data.sold;
       let p = get(/databases/$(database)/documents/products/$(d.pid)).data;
