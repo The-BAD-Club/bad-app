@@ -876,6 +876,24 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
   }};
 })();
 
+/* ---------- app version and what's new ----------
+   Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
+   and the same line to the SOP's App versions table. */
+const APP_VERSION='0.8';
+const CHANGES=[
+  ['0.8','2026-10-24','Game Master per session; admins add players and guests by hand and take people off a session'],
+  ['0.7','2026-10-24','Points and BADges from BAD APP – Master; BADge levels and perks; name on tracker; department wording'],
+  ['0.6','2026-10-24','Payments tab; Check with admin; remove and undo for payments'],
+  ['0.5','2026-10-24','Shop: limited drops, essentials, bag, checkout and orders'],
+  ['0.4','2026-10-24','Pay all, Careem Pay, make a session free, clear pending'],
+  ['0.3','2026-10-24','Two-sided card with invite QR; design pass; admin roles'],
+  ['0.2','2026-10-23','Home page, membership levels, save card, light theme, Members sheet'],
+  ['0.1','2026-10-23','First version: sign-in, player card, sessions, referral codes']];
+const SOP_URL='https://claude.ai/artifact/RuSFThqHtbF6S2KcZvxqtX';
+function whatsNewHTML(){return `<p class="hint" style="margin-top:0">You're on version ${APP_VERSION}${APP_VERSION.startsWith('0.')?', the testing period. Version 1.0 is the launch':''}. How the crew runs things is in the <a href="${SOP_URL}" target="_blank" rel="noopener">BAD App SOP</a>.</p>
+  <div class="list">${CHANGES.map(([v,d,t])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="tagl${v===APP_VERSION?' solid':''} num">v${v}</span><div><div class="nm" style="font-weight:500">${esc(t)}</div><div class="sub">${esc(fmtD(d))}</div></div></div>`).join('')}</div>`}
+(function addVer(){if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',addVer);return}const f=document.querySelector('footer.sign');if(f&&!f.querySelector('.ver')){const s=document.createElement('span');s.className='ver num';s.textContent='BAD App v'+APP_VERSION+(APP_VERSION.startsWith('0.')?' · testing':'');f.appendChild(s)}})();
+
 const CFG={freeHours:48,halfHours:24};
 const SHEETS=[{id:'1xKhAHUrprXUPyrpGrKL6hQKDGxY7GUNCnhsEDFRjUzY',day:'wed',label:'Wednesday Rally'},{id:'1V7Ps7jnQ5KpDEB2E7B1WK9aSvwt_3l_mehe4fokgxV4',day:'fri',label:'Friday Rally'}];
 const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','White','#fff'],['courtside','Courtside','Grey','#969696']];
@@ -2164,6 +2182,7 @@ function aSettings(){
     <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:150px;margin:0"><label for="mt-name">New type</label><input type="text" id="mt-name" maxlength="24" placeholder="e.g. Student"></div><div class="field" style="flex:2;min-width:160px;margin:0"><label for="mt-desc">Short description</label><input type="text" id="mt-desc" maxlength="40"></div><button class="btn" id="mt-add">Add</button></div>`)}
   ${boxD('Google Sheets',`<p class="hint">The trackers feed attendance and payments into the Master, which works out points.</p><div class="list">${[['BAD APP – Master',SIGNUP_SHEET,'Players, sign-ups, points and every tracker'],...SHEETS.map(x=>[x.label,x.id,'Attendance and payments']),['Tuesday Training Tracker','1gwP-s7QP93-0qOzRu_RH2q664Onpsrz1crWjneDa5Oo','Training attendance, payments and coach fees']].map(([n,id,d])=>`<a class="li" style="grid-template-columns:auto minmax(0,1fr) auto;text-decoration:none;color:inherit" href="${gs(id)}" target="_blank" rel="noopener">${ic('sheet')}<div><div class="nm">${esc(n)}</div><div class="sub">${esc(d)}</div></div>${ic('arrow')}</a>`).join('')}<a class="li" style="grid-template-columns:auto minmax(0,1fr) auto;text-decoration:none;color:inherit" href="https://drive.google.com/drive/folders/1E_EmlRuVN-zhlGosz8Fvd5oWNGGS-lsk" target="_blank" rel="noopener">${ic('image')}<div><div class="nm">BAD APP folder</div><div class="sub">Google Drive folder with all of the above</div></div>${ic('arrow')}</a></div>`)}
   ${Object.values(S.profiles).some(p=>p.sample)?box(`Sample players <span class="tagl">${Object.values(S.profiles).filter(p=>p.sample).length}</span>`,`<p class="hint">Sample players from the 21 Oct session are here so you can try the courts and check-in. Remove them before going live.</p><button class="btn ghost sm" id="rm-samples" style="justify-self:start">${ic('x')}Remove sample players</button>`,'secret'):''}
+  ${boxD(`What's new <span class="hint num">v${APP_VERSION}</span>`,whatsNewHTML())}
   ${boxD('Brand and logos',brandPanel())}`;
 }
 let postType='event',newSport='badminton';
