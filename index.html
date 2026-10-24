@@ -1052,9 +1052,10 @@ function cardBackHTML(p,st){
    founder: everything, can add and remove admins (not owners)
    app: helps build the app: everything except managing admins
    cm: community manager for chosen sports: their sessions, courts, players and posts */
-const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins.'},cm:{k:'Community manager',d:'Runs their own sport: sessions, courts, players and posts.'}};
+const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins and the shop.'},cm:{k:'Community manager',d:'Runs their own sport: sessions, courts, players and posts.'}};
 const myRole=()=>S.canEdit?((window.BAD_USER&&window.BAD_USER.role)||'owner'):'';
 const mySports=()=>(window.BAD_USER&&window.BAD_USER.sports)||[];
+const shopAdmin=()=>['owner','founder'].includes(myRole());
 const fullAdmin=()=>['owner','founder','app'].includes(myRole());
 const canManageAdmins=()=>['owner','founder'].includes(myRole());
 const canSport=k=>fullAdmin()||(myRole()==='cm'&&mySports().includes(k||'badminton'));
@@ -1870,7 +1871,7 @@ const tile=(n,l)=>`<div class="tile"><div class="stat"><b class="num">${n}</b><s
 
 const TABS_CM=['today','sessions','players','posts'];
 function renderAdmin(){
-  if(!fullAdmin()&&!TABS_CM.includes(aTab))aTab='today';const TABS=fullAdmin()?ATABS:ATABS.filter(t=>TABS_CM.includes(t[0]));
+  if(!fullAdmin()&&!TABS_CM.includes(aTab))aTab='today';if(aTab==='shop'&&!shopAdmin())aTab='today';const TABS=(fullAdmin()?ATABS:ATABS.filter(t=>TABS_CM.includes(t[0]))).filter(t=>t[0]!=='shop'||shopAdmin());
   const el=$('v-admin'),list=Object.entries(S.sessions).filter(([,x])=>canSport(x.sport)).sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
   const up=upcoming().filter(([,x])=>canSport(x.sport));if(!adminPicked&&up[0])adminSid=up[0][0];if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
   const badge=fullAdmin()?{points:Object.keys(S.requests).length,players:memPending().length}:{};
@@ -2410,7 +2411,7 @@ S.contacts={};S.brand={};
     db.collection('qr').onSnapshot(s=>{S.qr=map(s);syncCheckins()},()=>{});
     db.collection('levels').onSnapshot(s=>{S.levels=map(s);render()},()=>{});
     if(window.BAD_WEB)db.collection('admins').onSnapshot(s=>{S.admins=map(s);if(S.view==='admin')render()},()=>{});
-    db.collection('orders').onSnapshot(s=>{S.orders=map(s);if(S.view==='admin')render()},()=>{});
+    if(shopAdmin())db.collection('orders').onSnapshot(s=>{S.orders=map(s);if(S.view==='admin')render()},()=>{});
     db.collection('noshows').onSnapshot(s=>{S.noshows=map(s);if(S.view==='admin')render()},()=>{});
   }
 })();

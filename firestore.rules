@@ -8,19 +8,23 @@ service cloud.firestore {
         request.auth.token.email.lower() in ['thebadclub.co@gmail.com'] ||
         exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())));
     }
+    function isShopAdmin() { return signedIn() && request.auth.token.email != null && (
+        request.auth.token.email.lower() in ['thebadclub.co@gmail.com'] ||
+        (exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())) &&
+         get(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())).data.get('role','founder') == 'founder')); }
     function isSelf(id) { return signedIn() && request.auth.uid == id; }
 
-    // Everyone signed in can see these; only organisers change them.
+    // Everyone signed in can see these; only admins change them.
     match /{col}/{id} {
-      allow read: if signedIn() && col in ['profiles','requests','bookings','ledger','sessions','posts','config','live','games','scores','payments','products'];
-      allow write: if isAdmin();
+      allow read: if signedIn() && col in ['profiles','requests','bookings','ledger','sessions','posts','config','live','games','scores','payments'];
+      allow write: if isAdmin() && !(col in ['products','orders','shopstock']);
     }
     // Players can edit their own card, requests, bookings and scores.
     match /profiles/{id} { allow write: if isSelf(id) || isAdmin(); }
     match /requests/{id} { allow write: if isSelf(id) || isAdmin(); }
     match /bookings/{id} { allow write: if isSelf(id) || isAdmin(); }
     match /scores/{id}   { allow write: if isSelf(id) || isAdmin(); }
-    // Private: contact details and check-ins (own + organisers).
+    // Private: contact details and check-ins (own + admins).
     match /contacts/{id} { allow read, write: if isSelf(id) || isAdmin(); }
     match /checkins/{id} { allow read, write: if isSelf(id) || isAdmin(); }
     // Referral codes: each code is claimed once, by one player, for good.
@@ -30,13 +34,14 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
     // Shop: stock counters move when anyone orders; orders are private to the buyer and admins.
+    match /products/{id} { allow read: if signedIn(); allow write: if isShopAdmin(); }
     match /shopstock/{id} { allow read, write: if signedIn(); }
     match /orders/{id} {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
-      allow update, delete: if isAdmin();
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isShopAdmin());
+      allow update, delete: if isShopAdmin();
     }
-    // Organisers only.
+    // Admins only.
     match /noshows/{id} { allow read, write: if isAdmin(); }
     match /qr/{id}      { allow read, write: if isAdmin(); }
     match /levels/{id}  { allow read, write: if isAdmin(); }
