@@ -850,7 +850,7 @@ const SPORTS={
 };
 const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Run club',basketball:'Basketball',training:'Coaching and drills',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 const LEVEL_FREE=['retreat','vibe'];
-const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'}};
+const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
 const PLAYABLE=['badminton','volleyball','pickleball','run','basketball'];
 const TYPES={
  badminton:{'Smasher':'Ends rallies from the back.','Net Ninja':'Lives at the tape.','The Wall':'Returns everything.','Trickster':'Holds, flicks, deceives.','Rally Machine':'No errors. Ever.'},
@@ -1212,17 +1212,20 @@ async function join(sid,pay){try{await saveBooking(s=>{s[sid]={at:new Date().toI
 async function setPay(sid,pay){try{await saveBooking(s=>{s[sid]={...s[sid],pay,sent:null}});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function markSent(sid){try{await saveBooking(s=>{s[sid]={...s[sid],sent:new Date().toISOString()}});toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
 async function unmarkSent(sid){try{await saveBooking(s=>{const x={...s[sid]};delete x.sent;s[sid]=x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
-const payOn=k=>{const c=S.payCfg||{};return k==='cash'?c.cash!==false:k==='bank'?c.bank!==false:c.ziina!==false};
+const payOn=k=>{const c=S.payCfg||{};return c[k]!==false};
 function payPicker(sid,isChange){return `<div class="confirm"><b>${isChange?'Change how you pay':'How would you like to pay?'}</b>
   <div class="paypick">${Object.entries(PAY).filter(([k])=>payOn(k)).map(([k,m])=>`<button type="button" data-pay="${k}" data-sid="${sid}" data-change="${isChange?1:0}">${ic(m.icon)}<b>${m.label}</b><span class="fine">${m.sub}</span></button>`).join('')}</div>
   <button class="btn ghost sm" data-paycancel="1" style="justify-self:start">Cancel</button></div>`}
+const careemDet=(c,amt)=>c.careemNo||c.careemLink?`<div class="paydet">${c.careemName?`<span class="fine">Send to</span><b>${esc(c.careemName)}</b>`:''}${c.careemNo?`<span class="fine">Careem Pay</span><b class="num">${esc(c.careemNo)}</b>`:''}<span class="fine">Amount</span><b class="num">AED ${esc(amt)}</b></div>${c.careemLink?`<a class="btn" href="${esc(c.careemLink)}" target="_blank" rel="noopener">${ic('phone')}Open Careem Pay</a>`:''}`:'<p class="fine">An admin will share the Careem Pay details with you.</p>';
 function payInfo(sid,s,mine,amt){const fee=amt!=null?amt:s.fee;
   const k=mine.pay||'cash',m=PAY[k],c=S.payCfg||{},ok=S.payments[sid]?.[S.uid]?.ok;
+  if(S.payments[sid]?.[S.uid]?.waived)return `<div class="payline ok">${ic('check')}<span><b>Free</b> · nothing to pay</span></div>`;
   if(ok)return `<div class="payline ok">${ic('check')}<span><b>Paid</b> · ${m.label}</span></div>`;
   let det='';
   if(k==='bank')det=c.bankName||c.iban?`<div class="paydet"><span class="fine">Account name</span><b>${esc(c.accName||'')}</b><span class="fine">Bank</span><b>${esc(c.bankName||'')}</b><span class="fine">IBAN</span><b class="num" id="iban-${sid}">${esc(c.iban||'')}</b><span class="fine">Reference</span><b>${esc((myProfile()?.nickname||'')+' '+s.date)}</b></div><button class="btn ghost sm" data-copy="iban-${sid}">${ic('copy')}Copy IBAN</button>`:'<p class="fine">An admin will share the bank details with you.</p>';
   if(k==='ziina')det=c.ziinaLink?`<a class="btn sm" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Pay AED ${esc(fee)} with Ziina</a>`:'<p class="fine">An admin will send you a Ziina link.</p>';
   if(k==='cash')det=`<p class="fine">Please bring AED ${esc(fee)} in cash to the session.</p>`;
+  if(k==='careem')det=careemDet(c,fee);
   return `<div class="payline"><div class="row" style="justify-content:space-between"><span class="ic-row">${ic(m.icon)}<span><b>${m.label}</b> · AED ${esc(fee)}${mine.sent?' · <span class="fine">sent, waiting for confirmation</span>':''}</span></span><button class="btn ghost sm" data-paychange="${sid}">Change</button></div>
     ${det}${k!=='cash'&&!mine.sent?`<button class="btn ghost sm" data-sent="${sid}" style="justify-self:start">${ic('check')}I've paid</button>`:''}${mine.sent?`<button class="linkbtn" data-unsent="${sid}" style="justify-self:start">Tapped by mistake? Undo</button>`:''}</div>`;
 }
@@ -1308,7 +1311,7 @@ function myActivity(){
     else if(wait){status=started?'Missed (waitlist)':'Waitlist'}
     else continue;
     const pay=S.payments[sid]?.[S.uid];
-    const payState=!amount?'none':pay?.ok?'paid':x.sent?'sent':'pending';
+    const payState=!amount?'none':pay?.waived?'free':pay?.ok?'paid':x.sent?'sent':'pending';
     rows.push({sid,s,x,status,amount,guests,payState,games:gamesFor(sid,S.uid),method:x.pay||'cash'});
   }
   return rows.sort((a,b)=>sessStart(b.s)-sessStart(a.s));
@@ -1320,6 +1323,7 @@ function payAllHTML(due,total){
   if(k==='bank')det=c.iban?`<div class="paydet"><span class="fine">Account name</span><b>${esc(c.accName||'')}</b><span class="fine">Bank</span><b>${esc(c.bankName||'')}</b><span class="fine">IBAN</span><b class="num" id="iban-all">${esc(c.iban)}</b><span class="fine">Amount</span><b class="num">AED ${total}</b><span class="fine">Reference</span><b>${esc(ref)}</b></div><button class="btn ghost" data-copy="iban-all">${ic('copy')}Copy IBAN</button>`:'<p class="fine">An admin will share the bank details with you.</p>';
   if(k==='ziina')det=c.ziinaLink?`<a class="btn" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Open Ziina and send AED ${total}</a>`:'<p class="fine">An admin will send you a Ziina link for AED '+total+'.</p>';
   if(k==='cash')det=`<p class="fine">Please bring AED ${total} in cash to your next session. An admin will confirm it there.</p>`;
+  if(k==='careem')det=careemDet(c,total);
   return `<div class="payall"><div class="list">${due.map(r=>{const d=dParts(r.s.date);return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><span>${esc(r.s.title||sportOf(r.s.sport).club)} <span class="fine">· ${d.d} ${d.m}${r.status==='Dropped late'?' · late drop fee':''}${r.guests?` · +${r.guests} guest${r.guests>1?'s':''}`:''}</span></span><b class="num">AED ${r.amount}</b></div>`}).join('')}
     <div class="li total" style="grid-template-columns:minmax(0,1fr) auto"><b>Total</b><b class="num">AED ${total}</b></div></div>
     <div class="chips" role="group" aria-label="How you'll pay">${opts.map(o=>`<button class="chip" data-pam="${o}" aria-pressed="${o===k}">${ic(PAY[o].icon)}${PAY[o].label}</button>`).join('')}</div>
@@ -1328,7 +1332,7 @@ function payAllHTML(due,total){
 function activityHTML(){
   const rows=myActivity(),due=rows.filter(r=>r.payState==='pending'||r.payState==='sent');
   const total=due.reduce((a,r)=>a+r.amount,0);
-  const badge=st=>({paid:'<span class="tagl solid">'+ic('check')+'Paid</span>',sent:'<span class="tagl">Sent · checking</span>',pending:'<span class="tagl warn">Pending</span>',none:''}[st]);
+  const badge=st=>({free:'<span class="tagl solid">'+ic('check')+'Free</span>',paid:'<span class="tagl solid">'+ic('check')+'Paid</span>',sent:'<span class="tagl">Sent · checking</span>',pending:'<span class="tagl warn">Pending</span>',none:''}[st]);
   return `<div class="sec hsec"><div class="sec-h"><h3 class="ah">Bookings and payments</h3>${rows.length?`<span class="fine">${rows.length} session${rows.length===1?'':'s'}</span>`:''}</div>
     ${total?`<div class="tile owe"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div>
       <div class="row"><button class="btn" data-payall="1">${ic('wallet')}Pay all AED ${total}</button><button class="btn ghost" data-payjump="1">Pay one by one</button></div>
@@ -1872,7 +1876,7 @@ function aPlayers(){
   const mp=memPending();
   return `${fullAdmin()?'':`<p class="hint">Players in ${esc(mySports().map(k=>SPORTS[k]?.club).join(', '))}.</p>`}${!fullAdmin()?'':box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
   <div class="field" style="margin:0"><label for="a-q" class="sr">Search players</label><input type="search" id="a-q" placeholder="Search name, email or mobile"></div>
-  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div>${fullAdmin()?`<details class="manage"><summary>Manage</summary><div class="row" style="gap:8px;margin-top:8px">${window.BAD_WEB&&!p.sample&&canManageAdmins()?(()=>{const em=((S.contacts[uid]||{}).email||'').toLowerCase(),r=adminRec(em),cur=!r?'':r.role==='cm'?'cm:'+((r.sports||[])[0]||''):r.role;if(!em)return '';if(r&&r.role==='owner')return `<span class="tagl solid">${ic('check')}Owner</span>`;return `<select class="memset adm" data-access="${esc(uid)}" aria-label="Admin access for ${esc(p.nickname||'player')}"><option value="">No admin access</option>${Object.keys(SPORTS).map(k=>`<option value="cm:${k}" ${cur==='cm:'+k?'selected':''}>Community manager · ${esc(SPORTS[k].club)}</option>`).join('')}<option value="app" ${cur==='app'?'selected':''}>App admin</option><option value="founder" ${cur==='founder'?'selected':''}>Founder admin</option></select>`})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div></details>`:''}</div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
+  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div></div><div class="pts"><b class="num">${st.balance}</b><span class="label">pts</span></div>${fullAdmin()?`<details class="manage"><summary>Manage${pendingFor(uid).length?` · AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending`:''}</summary><div class="row" style="gap:8px;margin-top:8px">${pendingFor(uid).length?`<button class="btn ghost" data-freeall="${esc(uid)}">Clear AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending</button>`:''}${window.BAD_WEB&&!p.sample&&canManageAdmins()?(()=>{const em=((S.contacts[uid]||{}).email||'').toLowerCase(),r=adminRec(em),cur=!r?'':r.role==='cm'?'cm:'+((r.sports||[])[0]||''):r.role;if(!em)return '';if(r&&r.role==='owner')return `<span class="tagl solid">${ic('check')}Owner</span>`;return `<select class="memset adm" data-access="${esc(uid)}" aria-label="Admin access for ${esc(p.nickname||'player')}"><option value="">No admin access</option>${Object.keys(SPORTS).map(k=>`<option value="cm:${k}" ${cur==='cm:'+k?'selected':''}>Community manager · ${esc(SPORTS[k].club)}</option>`).join('')}<option value="app" ${cur==='app'?'selected':''}>App admin</option><option value="founder" ${cur==='founder'?'selected':''}>Founder admin</option></select>`})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div></details>`:''}</div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
   ${box('No-show list <span class="tagl">Admins only</span>',`<p class="hint">Players never see this. Mark no-shows from a session’s player list.</p><div class="list">${nsKeys.map(n=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(n.name||n.player)}</div><div class="sub num">${n.dates.map(d=>{const [sd,g]=d.split('#');return esc((S.sessions[sd]?fmtS(S.sessions[sd]):sd)+(g?' (guest)':''))}).join(' · ')}</div></div><b class="num">${n.dates.length}</b></div>`).join('')||'<div class="empty">Clean sheet so far.</div>'}</div>`,'secret')}
   <details class="panel"><summary class="ah">Add a player from a join code</summary><p class="hint">Only needed if a player couldn’t save their card and sent you a BAD1- code.</p><textarea id="imp-code" placeholder="BAD1-…"></textarea><div class="row"><button class="btn ghost" id="imp-go">Add player</button></div></details>`;
 }
@@ -1926,15 +1930,18 @@ function aSettings(){
   ${boxD('Brand and logos',brandPanel())}`;
 }
 let postType='event',newSport='badminton';
-function payTag(sid,uid){const b=S.bookings[uid]?.s?.[sid]||{},k=b.pay||'cash',ok=S.payments[sid]?.[uid]?.ok;
-  return `<div class="row" style="gap:6px;margin-top:4px"><span class="tagl${ok?' solid':''}">${ic(PAY[k].icon)}${PAY[k].label}${ok?' · Paid':b.sent?' · Sent':''}</span><button class="chip sm" data-paid="${esc(uid)}" aria-pressed="${!!ok}">${ok?'Undo paid':'Mark paid'}</button></div>`}
+function payTag(sid,uid){const b=S.bookings[uid]?.s?.[sid]||{},k=b.pay||'cash',P=S.payments[sid]?.[uid]||{},ok=P.ok&&!P.waived,fr=!!P.waived;
+  return `<div class="row" style="gap:6px;margin-top:4px"><span class="tagl${ok||fr?' solid':''}">${ic(PAY[k]?.icon||'cash')}${PAY[k]?.label||'Cash'}${fr?' · Free':ok?' · Paid':b.sent?' · Sent':''}</span>${fr?'':`<button class="chip sm" data-paid="${esc(uid)}" aria-pressed="${ok}">${ok?'Undo paid':'Mark paid'}</button>`}${ok?'':`<button class="chip sm" data-free="${esc(uid)}" aria-pressed="${fr}">${fr?'Undo free':'Make free'}</button>`}</div>`}
 function payPanel(){const c=S.payCfg||{};
-  return `<div class="panel"><h3 class="ah">Payments</h3><p class="muted">Players choose how they pay when they join a session. Bank details and the Ziina link are shown only to players who pick that option.</p>
+  return `<div class="panel"><h3 class="ah">Payments</h3><p class="muted">Players choose how they pay when they join a session. Bank, Ziina and Careem Pay details are shown only to players who pick that option.</p>
     <div class="chips">${Object.entries(PAY).map(([k,m])=>`<label class="chip"><input type="checkbox" data-pon="${k}" ${c[k]!==false?'checked':''}> ${ic(m.icon)}${m.label}</label>`).join('')}</div>
     <div class="row" style="align-items:flex-end"><div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-acc">Account name</label><input type="text" id="pc-acc" value="${esc(c.accName||'')}"></div>
       <div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-bank">Bank</label><input type="text" id="pc-bank" value="${esc(c.bankName||'')}"></div></div>
     <div class="field" style="margin:0"><label for="pc-iban">IBAN</label><input type="text" id="pc-iban" value="${esc(c.iban||'')}" placeholder="AE.."></div>
     <div class="field" style="margin:0"><label for="pc-ziina">Ziina payment link</label><input type="text" id="pc-ziina" value="${esc(c.ziinaLink||'')}" placeholder="https://pay.ziina.com/..."></div>
+    <div class="row" style="align-items:flex-end"><div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-cname">Careem Pay name</label><input type="text" id="pc-cname" value="${esc(c.careemName||'')}"></div>
+      <div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-cno">Careem Pay number</label><input type="tel" id="pc-cno" value="${esc(c.careemNo||'')}" placeholder="+971 5x xxx xxxx"></div></div>
+    <div class="field" style="margin:0"><label for="pc-clink">Careem Pay link <span class="muted">(optional)</span></label><input type="text" id="pc-clink" value="${esc(c.careemLink||'')}" placeholder="https://"></div>
     <div class="row"><button class="btn" id="pc-save">Save payment details</button></div></div>`}
 const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BADDINK Pickleball',run:'Runaways Run',basketball:'BADSHOTS Run',training:'Training',retreat:'BAD Retreat'}[k]||'Session');
 function bindAdmin(){
@@ -1967,9 +1974,13 @@ function bindAdmin(){
     try{if(!raw.startsWith('BAD1-'))throw 0;const d=JSON.parse(decodeURIComponent(escape(atob(raw.slice(5)))));if(!d.nickname)throw 0;const id='imp-'+slug(d.nickname)+'-'+Date.now().toString(36);const c=d.contact;delete d.contact;
       await S.db.doc('profiles/'+id).set(d);if(c)await S.db.doc('contacts/'+id).set(c);$('imp-code').value='';toast(d.nickname+' added.')}catch(e){toast('That code is not valid. Ask them to copy it again.')}});
   on('sync',syncPoints);on('export',exportSheet);bindCodes();if(aTab==='settings')bindBrand();
+  q('[data-free]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.free,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.waived;if(was)delete cur[uid];else cur[uid]={ok:true,waived:true,at:new Date().toISOString(),by:window.BAD_USER?.email||''};
+    try{await S.db.doc('payments/'+adminSid).set(cur);toast(was?'Back to pending.':'Done. Nothing to pay for this one.')}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-freeall]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.freeall,list=pendingFor(uid),at=new Date().toISOString();
+    try{for(const r of list){const cur={...(S.payments[r.sid]||{})};cur[uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
     try{await S.db.doc('payments/'+adminSid).set(cur);toast(was?'Marked as unpaid.':'Payment confirmed.')}catch(e){toast("Sorry, that didn't save.")}});
-  on('pc-save',async()=>{const d={accName:$('pc-acc').value.trim(),bankName:$('pc-bank').value.trim(),iban:$('pc-iban').value.trim(),ziinaLink:$('pc-ziina').value.trim()};
+  on('pc-save',async()=>{const d={accName:$('pc-acc').value.trim(),bankName:$('pc-bank').value.trim(),iban:$('pc-iban').value.trim(),ziinaLink:$('pc-ziina').value.trim(),careemName:$('pc-cname').value.trim(),careemNo:$('pc-cno').value.trim(),careemLink:$('pc-clink').value.trim()};
     q('[data-pon]').forEach(x=>d[x.dataset.pon]=x.checked);
     if(d.ziinaLink&&!/^https:\/\//.test(d.ziinaLink)){toast('Please use a full https:// link for Ziina.');return}
     try{await S.db.doc('config/payments').set(d);toast('Payment details saved.')}catch(e){toast("Sorry, that didn't save.")}});
@@ -2069,6 +2080,13 @@ function bindCodes(){
 }
 
 function memPending(){return Object.entries(S.profiles).filter(([,p])=>!p.sample).map(([uid,p])=>[uid,p,memStatus(uid)]).filter(([,,m])=>m.state==='pending').sort((a,b)=>String(a[2].at||'').localeCompare(String(b[2].at||'')))}
+
+/* a player's unpaid sessions (for admins) */
+function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
+  for(const [sid,x] of Object.entries(b)){const s=S.sessions[sid];if(!s)continue;const r=roster(sid),P=S.payments[sid]?.[uid];if(P&&P.ok)continue;
+    let amount=0;if(x.out)amount=feeFor(s,x.out).amount;else if(r.in.some(e=>e.uid===uid&&!e.guest)){const g=(x.guests||[]).filter(g=>!g.out).length;amount=(Number(s.fee)||0)*(1+g)}
+    if(amount)out.push({sid,amount})}
+  return out}
 
 /* ---------- brand: official BAD logos (BAD ASSETS folder, files 03 white / 04 black) built in; brand fonts by upload ---------- */
 function applyBrand(){
