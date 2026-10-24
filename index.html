@@ -547,12 +547,80 @@ details.fold:not([open]){gap:0}
 .cback .cb-sub{text-align:center;font-size:.72rem;color:var(--dim);margin:6px 0 auto;line-height:1.4}
 .cback .hd .num{font-family:var(--f-serif);font-size:1.6rem;letter-spacing:0;line-height:1}
 @media (prefers-reduced-motion:reduce){.flip-in{transition:none}}
+
+/* =====================================================================
+   Design system pass: one radius scale, calmer type, glass bars, soft motion.
+   Radii are concentric: an inner surface = outer radius minus its padding.
+   ===================================================================== */
+:root{--r-xl:28px;--r-lg:22px;--r-md:14px;--r-sm:8px;--r:var(--r-lg);
+  --line:rgba(255,255,255,.09);--rule:rgba(255,255,255,.22);--soft:#111112;--chip:#1A1A1C;
+  --ease:cubic-bezier(.25,.8,.25,1)}
+:root[data-theme="light"]{--soft:#F5F5F7;--line:rgba(0,0,0,.08);--rule:rgba(0,0,0,.18);--chip:#EDEDF0;--muted:#6E6E73}
+body{font-size:16px;line-height:1.45;letter-spacing:-.005em;text-rendering:optimizeLegibility}
+
+/* type: quieter caps, tighter headings */
+.label,.ah,.field label,.field .lbl,.wkh{letter-spacing:.08em}
+.label{font-size:.7rem}
+.ah{font-size:.8rem}
+.field label,.field .lbl{font-size:.74rem;font-weight:600}
+h2{letter-spacing:-.02em}
+.tagl{letter-spacing:.06em;font-weight:600;padding:4px 10px}
+
+/* surfaces: large = lg, inner = md, tiny = sm */
+.tile,.note,.empty,.sess,.post,.panel,.abody .panel,.nextcard,.secret,.acct,.mystrip,.memb,.refer,.court{border-radius:var(--r-lg)}
+.act,.sig,.confirm,.wait,.paypick>*,.sess .empty,.court .empty{border-radius:var(--r-md)}
+input.sc{min-height:36px}
+.tile,.abody .panel,.nextcard,.sess,.post{padding:20px}
+.abody .tile{border-radius:var(--r-md)}
+.nextcard .tile{border-radius:var(--r-md)}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=time],input[type=search],input[type=url],select,textarea,.gate-card input{border-radius:var(--r-md);min-height:48px}
+textarea{min-height:96px}
+.sess .dt,.nexts .dt,.dt,.editions button,.lvl-pick button,.paydet,#qrbox,.invqr,.crop-frame,.pl,.photo .pv,.act .ic-bub{border-radius:var(--r-md)}
+.cback .qrbox{border-radius:var(--r-md)}
+.chk .box,.mini-dt,.court-body,.pc .cqr img{border-radius:var(--r-sm)}
+.crop-box,.qrcard,.gate-card{border-radius:var(--r-xl)}
+.cap,.cap i,.bar,.bar i,.steps i{border-radius:999px}
+.tabs button,.anav button{border-radius:999px}
+@media (min-width:1000px){.anav button{border-radius:var(--r-md)}}
+/* the player card: one radius at every size */
+.pc,#v-create .pc,.mini .pc,.flip:focus-visible .flip-in{border-radius:20px}
+@media (max-width:760px){#v-create .pc,.mini .pc{border-radius:16px}}
+
+/* controls: one height per size, no shouting */
+.btn{min-height:44px;padding:0 20px;font-weight:600;letter-spacing:0;font-size:.88rem;transition:transform .15s var(--ease),opacity .15s,background .2s,color .2s}
+.btn.sm{min-height:34px;padding:0 14px;font-size:.8rem}
+.btn:active,.chip:active,.sp:active,.anav button:active,.tabs button:active{transform:scale(.97)}
+.chip{min-height:38px;padding:0 15px;transition:background .2s,color .2s,border-color .2s}
+.chip.sm{min-height:30px;padding:0 11px}
+.sp{min-height:38px;padding:0 14px 0 10px;border-color:var(--rule);background:transparent;transition:background .2s,color .2s}
+.btn:focus-visible,.chip:focus-visible,.sp:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.linkbtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+input:focus,select:focus,textarea:focus{border-color:var(--ink)}
+
+/* glass bars */
+.top{background:color-mix(in srgb,var(--bg) 78%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
+@media (max-width:760px){
+  .top .tabs{background:color-mix(in srgb,var(--bg) 80%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line)}
+  .tabs button{border-radius:var(--r-md)}
+}
+.anav{background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
+@media (min-width:1000px){.anav{background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0}}
+
+/* lists: hairlines */
+.li{border-bottom:.5px solid var(--line)}
+.list>.li:last-child{border-bottom:0}
+
+/* motion: views fade in, cards lift */
+.view:not([hidden]){animation:fadeup .35s var(--ease)}
+@keyframes fadeup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.toast{border-radius:999px;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+@media (prefers-reduced-motion:reduce){.view:not([hidden]){animation:none}.btn:active,.chip:active,.sp:active{transform:none}}
+.inv.one{grid-template-columns:1fr}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
 .gate-card{width:100%;max-width:380px;display:grid;gap:14px;text-align:left}
 .gate-card h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:40px;line-height:1;margin:8px 0 0}
-.gate-card input{width:100%;box-sizing:border-box;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;font-size:16px}
+.gate-card input{width:100%;box-sizing:border-box;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px;font:inherit;font-size:16px}
 .gate-card form{display:grid;gap:10px}
 .gate-card .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .gate-card .btn{justify-content:center}
@@ -1256,7 +1324,7 @@ function renderCard(){
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       <section class="hsec"><h3 class="ah">Recent points</h3><div class="list">${(st.entries.slice(0,5).map(e=>`<div class="li"><span class="ic-bub soft">${ic(e.kind==='redeem'?'ticket':e.kind==='guest'?'guest':e.kind==='referral'?'gift':'coin')}</span><div><div class="nm">${esc(e.reason)}</div><div class="sub num">${esc(fmtD(e.date))}</div></div><b class="num">${e.pts>0?'+':'−'}${Math.abs(e.pts)}</b></div>`).join(''))||`<div class="li"><span class="ic-bub soft">${ic('star')}</span><div><div class="nm">Welcome to BAD</div><div class="sub">For registering</div></div><b class="num">+${CFG.welcome}</b></div>`}</div></section>
       <section class="tile refer"><span class="label">Invite a friend</span>
-        <div class="inv">${p.ref&&qrData(inviteUrl(p.ref))?`<img class="invqr" src="${qrData(inviteUrl(p.ref),360)}" alt="QR code to join BAD with your code">`:''}<div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">Friends scan this or use your code when they register. +${CFG.referrer} for you, +${CFG.referee} for them.</span>
+        <div class="inv one"><div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">Flip your card to show your QR code, or share the link. Friends use your code when they register. +${CFG.referrer} for you, +${CFG.referee} for them.</span>
           <div class="row" style="margin-top:6px"><button class="btn sm" id="share-inv">${ic('arrow')}Share invite</button><button class="btn ghost sm" id="copy-ref">${ic('copy')}Copy code</button></div></div></div></section>
       <details class="hsec how"><summary class="ah">How points work</summary><div class="list">${[['play','Join a session','+'+CFG.attend],['coin','Pay on the day','+'+CFG.paid],['guest','Bring a new guest','+'+CFG.newGuest],['gift','A friend joins with your code','+'+CFG.referrer],['ticket','A free session','−'+CFG.free]].map(([i,a,b])=>`<div class="li"><span class="ic-bub soft">${ic(i)}</span><span>${a}</span><b class="num">${b}</b></div>`).join('')}</div><p class="fine">${CFG.member} lifetime points turns your card silver.</p></details>
     </div></div>`;

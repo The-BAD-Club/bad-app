@@ -3,7 +3,7 @@
 html.gated .app,html.gated .tabs{visibility:hidden}
 .gate-card{width:100%;max-width:380px;display:grid;gap:14px;text-align:left}
 .gate-card h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:40px;line-height:1;margin:8px 0 0}
-.gate-card input{width:100%;box-sizing:border-box;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;font-size:16px}
+.gate-card input{width:100%;box-sizing:border-box;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px;font:inherit;font-size:16px}
 .gate-card form{display:grid;gap:10px}
 .gate-card .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .gate-card .btn{justify-content:center}
