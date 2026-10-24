@@ -1,0 +1,6 @@
+{
+  "indexes": [
+    { "collectionGroup": "sops", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "audience", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" } ] }
+  ],
+  "fieldOverrides": []
+}

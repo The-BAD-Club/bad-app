@@ -1,66 +1,280 @@
 rules_version = '2';
-// BAD App — paste into Firebase → Firestore Database → Rules → Publish.
+// BAD App security rules. Publish in Firebase → Firestore Database → Rules (or `firebase deploy --only firestore:rules`).
+// Tests: tests/rules.test.mjs, run on every push by .github/workflows/rules.yml against the Firestore emulator.
+//
+// Permission matrix (see docs/permissions.md):
+//   Player ............ own profile, contact details, bookings, scores, free-session request, push devices
+//   Crew / Community Manager / Founder membership (config/members, verified by an admin) ... can give BADges
+//   Game Master ....... runs the court board and games for the sessions they are assigned to (sessions/{id}.gms)
+//   Community manager . admins/{email}.role == 'cm': sessions, bookings, payments, posts, no-shows for admins/{email}.sports
+//   App admin ......... role 'app': every department's sessions, bookings, posts, players, points; no payments, shop or admins
+//   Founder admin ..... role 'founder': everything except granting admin access
+//   Finance authority . role 'founder', or admins/{email}.finance == true: payment approvals and payment-destination edits
+//   Shop administrator  role 'founder', or admins/{email}.shop == true: products and orders
+//   Owner ............. emails below: everything, and the only role that grants or removes admin access
+// Every admin check needs a verified email (Google sign-in is verified; email/password accounts must verify first).
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function isAdmin() {
-      return signedIn() && request.auth.token.email != null && (
-        request.auth.token.email.lower() in ['thebadclub.co@gmail.com'] ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())));
-    }
-    function isShopAdmin() { return signedIn() && request.auth.token.email != null && (
-        request.auth.token.email.lower() in ['thebadclub.co@gmail.com'] ||
-        (exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())) &&
-         get(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())).data.get('role','founder') == 'founder')); }
-    // Founders and crew: membership level Founder, Crew or Community Manager, verified by an admin
-    function isStaff() { return signedIn() &&
-        get(/databases/$(database)/documents/config/members).data.get(request.auth.uid, {}).get('type', '') in ['Founder','Crew','Community Manager']; }
-    // Game Master of a session: picked by an admin in Sessions
-    function isGM(sid) { return signedIn() && sid is string && exists(/databases/$(database)/documents/sessions/$(sid)) &&
-        request.auth.uid in get(/databases/$(database)/documents/sessions/$(sid)).data.get('gms', []); }
-    function isSelf(id) { return signedIn() && request.auth.uid == id; }
 
-    // Everyone signed in can see these; only admins change them.
-    match /{col}/{id} {
-      allow read: if signedIn() && col in ['profiles','requests','bookings','ledger','sessions','posts','config','live','games','scores','payments'];
-      allow write: if isAdmin() && !(col in ['products','orders','shopstock']);
+    // ---------- identity and roles ----------
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function verified() { return signedIn() && request.auth.token.email != null && request.auth.token.email_verified == true; }
+    function email() { return request.auth.token.email.lower(); }
+    function isOwner() { return verified() && email() in ['thebadclub.co@gmail.com']; }
+    function admPath() { return /databases/$(database)/documents/admins/$(email()); }
+    function hasAdm() { return verified() && exists(admPath()); }
+    function adm() { return get(admPath()).data; }
+    function admRole() { return hasAdm() ? adm().get('role', '') : ''; }
+    function isFounder() { return isOwner() || admRole() == 'founder'; }
+    function isFull() { return isOwner() || admRole() in ['founder', 'app']; }
+    function isAdminAny() { return isOwner() || admRole() in ['founder', 'app', 'cm']; }
+    function isCmFor(k) { return admRole() == 'cm' && k in adm().get('sports', []); }
+    function canDept(k) { return isFull() || isCmFor(k); }
+    function isFinance() { return isFounder() || (hasAdm() && adm().get('finance', false) == true); }
+    function canPay(k) { return isFinance() || isCmFor(k); }
+    function isShop() { return isFounder() || (hasAdm() && adm().get('shop', false) == true); }
+    function memberType() {
+      let m = /databases/$(database)/documents/config/members;
+      return exists(m) ? get(m).data.get(uid(), {}).get('type', '') : '';
     }
-    // Players can edit their own card, requests, bookings and scores.
-    match /profiles/{id} { allow write: if isSelf(id) || isAdmin(); }
-    match /requests/{id} { allow write: if isSelf(id) || isAdmin(); }
-    match /bookings/{id} { allow write: if isSelf(id) || isAdmin(); }
-    match /scores/{id}   { allow write: if isSelf(id) || isAdmin(); }
-    // Private: contact details and check-ins (own + admins).
-    match /contacts/{id} { allow read, write: if isSelf(id) || isAdmin(); }
-    match /checkins/{id} { allow read, write: if isSelf(id) || isAdmin(); }
-    // Referral codes: each code is claimed once, by one player, for good.
-    match /refcodes/{code} {
+    function isCrew() { return signedIn() && memberType() in ['Founder', 'Crew', 'Community Manager']; }
+    function sessionPath(sid) { return /databases/$(database)/documents/sessions/$(sid); }
+    function sportOf(sid) { return get(sessionPath(sid)).data.get('sport', 'badminton'); }
+    function isGM(sid) { return signedIn() && sid is string && exists(sessionPath(sid)) && uid() in get(sessionPath(sid)).data.get('gms', []); }
+    function isSelf(id) { return signedIn() && uid() == id; }
+    function str(v, max) { return v is string && v.size() <= max; }
+    function optStr(m, k, max) { return !(k in m) || m[k] == null || str(m[k], max); }
+
+    // ---------- community data (signed-in players can read) ----------
+    match /sessions/{sid} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if isAdmin();
+      allow create: if canDept(request.resource.data.get('sport', '')) && validSession(request.resource.data);
+      allow update: if canDept(resource.data.get('sport', '')) && canDept(request.resource.data.get('sport', '')) && validSession(request.resource.data);
+      allow delete: if canDept(resource.data.get('sport', ''));
     }
-    // Shop: stock counters move when anyone orders; orders are private to the buyer and admins.
-    match /products/{id} { allow read: if signedIn(); allow write: if isShopAdmin(); }
-    match /shopstock/{id} { allow read, write: if signedIn(); }
-    match /orders/{id} {
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isShopAdmin());
-      allow update, delete: if isShopAdmin();
+    function validSession(d) {
+      return str(d.sport, 20) && str(d.title, 80) && str(d.date, 10) && (!('fee' in d) || d.fee is number) && (!('capacity' in d) || d.capacity is int)
+        && (!('gms' in d) || (d.gms is list && d.gms.size() <= 4));
     }
-    // Game Masters run the courts for their session.
-    match /live/{sid}  { allow write: if isGM(sid); }
-    match /games/{gid} { allow create, update: if isGM(request.resource.data.sid); allow delete: if isGM(resource.data.sid); }
-    // BADges: given by founders and crew, seen by everyone signed in. The sheet sync marks them as sent.
+
+    match /posts/{id} {
+      allow read: if signedIn();
+      allow create, update: if isFull() || (request.resource.data.get('club', 'all') != 'all' && isCmFor(request.resource.data.club));
+      allow delete: if isFull() || (resource.data.get('club', 'all') != 'all' && isCmFor(resource.data.club));
+    }
+
+    match /profiles/{id} {
+      allow read: if signedIn();
+      allow create: if isSelf(id) && validProfile(request.resource.data);
+      // listName ("name on tracker") ties points and payments to a player: a player sets it once, staff change it after
+      allow update: if (isSelf(id) && validProfile(request.resource.data)
+                        && (resource.data.get('listName', '') == '' || request.resource.data.get('listName', '') == resource.data.get('listName', '')))
+                    || (isAdminAny() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['listName', 'updatedAt']))
+                    || (isFull() && validProfile(request.resource.data));
+      allow delete: if isFull();
+    }
+    function validProfile(d) {
+      return d.keys().hasOnly(['nickname', 'listName', 'listKey', 'number', 'edition', 'photo', 'sports', 'primary', 'types', 'levels', 'level',
+                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample'])
+        && str(d.nickname, 16) && optStr(d, 'listName', 30) && optStr(d, 'listKey', 40) && optStr(d, 'number', 3)
+        && optStr(d, 'photo', 400000) && optStr(d, 'ref', 20) && optStr(d, 'referredBy', 16) && optStr(d, 'shot', 20)
+        && (!('sports' in d) || (d.sports is list && d.sports.size() <= 10))
+        && (!('refs' in d) || (d.refs is list && d.refs.size() <= 6))
+        && (!('sample' in d) || isFull())
+        && (!('memReq' in d) || (d.memReq is map && d.memReq.keys().hasOnly(['type', 'at']) && str(d.memReq.type, 30)));
+    }
+
+    // Bookings: one document per player, one entry per session. Every change names the session it touches (op.sid),
+    // only that entry may change, join and leave times come from the server clock, and nobody edits someone else's entry.
+    match /bookings/{id} {
+      allow read: if signedIn();
+      allow create, update: if (isSelf(id) && validOwnBooking()) || staffBooking();
+      allow delete: if resource.data.get('guest', false) == true && isAdminAny();
+    }
+    function oldEntries() { return resource == null ? {} : resource.data.get('s', {}); }
+    function validOwnBooking() {
+      let d = request.resource.data;
+      let sid = d.op.sid;
+      let e = d.s[sid];
+      let olds = oldEntries();
+      let o = olds.get(sid, null);
+      return d.keys().hasOnly(['key', 's', 'op', 'u']) && str(d.key, 40) && d.u == request.time
+        && d.op.keys().hasOnly(['sid', 'kind']) && str(sid, 80) && exists(sessionPath(sid))
+        && d.s.diff(olds).affectedKeys().hasOnly([sid])
+        && e is map && e.keys().hasOnly(['at', 't', 'pay', 'sent', 'ask', 'out', 'tout', 'guests'])
+        && e.pay in ['cash', 'bank', 'ziina', 'careem'] && e.guests is list && e.guests.size() <= 3
+        && (
+          (d.op.kind == 'join' && e.t == request.time && !('out' in e) && !('tout' in e) && !('sent' in e) && !('ask' in e) && e.guests.size() == 0)
+          || (o != null && d.op.kind == 'leave' && e.t == o.t && e.tout == request.time && e.diff(o).affectedKeys().hasOnly(['out', 'tout', 'guests']))
+          || (o != null && d.op.kind == 'guest' && e.t == o.t && !('tout' in o) && e.diff(o).affectedKeys().hasOnly(['guests']))
+          || (o != null && d.op.kind == 'pay' && e.diff(o).affectedKeys().hasOnly(['pay', 'sent', 'ask']))
+        );
+    }
+    function staffBooking() {
+      let d = request.resource.data;
+      return d.op.kind == 'admin' && str(d.op.sid, 80) && exists(sessionPath(d.op.sid)) && canDept(sportOf(d.op.sid))
+        && d.s.diff(oldEntries()).affectedKeys().hasOnly([d.op.sid]) && d.u == request.time;
+    }
+
+    match /games/{gid} {
+      allow read: if signedIn();
+      allow create, update: if canDept(sportOf(request.resource.data.sid)) || isGM(request.resource.data.sid);
+      allow delete: if canDept(sportOf(resource.data.sid)) || isGM(resource.data.sid);
+    }
+    // The court board: every save carries the next revision number, so two organisers can never overwrite each other.
+    match /live/{sid} {
+      allow read: if signedIn();
+      allow create: if (canDept(sportOf(sid)) || isGM(sid)) && request.resource.data.rev == 1;
+      allow update: if (canDept(sportOf(sid)) || isGM(sid)) && request.resource.data.rev == resource.data.get('rev', 0) + 1;
+      allow delete: if canDept(sportOf(sid));
+    }
+    match /scores/{id} {
+      allow read: if signedIn();
+      allow write: if isSelf(id) && request.resource.data.keys().hasOnly(['g']) && request.resource.data.g is map && request.resource.data.g.size() <= 500;
+    }
     match /badges/{id} {
       allow read: if signedIn();
-      allow create: if (isAdmin() || isStaff()) && request.resource.data.byUid == request.auth.uid
-                    && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 5;
-      allow update, delete: if isAdmin();
+      allow create: if (isAdminAny() || isCrew()) && request.resource.data.byUid == uid()
+        && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 5
+        && str(request.resource.data.reason, 80) && request.resource.data.synced == false;
+      allow update, delete: if isFull();
     }
-    // Admins only.
-    match /noshows/{id} { allow read, write: if isAdmin(); }
-    match /qr/{id}      { allow read, write: if isAdmin(); }
-    match /levels/{id}  { allow read, write: if isAdmin(); }
-    match /admins/{id}  { allow read: if signedIn() && request.auth.token.email.lower() == id; allow read, write: if isAdmin(); }
+    match /refcodes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn() && (request.resource.data.uid == uid() || (isFull() && request.resource.data.uid == 'club'));
+      allow update, delete: if isFull();
+    }
+
+    // ---------- private to the player and staff ----------
+    match /contacts/{id} {
+      allow read: if isSelf(id) || isAdminAny();
+      allow write: if (isSelf(id) || isFull()) && request.resource.data.keys().hasOnly(['email', 'mobile', 'whatsapp', 'instagram', 'updatedAt'])
+        && optStr(request.resource.data, 'email', 120) && optStr(request.resource.data, 'mobile', 30) && optStr(request.resource.data, 'instagram', 40);
+    }
+    match /requests/{id} {
+      allow read: if isSelf(id) || isAdminAny();
+      allow create: if isSelf(id) && request.resource.data.keys().hasOnly(['player', 'at', 'type']) && request.resource.data.type == 'free-session';
+      allow delete: if isSelf(id) || isFull();
+    }
+    // Payment status per player: staff confirm or waive; "I've paid" is only a claim on the player's booking.
+    match /pay/{id} {
+      allow read: if isSelf(id) || isAdminAny();
+      allow create, update: if canPay(sportOf(request.resource.data.op.sid))
+        && request.resource.data.get('s', {}).diff(resource == null ? {} : resource.data.get('s', {})).affectedKeys().hasOnly([request.resource.data.op.sid])
+        && request.resource.data.u == request.time;
+    }
+    match /paynotes/{id} {
+      allow read: if isSelf(id) || isAdminAny();
+      allow write: if isSelf(id) && request.resource.data.keys().hasOnly(['n']) && request.resource.data.n is map && request.resource.data.n.size() <= 50;
+    }
+    match /standing/{id} { allow read: if isSelf(id) || isAdminAny(); }        // written by the Apps Script only
+    match /ledger/{id} {
+      allow read: if isAdminAny() || (signedIn() && resource.data.get('uid', '') == uid());
+      allow create: if isFull() && request.resource.data.v == 2 && request.resource.data.synced == false
+        && request.resource.data.type in ['Event or tournament', 'BAD Retreat', 'No-show', 'Free session redeemed', 'Adjustment'];
+      allow delete: if isFull() && resource.data.get('synced', false) == false;
+    }
+    match /checkins/{id} { allow read, write: if isSelf(id) || isAdminAny(); }
+    match /noshows/{id} { allow read, write: if isAdminAny(); }
+    match /qr/{id}      { allow read, write: if isAdminAny(); }
+    match /levels/{id}  { allow read, write: if isAdminAny(); }
+    match /payments/{id} { allow read: if isAdminAny(); }                      // old per-session payments, kept for history and migration
+
+    // ---------- shop ----------
+    match /products/{id} { allow read: if signedIn(); allow write: if isShop(); }
+    // One stock counter per product size. Players can only raise it, by up to 10, never past the stock,
+    // and only in the same transaction that creates their own new order.
+    match /stock/{id} {
+      allow read: if signedIn();
+      allow create, update: if isShop() || validReserve();
+    }
+    function validReserve() {
+      let d = request.resource.data;
+      let before = resource == null ? 0 : resource.data.sold;
+      let p = get(/databases/$(database)/documents/products/$(d.pid)).data;
+      let order = /databases/$(database)/documents/orders/$(d.lastOrder);
+      return signedIn() && d.keys().hasOnly(['pid', 'size', 'sold', 'lastOrder']) && id == d.pid + '_' + d.size
+        && d.sold is int && d.sold > before && d.sold - before <= 10 && d.sold <= p.sizes.get(d.size, 0)
+        && !exists(order) && existsAfter(order) && getAfter(order).data.uid == uid();
+    }
+    match /orders/{id} {
+      allow create: if signedIn() && validOrder(request.resource.data);
+      allow read: if signedIn() && (resource.data.uid == uid() || isShop());
+      allow update, delete: if isShop();
+    }
+    function prod(i) { return get(/databases/$(database)/documents/products/$(i.pid)).data; }
+    function itemOk(i) {
+      let p = prod(i);
+      return i.keys().hasOnly(['pid', 'name', 'size', 'qty', 'price']) && i.qty is int && i.qty >= 1 && i.qty <= 10
+        && p.status == 'live' && i.price == p.price && i.size in p.sizes && (p.get('maxPer', 0) == 0 || i.qty <= p.maxPer)
+        && (!('releaseTs' in p) || p.releaseTs == null || request.time >= p.releaseTs - duration.value(24, 'h'));
+    }
+    function line(items, n) { return items.size() > n ? items[n].price * items[n].qty : 0; }
+    function itemsOk(items) {
+      return items is list && items.size() >= 1 && items.size() <= 4
+        && itemOk(items[0]) && (items.size() < 2 || itemOk(items[1])) && (items.size() < 3 || itemOk(items[2])) && (items.size() < 4 || itemOk(items[3]));
+    }
+    function validOrder(d) {
+      let sub = line(d.items, 0) + line(d.items, 1) + line(d.items, 2) + line(d.items, 3);
+      return d.uid == uid() && d.status == 'new' && itemsOk(d.items) && d.subtotal == sub
+        && d.discountPct in [0, 5, 10] && d.discount == sub * d.discountPct / 100 && d.total == sub - d.discount
+        && d.createdAt == request.time && d.fulfil in ['pickup', 'delivery'] && d.pay in ['cash', 'bank', 'ziina', 'careem']
+        && optStr(d, 'address', 300) && optStr(d, 'name', 40);
+    }
+
+    // ---------- settings ----------
+    match /config/{doc} {
+      allow read: if signedIn();
+      allow write: if (doc == 'payments' && isFinance() && request.resource.data.updatedBy == email() && request.resource.data.updatedAt == request.time
+                         && existsAfter(/databases/$(database)/documents/payHistory/$(request.resource.data.rev)))
+                   || (doc in ['codes', 'members', 'membership', 'site', 'brand'] && isFull())
+                   || (doc == 'contact' && isOwner());
+      // config/points and config/sheetPoints are written by the Apps Script only
+    }
+    match /payHistory/{id} {
+      allow read: if isFinance();
+      allow create: if isFinance() && request.resource.data.by == email() && request.resource.data.at == request.time;
+    }
+    match /admins/{id} {
+      allow read: if (verified() && email() == id) || isAdminAny();
+      allow write: if isOwner();
+    }
+    match /status/{id} { allow read: if isAdminAny(); }                        // sync status, written by the Apps Script
+
+    // ---------- SOPs and guides ----------
+    match /sops/{id} {
+      allow read: if (signedIn() && resource.data.status == 'published' && resource.data.audience == 'player')
+                  || ((isCrew() || isAdminAny()) && resource.data.status == 'published' && resource.data.audience == 'staff')
+                  || isFull();
+      allow create, update: if isFull() && request.resource.data.updatedBy == email() && request.resource.data.updatedAt == request.time
+        && (request.resource.data.status in ['draft', 'review', 'archived'] || isFounder());
+      allow delete: if isOwner();
+      match /revisions/{rev} {
+        allow read: if isFull();
+        allow create: if isFull() && request.resource.data.by == email();
+      }
+    }
+    match /sopAcks/{id} {
+      allow read: if (signedIn() && resource.data.uid == uid()) || isAdminAny();
+      allow create: if signedIn() && request.resource.data.uid == uid() && request.resource.data.at == request.time;
+    }
+
+    // ---------- notifications ----------
+    match /pushTokens/{token} {
+      allow read, delete: if signedIn() && resource.data.uid == uid();
+      allow create, update: if signedIn() && request.resource.data.uid == uid() && request.resource.data.keys().hasOnly(['uid', 'token', 'ua', 'prefs', 'at'])
+        && str(request.resource.data.token, 400) && request.resource.data.at == request.time;
+    }
+    match /pushQueue/{id} {
+      // Test: one per player at a time (the sender deletes it). Waitlist promotion: the sender checks the real list first.
+      allow create: if signedIn() && request.resource.data.at == request.time && (
+        (request.resource.data.type == 'test' && request.resource.data.uid == uid() && id == 'test-' + uid())
+        || (request.resource.data.type == 'promoted' && str(request.resource.data.sid, 80) && id == 'promo-' + request.resource.data.sid + '-' + request.resource.data.uid)
+        || (request.resource.data.type == 'session-change' && canDept(sportOf(request.resource.data.sid))));
+    }
+
+    // Shop stock from the first version, kept read-only for migration.
+    match /shopstock/{id} { allow read: if isShop(); }
   }
 }
