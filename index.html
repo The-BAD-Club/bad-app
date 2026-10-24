@@ -633,6 +633,17 @@ details.manage summary,.linkbtn{text-decoration:none;color:var(--muted);font-wei
 details.manage summary::after{content:"›";font-size:1.1em;line-height:1;margin-left:2px;transition:transform .2s}
 details.manage[open] summary::after{transform:rotate(90deg)}
 details.manage summary:hover,.linkbtn:hover{color:var(--ink)}
+/* pay from Home */
+button.tile.owe{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.paygo{font-size:.8rem;font-weight:600;color:var(--muted)}
+.tile.owe .paygo{color:var(--ink)}
+details.payrow summary{list-style:none;cursor:pointer}
+details.payrow summary::-webkit-details-marker{display:none}
+details.payrow[open] .paygo{color:var(--ink)}
+details.payrow .paybody{padding:4px 0 16px 56px;display:grid;gap:10px}
+details.payrow:not(:last-child){border-bottom:.5px solid var(--line)}
+details.payrow summary .li{border-bottom:0}
+a.btn{text-decoration:none}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1200,14 +1211,14 @@ const payOn=k=>{const c=S.payCfg||{};return k==='cash'?c.cash!==false:k==='bank'
 function payPicker(sid,isChange){return `<div class="confirm"><b>${isChange?'Change how you pay':'How would you like to pay?'}</b>
   <div class="paypick">${Object.entries(PAY).filter(([k])=>payOn(k)).map(([k,m])=>`<button type="button" data-pay="${k}" data-sid="${sid}" data-change="${isChange?1:0}">${ic(m.icon)}<b>${m.label}</b><span class="fine">${m.sub}</span></button>`).join('')}</div>
   <button class="btn ghost sm" data-paycancel="1" style="justify-self:start">Cancel</button></div>`}
-function payInfo(sid,s,mine){
+function payInfo(sid,s,mine,amt){const fee=amt!=null?amt:s.fee;
   const k=mine.pay||'cash',m=PAY[k],c=S.payCfg||{},ok=S.payments[sid]?.[S.uid]?.ok;
   if(ok)return `<div class="payline ok">${ic('check')}<span><b>Paid</b> · ${m.label}</span></div>`;
   let det='';
   if(k==='bank')det=c.bankName||c.iban?`<div class="paydet"><span class="fine">Account name</span><b>${esc(c.accName||'')}</b><span class="fine">Bank</span><b>${esc(c.bankName||'')}</b><span class="fine">IBAN</span><b class="num" id="iban-${sid}">${esc(c.iban||'')}</b><span class="fine">Reference</span><b>${esc((myProfile()?.nickname||'')+' '+s.date)}</b></div><button class="btn ghost sm" data-copy="iban-${sid}">${ic('copy')}Copy IBAN</button>`:'<p class="fine">An admin will share the bank details with you.</p>';
-  if(k==='ziina')det=c.ziinaLink?`<a class="btn sm" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Pay AED ${esc(s.fee)} with Ziina</a>`:'<p class="fine">An admin will send you a Ziina link.</p>';
-  if(k==='cash')det=`<p class="fine">Please bring AED ${esc(s.fee)} in cash to the session.</p>`;
-  return `<div class="payline"><div class="row" style="justify-content:space-between"><span class="ic-row">${ic(m.icon)}<span><b>${m.label}</b> · AED ${esc(s.fee)}${mine.sent?' · <span class="fine">sent, waiting for confirmation</span>':''}</span></span><button class="btn ghost sm" data-paychange="${sid}">Change</button></div>
+  if(k==='ziina')det=c.ziinaLink?`<a class="btn sm" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Pay AED ${esc(fee)} with Ziina</a>`:'<p class="fine">An admin will send you a Ziina link.</p>';
+  if(k==='cash')det=`<p class="fine">Please bring AED ${esc(fee)} in cash to the session.</p>`;
+  return `<div class="payline"><div class="row" style="justify-content:space-between"><span class="ic-row">${ic(m.icon)}<span><b>${m.label}</b> · AED ${esc(fee)}${mine.sent?' · <span class="fine">sent, waiting for confirmation</span>':''}</span></span><button class="btn ghost sm" data-paychange="${sid}">Change</button></div>
     ${det}${k!=='cash'&&!mine.sent?`<button class="btn ghost sm" data-sent="${sid}" style="justify-self:start">${ic('check')}I've paid</button>`:''}</div>`;
 }
 async function leave(sid,late){const now=new Date().toISOString();
@@ -1301,13 +1312,14 @@ function activityHTML(){
   const total=due.reduce((a,r)=>a+r.amount,0);
   const badge=st=>({paid:'<span class="tagl solid">'+ic('check')+'Paid</span>',sent:'<span class="tagl">Sent · checking</span>',pending:'<span class="tagl warn">Pending</span>',none:''}[st]);
   return `<div class="sec hsec"><div class="sec-h"><h3 class="ah">Bookings and payments</h3>${rows.length?`<span class="fine">${rows.length} session${rows.length===1?'':'s'}</span>`:''}</div>
-    ${total?`<div class="tile owe"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div></div>`
+    ${total?`<button class="tile owe" data-payjump="1"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div><span class="paygo">See how to pay ›</span></button>`
       :rows.length?`<div class="tile"><span class="ic-row">${ic('check')}<b>All paid up.</b></span><span class="fine">Thank you.</span></div>`:''}
-    <div class="list">${rows.slice(0,12).map(r=>{const d=dParts(r.s.date),sp=sportOf(r.s.sport);return `<div class="li act" style="grid-template-columns:auto minmax(0,1fr) auto">
+    <div class="list">${rows.slice(0,12).map(r=>{const d=dParts(r.s.date),sp=sportOf(r.s.sport),due=r.payState==='pending'||r.payState==='sent',open=S.openPay===r.sid||(!S.openPay&&S.payJump&&due&&r===rows.find(x=>x.payState==='pending'||x.payState==='sent'));const row=`<div class="li act" style="grid-template-columns:auto minmax(0,1fr) auto">
       <div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div>
       <div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(r.s.title||sp.club)}</div><div class="sub">${esc(r.status)}${r.games?` · ${r.games} game${r.games===1?'':'s'}`:''}${r.guests?` · +${r.guests} guest${r.guests>1?'s':''}`:''}${r.amount?` · ${ic(PAY[r.method].icon)} ${PAY[r.method].label}`:''}</div></div>
-      <div style="display:grid;justify-items:end;gap:4px">${r.amount?`<b class="num">AED ${r.amount}</b>`:''}${badge(r.payState)}</div></div>`}).join('')||`<div class="empty">${ic('play')}<span>No sessions yet. Your bookings, games and payments will show here.</span></div>`}</div>
-    ${due.length?`<p class="fine">Cash is confirmed by an admin at the session. For bank transfer or Ziina, tap I've paid on the Play tab after sending.</p>`:''}</div>`;
+      <div style="display:grid;justify-items:end;gap:4px">${r.amount?`<b class="num">AED ${r.amount}</b>`:''}${badge(r.payState)}${due?`<span class="paygo">${r.payState==='sent'?'Details':'Pay'} ›</span>`:''}</div></div>`;
+      return due?`<details class="payrow" data-payrow="${esc(r.sid)}" ${open?'open':''}><summary>${row}</summary><div class="paybody">${payFor&&payFor.sid===r.sid?payPicker(r.sid,true):payInfo(r.sid,r.s,r.x,r.amount)}</div></details>`:row}).join('')||`<div class="empty">${ic('play')}<span>No sessions yet. Your bookings, games and payments will show here.</span></div>`}</div>
+    ${due.length?`<p class="fine">Cash is confirmed by an admin at the session. For bank transfer or Ziina, open the session above and tap I've paid after sending.</p>`:''}</div>`;
 }
 function renderCard(){
   const el=$('v-card'),p=myProfile();
@@ -1360,7 +1372,10 @@ function renderCard(){
           <div class="row" style="margin-top:6px"><button class="btn sm" id="share-inv">${ic('arrow')}Share invite</button><button class="btn ghost sm" id="copy-ref">${ic('copy')}Copy code</button></div></div></div></section>
       <details class="hsec how"><summary class="ah">How points work</summary><div class="list">${[['play','Join a session','+'+CFG.attend],['coin','Pay on the day','+'+CFG.paid],['guest','Bring a new guest','+'+CFG.newGuest],['gift','A friend joins with your code','+'+CFG.referrer],['ticket','A free session','−'+CFG.free]].map(([i,a,b])=>`<div class="li"><span class="ic-bub soft">${ic(i)}</span><span>${a}</span><b class="num">${b}</b></div>`).join('')}</div><p class="fine">${CFG.member} lifetime points turns your card silver.</p></details>
     </div></div>`;
-  bindPlay(el);$('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  bindPlay(el);
+  el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
+  el.querySelectorAll('[data-payjump]').forEach(b=>b.onclick=()=>{const d=el.querySelector('.payrow');if(!d)return;d.open=true;S.openPay=d.dataset.payrow;d.scrollIntoView({behavior:'smooth',block:'center'})});
+  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
   const r=$('redeem');if(r)r.onclick=requestFree;
   $('save-card').onclick=saveCardImage;
