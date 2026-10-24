@@ -694,6 +694,8 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .sheet .price{font-size:1.2rem}
 .gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;background:var(--soft)}
 .gallery::-webkit-scrollbar{display:none}
+.pcheck{align-items:start}.pcheck .pline{display:flex;justify-content:space-between;gap:10px}.pcheck .pline .num{flex:none}
+.askbox{display:grid;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}.askbox textarea{width:100%}.owe [data-askadm]{margin-top:10px}
 .buybar{position:sticky;bottom:calc(-20px - env(safe-area-inset-bottom,0px));z-index:2;background:var(--bg);padding:12px 0 calc(20px + env(safe-area-inset-bottom,0px));margin-bottom:calc(-20px - env(safe-area-inset-bottom,0px))}
 .gallery img,.gallery .noimg{flex:0 0 100%;width:100%;min-width:0;max-height:62vh;aspect-ratio:4/5;object-fit:cover;scroll-snap-align:center;display:grid;place-items:center;color:var(--muted)}
 .qty{display:inline-flex;align-items:center;gap:10px}
@@ -1404,7 +1406,10 @@ function activityHTML(){
   const badge=st=>({free:'<span class="tagl solid">'+ic('check')+'Free</span>',paid:'<span class="tagl solid">'+ic('check')+'Paid</span>',sent:'<span class="tagl">Sent · checking</span>',pending:'<span class="tagl warn">Pending</span>',none:''}[st]);
   return `<div class="sec hsec"><div class="sec-h"><h3 class="ah">Bookings and payments</h3>${rows.length?`<span class="fine">${rows.length} session${rows.length===1?'':'s'}</span>`:''}</div>
     ${total?`<div class="tile owe"><span class="label">Payment pending</span><div class="stat"><b class="num">AED ${total}</b><span class="fine">${due.length} session${due.length===1?'':'s'} not confirmed yet. Thank you for settling when you can.</span></div>
-      <div class="row"><button class="btn" data-payall="1">${ic('wallet')}Pay all AED ${total}</button><button class="btn ghost" data-payjump="1">Pay one by one</button></div>${S.canEdit&&fullAdmin()?`<button class="linkbtn" data-clearmine="1">Admin: clear my AED ${total} pending</button>`:''}
+      <div class="row"><button class="btn" data-payall="1">${ic('wallet')}Pay all AED ${total}</button><button class="btn ghost" data-payjump="1">Pay one by one</button></div>${(()=>{const asked=due.filter(r=>r.x.ask&&!r.x.ask.no),no=due.find(r=>r.x.ask&&r.x.ask.no);
+        if(asked.length)return `<div class="askbox"><span class="ic-row">${ic('clock')}<span>Sent to the admins. They'll check and confirm soon.</span></span><button class="linkbtn" data-askcancel="1">Cancel request</button></div>`;
+        if(S.askOpen)return `<div class="askbox"><label class="lbl" for="ask-note">Anything the admins should know?</label><textarea id="ask-note" rows="2" maxlength="300" placeholder="Optional. For example: I paid cash to Kym on Friday.">${esc(S.askNote||'')}</textarea><div class="row"><button class="btn" data-asksend="1">${ic('check')}Send to admins</button><button class="btn ghost" data-askclose="1">Cancel</button></div></div>`;
+        return `${no?'<p class="fine">An admin couldn’t find this payment yet. Please check with them at your next session.</p>':''}<button class="btn ghost wide" data-askadm="1">${ic('users')}Check with admin</button>`})()}${S.canEdit&&fullAdmin()?`<button class="linkbtn" data-clearmine="1">Admin: clear my AED ${total} pending</button>`:''}
       ${S.payAll?payAllHTML(due,total):''}</div>`
       :rows.length?`<div class="tile"><span class="ic-row">${ic('check')}<b>All paid up.</b></span><span class="fine">Thank you.</span></div>`:''}
     <div class="list">${rows.slice(0,12).map(r=>{const d=dParts(r.s.date),sp=sportOf(r.s.sport),due=r.payState==='pending'||r.payState==='sent',open=S.openPay===r.sid||(!S.openPay&&S.payJump&&due&&r===rows.find(x=>x.payState==='pending'||x.payState==='sent'));const row=`<div class="li act" style="grid-template-columns:auto minmax(0,1fr) auto">
@@ -1469,6 +1474,12 @@ function renderCard(){
   el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
   el.querySelectorAll('[data-payall]').forEach(b=>b.onclick=()=>{S.payAll=!S.payAll;renderCard()});
   el.querySelectorAll('[data-pam]').forEach(b=>b.onclick=()=>{S.payAllM=b.dataset.pam;renderCard()});
+  el.querySelectorAll('[data-askadm]').forEach(b=>b.onclick=()=>{S.askOpen=true;renderCard();setTimeout(()=>$('ask-note')?.focus(),50)});
+  el.querySelectorAll('[data-askclose]').forEach(b=>b.onclick=()=>{S.askOpen=false;renderCard()});
+  const an=$('ask-note');if(an)an.oninput=()=>S.askNote=an.value;
+  el.querySelectorAll('[data-asksend]').forEach(b=>b.onclick=async()=>{const note=($('ask-note')?.value||'').trim(),ids=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent').map(r=>r.sid),at=new Date().toISOString();
+    try{await saveBooking(x=>{ids.forEach(id=>{x[id]={...x[id],ask:{at,note}}})});S.askOpen=false;S.askNote='';toast('Sent. An admin will check and confirm. Thank you.')}catch(e){toast("Sorry, that didn't send. Please try again.")}});
+  el.querySelectorAll('[data-askcancel]').forEach(b=>b.onclick=async()=>{try{await saveBooking(x=>{Object.keys(x).forEach(id=>{if(x[id]&&x[id].ask){const y={...x[id]};delete y.ask;x[id]=y}})});toast('Request cancelled.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-clearmine]').forEach(b=>b.onclick=async()=>{const due=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent'),at=new Date().toISOString();
     try{for(const r of due){const cur={...(S.payments[r.sid]||{})};cur[S.uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}S.payAll=false;toast('Cleared. Nothing pending.')}catch(e){toast("Sorry, that didn't save. Please publish the latest rules and try again.")}});
   el.querySelectorAll('[data-payalldone]').forEach(b=>b.onclick=async()=>{const k=b.dataset.payalldone,ids=myActivity().filter(r=>r.payState==='pending').map(r=>r.sid),at=new Date().toISOString();
@@ -1863,7 +1874,7 @@ const nameOf=(uid,key)=>S.profiles[uid]?.nickname||allKeys()[key]||key||'Unknown
 function mcpErr(e){const c=e&&e.code;return c==='server_not_connected'?'Add Google Sheets in claude.ai Settings → Connectors.':c==='needs_reauth'?'Reconnect Google Sheets in claude.ai Settings → Connectors.':(c==='not_in_manifest'||c==='approval_required')?'Allow Google Sheets for this page, then try again.':(e&&e.message)||'Something went wrong.'}
 
 let aTab='today',showNew=false,showPast=false,adminPicked=false;
-const ATABS=[['today','Today','clock'],['sessions','Sessions','ticket'],['players','Players','users'],['points','Points & codes','coin'],['posts','Club posts','club'],['shop','Shop','bag'],['settings','Settings','admin']];
+const ATABS=[['today','Today','clock'],['sessions','Sessions','ticket'],['players','Players','users'],['points','Points & codes','coin'],['posts','Club posts','club'],['payments','Payments','wallet'],['shop','Shop','bag'],['settings','Settings','admin']];
 const fmtS=x=>{const d=dParts(x.date);return `${d.w} ${d.d} ${d.m}`};
 const unpaidOf=sid=>{const r=roster(sid);return r.in.filter(e=>!e.guest&&!S.payments[sid]?.[e.uid]?.ok)};
 const owedOf=sid=>{const s=S.sessions[sid],r=roster(sid);return unpaidOf(sid).length*(+s.fee||0)+r.late.filter(e=>e.guest||!S.payments[sid]?.[e.uid]?.ok).reduce((t,e)=>t+(+e.fee.amount||0),0)};
@@ -1871,15 +1882,15 @@ const boxD=(title,inner)=>`<details class="panel fold"><summary class="ah">${tit
 const box=(title,inner,extra='')=>`<div class="panel ${extra}">${title?`<h3 class="ah">${title}</h3>`:''}${inner}</div>`;
 const tile=(n,l)=>`<div class="tile"><div class="stat"><b class="num">${n}</b><span class="label">${l}</span></div></div>`;
 
-const TABS_CM=['today','sessions','players','posts'];
+const TABS_CM=['today','sessions','players','payments','posts'];
 function renderAdmin(){
   if(!fullAdmin()&&!TABS_CM.includes(aTab))aTab='today';if(aTab==='shop'&&!shopAdmin())aTab='today';const TABS=(fullAdmin()?ATABS:ATABS.filter(t=>TABS_CM.includes(t[0]))).filter(t=>t[0]!=='shop'||shopAdmin());
   const el=$('v-admin'),list=Object.entries(S.sessions).filter(([,x])=>canSport(x.sport)).sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
   const up=upcoming().filter(([,x])=>canSport(x.sport));if(!adminPicked&&up[0])adminSid=up[0][0];if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
-  const badge=fullAdmin()?{points:Object.keys(S.requests).length,players:memPending().length}:{};
+  const badge=Object.assign({payments:payChecks().length},fullAdmin()?{points:Object.keys(S.requests).length,players:memPending().length}:{});
   const T=ATABS.find(t=>t[0]===aTab)||ATABS[0];
   const nav=`<nav class="anav" aria-label="Admin sections">${TABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
-  const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,shop:aShop,settings:aSettings}[aTab]||aToday)(list,up);
+  const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,payments:aPayments,shop:aShop,settings:aSettings}[aTab]||aToday)(list,up);
   el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><h2>${T[1]}</h2></div>${nav}<div class="abody">${body}</div></div>`;
   bindAdmin();const act=el.querySelector('.anav [aria-current="page"]');if(act&&innerWidth<1000)act.scrollIntoView({block:'nearest',inline:'center'});
 }
@@ -1891,6 +1902,7 @@ function aToday(list,up){
   if(rq)alerts.push(['gift',`${rq} free session request${rq>1?'s':''} waiting`,'points']);
   const past=list.filter(([id,x])=>sessStart(x)<Date.now()&&sessStart(x)>Date.now()-14*864e5);
   for(const [id,x] of past){const o=owedOf(id);if(o)alerts.push(['coin',`AED ${o} unpaid from ${esc(x.title)} · ${fmtS(x)}`,'sessions',id])}
+  const pcN=payChecks().length;if(pcN)alerts.unshift(['wallet',`${pcN} payment${pcN>1?'s':''} to check`,'payments']);
   const pc=S.payCfg||{};if(fullAdmin()&&!pc.iban&&!pc.ziinaLink)alerts.push(['bank','Add your bank details and Ziina link so players know where to pay','settings']);
   if(fullAdmin()&&!S.site?.url)alerts.push(['arrow','Add the BAD website link so every Club post links to it','settings']);
   const sm=fullAdmin()?Object.values(S.profiles).filter(p=>p.sample).length:0;if(sm)alerts.push(['users',`${sm} sample players are still in the app`,'settings']);
@@ -2048,6 +2060,16 @@ function bindAdmin(){
   on('sync',syncPoints);on('export',exportSheet);bindCodes();if(aTab==='settings')bindBrand();
   q('[data-free]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.free,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.waived;if(was)delete cur[uid];else cur[uid]={ok:true,waived:true,at:new Date().toISOString(),by:window.BAD_USER?.email||''};
     try{await S.db.doc('payments/'+adminSid).set(cur);toast(was?'Back to pending.':'Done. Nothing to pay for this one.')}catch(e){toast("Sorry, that didn't save.")}});
+  const pcSet=async(uid,mk,msg,src)=>{const c=(src||payChecks)().find(x=>x.uid===uid);if(!c)return;const at=new Date().toISOString();
+    try{for(const r of c.items){const cur={...(S.payments[r.sid]||{})};cur[uid]=mk(at,r);await S.db.doc('payments/'+r.sid).set(cur)}toast(msg)}catch(e){toast("Sorry, that didn't save.")}};
+  q('[data-pcok]').forEach(b=>b.onclick=()=>pcSet(b.dataset.pcok,(at,r)=>({ok:true,at,method:S.bookings[b.dataset.pcok]?.s?.[r.sid]?.pay||'cash',by:window.BAD_USER?.email||''}),'Payment confirmed. Thank you.'));
+  q('[data-pcfree]').forEach(b=>b.onclick=()=>pcSet(b.dataset.pcfree,at=>({ok:true,waived:true,at,by:window.BAD_USER?.email||''}),'Done. Nothing to pay.'));
+  q('[data-upok]').forEach(b=>b.onclick=()=>pcSet(b.dataset.upok,(at,r)=>({ok:true,at,method:S.bookings[b.dataset.upok]?.s?.[r.sid]?.pay||'cash',by:window.BAD_USER?.email||''}),'Marked as paid. Thank you.',unpaidList));
+  q('[data-upfree]').forEach(b=>b.onclick=()=>pcSet(b.dataset.upfree,at=>({ok:true,waived:true,at,by:window.BAD_USER?.email||''}),'Done. Nothing to pay.',unpaidList));
+  const pq=$('pay-q');if(pq)pq.oninput=()=>{const v=pq.value.toLowerCase();S.payQ=pq.value;document.querySelectorAll('#a-unpaid .li').forEach(li=>li.hidden=v&&!li.dataset.q.includes(v))};
+  q('[data-pcno]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcno,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const s={...bk.s},at=new Date().toISOString();
+    c.items.forEach(r=>{const x={...s[r.sid]};delete x.sent;x.ask={...(x.ask||{}),no:at};s[r.sid]=x});
+    try{await S.db.doc('bookings/'+uid).set({...bk,s});toast('Noted. The player will see it wasn’t found yet.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-freeall]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.freeall,list=pendingFor(uid),at=new Date().toISOString();
     try{for(const r of list){const cur={...(S.payments[r.sid]||{})};cur[uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
@@ -2152,6 +2174,33 @@ function bindCodes(){
 }
 
 function memPending(){return Object.entries(S.profiles).filter(([,p])=>!p.sample).map(([uid,p])=>[uid,p,memStatus(uid)]).filter(([,,m])=>m.state==='pending').sort((a,b)=>String(a[2].at||'').localeCompare(String(b[2].at||'')))}
+
+/* players who asked an admin to check a payment, or tapped I've paid */
+function payChecks(){const out=[];
+  for(const [uid,b] of Object.entries(S.bookings||{})){const bs=b?.s||{};
+    const items=pendingFor(uid).filter(r=>{const x=bs[r.sid]||{},s=S.sessions[r.sid];return s&&canSport(s.sport)&&((x.ask&&!x.ask.no)||x.sent)});
+    if(!items.length)continue;const note=items.map(r=>bs[r.sid].ask?.note).find(Boolean)||'',at=items.map(r=>bs[r.sid].ask?.at||bs[r.sid].sent).sort().pop();
+    out.push({uid,items,note,at,total:items.reduce((t,r)=>t+r.amount,0)})}
+  return out.sort((a,b)=>String(a.at).localeCompare(String(b.at)))}
+function unpaidList(){const out=[];
+  for(const uid of Object.keys(S.bookings||{})){const items=pendingFor(uid).filter(r=>canSport(S.sessions[r.sid].sport));if(items.length)out.push({uid,items,total:items.reduce((t,r)=>t+r.amount,0)})}
+  return out.sort((a,b)=>b.total-a.total)}
+function aPayments(){
+  const C=payChecks(),U=unpaidList(),Cu=new Set(C.map(c=>c.uid)),UL=U.filter(u=>!Cu.has(u.uid)),owed=U.reduce((t,u)=>t+u.total,0),since=Date.now()-14*864e5,rec=[];
+  for(const [sid,m] of Object.entries(S.payments||{})){const s=S.sessions[sid];if(!s||!canSport(s.sport))continue;for(const [uid,P] of Object.entries(m||{}))if(P&&P.ok&&P.at&&Date.parse(P.at)>since)rec.push({sid,uid,P,s})}
+  rec.sort((a,b)=>String(b.P.at).localeCompare(String(a.P.at)));
+  const nm=uid=>esc(S.profiles[uid]?.nickname||'Player');
+  return `<div class="tiles">${tile(C.length,'To check')}${tile(owed,'AED unpaid')}${tile(U.length,'Players owing')}</div>
+  ${payChecksHTML()||box('Payments to check','<p class="hint">Nothing to check right now. When a player taps Check with admin or I\'ve paid, they show here.</p>')}
+  ${box(`Unpaid <span class="hint num">AED ${owed}</span>`,UL.length?`<input type="search" id="pay-q" placeholder="Search a player" value="${esc(S.payQ||'')}" aria-label="Search unpaid players"><div class="list" id="a-unpaid">${UL.map(u=>{const p=S.profiles[u.uid]||{},bs=S.bookings[u.uid]?.s||{};return `<div class="li pcheck" data-q="${esc((p.nickname||'').toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr)">${avatar(p,p.listKey)}<div><div class="row" style="justify-content:space-between"><span class="nm">${nm(u.uid)}</span><b class="num">AED ${u.total}</b></div>
+    ${u.items.map(r=>{const s=S.sessions[r.sid],x=bs[r.sid]||{};return `<div class="sub pline"><span>${esc(s.title||sportOf(s.sport).club)} · ${fmtS(s)} · ${PAY[x.pay||'cash']?.label||'Cash'}</span><span class="num">${r.amount}</span></div>`}).join('')}
+    <div class="row" style="gap:6px;margin-top:8px"><button class="chip sm" data-upok="${esc(u.uid)}">${ic('check')}Mark all paid</button><button class="chip sm" data-upfree="${esc(u.uid)}">Make free</button></div></div></div>`}).join('')}</div>`:(U.length?'<p class="hint">Everyone else owing is in Payments to check above.</p>':'<p class="hint">Everyone is paid up. Thank you.</p>'))}
+  ${boxD(`Confirmed in the last 2 weeks <span class="hint num">${rec.length}</span>`,rec.length?`<div class="list">${rec.slice(0,40).map(r=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><span class="nm">${nm(r.uid)}</span><div class="sub">${esc(r.s.title||sportOf(r.s.sport).club)} · ${fmtS(r.s)}${r.P.by?' · by '+esc(r.P.by.split('@')[0]):''}</div></div><span class="tagl solid">${ic('check')}${r.P.waived?'Free':PAY[r.P.method]?.label||'Paid'}</span></div>`).join('')}</div>`:'<p class="hint">Nothing confirmed yet.</p>')}`}
+function payChecksHTML(){const L=payChecks();if(!L.length)return '';
+  return box(`Payments to check <span class="hint num">${L.length}</span>`,`<div class="list">${L.map(c=>{const p=S.profiles[c.uid]||{},bs=S.bookings[c.uid]?.s||{};return `<div class="li pcheck" style="grid-template-columns:auto minmax(0,1fr)">${avatar(p,p.listKey)}<div><div class="row" style="justify-content:space-between"><span class="nm">${esc(p.nickname||'Player')}</span><b class="num">AED ${c.total}</b></div>
+    ${c.items.map(r=>{const s=S.sessions[r.sid],x=bs[r.sid]||{};return `<div class="sub pline"><span>${esc(s.title||sportOf(s.sport).club)} · ${fmtS(s)} · ${PAY[x.pay||'cash']?.label||'Cash'}${x.sent?' · says paid':''}</span><span class="num">${r.amount}</span></div>`}).join('')}
+    ${c.note?`<p class="hint" style="margin:6px 0 0">“${esc(c.note)}”</p>`:''}
+    <div class="row" style="gap:6px;margin-top:8px"><button class="chip sm" data-pcok="${esc(c.uid)}">${ic('check')}Paid</button><button class="chip sm" data-pcfree="${esc(c.uid)}">Make free</button><button class="chip sm" data-pcno="${esc(c.uid)}">Not received</button></div></div></div>`}).join('')}</div>`)}
 
 /* a player's unpaid sessions (for admins) */
 function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
