@@ -1207,6 +1207,7 @@ async function saveBooking(mut){const cur=S.bookings[S.uid]||{s:{}};const next={
 async function join(sid,pay){try{await saveBooking(s=>{s[sid]={at:new Date().toISOString(),guests:[],pay:pay||'cash'}});payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
 async function setPay(sid,pay){try{await saveBooking(s=>{s[sid]={...s[sid],pay,sent:null}});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function markSent(sid){try{await saveBooking(s=>{s[sid]={...s[sid],sent:new Date().toISOString()}});toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
+async function unmarkSent(sid){try{await saveBooking(s=>{const x={...s[sid]};delete x.sent;s[sid]=x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
 const payOn=k=>{const c=S.payCfg||{};return k==='cash'?c.cash!==false:k==='bank'?c.bank!==false:c.ziina!==false};
 function payPicker(sid,isChange){return `<div class="confirm"><b>${isChange?'Change how you pay':'How would you like to pay?'}</b>
   <div class="paypick">${Object.entries(PAY).filter(([k])=>payOn(k)).map(([k,m])=>`<button type="button" data-pay="${k}" data-sid="${sid}" data-change="${isChange?1:0}">${ic(m.icon)}<b>${m.label}</b><span class="fine">${m.sub}</span></button>`).join('')}</div>
@@ -1219,7 +1220,7 @@ function payInfo(sid,s,mine,amt){const fee=amt!=null?amt:s.fee;
   if(k==='ziina')det=c.ziinaLink?`<a class="btn sm" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Pay AED ${esc(fee)} with Ziina</a>`:'<p class="fine">An admin will send you a Ziina link.</p>';
   if(k==='cash')det=`<p class="fine">Please bring AED ${esc(fee)} in cash to the session.</p>`;
   return `<div class="payline"><div class="row" style="justify-content:space-between"><span class="ic-row">${ic(m.icon)}<span><b>${m.label}</b> · AED ${esc(fee)}${mine.sent?' · <span class="fine">sent, waiting for confirmation</span>':''}</span></span><button class="btn ghost sm" data-paychange="${sid}">Change</button></div>
-    ${det}${k!=='cash'&&!mine.sent?`<button class="btn ghost sm" data-sent="${sid}" style="justify-self:start">${ic('check')}I've paid</button>`:''}</div>`;
+    ${det}${k!=='cash'&&!mine.sent?`<button class="btn ghost sm" data-sent="${sid}" style="justify-self:start">${ic('check')}I've paid</button>`:''}${mine.sent?`<button class="linkbtn" data-unsent="${sid}" style="justify-self:start">Tapped by mistake? Undo</button>`:''}</div>`;
 }
 async function leave(sid,late){const now=new Date().toISOString();
   try{await saveBooking(s=>{if(late)s[sid]={...s[sid],out:now,guests:(s[sid].guests||[]).map(g=>g.out?g:{...g,out:now})};else delete s[sid]});pendingOut=null;toast(late?'Your name is removed. The fee is noted.':'Your name is removed. Thank you for letting us know.')}catch(e){toast("Sorry, that didn't save. Please try again.")}}
@@ -1275,6 +1276,7 @@ function bindPlay(el){
   q('[data-paycancel]').forEach(b=>b.onclick=()=>{payFor=null;renderNow()});
   q('[data-paychange]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.paychange,change:true};renderNow()});
   q('[data-sent]').forEach(b=>b.onclick=()=>markSent(b.dataset.sent));
+  q('[data-unsent]').forEach(b=>b.onclick=()=>unmarkSent(b.dataset.unsent));
   q('[data-copy]').forEach(b=>b.onclick=async()=>{const t=$(b.dataset.copy).textContent;try{await navigator.clipboard.writeText(t);toast('IBAN copied.')}catch(e){const r=document.createRange();r.selectNodeContents($(b.dataset.copy));const x=getSelection();x.removeAllRanges();x.addRange(r);toast('Selected. Please copy it now.')}});
   q('[data-wout]').forEach(b=>b.onclick=()=>leave(b.dataset.wout,false));
   q('[data-out]').forEach(b=>b.onclick=()=>{const sid=b.dataset.out;if(feeFor(S.sessions[sid],now()).amount===0)leave(sid,false);else{pendingOut={sid};renderNow()}});
