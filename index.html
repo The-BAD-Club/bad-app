@@ -647,7 +647,17 @@ a.btn{text-decoration:none}
 .payall{display:grid;gap:14px;border-top:.5px solid var(--line);padding-top:14px}
 .payall .li{padding:10px 0}
 .payall .li.total{border-top:.5px solid var(--rule);border-bottom:0}
-.tile.owe .row .btn{flex:1;min-width:150px}
+.tile.owe .row .btn{flex:0 0 auto}
+/* proportion pass: compact, Apple-sized controls */
+.btn,.btn.sm,.chip,.chip.sm,.sp{min-height:38px;font-size:.84rem}
+.btn,.btn.sm{padding:0 16px;gap:6px}
+.chip,.chip.sm{padding:0 14px}
+.sp{padding:0 14px 0 11px}
+.btn svg.i,.chip svg.i,.sp svg.i{width:16px;height:16px}
+select.memset{min-height:38px}
+.btn.wide{min-height:46px;font-size:.92rem}
+.stepnav #next{min-height:46px}
+.linkbtn{background:none;border:0;padding:0;cursor:pointer;font-family:inherit}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
