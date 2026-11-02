@@ -36,7 +36,7 @@ function syncCheckins(){
   for(const [sid,lv0] of Object.entries(S.live)){const q=S.qr[sid];if(!S.sessions[sid])continue;
     const lv=norm(clone(lv0)),ppl=people(sid);let changed=false;lv.rest=lv.rest||{};lv.more=lv.more||{};lv.ft=lv.ft||{};
     for(const [uid,doc] of Object.entries(S.checkins)){const e=doc&&doc[sid];if(!e)continue;
-      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){lv.checkin[uid]=e.at;changed=true}
+      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){setBase(sid,lv,uid);lv.checkin[uid]=e.at;changed=true}
       if(lv.checkin[uid]&&e.ft&&e.ft>(lv.ft[uid]||'')){lv.rest[uid]=!!e.rest;lv.more[uid]=!!e.more;lv.ft[uid]=e.ft;changed=true}}
     if(changed)saveLive(sid,lv)}
 }

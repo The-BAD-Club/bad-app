@@ -759,6 +759,8 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .plan p{margin:6px 0 0}.plan .warnbox{margin-top:10px;border:1px dashed var(--rule);background:transparent}
 .planctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}.planctl>div{display:grid;gap:4px}
 .plan .fine svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.court .cfoot{justify-content:flex-end;gap:10px;align-items:center}.court .cfoot .btn.wide{flex:1;max-width:220px}
+.court.on{box-shadow:inset 0 0 0 1.5px var(--ink)}.court .fmt{min-height:28px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1943,7 +1945,7 @@ function planTile(sid,lv,full){const s=S.sessions[sid],P=planInfo(sid,lv),admin=
   const warn=!P.adv.ok?`<div class="note warnbox" role="status"><b>${P.adv.S} more games are needed for everyone to reach 5.</b> That takes about ${fmtMins(P.adv.need)}, with ${fmtMins(P.left)} left.
       <div class="row" style="gap:6px;margin-top:8px">${admin?`<button class="btn sm" data-act="extend" data-v="${P.adv.extend}">${ic('clock')}Extend ${P.adv.extend} min</button>`:''}<button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add a court${P.adv.courtEnough?' (fits in time)':''}</button></div></div>`
     :P.games.length?`<p class="fine">${ic('check')} On track: everyone can reach 5 games${P.adv.need?`, in about ${fmtMins(P.adv.need)}`:''}.</p>`:'';
-  if(!full)return warn?`<div class="tile plan">${warn}</div>`:'';
+  if(!full)return !P.adv.ok?`<div class="tile plan">${warn}</div>`:warn?`<div class="plan">${warn}</div>`:'';
   const r=roster(sid),wc=r.wc===Infinity?'No limit':r.wc;
   const prev=n=>`${n} players: about ${BADMATH.gamesEach(n,P.C,P.T,P.d).toFixed(1)} games each`;
   return `<div class="tile plan"><div class="sec-h"><b>${ic('users')} Session</b><span class="fine">Ends ${fmtTime(s.end||'22:00')}</span></div>
@@ -1987,8 +1989,26 @@ const placed=lv=>new Set([...lv.courts,...lv.waiting].flatMap(c=>c.on).filter(Bo
 /* Bench = checked-in players who are not on a court or waiting. Default order: first come, first served
    (check-in time, then the time their last game ended). Late arrivals join at the back; nobody jumps ahead for having fewer games. */
 function benchOf(sid,lv){norm(lv);const p=placed(lv),out=new Set(lv.out);
-  return Object.keys(lv.checkin).filter(x=>!p.has(x)&&!out.has(x)).map(x=>({x,t:lv.avail[x]||lv.checkin[x],c:lv.checkin[x],g:gamesFor(sid,x)}))
-    .sort((a,b)=>(!!(lv.rest||{})[a.x]-!!(lv.rest||{})[b.x])||(lv.catchup?(a.g-b.g||a.t.localeCompare(b.t)):a.t.localeCompare(b.t))).map(o=>o.x)}
+  const free=Object.keys(lv.checkin).filter(x=>!p.has(x)&&!out.has(x));
+  const ord=BADMATH.order(free.map(x=>rotP(sid,lv,x))).map(o=>o.id);
+  return [...ord.filter(x=>!isRest(lv,x)),...ord.filter(x=>isRest(lv,x))]}
+/* one player as the rotation sees them */
+function rotP(sid,lv,id){return {id,g:gamesFor(sid,id),base:(lv.base||{})[id]||0,since:msOf(lv.avail[id]||lv.checkin[id])||0,deferred:(lv.defer||{})[id]||0,
+  rating:S.profiles[id]?badRating(id):null,cat:S.profiles[id]?catOf(id):null}}
+/* lineups already played or prepared, so fresh partners and opponents are preferred */
+function lineups(sid,lv){const h=liveGames(sid).map(([,g])=>({a:g.a,b:g.b}));
+  for(const c of [...lv.courts,...lv.waiting]){const half=c.size/2,a=c.on.slice(0,half).filter(Boolean),b=c.on.slice(half).filter(Boolean);if(a.length&&b.length)h.push({a,b})}return h}
+/* fill an empty doubles slot with the next four from the rotation; other sizes fill in bench order */
+function generateInto(sid,lv,c){const bench=benchOf(sid,lv).filter(p=>!isRest(lv,p));
+  if(c.size===4&&!c.on.some(Boolean)){const r=BADMATH.pickFour(bench.map(x=>rotP(sid,lv,x)),lineups(sid,lv));if(!r)return false;
+    c.on=[...r.a,...r.b];lv.defer={...(lv.defer||{}),...r.deferred};return true}
+  const before=c.on.filter(Boolean).length;c.on=c.on.map(x=>x||bench.shift()||null);return c.on.filter(Boolean).length>before}
+/* late-arrival credit: remember the lowest games count among players already there */
+function setBase(sid,lv,pid){const others=presentIds(lv).filter(x=>x!==pid).map(x=>gamesFor(sid,x));lv.base=lv.base||{};if(others.length)lv.base[pid]=Math.min(...others)}
+/* format suggestion: 21 points at capacity; 30 below it while everyone can still reach 5 games */
+function suggestFmt(sid,lv){const P=planInfo(sid,lv);if(P.N>=roster(sid).cap)return 21;
+  const a=BADMATH.advice({games:P.games,courts:P.C,minsLeft:P.left,d:P.measured?P.measured.d*30/21:BADMATH.FORMATS[30].mins});return a.ok?30:21}
+const elapsed=c=>{const t=msOf(c.t0dev);return isFinite(t)?Math.max(0,Math.floor((Date.now()-t)/60000)):0};
 const isRest=(lv,p)=>!!(lv.rest||{})[p];
 function detach(lv,pid){for(const c of [...lv.courts,...lv.waiting])c.on=c.on.map(x=>x===pid?null:x);lv.out=lv.out.filter(x=>x!==pid)}
 function locate(lv,pid){for(const [k,arr] of [['c',lv.courts],['w',lv.waiting]])for(let ci=0;ci<arr.length;ci++){const i=arr[ci].on.indexOf(pid);if(i>=0)return[k,ci,i]}return null}
@@ -2005,7 +2025,10 @@ function startBoard(sid){const sp=S.sessions[sid].sport||'badminton',size=SIZES[
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
-S.courtStep=3;S.asPlayer=false;let pendingDone=null;
+S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='';
+const CANCEL_REASONS=['Injury','Player had to leave','Wrong lineup','Court problem','Other'];
+/* timers on playing courts tick once a minute without redrawing the board */
+setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m)/60000))+' min'}),20000);
 const nm=(sid,pid)=>pid===S.uid?'You':who(sid,pid).name;
 function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
   const tag=o.act?'button':'span',me=pid===S.uid;
@@ -2013,15 +2036,19 @@ function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
 function spot(o={}){return o.act?`<button class="pl" data-act="${o.act}" ${o.data||''} aria-label="Open spot"><span class="slot">${ic('plus')}</span></button>`:`<span class="pl"><span class="slot"></span></span>`}
 function sideHTML(sid,c,k,ci,from,to,edit){let h='';for(let i=from;i<to;i++){const pid=c.on[i],d=`data-k="${k}" data-c="${ci}" data-i="${i}"`;h+=pid?pl(sid,pid,{act:edit?'slot':null,data:d,games:edit,lv:S.live[sid]}):spot({act:edit?'slot':null,data:d})}return h}
 function courtCard(sid,c,ci,edit){
-  const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,gno=sessGames(sid).filter(([,g])=>g.court===c.name).length+1;
+  const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,playing=c.st==='playing',gno=liveGames(sid).filter(([,g])=>g.court===c.name).length+1;
+  const fmt=c.fmt||(sp==='badminton'?suggestFmt(sid,S.live[sid]||{courts:[]}):null);
   let foot='';
-  if(edit){foot=pendingDone===ci
-    ?`<div class="confirm"><b>Final score?</b><div class="row" style="gap:6px"><span class="fine">Left</span><input type="number" min="0" id="sa-${ci}" class="sc" value="${c.score&&(c.score[0]||c.score[1])?c.score[0]:''}" aria-label="Score, left team"><span class="muted">–</span><input type="number" min="0" id="sb-${ci}" class="sc" value="${c.score&&(c.score[0]||c.score[1])?c.score[1]:''}" aria-label="Score, right team"><span class="fine">Right</span></div>
-      <div class="row" style="gap:6px"><button class="btn sm" data-act="done" data-c="${ci}">${ic('check')}Save game</button><button class="btn ghost sm" data-act="done" data-c="${ci}" data-noscore="1">Skip score</button><button class="btn ghost sm" data-act="nodone">Back</button></div></div>`
-    :`<div class="row" style="justify-content:flex-end;gap:6px">${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">Auto-fill</button>`:''}<button class="btn sm" data-act="askdone" data-c="${ci}" ${full<2?'disabled':''}>${ic('check')}Game done</button></div>`}
-  /* final scores only: no point-by-point counter (it saved the whole board on every rally) */
-  return `<article class="court"><div class="court-h"><b>${esc(c.name)}</b><span class="tagl${full?' solid':''}">${full?'Game '+gno:'Free'}</span></div>
-    <div class="court-body ${sp}">${MARK[sp]||''}<div class="half">${sideHTML(sid,c,'c',ci,0,half,edit)}</div><div class="net"><span>${MIDLINE[sp]||'NET'}</span></div><div class="half">${sideHTML(sid,c,'c',ci,half,c.size,edit)}</div></div>${foot}</article>`;
+  if(edit){
+    if(cancelAsk===ci)foot=`<div class="confirm"><b>${playing?'Cancel this game?':'Clear this court?'}</b>${playing?`<p class="fine">No result is counted. The players go back to the front of the bench.</p>
+        <div class="chips" role="group" aria-label="Reason">${CANCEL_REASONS.map(r=>`<button class="chip sm" data-act="cancelwhy" data-v="${esc(r)}" aria-pressed="${cancelWhy===r}">${esc(r)}</button>`).join('')}</div>`:''}
+        <div class="row" style="gap:6px"><button class="btn sm" data-act="cancelgo" data-c="${ci}" ${playing&&!cancelWhy?'disabled':''}>${playing?'Cancel game':'Clear court'}</button><button class="btn ghost sm" data-act="cancelno">Back</button></div></div>`;
+    else if(playing)foot=`<div class="row cfoot"><button class="linkbtn" data-act="cancelask" data-c="${ci}">Cancel</button><button class="btn wide" data-act="finish" data-c="${ci}">${ic('check')}Finish</button></div>`;
+    else foot=`<div class="row cfoot">${full?`<button class="linkbtn" data-act="cancelask" data-c="${ci}">Clear</button>`:''}${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">${ic('users')}Fill from rotation</button>`:''}${full>=2?`<button class="btn wide" data-act="begin" data-c="${ci}" ${full<c.size&&sp==='badminton'?'disabled':''}>${ic('play')}Start</button>`:''}</div>`}
+  const fchip=fmt?(edit&&!playing?`<button class="chip sm fmt" data-act="fmt" data-c="${ci}" aria-label="Game format, tap to change">To ${fmt}</button>`:`<span class="tagl">To ${fmt}</span>`):'';
+  const tag=playing?`<span class="tagl solid timer" data-t0="${esc(c.t0dev||'')}">${elapsed(c)} min</span>`:`<span class="tagl">${full?'Game '+gno+' · ready':'Free'}</span>`;
+  return `<article class="court${playing?' on':''}"><div class="court-h"><b>${esc(c.name)}</b><span class="row" style="gap:6px">${fchip}${tag}</span></div>
+    <div class="court-body ${sp}">${MARK[sp]||''}<div class="half">${sideHTML(sid,c,'c',ci,0,half,edit&&!playing)}</div><div class="net"><span>${MIDLINE[sp]||'NET'}</span></div><div class="half">${sideHTML(sid,c,'c',ci,half,c.size,edit&&!playing)}</div></div>${foot}</article>`;
 }
 function waitRow(sid,w,wi,edit){
   const half=w.size/2,full=w.on.filter(Boolean).length;
@@ -2080,7 +2107,7 @@ function renderCourts(){
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,false)).join('')}</div></div><aside class="side">
       ${lv.waiting.some(w=>w.on.some(Boolean))?`<div class="sec"><span class="label">Next</span><div class="waits">${lv.waiting.map((w,i)=>w.on.some(Boolean)?waitRow(sid,w,i,false):'').join('')}</div></div>`:''}
       ${bench.length?`<div class="sec"><span class="label">Bench</span><div class="bench">${bench.map((p,i)=>pl(sid,p,{n:i+1,lv})).join('')}</div></div>`:''}
-      <p class="fine">Games go in order of arrival. Arriving late may mean fewer games.</p>
+      <p class="fine">Fewest games play first. Arrive late and you join one game behind.</p>
       ${myGames.length?`<div class="sec"><span class="label">Your games · ${myGames.length}</span><div class="list">${myGames.map(([gid,g],i)=>gameRow(sid,gid,g,i,true)).join('')}</div></div>`:''}</aside></div>`;
     bindCourts(el);return;
   }
@@ -2109,7 +2136,7 @@ function renderCourts(){
     body=`${planTile(sid,lv,false)}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,true)).join('')}</div>
       <div class="sec"><span class="label">Waiting area</span><div class="waits">${lv.waiting.map((w,i)=>waitRow(sid,w,i,true)).join('')}</div></div></div>
-      <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · ${lv.catchup?'catch-up: fewest games first':'first come, first served'}</span><button class="chip sm" data-act="catchup" aria-pressed="${!!lv.catchup}">${ic('arrow')}Catch-up</button></div>
+      <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · fewest games first</span></div>
         <div class="bench">${bench.map((p,i)=>pl(sid,p,{act:'bench',data:`data-pid="${esc(p)}"`,n:i+1,games:true,lv})).join('')||'<span class="fine">Everyone checked in is placed.</span>'}</div>
         ${Object.keys(ppl).filter(p=>!lv.checkin[p]).length?`<button class="btn ghost sm" data-act="step" data-n="2" style="justify-self:start">${ic('check')}${Object.keys(ppl).filter(p=>!lv.checkin[p]).length} not checked in</button>`:''}</div></aside></div>
       ${sel?`<div class="selbar">${pav(sid,sel)}<b style="flex:1;min-width:90px">${esc(who(sid,sel).name)}</b><div class="row" style="gap:6px">${locate(lv,sel)?`<button class="btn ghost sm" data-act="tobench">To bench</button>`:''}<button class="btn ghost sm" data-act="orest">${isRest(lv,sel)?'Ready':'Rest'}</button><button class="btn ghost sm" data-act="out">Left</button><button class="btn sm" data-act="unsel">${ic('x')}</button></div></div>`:''}`;
@@ -2154,43 +2181,59 @@ function bindCourts(el){el.onclick=async ev=>{
   const lv=norm(clone(S.live[sid])),arr=k=>k==='w'?lv.waiting:lv.courts,sp=S.sessions[sid].sport||'badminton';
   if(act==='bench'){sel=sel===b.dataset.pid?null:b.dataset.pid;return renderCourts()}
   if(act==='qr')return showQR(sid);
-  if(act==='catchup'){lv.catchup=!lv.catchup;toast(lv.catchup?'Catch-up on: fewest games are called first.':'Back to first come, first served.');return saveLive(sid,lv)}
   if(act==='orest'){lv.rest=lv.rest||{};lv.ft=lv.ft||{};lv.rest[sel]=!lv.rest[sel];lv.ft[sel]=new Date().toISOString();sel=null;return saveLive(sid,lv)}
-  if(act==='ci'){const p=b.dataset.pid;lv.checkin[p]=new Date().toISOString();toast(`${who(sid,p).name} checked in · #${Object.keys(lv.checkin).length}`);return saveLive(sid,lv)}
+  if(act==='ci'){const p=b.dataset.pid;setBase(sid,lv,p);lv.checkin[p]=new Date().toISOString();toast(`${who(sid,p).name} checked in · #${Object.keys(lv.checkin).length}`);return saveLive(sid,lv)}
   if(act==='unci'){const p=b.dataset.pid;delete lv.checkin[p];delete lv.avail[p];detach(lv,p);return saveLive(sid,lv)}
   if(act==='order'){lv.order=b.dataset.v;return saveLive(sid,lv)}
   if(act==='unsel'){sel=null;return renderCourts()}
-  if(act==='askdone'){pendingDone=+b.dataset.c;return renderCourts()}
-  if(act==='nodone'){pendingDone=null;return renderCourts()}
+  if(act==='cancelask'){cancelAsk=+b.dataset.c;cancelWhy='';return renderCourts()}
+  if(act==='cancelno'){cancelAsk=null;return renderCourts()}
+  if(act==='cancelwhy'){cancelWhy=b.dataset.v;return renderCourts()}
   if(act==='slot'){const c=arr(b.dataset.k)[+b.dataset.c],i=+b.dataset.i,cur=c.on[i];
+    if(c.st==='playing'){toast('This game has started. Finish or cancel it first.');return}
+    if(sel){const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');sel=null;return renderCourts()}}
     if(!sel){if(cur){sel=cur;renderCourts()}return}
     if(cur===sel){sel=null;return renderCourts()}
     const from=locate(lv,sel);detach(lv,sel);
     if(cur){detach(lv,cur);if(from)arr(from[0])[from[1]].on[from[2]]=cur}
     c.on[i]=sel;sel=null;return saveLive(sid,lv)}
-  if(act==='tobench'){detach(lv,sel);sel=null;return saveLive(sid,lv)}
-  if(act==='out'){detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
+  if(act==='tobench'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);sel=null;return saveLive(sid,lv)}
+  if(act==='out'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
   if(act==='restore'){lv.out=lv.out.filter(x=>x!==b.dataset.pid);return saveLive(sid,lv)}
   if(act==='walk'){const n=$('walk-name').value.trim().slice(0,24);if(!n){toast("Please type the player's name.");return}
-    const wid=slug(n)+'-'+Date.now().toString(36);lv.walkins.push({id:wid,name:n});lv.checkin['w~'+wid]=new Date().toISOString();toast(`${n} is checked in.`);return saveLive(sid,lv)}
+    const wid=slug(n)+'-'+Date.now().toString(36);lv.walkins.push({id:wid,name:n});setBase(sid,lv,'w~'+wid);lv.checkin['w~'+wid]=new Date().toISOString();toast(`${n} is checked in.`);return saveLive(sid,lv)}
   if(act==='add'){const k=b.dataset.k,size=(k==='w'&&lv.courts[0]?.size)||SIZES[sp][0][0];
     if(k==='c')lv.courts.push({id:'c'+Date.now().toString(36),name:'Court '+(lv.courts.length+1),size,on:blank(size)});else lv.waiting.push({id:'w'+Date.now().toString(36),size,on:blank(size)});return saveLive(sid,lv)}
   if(act==='wless'){const i=lv.waiting.map(w=>w.on.some(Boolean)).lastIndexOf(false);lv.waiting.splice(i>=0?i:lv.waiting.length-1,1);return saveLive(sid,lv)}
-  if(act==='del'){arr(b.dataset.k).splice(+b.dataset.c,1);return saveLive(sid,lv)}
-  if(act==='size'){const c=arr(b.dataset.k)[+b.dataset.c],n=+b.dataset.n,on=c.on.filter(Boolean);c.size=n;c.on=blank(n);on.slice(0,n).forEach((p,i)=>c.on[i]=p);
+  if(act==='del'){const c=arr(b.dataset.k)[+b.dataset.c];if(c&&c.st==='playing'){toast('Finish or cancel the game on this court first.');return}arr(b.dataset.k).splice(+b.dataset.c,1);return saveLive(sid,lv)}
+  if(act==='size'){if(arr(b.dataset.k)[+b.dataset.c].st==='playing'){toast('Finish or cancel the game on this court first.');return}const c=arr(b.dataset.k)[+b.dataset.c],n=+b.dataset.n,on=c.on.filter(Boolean);c.size=n;c.on=blank(n);on.slice(0,n).forEach((p,i)=>c.on[i]=p);
     lv.waiting.forEach(w=>{if(!w.on.some(Boolean)){w.size=n;w.on=blank(n)}});return saveLive(sid,lv)}
-  if(act==='fill'){const c=arr(b.dataset.k)[+b.dataset.c],bench=benchOf(sid,lv).filter(p=>!isRest(lv,p));c.on=c.on.map(p=>p||bench.shift()||null);return saveLive(sid,lv)}
-  if(act==='done'){const ci=+b.dataset.c,c=lv.courts[ci],half=c.size/2,a=c.on.slice(0,half).filter(Boolean),bb=c.on.slice(half).filter(Boolean);
-    if(!a.length||!bb.length){toast('Please put players on both sides first.');return}
+  if(act==='fill'){const c=arr(b.dataset.k)[+b.dataset.c];if(c.st==='playing')return;if(!generateInto(sid,lv,c)){toast('Not enough players on the bench.');return}return saveLive(sid,lv)}
+  if(act==='fmt'){const c=lv.courts[+b.dataset.c];c.fmt=(c.fmt||suggestFmt(sid,lv))===21?30:21;return saveLive(sid,lv)}
+  if(act==='begin'){const c=lv.courts[+b.dataset.c],half=c.size/2;
+    if(!c.on.slice(0,half).some(Boolean)||!c.on.slice(half).some(Boolean)){toast('Please put players on both sides first.');return}
+    c.st='playing';c.t0=SVT();c.t0dev=new Date().toISOString();if(sp==='badminton')c.fmt=c.fmt||suggestFmt(sid,lv);
+    toast(`${c.name} has started${c.fmt?' · to '+c.fmt:''}.`);return saveLive(sid,lv)}
+  if(act==='finish'||act==='cancelgo'){const ci=+b.dataset.c,c=lv.courts[ci],half=c.size/2,a=c.on.slice(0,half).filter(Boolean),bb=c.on.slice(half).filter(Boolean),now=new Date().toISOString();
+    cancelAsk=null;
+    if(act==='cancelgo'&&c.st!=='playing'){c.on=blank(c.size);delete c.fmt;toast(`${c.name} is clear.`);return saveLive(sid,lv)}
     const names={};[...a,...bb].forEach(p=>names[p]=who(sid,p).name);
-    const g={sid,sport:sp,court:c.name,a,b:bb,names,at:new Date().toISOString()};
-    if(!b.dataset.noscore){const sa=$('sa-'+ci).value,sb=$('sb-'+ci).value;if(sa===''||sb===''){toast('Please enter both scores, or tap Skip score.');return}g.final=[Number(sa),Number(sb)]}
-    try{await S.db.doc('games/'+sid+'-'+Date.now().toString(36)).set(g)}catch(e){toast("Sorry, the game didn't save.");return}
-    pendingDone=null;const endT=new Date().toISOString();[...a,...bb].forEach(p=>lv.avail[p]=endT);c.on=blank(c.size);c.score=[0,0];
-    const nx=lv.waiting[0];
+    /* the game record: teams, court, format and both clocks. Finish frees the court; the score comes from the players and Support. */
+    const g={v:2,sid,sport:sp,court:c.name,a,b:bb,names,fmt:c.fmt||null,st:act==='finish'?'review':'cancelled',start:isFinite(msOf(c.t0))?c.t0:null,startDev:c.t0dev||null,end:SVT(),endDev:now,at:now};
+    if(act==='cancelgo'){g.reason=cancelWhy||'Other';g.interrupted=true;g.by=S.uid}
+    const gid=sid+'-'+Date.now().toString(36);
+    try{await S.db.doc('games/'+gid).set(g)}catch(e){toast("Sorry, the game didn't save. Please try again.");return}
+    S.gSess[gid]={...g,start:g.start||null,end:null};mergeGames();   /* count it now, before the next lineup is picked */
+    if(act==='finish')[...a,...bb].forEach(p=>lv.avail[p]=now);      /* cancelled: they keep their place in line */
+    c.on=blank(c.size);delete c.st;delete c.t0;delete c.t0dev;delete c.fmt;cancelWhy='';
+    /* bring on the next prepared lineup, or generate one straight onto the free court */
+    const nx=lv.waiting[0];let msg;
     if(nx&&nx.on.some(Boolean)){if(nx.size===c.size)c.on=[...nx.on];else nx.on.filter(Boolean).slice(0,c.size).forEach((p,i)=>c.on[i]=p);
-      lv.waiting.shift();lv.waiting.push({id:'w'+Date.now().toString(36),size:nx.size,on:blank(nx.size)});toast(`Game saved. Next up is on ${c.name}.`)}
-    else toast(`Game saved. ${c.name} is free.`);
+      lv.waiting.shift();lv.waiting.push({id:'w'+Date.now().toString(36),size:nx.size,on:blank(nx.size)});msg=`Next up is on ${c.name}.`}
+    else msg=generateInto(sid,lv,c)?`Next four are on ${c.name}.`:`${c.name} is free.`;
+    /* keep Next up prepared so players can see who's coming */
+    if(lv.waiting[0]&&!lv.waiting[0].on.some(Boolean))generateInto(sid,lv,lv.waiting[0]);
+    toast((act==='finish'?'Game finished. ':'Game cancelled. ')+msg);
     return saveLive(sid,lv)}
 }}
 
@@ -2250,7 +2293,7 @@ function syncCheckins(){
   for(const [sid,lv0] of Object.entries(S.live)){const q=S.qr[sid];if(!S.sessions[sid])continue;
     const lv=norm(clone(lv0)),ppl=people(sid);let changed=false;lv.rest=lv.rest||{};lv.more=lv.more||{};lv.ft=lv.ft||{};
     for(const [uid,doc] of Object.entries(S.checkins)){const e=doc&&doc[sid];if(!e)continue;
-      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){lv.checkin[uid]=e.at;changed=true}
+      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){setBase(sid,lv,uid);lv.checkin[uid]=e.at;changed=true}
       if(lv.checkin[uid]&&e.ft&&e.ft>(lv.ft[uid]||'')){lv.rest[uid]=!!e.rest;lv.more[uid]=!!e.more;lv.ft[uid]=e.ft;changed=true}}
     if(changed)saveLive(sid,lv)}
 }
