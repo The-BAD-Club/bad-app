@@ -30,7 +30,8 @@ function courtSubs(){
   if(!want.length){S.gSess={};mergeGames();return}
   for(const sid of want)S.subs.off.push(d.db.doc('live/'+sid).onSnapshot(x=>{if(x.exists)S.live[sid]=x.data();else delete S.live[sid];render()},()=>{}));
   S.subs.off.push(d.db.collection('games').where('sid','in',want).onSnapshot(s=>{S.gSess=d.map(s);mergeGames();render()},()=>{}));
-  S.subs.off.push(d.db.collection('scores').onSnapshot(s=>{S.scores=d.map(s);render()},()=>{}));
+  S.subs.off.push(d.db.collection('results').where('sid','in',want).onSnapshot(s=>{S.results=d.map(s);render()},()=>{}));
+  if(S.canEdit||want.some(x=>isGM(x)))S.subs.off.push(d.db.collection('scores').onSnapshot(s=>{S.scores=d.map(s);render()},()=>{}));
 }
 async function myGamesLoad(){const d=S.sessData;if(!d||!S.uid)return;
   try{const r=await Promise.all(['a','b'].map(t=>d.db.collection('games').where(t,'array-contains',S.uid).get()));S.gMine={...d.map(r[0]),...d.map(r[1])};mergeGames();render()}catch(_){}}
@@ -212,11 +213,12 @@ async function saveGrade(uid,sid,k,v){
   catch(e){toast("Sorry, that level didn't save.");renderCourts()}}
 function levelPick(uid,sp){const own=ownLevel(uid,sp),o=S.levels[uid],ov=o&&o.levels?o.levels[sp]:(o?o.level:null);
   return `<label class="lvl"><span class="fine">Level</span><select data-lvl="${esc(uid)}" data-sp="${sp}"><option value="">${own!=null?'Their own: '+LEVELS[own]:'Not set'}</option>${LEVELS.map((l,i)=>`<option value="${i}" ${ov===i?'selected':''}>${l}</option>`).join('')}</select></label>`}
-function stepper(){const st=[['Set up','Courts'],['Check in','Who has arrived'],['Games','Place and log'],['Wrap up','Scores, sheet']];
+function stepper(){const n=S.courtSid?supportCount(S.courtSid):0,st=[['Set up','Courts and time'],['Check in','Who has arrived'],['Games','Courts and next up'],['Scores',n?`${n} to check`:'Standings']];
   return `<div class="stepper">${st.map(([t,d],i)=>`<button data-act="step" data-n="${i+1}" aria-current="${S.courtStep===i+1?'step':'false'}"><span class="qn num" style="position:static">${i+1}</span><span><b>${t}</b><span class="fine">${d}</span></span></button>`).join('')}</div>`}
 
 function renderCourts(){
   const el=$('v-courts');if(!el||S.view!=='courts')return;
+  const fa=document.activeElement;if(fa&&el.contains(fa)&&fa.matches('input,textarea')){if(!el._wait){el._wait=1;fa.addEventListener('blur',()=>{el._wait=0;setTimeout(renderCourts,0)},{once:true})}return}
   const me=myProfile();
   if(!S.courtSport){const liveS=Object.keys(S.live).map(k=>S.sessions[k]).filter(Boolean).find(x=>sessStart(x)>Date.now()-18*36e5);S.courtSport=(liveS&&liveS.sport)||(me&&COURT_SPORTS.find(k=>(me.sports||[]).includes(k)))||'badminton'}
   const list=courtSessions();
@@ -236,15 +238,16 @@ function renderCourts(){
     const pend=!lv.checkin[meId]&&S.myCI?.[sid],inn=lv.checkin[meId],st=pend?['Checking you in…','Scan received. It confirms in a moment.']:loc&&loc[0]==='c'?['On '+lv.courts[loc[1]].name,'Enjoy the game.']:loc?[loc[1]===0?'You’re next':'Up in '+(loc[1]+1),loc[1]===0?'Get ready.':'Hang tight.']:inn&&!lv.out.includes(meId)?['On the bench','#'+(bench.indexOf(meId)+1)+' in line · checked in '+hhmm(inn)]:ppl[meId]?['Not checked in','Please check in with an admin when you arrive.']:null;
     const myGames=sessGames(sid).filter(([,g])=>[...g.a,...g.b].includes(meId));
     const benchMe=inn&&!loc&&!lv.out.includes(meId),rest=isRest(lv,meId),more=(lv.more||{})[meId];
-    const todo=sessGames(sid).filter(([gid,g])=>[...g.a,...g.b].includes(meId)&&!g.final&&!S.scores[meId]?.g?.[gid]).slice(-1)[0];
-    el.innerHTML=head+`${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
+    const legacy=myGames.filter(([,g])=>!v2(g));
+    const todo=legacy.filter(([gid,g])=>!g.final&&!S.scores[meId]?.g?.[gid]).slice(-1)[0];
+    el.innerHTML=head+`${playerScoresHTML(sid)}${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
       ${inn&&!lv.out.includes(meId)?`<div class="row" style="gap:6px;margin-top:6px"><button class="btn sm ${rest?'':'ghost'} inv" data-act="rest" data-v="${rest?0:1}">${rest?ic('play')+'Ready to play':ic('clock')+'Sit out a game'}</button><button class="btn sm ghost inv" data-act="more" data-v="${more?0:1}" aria-pressed="${!!more}">${ic('plus')}${more?'Up for extra: on':'Up for extra games'}</button></div>`:''}</div>`:''}
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,false)).join('')}</div></div><aside class="side">
       ${lv.waiting.some(w=>w.on.some(Boolean))?`<div class="sec"><span class="label">Next</span><div class="waits">${lv.waiting.map((w,i)=>w.on.some(Boolean)?waitRow(sid,w,i,false):'').join('')}</div></div>`:''}
       ${bench.length?`<div class="sec"><span class="label">Bench</span><div class="bench">${bench.map((p,i)=>pl(sid,p,{n:i+1,lv})).join('')}</div></div>`:''}
       <p class="fine">Fewest games play first. Arrive late and you join one game behind.</p>
-      ${myGames.length?`<div class="sec"><span class="label">Your games · ${myGames.length}</span><div class="list">${myGames.map(([gid,g],i)=>gameRow(sid,gid,g,i,true)).join('')}</div></div>`:''}</aside></div>`;
-    bindCourts(el);return;
+      ${legacy.length?`<div class="sec"><span class="label">Earlier games · ${legacy.length}</span><div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,true)).join('')}</div></div>`:''}</aside></div>`;
+    bindCourts(el);bindScores(el);return;
   }
   /* ---------- admin view: step by step ---------- */
   let body='';
@@ -277,15 +280,16 @@ function renderCourts(){
       ${sel?`<div class="selbar">${pav(sid,sel)}<b style="flex:1;min-width:90px">${esc(who(sid,sel).name)}</b><div class="row" style="gap:6px">${locate(lv,sel)?`<button class="btn ghost sm" data-act="tobench">To bench</button>`:''}<button class="btn ghost sm" data-act="orest">${isRest(lv,sel)?'Ready':'Rest'}</button><button class="btn ghost sm" data-act="out">Left</button><button class="btn sm" data-act="unsel">${ic('x')}</button></div></div>`:''}`;
   }else{
     const counts=Object.keys(ppl).map(p=>[p,gamesFor(sid,p)]).sort((a,b)=>b[1]-a[1]);
-    body=`<div class="tile"><b>${ic('play')} Game log · ${sessGames(sid).length}</b><p class="fine">Confirm or correct scores. Players' own entries show as Reported.</p>
-        <div class="list">${sessGames(sid).map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')||'<span class="fine">No games logged yet.</span>'}</div></div>
+    const legacy=sessGames(sid).filter(([,g])=>!v2(g));
+    body=`${supportHTML(sid)}${typeof standingsHTML==='function'?standingsHTML(sid,true):''}${legacy.length?`<div class="tile"><b>${ic('play')} Earlier games · ${legacy.length}</b><p class="fine">Logged before score checks. Confirm or correct them here.</p>
+        <div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')}</div></div>`:''}
       <div class="tile"><b>${ic('users')} Games per player</b><div class="list">${counts.map(([p,n])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<span>${esc(who(sid,p).name)}</span><b class="num">${n}</b></div>`).join('')}</div></div>`;
   }
   el.innerHTML=head+stepper()+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
   el.querySelectorAll('[data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,S.courtSid,x.dataset.gk,x.value));
   const fd=$('ci-find');if(fd)fd.oninput=e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#ci-list .ci').forEach(r=>r.hidden=q&&!r.dataset.name.includes(q))};
-  bindCourts(el);
+  bindCourts(el);bindScores(el);
 }
 function gameRow(sid,gid,g,i,mine,bare){
   const sc=scoreOf(gid,g),names=t=>t.map(p=>esc(nm(sid,p))).join(' & ');
