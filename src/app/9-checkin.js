@@ -13,7 +13,7 @@ function qrData(text,size=240){const k=size+'|'+text;if(_qrCache[k])return _qrCa
 const newCode=()=>Math.random().toString(36).slice(2,8).padEnd(6,'x');
 const ownLevel=(uid,sp)=>{const p=S.profiles[uid];if(!p)return null;return p.levels&&p.levels[sp]!=null?p.levels[sp]:(p.level??null)};
 const effLevel=(uid,sp)=>{const o=S.levels[uid];if(o&&o.levels&&o.levels[sp]!=null)return o.levels[sp];if(o&&o.level!=null&&!o.levels)return o.level;return ownLevel(uid,sp)};
-const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
+const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){if(!S.profiles[uid]){const x=boardLvl(S.live[S.courtSid],uid);return gradeRow(x.g)?x.g+(x.cat?' '+x.cat:''):'Unrated'}const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
 
 /* player: complete a scanned check-in */
 async function processCheckin(){
