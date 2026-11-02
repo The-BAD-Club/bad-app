@@ -193,10 +193,12 @@ function waitRow(sid,w,wi,edit){
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
 /* crew and Game Masters verify the BAD grade and category; an optional rating override replaces the table rating */
-function gradePick(uid,sid){const r=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{},c=r.cat||'',g=gradeRow(r.g||''),calc=g&&(c||pr.cat)?((c||pr.cat)==='W'?g[2]:g[3]):'';
+function gradePick(uid,sid){const r=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{},c=r.cat||'',g=gradeRow(r.g||''),cc=c||pr.cat,calc=g&&cc?(cc==='W'?g[2]:g[3]):null;
+  const adj=typeof r.ovr==='number',val=adj?r.ovr:calc;
   return `<div class="gpick" data-gp="${esc(uid)}"><select data-gk="g" aria-label="BAD level"><option value="U">UNRATED${pr.grade&&!g?' · says '+esc(pr.grade):''}</option>${GRADES.map(([k,d])=>`<option value="${k}" ${r.g===k?'selected':''}>${k} · ${esc(d)}</option>`).join('')}</select>
     <select data-gk="cat" aria-label="Balancing category"><option value="">W / M${pr.cat&&!c?' · says '+esc(pr.cat):''}</option>${Object.keys(CATS).map(k=>`<option value="${k}" ${c===k?'selected':''}>${k}</option>`).join('')}</select>
-    <input type="number" step="0.5" min="0" max="7" inputmode="decimal" data-gk="ovr" placeholder="${calc===''?'Rating':esc(calc)}" value="${typeof r.ovr==='number'?r.ovr:''}" aria-label="Rating override. Replaces the table rating" title="Override replaces the table rating"></div>`}
+    <label class="grate${adj?' adj':''}"><span>${adj?'Adjusted':'Rating'}</span><input type="number" step="0.5" min="0" max="7" inputmode="decimal" data-gk="ovr" placeholder="—" value="${val==null?'':val}" ${val==null&&!adj?'disabled':''} aria-label="Balancing rating. Set from the level; change it to adjust"></label>
+    ${adj?`<button type="button" class="linkbtn greset" data-greset="${esc(uid)}" title="Back to the rating for ${esc(r.g||'')} ${esc(cc||'')}">Reset to ${calc==null?'auto':calc}</button>`:''}</div>`}
 async function saveGrade(uid,sid,k,v){
   const cur=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{};
   const from={g:cur.g||'U',cat:cur.cat||null,ovr:typeof cur.ovr==='number'?cur.ovr:null};
@@ -204,13 +206,16 @@ async function saveGrade(uid,sid,k,v){
   if(k==='g')to.g=gradeRow(v)?v:'U';
   if(k==='cat')to.cat=CATS[v]?v:null;
   if(k==='ovr'){const n=v===''?null:Math.round(Number(v)*2)/2;if(n!=null&&!(n>=0&&n<=7)){toast('Ratings go from 0 to 7.');return}to.ovr=n}
-  if(k!=='cat'&&!to.cat&&CATS[pr.cat])to.cat=pr.cat;   /* the player's own category, now confirmed by crew */
+  if(k!=='cat'&&!to.cat&&CATS[pr.cat])to.cat=pr.cat;
+  if(k==='g'||k==='cat')to.ovr=null;   /* a new level or category means a fresh rating from the table */
+  if(k==='ovr'&&to.ovr!=null){const row=gradeRow(to.g),cc=to.cat||pr.cat,calc=row&&cc?(cc==='W'?row[2]:row[3]):null;if(calc===to.ovr)to.ovr=null}   /* the player's own category, now confirmed by crew */
   const me=myProfile(),doc={...to,by:S.uid,byName:(me&&me.nickname)||'',at:SVT(),sid,scale:GRADE_SCALE};
   /* keep the old 5-step level (scale v1) the first time, for the record. It is never turned into a grade. */
   if(cur.prev)doc.prev=cur.prev;else{const lv=S.levels&&S.levels[uid],ov=lv&&lv.levels?lv.levels.badminton:null,own=pr.levels?pr.levels.badminton:null;
     doc.prev={scale:'v1',self:own==null||own===''?null:(LEVELS[own]||null),crew:ov==null?null:(LEVELS[ov]||null)}}
   try{const b=S.db.batch();b.set(S.db.doc('grades/'+uid),doc);b.set(S.db.collection('grades/'+uid+'/log').doc(),{from,to,by:S.uid,byName:doc.byName,at:SVT(),sid});await b.commit();
-    toast(`${(S.profiles[uid]||{}).nickname||'Player'}: ${gradeRow(to.g)?to.g:'UNRATED'}${to.cat?' - '+to.cat:''}${to.ovr!=null?' · rating '+to.ovr:''}. Saved.`)}
+    const row=gradeRow(to.g),cc=to.cat||pr.cat,rt=to.ovr!=null?to.ovr:row&&cc?(cc==='W'?row[2]:row[3]):null;
+    toast(`${(S.profiles[uid]||{}).nickname||'Player'}: ${row?to.g:'UNRATED'}${to.cat?' - '+to.cat:''}${rt!=null?` · rating ${rt}${to.ovr!=null?' (adjusted)':''}`:''}. Saved.`)}
   catch(e){toast("Sorry, that level didn't save.");renderCourts()}}
 function levelPick(uid,sp){const own=ownLevel(uid,sp),o=S.levels[uid],ov=o&&o.levels?o.levels[sp]:(o?o.level:null);
   return `<label class="lvl"><span class="fine">Level</span><select data-lvl="${esc(uid)}" data-sp="${sp}"><option value="">${own!=null?'Their own: '+LEVELS[own]:'Not set'}</option>${LEVELS.map((l,i)=>`<option value="${i}" ${ov===i?'selected':''}>${l}</option>`).join('')}</select></label>`}
@@ -288,6 +293,7 @@ function renderCourts(){
   el.innerHTML=head+stepper()+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
   el.querySelectorAll('[data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,S.courtSid,x.dataset.gk,x.value));
+  el.querySelectorAll('[data-greset]').forEach(x=>x.onclick=()=>saveGrade(x.dataset.greset,S.courtSid,'ovr',''));
   const fd=$('ci-find');if(fd)fd.oninput=e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#ci-list .ci').forEach(r=>r.hidden=q&&!r.dataset.name.includes(q))};
   bindCourts(el);bindScores(el);
 }
