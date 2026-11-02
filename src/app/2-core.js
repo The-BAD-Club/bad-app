@@ -102,6 +102,8 @@ const QUIZ=[
 
 const S={memCfg:{},members:{},site:{},codes:{},payCfg:{},payments:{},uid:null,canEdit:false,db:null,mcp:null,profiles:{},ledger:[],requests:{},sessions:{},bookings:{},posts:{},noshows:{},contacts:{},brand:{},loaded:false,view:'card',sport:'all',clubFilter:'all'};
 const $=id=>document.getElementById(id);
+/* server time for fields the security rules check (falls back to device time where there's no Firestore) */
+const SVT=()=>(window.firebase&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const keyOf=s=>String(s||'').trim().toLowerCase();
 const slug=s=>keyOf(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'x';

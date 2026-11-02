@@ -22,7 +22,7 @@ async function processCheckin(){
   if(!myProfile()){if(!p.told){p.told=1;toast('Please register first. You’ll be checked in right after.');if(S.view!=='create')startCreator()}return}
   S.pendingCI=null;
   try{
-    if(!S.bookings[S.uid]?.s?.[p.sid]||S.bookings[S.uid].s[p.sid].out)await saveBooking(x=>{x[p.sid]={at:new Date().toISOString(),guests:[]}});
+    if(!S.bookings[S.uid]?.s?.[p.sid]||S.bookings[S.uid].s[p.sid].out)await saveBooking(p.sid,'join',()=>freshEntry('cash'));
     const cur=S.myCI||{};await S.db.doc('checkins/'+S.uid).set({...cur,[p.sid]:{...(cur[p.sid]||{}),at:cur[p.sid]?.at||new Date().toISOString(),code:p.code}});
     S.courtSport=s.sport||'badminton';S.courtSid=p.sid;setView('courts');toast('You’re checked in. Thank you!');
   }catch(e){toast('Sorry, check-in didn’t save. Please ask an admin.')}

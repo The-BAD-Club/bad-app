@@ -135,7 +135,6 @@ function gradePick(uid,sid){const r=(S.grades||{})[uid]||{},pr=S.profiles[uid]||
   return `<div class="gpick" data-gp="${esc(uid)}"><select data-gk="g" aria-label="BAD level"><option value="U">UNRATED${pr.grade&&!g?' · says '+esc(pr.grade):''}</option>${GRADES.map(([k,d])=>`<option value="${k}" ${r.g===k?'selected':''}>${k} · ${esc(d)}</option>`).join('')}</select>
     <select data-gk="cat" aria-label="Balancing category"><option value="">W / M${pr.cat&&!c?' · says '+esc(pr.cat):''}</option>${Object.keys(CATS).map(k=>`<option value="${k}" ${c===k?'selected':''}>${k}</option>`).join('')}</select>
     <input type="number" step="0.5" min="0" max="7" inputmode="decimal" data-gk="ovr" placeholder="${calc===''?'Rating':esc(calc)}" value="${typeof r.ovr==='number'?r.ovr:''}" aria-label="Rating override. Replaces the table rating" title="Override replaces the table rating"></div>`}
-const SVT=()=>(window.firebase&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString();
 async function saveGrade(uid,sid,k,v){
   const cur=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{};
   const from={g:cur.g||'U',cat:cur.cat||null,ovr:typeof cur.ovr==='number'?cur.ovr:null};
