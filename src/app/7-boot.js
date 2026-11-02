@@ -22,15 +22,17 @@ S.contacts={};S.brand={};
       toast('Starter sessions and sample players are in.')}catch(e){console.warn('seed',e)}}
   const col=(path,fn)=>db.collection(path).onSnapshot(s=>{fn(s);done()},()=>done());
   const map=s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());return o};
+  S.sessData={db,map};
   col('profiles',s=>S.profiles=map(s));
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
-  col('sessions',s=>S.sessions=map(s));
+  col('sessions',s=>{S.sessions=map(s);courtSubs()});
   col('bookings',s=>S.bookings=map(s));
   col('posts',s=>S.posts=map(s));
-  col('live',s=>S.live=map(s));
-  col('games',s=>S.games=map(s));
-  col('scores',s=>S.scores=map(s));
+  /* Lean data: court data is loaded only for tonight's sessions, and paused while the app is in the background.
+     Older games load once, only when a screen needs them (your stats, the Rank board). */
+  done();done();done();
+  if(S.uid)myGamesLoad();
   if(S.uid)db.doc('checkins/'+S.uid).onSnapshot(d=>{S.myCI=d.exists?d.data():{};render()},()=>{});
   db.doc('config/codes').onSnapshot(d=>{S.codes=d.exists?(d.data().list||{}):{};render()},()=>{});
   db.collection('products').onSnapshot(s=>{S.products=map(s);if(S.view==='shop'||S.view==='admin')render()},()=>{});

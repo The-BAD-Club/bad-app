@@ -57,7 +57,7 @@ async function setLevel(uid,sp,v){try{const cur={...((S.levels[uid]||{}).levels|
 
 /* sample players (for trying the app) */
 async function removeSamples(quiet){
-  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);if(!ids.length)return;const set=new Set(ids);
+  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);if(!ids.length)return;await allGamesLoad();const set=new Set(ids);
   try{for(const id of ids){await S.db.doc('profiles/'+id).delete();await S.db.doc('bookings/'+id).delete()}
     for(const [gid,g] of Object.entries(S.games||{}))if([...(g.a||[]),...(g.b||[])].some(x=>set.has(x)))await S.db.doc('games/'+gid).delete();
     for(const [sid,lv] of Object.entries(S.live||{})){const j=JSON.stringify(lv);if(ids.some(i=>j.includes('"'+i+'"')))await S.db.doc('live/'+sid).delete()}
