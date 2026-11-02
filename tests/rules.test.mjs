@@ -263,3 +263,21 @@ test('no results for cancelled games', async () => {
   await seedGame({ st: 'cancelled' });
   await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), sub('p1', 'a', 21, 17)));
 });
+
+// ---------- BADDEST PLAYER ----------
+const award = by => ({ sid: SID, winners: ['p1'], top: [], by, at: serverTimestamp(), rev: 1, prev: [] });
+const baddest = (pts = 5) => ({ v: 2, synced: false, uid: 'p1', type: 'BADDEST PLAYER', pts, sid: SID, date: '2026-10-30', reason: 'BADDEST PLAYER' });
+test('admins for the sport award BADDEST PLAYER; players and other sports cannot', async () => {
+  await assertSucceeds(setDoc(doc(ctx('a1', 'cm@x.com'), 'awards', SID), award('a1')));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'awards', SID), award('p1')));
+  await assertFails(setDoc(doc(ctx('a1', 'cm@x.com'), 'awards', VSID), { ...award('a1'), sid: VSID }));   // volleyball isn't theirs
+});
+test('the +5 is created once per player per session and can never be edited or doubled', async () => {
+  const db = ctx('a1', 'cm@x.com'), ref = doc(db, 'ledger', `baddest-${SID}-p1`);
+  await assertFails(setDoc(doc(db, 'ledger', 'whatever'), baddest()));              // must use the fixed id
+  await assertFails(setDoc(ref, baddest(50)));                                       // only +5 or -5
+  await assertSucceeds(setDoc(ref, baddest()));
+  await assertFails(setDoc(ref, baddest()));                                         // a second write is an update: refused
+  await assertSucceeds(setDoc(doc(db, 'ledger', `baddest-${SID}-p1-undo1`), baddest(-5)));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'ledger', `baddest-${SID}-p1x`), baddest()));
+});

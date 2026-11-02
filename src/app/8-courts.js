@@ -30,6 +30,7 @@ function courtSubs(){
   if(!want.length){S.gSess={};mergeGames();return}
   for(const sid of want)S.subs.off.push(d.db.doc('live/'+sid).onSnapshot(x=>{if(x.exists)S.live[sid]=x.data();else delete S.live[sid];render()},()=>{}));
   S.subs.off.push(d.db.collection('games').where('sid','in',want).onSnapshot(s=>{S.gSess=d.map(s);mergeGames();render()},()=>{}));
+  S.subs.off.push(d.db.collection('awards').where('sid','in',want).onSnapshot(s=>{S.awards=d.map(s);render()},()=>{}));
   S.subs.off.push(d.db.collection('results').where('sid','in',want).onSnapshot(s=>{S.results=d.map(s);render()},()=>{}));
   if(S.canEdit||want.some(x=>isGM(x)))S.subs.off.push(d.db.collection('scores').onSnapshot(s=>{S.scores=d.map(s);render()},()=>{}));
 }
@@ -240,12 +241,13 @@ function renderCourts(){
     const benchMe=inn&&!loc&&!lv.out.includes(meId),rest=isRest(lv,meId),more=(lv.more||{})[meId];
     const legacy=myGames.filter(([,g])=>!v2(g));
     const todo=legacy.filter(([gid,g])=>!g.final&&!S.scores[meId]?.g?.[gid]).slice(-1)[0];
-    el.innerHTML=head+`${playerScoresHTML(sid)}${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
+    el.innerHTML=head+`${S.awards[sid]?standingsHTML(sid,false):''}${playerScoresHTML(sid)}${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
       ${inn&&!lv.out.includes(meId)?`<div class="row" style="gap:6px;margin-top:6px"><button class="btn sm ${rest?'':'ghost'} inv" data-act="rest" data-v="${rest?0:1}">${rest?ic('play')+'Ready to play':ic('clock')+'Sit out a game'}</button><button class="btn sm ghost inv" data-act="more" data-v="${more?0:1}" aria-pressed="${!!more}">${ic('plus')}${more?'Up for extra: on':'Up for extra games'}</button></div>`:''}</div>`:''}
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,false)).join('')}</div></div><aside class="side">
       ${lv.waiting.some(w=>w.on.some(Boolean))?`<div class="sec"><span class="label">Next</span><div class="waits">${lv.waiting.map((w,i)=>w.on.some(Boolean)?waitRow(sid,w,i,false):'').join('')}</div></div>`:''}
       ${bench.length?`<div class="sec"><span class="label">Bench</span><div class="bench">${bench.map((p,i)=>pl(sid,p,{n:i+1,lv})).join('')}</div></div>`:''}
       <p class="fine">Fewest games play first. Arrive late and you join one game behind.</p>
+      ${!S.awards[sid]?standingsHTML(sid,false):''}
       ${legacy.length?`<div class="sec"><span class="label">Earlier games · ${legacy.length}</span><div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,true)).join('')}</div></div>`:''}</aside></div>`;
     bindCourts(el);bindScores(el);return;
   }
@@ -279,11 +281,9 @@ function renderCourts(){
         ${Object.keys(ppl).filter(p=>!lv.checkin[p]).length?`<button class="btn ghost sm" data-act="step" data-n="2" style="justify-self:start">${ic('check')}${Object.keys(ppl).filter(p=>!lv.checkin[p]).length} not checked in</button>`:''}</div></aside></div>
       ${sel?`<div class="selbar">${pav(sid,sel)}<b style="flex:1;min-width:90px">${esc(who(sid,sel).name)}</b><div class="row" style="gap:6px">${locate(lv,sel)?`<button class="btn ghost sm" data-act="tobench">To bench</button>`:''}<button class="btn ghost sm" data-act="orest">${isRest(lv,sel)?'Ready':'Rest'}</button><button class="btn ghost sm" data-act="out">Left</button><button class="btn sm" data-act="unsel">${ic('x')}</button></div></div>`:''}`;
   }else{
-    const counts=Object.keys(ppl).map(p=>[p,gamesFor(sid,p)]).sort((a,b)=>b[1]-a[1]);
     const legacy=sessGames(sid).filter(([,g])=>!v2(g));
     body=`${supportHTML(sid)}${typeof standingsHTML==='function'?standingsHTML(sid,true):''}${legacy.length?`<div class="tile"><b>${ic('play')} Earlier games · ${legacy.length}</b><p class="fine">Logged before score checks. Confirm or correct them here.</p>
-        <div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')}</div></div>`:''}
-      <div class="tile"><b>${ic('users')} Games per player</b><div class="list">${counts.map(([p,n])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<span>${esc(who(sid,p).name)}</span><b class="num">${n}</b></div>`).join('')}</div></div>`;
+        <div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')}</div></div>`:''}`;
   }
   el.innerHTML=head+stepper()+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));

@@ -761,6 +761,15 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .plan .fine svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
 .court .cfoot{justify-content:flex-end;gap:10px;align-items:center}.court .cfoot .btn.wide{flex:1;max-width:220px}
 .court.on{box-shadow:inset 0 0 0 1.5px var(--ink)}.court .fmt{min-height:28px}
+.scorein{display:grid;gap:8px;margin-top:8px}.scorein .sl{display:grid;grid-template-columns:minmax(0,1fr) 76px;align-items:center;gap:12px;font-size:.9rem}
+.scorein .sl span{overflow:hidden;text-overflow:ellipsis}.scorein .sc{width:76px;text-align:center;font-size:1.25rem;font-weight:700;min-height:48px}
+.scorein .schint{min-height:1em;margin:0}.scorein .scnote{width:100%}
+.qrow .qact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.qrow .qact .scorein{flex:1 1 100%}
+.qgroup .li{grid-template-columns:minmax(0,1fr)}
+.standings .stable{display:grid;margin-top:10px}.standings .sr{display:grid;grid-template-columns:28px minmax(0,1fr) 52px 48px;gap:8px;padding:9px 0;border-bottom:1px solid var(--rule);align-items:baseline;font-size:.92rem}
+.standings .sr.sh{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding-top:0}.standings .sr>:nth-child(3),.standings .sr>:nth-child(4){text-align:right}
+.standings .sr.top{font-weight:700}.standings .sr.me{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.baddest{display:grid;gap:2px;text-align:center;padding:18px 12px;margin-bottom:12px;border:1px solid var(--ink);border-radius:var(--r)}.baddest b{font-family:var(--f-serif);font-size:2rem;font-weight:400;line-height:1.1}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1895,6 +1904,7 @@ function courtSubs(){
   if(!want.length){S.gSess={};mergeGames();return}
   for(const sid of want)S.subs.off.push(d.db.doc('live/'+sid).onSnapshot(x=>{if(x.exists)S.live[sid]=x.data();else delete S.live[sid];render()},()=>{}));
   S.subs.off.push(d.db.collection('games').where('sid','in',want).onSnapshot(s=>{S.gSess=d.map(s);mergeGames();render()},()=>{}));
+  S.subs.off.push(d.db.collection('awards').where('sid','in',want).onSnapshot(s=>{S.awards=d.map(s);render()},()=>{}));
   S.subs.off.push(d.db.collection('results').where('sid','in',want).onSnapshot(s=>{S.results=d.map(s);render()},()=>{}));
   if(S.canEdit||want.some(x=>isGM(x)))S.subs.off.push(d.db.collection('scores').onSnapshot(s=>{S.scores=d.map(s);render()},()=>{}));
 }
@@ -2105,12 +2115,13 @@ function renderCourts(){
     const benchMe=inn&&!loc&&!lv.out.includes(meId),rest=isRest(lv,meId),more=(lv.more||{})[meId];
     const legacy=myGames.filter(([,g])=>!v2(g));
     const todo=legacy.filter(([gid,g])=>!g.final&&!S.scores[meId]?.g?.[gid]).slice(-1)[0];
-    el.innerHTML=head+`${playerScoresHTML(sid)}${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
+    el.innerHTML=head+`${S.awards[sid]?standingsHTML(sid,false):''}${playerScoresHTML(sid)}${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
       ${inn&&!lv.out.includes(meId)?`<div class="row" style="gap:6px;margin-top:6px"><button class="btn sm ${rest?'':'ghost'} inv" data-act="rest" data-v="${rest?0:1}">${rest?ic('play')+'Ready to play':ic('clock')+'Sit out a game'}</button><button class="btn sm ghost inv" data-act="more" data-v="${more?0:1}" aria-pressed="${!!more}">${ic('plus')}${more?'Up for extra: on':'Up for extra games'}</button></div>`:''}</div>`:''}
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,false)).join('')}</div></div><aside class="side">
       ${lv.waiting.some(w=>w.on.some(Boolean))?`<div class="sec"><span class="label">Next</span><div class="waits">${lv.waiting.map((w,i)=>w.on.some(Boolean)?waitRow(sid,w,i,false):'').join('')}</div></div>`:''}
       ${bench.length?`<div class="sec"><span class="label">Bench</span><div class="bench">${bench.map((p,i)=>pl(sid,p,{n:i+1,lv})).join('')}</div></div>`:''}
       <p class="fine">Fewest games play first. Arrive late and you join one game behind.</p>
+      ${!S.awards[sid]?standingsHTML(sid,false):''}
       ${legacy.length?`<div class="sec"><span class="label">Earlier games · ${legacy.length}</span><div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,true)).join('')}</div></div>`:''}</aside></div>`;
     bindCourts(el);bindScores(el);return;
   }
@@ -2144,11 +2155,9 @@ function renderCourts(){
         ${Object.keys(ppl).filter(p=>!lv.checkin[p]).length?`<button class="btn ghost sm" data-act="step" data-n="2" style="justify-self:start">${ic('check')}${Object.keys(ppl).filter(p=>!lv.checkin[p]).length} not checked in</button>`:''}</div></aside></div>
       ${sel?`<div class="selbar">${pav(sid,sel)}<b style="flex:1;min-width:90px">${esc(who(sid,sel).name)}</b><div class="row" style="gap:6px">${locate(lv,sel)?`<button class="btn ghost sm" data-act="tobench">To bench</button>`:''}<button class="btn ghost sm" data-act="orest">${isRest(lv,sel)?'Ready':'Rest'}</button><button class="btn ghost sm" data-act="out">Left</button><button class="btn sm" data-act="unsel">${ic('x')}</button></div></div>`:''}`;
   }else{
-    const counts=Object.keys(ppl).map(p=>[p,gamesFor(sid,p)]).sort((a,b)=>b[1]-a[1]);
     const legacy=sessGames(sid).filter(([,g])=>!v2(g));
     body=`${supportHTML(sid)}${typeof standingsHTML==='function'?standingsHTML(sid,true):''}${legacy.length?`<div class="tile"><b>${ic('play')} Earlier games · ${legacy.length}</b><p class="fine">Logged before score checks. Confirm or correct them here.</p>
-        <div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')}</div></div>`:''}
-      <div class="tile"><b>${ic('users')} Games per player</b><div class="list">${counts.map(([p,n])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<span>${esc(who(sid,p).name)}</span><b class="num">${n}</b></div>`).join('')}</div></div>`;
+        <div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')}</div></div>`:''}`;
   }
   el.innerHTML=head+stepper()+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
@@ -2345,6 +2354,7 @@ async function scoreAct(b){const k=b.dataset.sc,gid=b.dataset.gid,g=gid&&S.games
   if(k==='sedit'){S.sedit[gid]=true;return renderCourts()}
   if(k==='correct'){correctFor=gid;const f=g.final||[];scoreDraft[gid]={x:f[0],y:f[1]};return renderCourts()}
   if(k==='nocorrect'){correctFor=null;return renderCourts()}
+  if(k==='award'){await awardSession(S.courtSid);return renderCourts()}
   const ref=S.db.doc('results/'+gid),cur=resOf(gid);
   try{
     if(k==='submit'){const t=teamOf(g,S.uid);if(!t)return;const v=readDraft(gid,g,t==='b');if(!v)return;
@@ -2372,6 +2382,36 @@ function bindScores(el){
   el.querySelectorAll('[data-scgid] [data-scx]').forEach(x=>x.oninput=()=>{const gid=x.closest('[data-scgid]').dataset.scgid,d=scoreDraft[gid]=scoreDraft[gid]||{};d[x.dataset.scx]=x.value;
     const g=S.games[gid],h=x.closest('[data-scgid]').querySelector('.schint');if(h&&g&&x.dataset.scx!=='note')h.textContent=d.x!==undefined&&d.y!==undefined&&d.x!==''&&d.y!==''?BADMATH.scoreHint(fmtOf(g),d.x,d.y):''});
   el.querySelectorAll('[data-sc]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();scoreAct(b)})}
+
+/* ---------- session standings and BADDEST PLAYER ----------
+   Only final scores count. Most wins, then most points (scaled to a 21-point game), then fewer games. Exact ties share the title. */
+S.awards={};
+function sessStandings(sid){return BADMATH.standings(liveGames(sid).filter(([,g])=>v2(g)&&g.st==='final'&&g.final).map(([,g])=>({a:g.a,b:g.b,score:g.final,fmt:fmtOf(g)})))}
+const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
+function standingsHTML(sid,crew){const rows=sessStandings(sid),aw=S.awards[sid],pend=supportCount(sid),s=S.sessions[sid];
+  if(!rows.length)return crew?`<div class="tile"><b>${ic('board')} Standings</b><p class="fine">They appear as soon as the first score is final.</p></div>`:'';
+  const win=BADMATH.winners(rows),changed=aw&&!sameSet(aw.winners||[],win);
+  const admin=S.canEdit&&canSport((s||{}).sport||'badminton');
+  const badd=aw?`<div class="baddest"><span class="label">BADDEST PLAYER${(aw.winners||[]).length>1?'S':''}</span><b>${(aw.winners||[]).map(p=>esc(nm(sid,p))).join(' & ')}</b><span class="fine">+5 points${(aw.winners||[]).some(p=>!S.profiles[p])?' · guests need a card to collect points':''}</span></div>`:'';
+  const fin=!crew||!admin?'':pend?`<p class="fine">Finalise the ${pend} score${pend===1?'':'s'} above, then finalise the session to award BADDEST PLAYER.</p>`
+    :`<div class="row" style="gap:8px;align-items:center"><button class="btn sm" data-sc="award">${ic('star')}${aw?(changed?'Update the award':'Award again'):'Finalise session · award BADDEST PLAYER'}</button>${changed?`<span class="fine">Standings changed after a correction.</span>`:''}</div>`;
+  return `<div class="tile standings">${badd}<div class="sec-h"><b>${ic('board')} ${aw?'Final standings':'Standings · live'}</b><span class="fine">Wins, then points</span></div>
+    <div class="stable" role="table" aria-label="Session standings"><div class="sr sh" role="row"><span>#</span><span>Player</span><span>W–L</span><span>Pts</span></div>
+    ${rows.map(r=>`<div class="sr${r.id===S.uid?' me':''}${r.rank===1?' top':''}" role="row"><span class="num">${r.rank}</span><span>${esc(r.id===S.uid?'You':nm(sid,r.id))}${crew?`<small class="fine"> · ${r.played} games · ${r.diff>0?'+':''}${r.diff}</small>`:''}</span><span class="num">${r.wins}–${r.losses}</span><span class="num">${Number.isInteger(r.sp)?r.sp:r.sp.toFixed(1)}</span></div>`).join('')}</div>
+    <p class="fine">Points from 30-point games are scaled to 21 so every game counts the same. Win % and point difference are for interest only.</p>${fin}</div>`}
+/* admin: finalise the session. One award per session; a later correction updates it with a reversal entry, never a second +5. */
+async function awardSession(sid){const s=S.sessions[sid],rows=sessStandings(sid),win=BADMATH.winners(rows);if(!win.length){toast('No final scores yet.');return}
+  const prev=(S.awards[sid]||{}).winners||[],t=`${s.title||'Badminton'} · ${fmtD(s.date)}`,dept=sportOf(s.sport).club;
+  const have=new Set((S.ledger||[]).map(e=>e._id));let n=0;
+  try{
+    for(const uid of win)if(S.profiles[uid]&&!prev.includes(uid)){const id=`baddest-${sid}-${uid}`;
+      if(!have.has(id)){await addLedger(id,{uid,type:'BADDEST PLAYER',pts:5,dept,date:s.date,sid,reason:'BADDEST PLAYER · '+t});n++}}
+    for(const uid of prev)if(S.profiles[uid]&&!win.includes(uid)){const k=(S.ledger||[]).filter(e=>String(e._id).startsWith(`baddest-${sid}-${uid}-undo`)).length;
+      await addLedger(`baddest-${sid}-${uid}-undo${k+1}`,{uid,type:'BADDEST PLAYER',pts:-5,dept,date:s.date,sid,reason:'BADDEST PLAYER changed after a correction · '+t})}
+    const top=rows.slice(0,5).map(r=>({id:r.id,rank:r.rank,wins:r.wins,sp:r.sp,played:r.played}));
+    await S.db.doc('awards/'+sid).set({sid,winners:win,top,by:S.uid,at:SVT(),rev:((S.awards[sid]||{}).rev||0)+1,prev:prev});
+    toast(`BADDEST PLAYER: ${win.map(p=>nm(sid,p)).join(' & ')}${n?` · +5 points`:''}`)}
+  catch(e){console.warn(e);toast("Sorry, the award didn't save. Please try again.")}}
 
 /* ---------- QR check-in, rest / extra games, levels ---------- */
 const APP_URL=window.BAD_WEB?location.origin+location.pathname:'https://claude.ai/artifact/2WfMUPuiwZQBxY6TFkBAMk';

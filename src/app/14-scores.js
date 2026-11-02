@@ -84,6 +84,7 @@ async function scoreAct(b){const k=b.dataset.sc,gid=b.dataset.gid,g=gid&&S.games
   if(k==='sedit'){S.sedit[gid]=true;return renderCourts()}
   if(k==='correct'){correctFor=gid;const f=g.final||[];scoreDraft[gid]={x:f[0],y:f[1]};return renderCourts()}
   if(k==='nocorrect'){correctFor=null;return renderCourts()}
+  if(k==='award'){await awardSession(S.courtSid);return renderCourts()}
   const ref=S.db.doc('results/'+gid),cur=resOf(gid);
   try{
     if(k==='submit'){const t=teamOf(g,S.uid);if(!t)return;const v=readDraft(gid,g,t==='b');if(!v)return;
@@ -111,3 +112,33 @@ function bindScores(el){
   el.querySelectorAll('[data-scgid] [data-scx]').forEach(x=>x.oninput=()=>{const gid=x.closest('[data-scgid]').dataset.scgid,d=scoreDraft[gid]=scoreDraft[gid]||{};d[x.dataset.scx]=x.value;
     const g=S.games[gid],h=x.closest('[data-scgid]').querySelector('.schint');if(h&&g&&x.dataset.scx!=='note')h.textContent=d.x!==undefined&&d.y!==undefined&&d.x!==''&&d.y!==''?BADMATH.scoreHint(fmtOf(g),d.x,d.y):''});
   el.querySelectorAll('[data-sc]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();scoreAct(b)})}
+
+/* ---------- session standings and BADDEST PLAYER ----------
+   Only final scores count. Most wins, then most points (scaled to a 21-point game), then fewer games. Exact ties share the title. */
+S.awards={};
+function sessStandings(sid){return BADMATH.standings(liveGames(sid).filter(([,g])=>v2(g)&&g.st==='final'&&g.final).map(([,g])=>({a:g.a,b:g.b,score:g.final,fmt:fmtOf(g)})))}
+const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
+function standingsHTML(sid,crew){const rows=sessStandings(sid),aw=S.awards[sid],pend=supportCount(sid),s=S.sessions[sid];
+  if(!rows.length)return crew?`<div class="tile"><b>${ic('board')} Standings</b><p class="fine">They appear as soon as the first score is final.</p></div>`:'';
+  const win=BADMATH.winners(rows),changed=aw&&!sameSet(aw.winners||[],win);
+  const admin=S.canEdit&&canSport((s||{}).sport||'badminton');
+  const badd=aw?`<div class="baddest"><span class="label">BADDEST PLAYER${(aw.winners||[]).length>1?'S':''}</span><b>${(aw.winners||[]).map(p=>esc(nm(sid,p))).join(' & ')}</b><span class="fine">+5 points${(aw.winners||[]).some(p=>!S.profiles[p])?' · guests need a card to collect points':''}</span></div>`:'';
+  const fin=!crew||!admin?'':pend?`<p class="fine">Finalise the ${pend} score${pend===1?'':'s'} above, then finalise the session to award BADDEST PLAYER.</p>`
+    :`<div class="row" style="gap:8px;align-items:center"><button class="btn sm" data-sc="award">${ic('star')}${aw?(changed?'Update the award':'Award again'):'Finalise session · award BADDEST PLAYER'}</button>${changed?`<span class="fine">Standings changed after a correction.</span>`:''}</div>`;
+  return `<div class="tile standings">${badd}<div class="sec-h"><b>${ic('board')} ${aw?'Final standings':'Standings · live'}</b><span class="fine">Wins, then points</span></div>
+    <div class="stable" role="table" aria-label="Session standings"><div class="sr sh" role="row"><span>#</span><span>Player</span><span>W–L</span><span>Pts</span></div>
+    ${rows.map(r=>`<div class="sr${r.id===S.uid?' me':''}${r.rank===1?' top':''}" role="row"><span class="num">${r.rank}</span><span>${esc(r.id===S.uid?'You':nm(sid,r.id))}${crew?`<small class="fine"> · ${r.played} games · ${r.diff>0?'+':''}${r.diff}</small>`:''}</span><span class="num">${r.wins}–${r.losses}</span><span class="num">${Number.isInteger(r.sp)?r.sp:r.sp.toFixed(1)}</span></div>`).join('')}</div>
+    <p class="fine">Points from 30-point games are scaled to 21 so every game counts the same. Win % and point difference are for interest only.</p>${fin}</div>`}
+/* admin: finalise the session. One award per session; a later correction updates it with a reversal entry, never a second +5. */
+async function awardSession(sid){const s=S.sessions[sid],rows=sessStandings(sid),win=BADMATH.winners(rows);if(!win.length){toast('No final scores yet.');return}
+  const prev=(S.awards[sid]||{}).winners||[],t=`${s.title||'Badminton'} · ${fmtD(s.date)}`,dept=sportOf(s.sport).club;
+  const have=new Set((S.ledger||[]).map(e=>e._id));let n=0;
+  try{
+    for(const uid of win)if(S.profiles[uid]&&!prev.includes(uid)){const id=`baddest-${sid}-${uid}`;
+      if(!have.has(id)){await addLedger(id,{uid,type:'BADDEST PLAYER',pts:5,dept,date:s.date,sid,reason:'BADDEST PLAYER · '+t});n++}}
+    for(const uid of prev)if(S.profiles[uid]&&!win.includes(uid)){const k=(S.ledger||[]).filter(e=>String(e._id).startsWith(`baddest-${sid}-${uid}-undo`)).length;
+      await addLedger(`baddest-${sid}-${uid}-undo${k+1}`,{uid,type:'BADDEST PLAYER',pts:-5,dept,date:s.date,sid,reason:'BADDEST PLAYER changed after a correction · '+t})}
+    const top=rows.slice(0,5).map(r=>({id:r.id,rank:r.rank,wins:r.wins,sp:r.sp,played:r.played}));
+    await S.db.doc('awards/'+sid).set({sid,winners:win,top,by:S.uid,at:SVT(),rev:((S.awards[sid]||{}).rev||0)+1,prev:prev});
+    toast(`BADDEST PLAYER: ${win.map(p=>nm(sid,p)).join(' & ')}${n?` · +5 points`:''}`)}
+  catch(e){console.warn(e);toast("Sorry, the award didn't save. Please try again.")}}
