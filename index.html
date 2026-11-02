@@ -777,6 +777,7 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .pc .ph{-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 42%,rgba(0,0,0,.55) 68%,rgba(0,0,0,.18) 86%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 42%,rgba(0,0,0,.55) 68%,rgba(0,0,0,.18) 86%,transparent 100%);bottom:30%!important}
 .pc .ph::after,.pc.member .ph::after{display:none}
 #a-plist .glevel{grid-column:2/-1;display:grid;gap:6px;min-width:0;margin-top:2px}.glevel .gpick{max-width:420px;min-width:0}.glevel .gpick select{min-width:0;max-width:100%;text-overflow:ellipsis}
+.walkin{display:grid;gap:8px;margin-top:6px;padding-top:12px;border-top:1px solid var(--rule)}.walkin select{width:100%}.ci-lvl{grid-column:3/-1;min-width:0}.ci-lvl:empty{display:none}.ci-lvl .gpick{max-width:420px}.ci-lvl .gpick select{min-width:0;max-width:100%}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -2013,7 +2014,7 @@ function benchOf(sid,lv){norm(lv);const p=placed(lv),out=new Set(lv.out);
   return [...ord.filter(x=>!isRest(lv,x)),...ord.filter(x=>isRest(lv,x))]}
 /* one player as the rotation sees them */
 function rotP(sid,lv,id){return {id,g:gamesFor(sid,id),base:(lv.base||{})[id]||0,since:msOf(lv.avail[id]||lv.checkin[id])||0,deferred:(lv.defer||{})[id]||0,
-  rating:S.profiles[id]?badRating(id):null,cat:S.profiles[id]?catOf(id):null}}
+  rating:S.profiles[id]?badRating(id):boardRating(lv,id),cat:S.profiles[id]?catOf(id):(boardLvl(lv,id).cat||null)}}
 /* lineups already played or prepared, so fresh partners and opponents are preferred */
 function lineups(sid,lv){const h=liveGames(sid).map(([,g])=>({a:g.a,b:g.b}));
   for(const c of [...lv.courts,...lv.waiting]){const half=c.size/2,a=c.on.slice(0,half).filter(Boolean),b=c.on.slice(half).filter(Boolean);if(a.length&&b.length)h.push({a,b})}return h}
@@ -2044,7 +2045,7 @@ function startBoard(sid){const sp=S.sessions[sid].sport||'badminton',size=SIZES[
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
-S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='';
+S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='';
 const CANCEL_REASONS=['Injury','Player had to leave','Wrong lineup','Court problem','Other'];
 /* timers on playing courts tick once a minute without redrawing the board */
 setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m)/60000))+' min'}),20000);
@@ -2074,6 +2075,13 @@ function waitRow(sid,w,wi,edit){
   return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span>${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</div>
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
+/* guests and walk-ins have no card, so their level and category live on tonight's board */
+const boardLvl=(lv,pid)=>((lv&&lv.lvl)||{})[pid]||{};
+function boardRating(lv,pid){const x=boardLvl(lv,pid),r=gradeRow(x.g);return r&&x.cat?(x.cat==='W'?r[2]:r[3]):null}
+function guestPick(lv,pid){const x=boardLvl(lv,pid),r=boardRating(lv,pid);
+  return `<div class="gpick" data-bp="${esc(pid)}"><select data-bk="g" aria-label="BAD level"><option value="U">UNRATED</option>${GRADES.map(([k,d])=>`<option value="${k}" ${x.g===k?'selected':''}>${k} · ${esc(d)}</option>`).join('')}</select>
+    <select data-bk="cat" aria-label="Category"><option value="">W / M</option>${Object.keys(CATS).map(k=>`<option value="${k}" ${x.cat===k?'selected':''}>${k}</option>`).join('')}</select>
+    <label class="grate"><span>Rating</span><input type="text" value="${r==null?'—':r}" disabled aria-label="Balancing rating from the level"></label></div>`}
 /* crew and Game Masters verify the BAD grade and category; an optional rating override replaces the table rating */
 function gradePick(uid,sid){const r=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{},c=r.cat||'',g=gradeRow(r.g||''),cc=c||pr.cat,calc=g&&cc?(cc==='W'?g[2]:g[3]):null;
   const adj=typeof r.ovr==='number',val=adj?r.ovr:calc;
@@ -2156,8 +2164,13 @@ function renderCourts(){
         <p class="fine">Players scan the code when they arrive. You can also check people in by name below, for guests or anyone without their phone.</p>
         <input type="text" id="ci-find" placeholder="Find a player" autocomplete="off">
         <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button></div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
-        <div class="row"><input type="text" id="walk-name" maxlength="24" placeholder="Walk-in player's name" style="flex:1;min-width:160px"><button class="btn ghost sm" data-act="walk">${ic('guest')}Add and check in</button></div></div>
-      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
+        <div class="walkin"><span class="label">Walk-in</span>
+          <input type="text" id="walk-name" maxlength="24" placeholder="Name: search members or add a walk-in" autocomplete="off">
+          <div id="walk-sugg" class="list" aria-live="polite"></div>
+          ${(s.sport||'badminton')==='badminton'?`<select id="walk-g" aria-label="Walk-in BAD level"><option value="U">Level: UNRATED</option>${GRADES.map(([k,d])=>`<option value="${k}">${k} · ${esc(d)}</option>`).join('')}</select>
+            <div class="chips" role="group" aria-label="Walk-in category">${Object.entries(CATS).map(([k,l])=>`<button type="button" class="chip sm" data-act="walkcat" data-v="${k}" aria-pressed="${walkCat===k}">${l}</button>`).join('')}</div>`:''}
+          <button class="btn ghost sm" data-act="walk" style="justify-self:start">${ic('guest')}Add and check in</button></div></div>
+      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div></div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}<div class="ci-lvl">${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):((s.sport||'badminton')==='badminton'?guestPick(lv,p):'')}</div></div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       <button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`;
   }else if(S.courtStep===3){
     body=`${planTile(sid,lv,false)}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
@@ -2176,6 +2189,14 @@ function renderCourts(){
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
   el.querySelectorAll('[data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,S.courtSid,x.dataset.gk,x.value));
   el.querySelectorAll('[data-greset]').forEach(x=>x.onclick=()=>saveGrade(x.dataset.greset,S.courtSid,'ovr',''));
+  el.querySelectorAll('[data-bp] [data-bk]').forEach(x=>x.onchange=()=>{const sid=S.courtSid,pid=x.closest('[data-bp]').dataset.bp,lv=norm(clone(S.live[sid]));
+    const cur={...boardLvl(lv,pid)};if(x.dataset.bk==='g')cur.g=gradeRow(x.value)?x.value:'U';else cur.cat=CATS[x.value]?x.value:null;
+    lv.lvl={...(lv.lvl||{}),[pid]:cur};toast(`${who(sid,pid).name}: ${gradeRow(cur.g)?cur.g:'UNRATED'}${cur.cat?' - '+cur.cat:''}. Saved for tonight.`);saveLive(sid,lv)});
+  const wn=$('walk-name');if(wn)wn.oninput=()=>{const q=wn.value.trim().toLowerCase(),box=$('walk-sugg');if(!box)return;if(q.length<2){box.innerHTML='';return}
+    const lv0=S.live[sid]||{},taken=new Set([...Object.keys(people(sid)),...Object.keys(lv0.checkin||{})]);
+    const hits=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&!taken.has(u)&&[(p.nickname||''),(p.listName||'')].some(x=>x.toLowerCase().includes(q))).slice(0,5);
+    box.innerHTML=hits.length?`<span class="label">Members</span>${hits.map(([u,p])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">${esc(gradeLabel(u))}${p.listName&&p.listName!==p.nickname?' · '+esc(p.listName):''}</div></div><button class="btn sm" data-act="memberin" data-pid="${esc(u)}">${ic('check')}Check in</button></div>`).join('')}<span class="fine">Not them? Add as a walk-in below.</span>`:'<span class="fine">No member with that name. Add them as a walk-in below.</span>';
+    box.querySelectorAll('[data-act=memberin]').forEach(b=>b.onmousedown=e=>e.preventDefault())};
   const fd=$('ci-find');if(fd)fd.oninput=e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#ci-list .ci').forEach(r=>r.hidden=q&&!r.dataset.name.includes(q))};
   bindCourts(el);bindScores(el);
 }
@@ -2227,8 +2248,14 @@ function bindCourts(el){el.onclick=async ev=>{
   if(act==='tobench'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);sel=null;return saveLive(sid,lv)}
   if(act==='out'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
   if(act==='restore'){lv.out=lv.out.filter(x=>x!==b.dataset.pid);return saveLive(sid,lv)}
+  if(act==='memberin'){const u=b.dataset.pid,pp=S.profiles[u];if(!pp)return;
+    if(S.canEdit&&canSport(sp)&&!S.bookings[u]?.s?.[sid]){try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:pp.listKey||'',s:(S.bookings[u]||{}).s||{}})}catch(e){toast("Couldn't add them to the session list, but they're checked in.")}}
+    setBase(sid,lv,u);lv.checkin[u]=new Date().toISOString();const wn=$('walk-name');if(wn){wn.value='';wn.blur()}
+    toast(`${pp.nickname} is checked in${S.canEdit&&canSport(sp)?' and on the session list':''}.`);return saveLive(sid,lv)}
+  if(act==='walkcat'){walkCat=walkCat===b.dataset.v?'':b.dataset.v;document.querySelectorAll('[data-act=walkcat]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===walkCat));return}
   if(act==='walk'){const n=$('walk-name').value.trim().slice(0,24);if(!n){toast("Please type the player's name.");return}
-    const wid=slug(n)+'-'+Date.now().toString(36);lv.walkins.push({id:wid,name:n});setBase(sid,lv,'w~'+wid);lv.checkin['w~'+wid]=new Date().toISOString();toast(`${n} is checked in.`);return saveLive(sid,lv)}
+    const wid=slug(n)+'-'+Date.now().toString(36),wg=($('walk-g')||{}).value||'U';lv.walkins.push({id:wid,name:n});
+    lv.lvl={...(lv.lvl||{}),['w~'+wid]:{g:gradeRow(wg)?wg:'U',cat:CATS[walkCat]?walkCat:null}};walkCat='';setBase(sid,lv,'w~'+wid);lv.checkin['w~'+wid]=new Date().toISOString();toast(`${n} is checked in.`);return saveLive(sid,lv)}
   if(act==='add'){const k=b.dataset.k,size=(k==='w'&&lv.courts[0]?.size)||SIZES[sp][0][0];
     if(k==='c')lv.courts.push({id:'c'+Date.now().toString(36),name:'Court '+(lv.courts.length+1),size,on:blank(size)});else lv.waiting.push({id:'w'+Date.now().toString(36),size,on:blank(size)});return saveLive(sid,lv)}
   if(act==='wless'){const i=lv.waiting.map(w=>w.on.some(Boolean)).lastIndexOf(false);lv.waiting.splice(i>=0?i:lv.waiting.length-1,1);return saveLive(sid,lv)}
@@ -2443,7 +2470,7 @@ function qrData(text,size=240){const k=size+'|'+text;if(_qrCache[k])return _qrCa
 const newCode=()=>Math.random().toString(36).slice(2,8).padEnd(6,'x');
 const ownLevel=(uid,sp)=>{const p=S.profiles[uid];if(!p)return null;return p.levels&&p.levels[sp]!=null?p.levels[sp]:(p.level??null)};
 const effLevel=(uid,sp)=>{const o=S.levels[uid];if(o&&o.levels&&o.levels[sp]!=null)return o.levels[sp];if(o&&o.level!=null&&!o.levels)return o.level;return ownLevel(uid,sp)};
-const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
+const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){if(!S.profiles[uid]){const x=boardLvl(S.live[S.courtSid],uid);return gradeRow(x.g)?x.g+(x.cat?' '+x.cat:''):'Unrated'}const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
 
 /* player: complete a scanned check-in */
 async function processCheckin(){
