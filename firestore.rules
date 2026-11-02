@@ -55,7 +55,9 @@ service cloud.firestore {
     }
     function validSession(d) {
       return str(d.sport, 20) && str(d.title, 80) && str(d.date, 10) && (!('fee' in d) || d.fee is number) && (!('capacity' in d) || d.capacity is int)
-        && (!('gms' in d) || (d.gms is list && d.gms.size() <= 4));
+        && (!('gms' in d) || (d.gms is list && d.gms.size() <= 4))
+        && (!('waitCap' in d) || d.waitCap == null || (d.waitCap is int && d.waitCap >= 0))
+        && (!('courts' in d) || d.courts == null || (d.courts is int && d.courts >= 1 && d.courts <= 8));
     }
 
     match /posts/{id} {

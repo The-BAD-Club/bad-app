@@ -79,7 +79,9 @@ function aSessions(list,up){
       <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
       <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
       <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
-      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:20}"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:newSport==='badminton'?16:20}"></div>
+      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${newSport==='badminton'?4:''}"></div>
+      ${COURT_SPORTS.includes(newSport)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${DEF_COURTS[newSport]||1}"></div>`:''}
       <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div>
       <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens"><p class="fine">Leave blank to open straight away. Member level and up can join 24 hours before this.</p></div></div>
     <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc"> Time to be confirmed</label>
@@ -197,7 +199,7 @@ function bindAdmin(){
   q('[data-nsp]').forEach(b=>b.onclick=()=>{newSport=b.dataset.nsp;renderAdmin()});
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
-    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
     const lk=$('p-link').value.trim()||S.site?.url||'';if(!/^https:\/\//.test(lk)){toast(S.site?.url?'Please use a full https:// link.':'Please add a link, or set the BAD site link in Settings.');return}$('p-link').value=lk;
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};

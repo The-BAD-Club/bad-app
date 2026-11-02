@@ -756,6 +756,9 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .gpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.gpick select,.gpick input{min-height:36px;font-size:.85rem;padding:4px 8px}.gpick input{width:78px}
 @media (max-width:760px){#v-create .pc .hd,.mini .pc .hd{font-size:.48rem;letter-spacing:.14em}#v-create .pc .hd img,.mini .pc .hd img{height:12px}}
 .gpick select{width:auto}.gpick [data-gk=g]{flex:1 1 100%}.gpick [data-gk=cat]{flex:1 1 0;min-width:0}.gpick [data-gk=ovr]{flex:0 0 72px}
+.plan p{margin:6px 0 0}.plan .warnbox{margin-top:10px;border:1px dashed var(--rule);background:transparent}
+.planctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}.planctl>div{display:grid;gap:4px}
+.plan .fine svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1452,7 +1455,9 @@ function roster(sid){
   /* Core level and up skip ahead of the waitlist */
   const active=sorted.slice(0,cap).concat(sorted.slice(cap).sort((a,b)=>pri(b)-pri(a)||a.at.localeCompare(b.at)));
   const late=all.filter(e=>e.out).map(e=>{const ahead=all.filter(o=>o.at<e.at&&(!o.out||o.out>e.out)).length;return{...e,wasIn:ahead<cap,fee:feeFor(s,e.out)}}).filter(e=>e.wasIn&&e.fee.amount>0);
-  return{cap,in:active.slice(0,cap),wait:active.slice(cap),late};
+  /* the waiting list can have a limit (badminton: 4); anyone past it is turned away when they try to join */
+  const wc=s&&s.waitCap!=null&&s.waitCap!==''?Number(s.waitCap):Infinity;
+  return{cap,wc,in:active.slice(0,cap),wait:active.slice(cap,cap+wc),over:active.slice(cap+wc),late};
 }
 function feeFor(s,whenIso){const h=(sessStart(s)-new Date(whenIso))/36e5,f=Number(s.fee)||0;
   if(h>=CFG.freeHours)return{amount:0,label:'No charge'};if(h>=CFG.halfHours)return{amount:f/2,label:'Half fee'};return{amount:f,label:'Full fee'}}
@@ -1467,7 +1472,8 @@ const freshEntry=(pay,at)=>({at:at||new Date().toISOString(),t:SVT(),guests:[],p
 async function staffBooking(uid,sid,fn,base){const cur=S.bookings[uid]||base||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
   const e=fn(o);if(e===undefined)return;if(e===null)delete s[sid];else s[sid]=e;
   const {op,u,...rest}=cur;await S.db.doc('bookings/'+uid).set({...rest,s,op:{sid,kind:'admin'},u:SVT()})}
-async function join(sid,pay){try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
+const isFull=sid=>{const r=roster(sid);return r.in.length>=r.cap&&r.wait.length>=r.wc&&!(typeof perk!=='undefined'&&perk.skipWait(S.uid))};
+async function join(sid,pay){if(isFull(sid)){toast('Sorry, this session and its waiting list are full.');return}try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
 async function setPay(sid,pay){try{await saveBooking(sid,'pay',o=>{const x={...o,pay};delete x.sent;return x});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function markSent(sid){try{await saveBooking(sid,'pay',o=>({...o,sent:new Date().toISOString()}));toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
 async function unmarkSent(sid){try{await saveBooking(sid,'pay',o=>{const x={...o};delete x.sent;return x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
@@ -1520,7 +1526,7 @@ function sessCard(sid,s){const me=myProfile();
     else if(wpos>=0){status=`<span class="tagl">Waitlist #${wpos+1}</span>`;actions=`<button class="btn ghost sm" data-wout="${sid}">Leave waitlist</button>`}
     else if(me&&!started){const ss=signupState(s,S.uid),fmtO=t=>new Date(t).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
       if(!ss.open)status=`<span class="tagl">Sign-ups open ${esc(fmtO(ss.opens))}</span>`;
-      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':'Join waitlist'):'Count me in'}</button>`}}
+      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=r.in.length>=r.cap&&r.wait.length>=r.wc&&!perk.skipWait(S.uid)?`<span class="tagl warn">Full · waiting list full</span>`:`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':`Join waitlist${r.wc<Infinity?` · ${r.wc-r.wait.length} left`:''}`):'Count me in'}</button>`}}
     let conf='';
     if(pendingOut&&pendingOut.sid===sid){const f=feeFor(s,new Date().toISOString()),g=pendingOut.gi!=null;
       conf=`<div class="confirm"><p><b>Just so you know:</b> it's now under ${f.label==='Full fee'?'24':'48'} hours to start. Removing ${g?'your guest':'your name'} means the ${esc(f.label.toLowerCase())}, AED ${f.amount}${g?', under your name':''}.</p>
@@ -1751,6 +1757,110 @@ function renderClub(){
 (function(){const b=$('theme');if(!b)return;const set=t=>{if(t==='light')document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');b.setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');try{localStorage.setItem('badTheme',t)}catch(_){}};
   b.onclick=()=>set(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');set(document.documentElement.getAttribute('data-theme')==='light'?'light':'dark')})();
 
+/* ---------- BAD maths: session sizing, score checks, rotation and standings ----------
+   Pure functions, no screen or database code, so they can be unit-tested (tests/badmath.test.mjs).
+   The reasoning behind every rule is in the Badminton Queuing plan. */
+const BADMATH=(()=>{
+  const FORMATS={21:{target:21,cap:30,mins:12},30:{target:30,cap:35,mins:17}};
+  const TARGET_GAMES=5;
+
+  /* ---- session sizing ----
+     average games each = 4·C·T / (N·d): every doubles game gives 4 player-games */
+  const gamesEach=(N,C,T,d)=>N>0&&d>0?4*C*T/(N*d):0;
+  /* games still needed to bring everyone present up to the target, and the time that takes */
+  function shortfall(games,target=TARGET_GAMES){return games.reduce((s,g)=>s+Math.max(0,target-g),0)}
+  function timeNeeded(S,C,d){const K=Math.ceil(S/4);return C>0?d*Math.ceil(K/C):Infinity}
+  /* advice for crew: null when everyone can still reach the target in the time left */
+  function advice({games,courts,minsLeft,d,target=TARGET_GAMES}){
+    const S=shortfall(games,target);if(!S)return {ok:true,S:0};
+    const need=timeNeeded(S,courts,d),needMore=timeNeeded(S,courts+1,d);
+    return need<=minsLeft?{ok:true,S,need}:{ok:false,S,need,extend:Math.ceil((need-minsLeft)/5)*5,withCourt:needMore,courtEnough:needMore<=minsLeft}}
+
+  /* ---- scores ----
+     valid final scores: win at the target by 2+, or by exactly 2 past it, or at the cap by 1 or 2 */
+  function validScore(fmt,x,y){const f=FORMATS[fmt];if(!f)return false;
+    if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x===y)return false;
+    const w=Math.max(x,y),l=Math.min(x,y);
+    return (w===f.target&&l<=f.target-2)||(w>f.target&&w<f.cap&&w-l===2)||(w===f.cap&&l>=f.cap-2)}
+  function scoreHint(fmt,x,y){const f=FORMATS[fmt];if(!f)return 'Pick 21 or 30 points first.';
+    if(x===''||y===''||x==null||y==null)return 'Enter both scores.';
+    x=Number(x);y=Number(y);if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0)return 'Scores are whole numbers.';
+    if(x===y)return 'Badminton can’t end in a tie.';
+    const w=Math.max(x,y),l=Math.min(x,y);
+    if(w<f.target)return `A ${f.target}-point game ends at ${f.target} or more.`;
+    if(w>f.cap)return `${f.cap} is the most a ${f.target}-point game can reach.`;
+    if(w===f.target&&l>f.target-2)return `At ${f.target-1}–${f.target-1} you need a 2-point lead to win.`;
+    if(w>f.target&&w<f.cap&&w-l!==2)return `Past ${f.target}, the winner is exactly 2 points ahead.`;
+    if(w===f.cap&&l<f.cap-2)return `A game only reaches ${f.cap} from ${f.cap-1}–${f.cap-1} or ${f.cap-2}–${f.cap-1}.`;
+    return '';}
+  /* points scaled to a 21-point game, so mixed formats compare fairly in the tiebreak */
+  const scaled=(s,fmt)=>s*21/(FORMATS[fmt]?FORMATS[fmt].target:21);
+
+  /* ---- rotation ----
+     players: [{id, g: games this session, base: lowest count when they arrived (late-arrival credit),
+                since: when they became free (ms), deferred: times passed over, rating, cat}]
+     history: past and prepared lineups [{a:[id,id], b:[id,id]}] */
+  const eff=p=>Math.max(p.g||0,(p.base||0)-1);
+  function order(players){return [...players].sort((x,y)=>eff(x)-eff(y)||(x.since||0)-(y.since||0)||String(x.id).localeCompare(String(y.id)))}
+  function counts(history){const part={},opp={},key=(x,y)=>x<y?x+'|'+y:y+'|'+x;
+    for(const m of history){for(const t of [m.a,m.b])if(t&&t.length===2){const k=key(t[0],t[1]);part[k]=(part[k]||0)+1}
+      if(m.a&&m.b)for(const x of m.a)for(const y of m.b){const k=key(x,y);opp[k]=(opp[k]||0)+1}}
+    return {part,opp,key}}
+  const W={balance:30,partner:10000,opponent:3,mix:2,depth:5};
+  /* the cheapest of the 3 ways to split four players into two teams */
+  function pairing(four,cnt,fallbackRating){
+    const r=p=>typeof p.rating==='number'?p.rating:fallbackRating;
+    let best=null;
+    for(const [i,j,k,l] of [[0,1,2,3],[0,2,1,3],[0,3,1,2]]){
+      const a=[four[i],four[j]],b=[four[k],four[l]];
+      const bal=Math.abs(r(a[0])+r(a[1])-r(b[0])-r(b[1]));
+      const P=(cnt.part[cnt.key(a[0].id,a[1].id)]||0)+(cnt.part[cnt.key(b[0].id,b[1].id)]||0);
+      let O=0;for(const x of a)for(const y of b)O+=cnt.opp[cnt.key(x.id,y.id)]||0;
+      const w=t=>t.filter(p=>p.cat==='W').length,M=w(a)!==w(b)?1:0;
+      const cost=W.balance*bal+W.partner*P+W.opponent*O+W.mix*M;
+      if(!best||cost<best.cost)best={a:a.map(p=>p.id),b:b.map(p=>p.id),cost,bal,P,O,M}}
+    return best}
+  /* pick the next four: fairness first (fewest games, longest wait, nobody skipped twice), then the best teams */
+  function pickFour(players,history,poolSize=8){
+    const q=order(players);if(q.length<4)return null;
+    const known=q.map(p=>p.rating).filter(x=>typeof x==='number'),avg=known.length?known.reduce((s,x)=>s+x,0)/known.length:3;
+    const cnt=counts(history),pool=q.slice(0,poolSize),e4=eff(q[3]);
+    const must=pool.filter(p=>eff(p)<e4).map(p=>p.id);
+    const forced=pool.filter(p=>eff(p)===e4&&(p.deferred||0)>0).map(p=>p.id);
+    if(!must.includes(pool[0].id)&&!forced.includes(pool[0].id))forced.unshift(pool[0].id);
+    const req=[...must,...forced].slice(0,4);
+    let best=null;const n=pool.length;
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)for(let k=j+1;k<n;k++)for(let l=k+1;l<n;l++){
+      const four=[pool[i],pool[j],pool[k],pool[l]],ids=four.map(p=>p.id);
+      if(four.some(p=>eff(p)>e4))continue;                 /* never skip a player with fewer games */
+      if(req.some(id=>!ids.includes(id)))continue;         /* first in line and anyone passed over before */
+      const pr=pairing(four,cnt,avg),cost=pr.cost+W.depth*(i+j+k+l-6);
+      if(!best||cost<best.cost)best={...pr,cost,last:l}}
+    if(!best){const pr=pairing(q.slice(0,4),cnt,avg);best={...pr,last:3}}
+    const chosen=new Set([...best.a,...best.b]);
+    /* players at the same level who were passed over must go next time */
+    const deferred={};for(const p of pool.slice(0,best.last+1))deferred[p.id]=chosen.has(p.id)?0:(eff(p)===e4?(p.deferred||0)+1:(p.deferred||0));
+    return {a:best.a,b:best.b,cost:best.cost,bal:best.bal,P:best.P,O:best.O,deferred}}
+
+  /* ---- standings ----
+     games: [{a:[ids], b:[ids], score:[sa,sb], fmt}] (final results only) */
+  function standings(games){
+    const t={};const row=id=>t[id]||(t[id]={id,played:0,wins:0,losses:0,pf:0,pa:0,sp:0});
+    for(const g of games){if(!g||!g.score)continue;const [sa,sb]=g.score.map(Number);
+      for(const [team,mine,theirs] of [[g.a,sa,sb],[g.b,sb,sa]])for(const id of team){const r=row(id);r.played++;
+        if(mine>theirs)r.wins++;else r.losses++;r.pf+=mine;r.pa+=theirs;r.sp+=scaled(mine,g.fmt)}}
+    const rows=Object.values(t).map(r=>({...r,diff:r.pf-r.pa,pct:r.played?r.wins/r.played:0,sp:Math.round(r.sp*10)/10}));
+    /* most wins, then most scaled points, then fewer games played (same result in fewer chances). Names never decide. */
+    const cmp=(x,y)=>y.wins-x.wins||y.sp-x.sp||x.played-y.played;
+    rows.sort((x,y)=>cmp(x,y)||String(x.id).localeCompare(String(y.id)));
+    let rank=0;rows.forEach((r,i)=>{if(i===0||cmp(rows[i-1],r)!==0)rank=i+1;r.rank=rank});
+    return rows}
+  const winners=rows=>rows.filter(r=>r.rank===1&&r.played>0).map(r=>r.id);
+
+  return {FORMATS,TARGET_GAMES,gamesEach,shortfall,timeNeeded,advice,validScore,scoreHint,scaled,eff,order,pairing,pickFour,standings,winners,W};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=BADMATH;
+
 /* ---------- Courts: live board for badminton, volleyball, pickleball, basketball ---------- */
 /* Admins place every player. Flow: Bench (fewest games first) → Waiting courts → Courts → Game done → back to Bench. */
 const COURT_SPORTS=['badminton','volleyball','pickleball','basketball'];
@@ -1808,7 +1918,42 @@ function who(sid,pid){const m=people(sid);if(m[pid])return m[pid];const p=S.prof
   for(const g of Object.values(S.games))if(g.names&&g.names[pid])return{name:g.names[pid]};return{name:'Player'}}
 function pav(sid,pid){const x=who(sid,pid);return x.p?avatar(x.p):avatar(null,x.name)}
 const sessGames=sid=>Object.entries(S.games).filter(([,g])=>g.sid===sid).sort((a,b)=>(a[1].at||'').localeCompare(b[1].at||''));
-const gamesFor=(sid,pid)=>sessGames(sid).filter(([,g])=>[...g.a,...g.b].includes(pid)).length;
+/* games that count for rotation: finished or being checked, never cancelled ones */
+const liveGames=sid=>sessGames(sid).filter(([,g])=>g.st!=='cancelled');
+const gamesFor=(sid,pid)=>liveGames(sid).filter(([,g])=>[...g.a,...g.b].includes(pid)).length;
+
+/* ---------- session plan: courts, time and the 5-game check ---------- */
+const sessEnd=s=>at(s.date,s.end||'22:00');
+const addMins=(hhmm,m)=>{const [h,mi]=String(hhmm||'22:00').split(':').map(Number);const t=Math.min(23*60+59,Math.max(0,h*60+mi+m));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')};
+const msOf=t=>t&&typeof t.toMillis==='function'?t.toMillis():t&&t.seconds!=null?t.seconds*1000:typeof t==='string'?Date.parse(t):typeof t==='number'?t:NaN;
+/* game length in minutes: server times, unless the phone was offline and they disagree by more than 30 s */
+function gameMins(g){const sv=msOf(g.end)-msOf(g.start),dv=msOf(g.endDev)-msOf(g.startDev);
+  const ms=isFinite(sv)&&sv>0&&(!isFinite(dv)||Math.abs(sv-dv)<=30000)?sv:isFinite(dv)&&dv>0?dv:NaN;return isFinite(ms)?ms/60000:NaN}
+function avgMins(sid){const ds=liveGames(sid).map(([,g])=>g.interrupted?NaN:gameMins(g)).filter(x=>x>2&&x<90);return ds.length>=3?{d:ds.reduce((a,b)=>a+b,0)/ds.length,n:ds.length}:null}
+function presentIds(lv){return Object.keys(lv.checkin||{}).filter(p=>!(lv.out||[]).includes(p))}
+function planInfo(sid,lv){const s=S.sessions[sid],now=Date.now(),st=sessStart(s),en=sessEnd(s);
+  const present=presentIds(lv),N=present.length||roster(sid).in.length,C=lv.courts.length,T=Math.max(0,(en-st)/6e4);
+  const left=Math.max(0,(en-Math.max(now,st))/6e4),m=avgMins(sid),d=m?m.d:BADMATH.FORMATS[21].mins;
+  const games=present.map(p=>gamesFor(sid,p));
+  return {N,C,T,left,d,measured:m,each:BADMATH.gamesEach(N,C,T,d),adv:BADMATH.advice({games,courts:C,minsLeft:left,d}),games}}
+const fmtMins=m=>{m=Math.round(m);return m>=60?`${Math.floor(m/60)} h${m%60?' '+m%60+' min':''}`:`${m} min`};
+function planTile(sid,lv,full){const s=S.sessions[sid],P=planInfo(sid,lv),admin=S.canEdit&&canSport(s.sport||'badminton');
+  const head=`${P.N} players · ${P.C} court${P.C===1?'':'s'} · ${fmtMins(P.T)} · about <b class="num">${P.each.toFixed(1)}</b> games each`;
+  const dl=P.measured?`Average game ${Math.round(P.d)} min, from ${P.measured.n} timed games.`:`Planning with ${Math.round(P.d)}-minute games until 3 games are timed.`;
+  const warn=!P.adv.ok?`<div class="note warnbox" role="status"><b>${P.adv.S} more games are needed for everyone to reach 5.</b> That takes about ${fmtMins(P.adv.need)}, with ${fmtMins(P.left)} left.
+      <div class="row" style="gap:6px;margin-top:8px">${admin?`<button class="btn sm" data-act="extend" data-v="${P.adv.extend}">${ic('clock')}Extend ${P.adv.extend} min</button>`:''}<button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add a court${P.adv.courtEnough?' (fits in time)':''}</button></div></div>`
+    :P.games.length?`<p class="fine">${ic('check')} On track: everyone can reach 5 games${P.adv.need?`, in about ${fmtMins(P.adv.need)}`:''}.</p>`:'';
+  if(!full)return warn?`<div class="tile plan">${warn}</div>`:'';
+  const r=roster(sid),wc=r.wc===Infinity?'No limit':r.wc;
+  const prev=n=>`${n} players: about ${BADMATH.gamesEach(n,P.C,P.T,P.d).toFixed(1)} games each`;
+  return `<div class="tile plan"><div class="sec-h"><b>${ic('users')} Session</b><span class="fine">Ends ${fmtTime(s.end||'22:00')}</span></div>
+    <p>${head}</p><p class="fine">${dl}</p>${warn}
+    ${admin?`<div class="planctl">
+      <div><span class="label">Player cap</span><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="cap" data-v="-1" aria-label="Lower the player cap">−</button><b class="num">${r.cap}</b><button class="btn ghost sm" data-act="cap" data-v="1" aria-label="Raise the player cap">+</button></div><span class="fine">${esc(prev(r.cap+1))}</span></div>
+      <div><span class="label">Waiting list</span><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="wcap" data-v="-1" aria-label="Shorter waiting list">−</button><b class="num">${wc}</b><button class="btn ghost sm" data-act="wcap" data-v="1" aria-label="Longer waiting list">+</button></div><span class="fine">${r.wait.length} waiting${r.over.length?`, ${r.over.length} turned away`:''}</span></div>
+      <div><span class="label">Time</span><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="extend" data-v="15">+15 min</button><button class="btn ghost sm" data-act="extend" data-v="30">+30 min</button></div><span class="fine">Ends ${fmtTime(s.end||'22:00')}</span></div>
+    </div>`:'<p class="fine">Admins can change the player cap, waiting list and end time.</p>'}</div>`}
+async function sessUpdate(sid,patch,msg){try{await S.db.doc('sessions/'+sid).update(patch);toast(msg)}catch(e){toast("Sorry, that didn't save.")}}
 
 function scoreOf(gid,g){
   if(g.final)return{s:g.final,st:'confirmed'};
@@ -1856,7 +2001,7 @@ function saveLive(sid,lv){lv.updatedAt=new Date().toISOString();lv.rev=((S.live[
 function saveState(){if(S.pend>0)return navigator.onLine===false?['warn','Offline · saves when you’re back online']:['','Saving…'];
   if(S.saveErr&&Date.now()-S.saveErr<15000)return['warn','Not saved · showing the latest board'];return['ok','Saved']}
 function startBoard(sid){const sp=S.sessions[sid].sport||'badminton',size=SIZES[sp][0][0];
-  saveLive(sid,{courts:Array.from({length:DEF_COURTS[sp]},(_,i)=>({id:'c'+(i+1),name:'Court '+(i+1),size,on:blank(size)})),waiting:[{id:'w1',size,on:blank(size)},{id:'w2',size,on:blank(size)}],walkins:[],out:[],checkin:{},avail:{},order:'arrival'});
+  saveLive(sid,{courts:Array.from({length:Number(S.sessions[sid].courts)||DEF_COURTS[sp]},(_,i)=>({id:'c'+(i+1),name:'Court '+(i+1),size,on:blank(size)})),waiting:[{id:'w1',size,on:blank(size)},{id:'w2',size,on:blank(size)}],walkins:[],out:[],checkin:{},avail:{},order:'arrival'});
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
@@ -1943,7 +2088,7 @@ function renderCourts(){
   let body='';
   if(S.courtStep===1){
     const sp=s.sport||'badminton';
-    body=`<div class="tile"><div class="sec-h"><b>${ic('court')} Courts</b><button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add court</button></div>
+    body=`${planTile(sid,lv,true)}<div class="tile"><div class="sec-h"><b>${ic('court')} Courts</b><button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add court</button></div>
       <div class="list">${lv.courts.map((c,i)=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(c.name)}</div><div class="chips" style="margin-top:6px">${SIZES[sp].map(([n,l])=>`<button class="chip sm" data-act="size" data-k="c" data-c="${i}" data-n="${n}" aria-pressed="${c.size===n}">${l}</button>`).join('')}</div></div>${lv.courts.length>1&&!c.on.some(Boolean)?`<button class="btn ghost sm" data-act="del" data-k="c" data-c="${i}">${ic('x')}</button>`:''}</div>`).join('')}</div></div>
       <div class="tile"><div class="sec-h"><b>${ic('clock')} Waiting area</b><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="wless" ${lv.waiting.length<2?'disabled':''} aria-label="Fewer waiting groups">−</button><b class="num">${lv.waiting.length}</b><button class="btn ghost sm" data-act="add" data-k="w" aria-label="More waiting groups">+</button></div></div>
         <p class="fine">Groups lined up to go on next. When a game ends, the first group moves onto that court.</p></div>
@@ -1961,7 +2106,7 @@ function renderCourts(){
       <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       <button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`;
   }else if(S.courtStep===3){
-    body=`<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
+    body=`${planTile(sid,lv,false)}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,true)).join('')}</div>
       <div class="sec"><span class="label">Waiting area</span><div class="waits">${lv.waiting.map((w,i)=>waitRow(sid,w,i,true)).join('')}</div></div></div>
       <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · ${lv.catchup?'catch-up: fewest games first':'first come, first served'}</span><button class="chip sm" data-act="catchup" aria-pressed="${!!lv.catchup}">${ic('arrow')}Catch-up</button></div>
@@ -2002,6 +2147,10 @@ function bindCourts(el){el.onclick=async ev=>{
     try{if(act==='final')await S.db.doc('games/'+gid).update({final:v});else{const cur=S.scores[S.uid]?.g||{};await S.db.doc('scores/'+S.uid).set({g:{...cur,[gid]:v}})}toast('Score saved. Thank you.')}catch(e){toast("Sorry, the score didn't save.")}return}
   if(!courtEd(sid))return;
   if(act==='start'){S.courtStep=1;return startBoard(sid)}
+  if(act==='cap'||act==='wcap'||act==='extend'){const ss=S.sessions[sid];if(!(S.canEdit&&canSport(ss.sport||'badminton'))){toast('Only admins can change this.');return}
+    if(act==='cap'){const n=Math.max(2,(Number(ss.capacity)||20)+Number(b.dataset.v));return sessUpdate(sid,{capacity:n},`Player cap is ${n}.${Number(b.dataset.v)>0&&roster(sid).wait.length?' The next person on the waiting list is in.':''}`)}
+    if(act==='wcap'){const cur=ss.waitCap==null||ss.waitCap===''?roster(sid).wait.length:Number(ss.waitCap),n=Math.max(0,cur+Number(b.dataset.v));return sessUpdate(sid,{waitCap:n},`Waiting list holds ${n}.`)}
+    const e=addMins(ss.end||'22:00',Number(b.dataset.v));return sessUpdate(sid,{end:e},`Session now ends at ${fmtTime(e)}.`)}
   const lv=norm(clone(S.live[sid])),arr=k=>k==='w'?lv.waiting:lv.courts,sp=S.sessions[sid].sport||'badminton';
   if(act==='bench'){sel=sel===b.dataset.pid?null:b.dataset.pid;return renderCourts()}
   if(act==='qr')return showQR(sid);
@@ -2210,7 +2359,9 @@ function aSessions(list,up){
       <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
       <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
       <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
-      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:20}"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:newSport==='badminton'?16:20}"></div>
+      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${newSport==='badminton'?4:''}"></div>
+      ${COURT_SPORTS.includes(newSport)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${DEF_COURTS[newSport]||1}"></div>`:''}
       <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div>
       <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens"><p class="fine">Leave blank to open straight away. Member level and up can join 24 hours before this.</p></div></div>
     <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc"> Time to be confirmed</label>
@@ -2328,7 +2479,7 @@ function bindAdmin(){
   q('[data-nsp]').forEach(b=>b.onclick=()=>{newSport=b.dataset.nsp;renderAdmin()});
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
-    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
     const lk=$('p-link').value.trim()||S.site?.url||'';if(!/^https:\/\//.test(lk)){toast(S.site?.url?'Please use a full https:// link.':'Please add a link, or set the BAD site link in Settings.');return}$('p-link').value=lk;
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};

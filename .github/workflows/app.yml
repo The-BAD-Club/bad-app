@@ -1,0 +1,15 @@
+name: App checks
+on:
+  push:
+    paths: ['src/**', 'tests/badmath.test.mjs', 'build.py', '.github/workflows/app.yml']
+  workflow_dispatch:
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - run: python3 build.py && node --check build/app.js
+      - run: node --test tests/badmath.test.mjs

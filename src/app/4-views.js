@@ -31,7 +31,9 @@ function roster(sid){
   /* Core level and up skip ahead of the waitlist */
   const active=sorted.slice(0,cap).concat(sorted.slice(cap).sort((a,b)=>pri(b)-pri(a)||a.at.localeCompare(b.at)));
   const late=all.filter(e=>e.out).map(e=>{const ahead=all.filter(o=>o.at<e.at&&(!o.out||o.out>e.out)).length;return{...e,wasIn:ahead<cap,fee:feeFor(s,e.out)}}).filter(e=>e.wasIn&&e.fee.amount>0);
-  return{cap,in:active.slice(0,cap),wait:active.slice(cap),late};
+  /* the waiting list can have a limit (badminton: 4); anyone past it is turned away when they try to join */
+  const wc=s&&s.waitCap!=null&&s.waitCap!==''?Number(s.waitCap):Infinity;
+  return{cap,wc,in:active.slice(0,cap),wait:active.slice(cap,cap+wc),over:active.slice(cap+wc),late};
 }
 function feeFor(s,whenIso){const h=(sessStart(s)-new Date(whenIso))/36e5,f=Number(s.fee)||0;
   if(h>=CFG.freeHours)return{amount:0,label:'No charge'};if(h>=CFG.halfHours)return{amount:f/2,label:'Half fee'};return{amount:f,label:'Full fee'}}
@@ -46,7 +48,8 @@ const freshEntry=(pay,at)=>({at:at||new Date().toISOString(),t:SVT(),guests:[],p
 async function staffBooking(uid,sid,fn,base){const cur=S.bookings[uid]||base||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
   const e=fn(o);if(e===undefined)return;if(e===null)delete s[sid];else s[sid]=e;
   const {op,u,...rest}=cur;await S.db.doc('bookings/'+uid).set({...rest,s,op:{sid,kind:'admin'},u:SVT()})}
-async function join(sid,pay){try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
+const isFull=sid=>{const r=roster(sid);return r.in.length>=r.cap&&r.wait.length>=r.wc&&!(typeof perk!=='undefined'&&perk.skipWait(S.uid))};
+async function join(sid,pay){if(isFull(sid)){toast('Sorry, this session and its waiting list are full.');return}try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
 async function setPay(sid,pay){try{await saveBooking(sid,'pay',o=>{const x={...o,pay};delete x.sent;return x});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function markSent(sid){try{await saveBooking(sid,'pay',o=>({...o,sent:new Date().toISOString()}));toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
 async function unmarkSent(sid){try{await saveBooking(sid,'pay',o=>{const x={...o};delete x.sent;return x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
@@ -99,7 +102,7 @@ function sessCard(sid,s){const me=myProfile();
     else if(wpos>=0){status=`<span class="tagl">Waitlist #${wpos+1}</span>`;actions=`<button class="btn ghost sm" data-wout="${sid}">Leave waitlist</button>`}
     else if(me&&!started){const ss=signupState(s,S.uid),fmtO=t=>new Date(t).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
       if(!ss.open)status=`<span class="tagl">Sign-ups open ${esc(fmtO(ss.opens))}</span>`;
-      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':'Join waitlist'):'Count me in'}</button>`}}
+      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=r.in.length>=r.cap&&r.wait.length>=r.wc&&!perk.skipWait(S.uid)?`<span class="tagl warn">Full · waiting list full</span>`:`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':`Join waitlist${r.wc<Infinity?` · ${r.wc-r.wait.length} left`:''}`):'Count me in'}</button>`}}
     let conf='';
     if(pendingOut&&pendingOut.sid===sid){const f=feeFor(s,new Date().toISOString()),g=pendingOut.gi!=null;
       conf=`<div class="confirm"><p><b>Just so you know:</b> it's now under ${f.label==='Full fee'?'24':'48'} hours to start. Removing ${g?'your guest':'your name'} means the ${esc(f.label.toLowerCase())}, AED ${f.amount}${g?', under your name':''}.</p>
