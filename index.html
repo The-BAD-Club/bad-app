@@ -737,6 +737,39 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .lvls .li{align-items:center}
 .bgpick .li{width:100%;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:10px 4px}
 .bgpick .li:hover{background:var(--chip)}
+.savest{align-self:center;font-size:.7rem}.savest.ok{opacity:.7}.savest.warn{border-style:dashed;background:transparent;box-shadow:inset 0 0 0 1px var(--rule);color:var(--muted)}
+/* minimal card (v0.9) */
+.pc .hd img{margin-bottom:0}
+.pc .stats.lv2{grid-template-columns:1fr auto;align-items:baseline;border-top:1px solid color-mix(in srgb,var(--fg) 35%,transparent);margin-top:14px;padding-top:12px}
+.pc .stats.lv2>*{font-size:1rem;font-weight:700;letter-spacing:.06em;color:var(--fg);text-transform:none}
+.pc .stats.lv2 b{display:inline;font-size:1rem;font-weight:700;letter-spacing:.06em}
+.pc .stats.lv2 small{font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-left:6px;font-weight:600}
+.pc .stats.lv2>:last-child{text-align:right}
+.pc .style{margin-top:2px}
+.cback .cb-mid{margin:auto 0;display:grid;justify-items:center;gap:10px}
+.cback .cb-mid .qrbox{margin:0;width:56%;max-width:170px}
+.cback .cb-mid .cb-code{font-family:inherit;font-size:.9rem;font-weight:800;letter-spacing:.16em;margin:0;text-transform:uppercase}
+.cback .cb-mid .cb-sub{margin:-4px 0 0;font-size:.52rem;letter-spacing:.16em;text-transform:uppercase}
+.cback .stats.lv2{margin-top:0}
+.lvl-pick.grades .gcode{min-width:2.2em;font-weight:800;font-size:1rem;letter-spacing:.04em}
+.lvl-note{margin:0 0 10px;font-size:.78rem;letter-spacing:.02em}
+.gpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.gpick select,.gpick input{min-height:36px;font-size:.85rem;padding:4px 8px}.gpick input{width:78px}
+@media (max-width:760px){#v-create .pc .hd,.mini .pc .hd{font-size:.48rem;letter-spacing:.14em}#v-create .pc .hd img,.mini .pc .hd img{height:12px}}
+.gpick select{width:auto}.gpick [data-gk=g]{flex:1 1 100%}.gpick [data-gk=cat]{flex:1 1 0;min-width:0}.gpick [data-gk=ovr]{flex:0 0 72px}
+.plan p{margin:6px 0 0}.plan .warnbox{margin-top:10px;border:1px dashed var(--rule);background:transparent}
+.planctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}.planctl>div{display:grid;gap:4px}
+.plan .fine svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.court .cfoot{justify-content:flex-end;gap:10px;align-items:center}.court .cfoot .btn.wide{flex:1;max-width:220px}
+.court.on{box-shadow:inset 0 0 0 1.5px var(--ink)}.court .fmt{min-height:28px}
+.scorein{display:grid;gap:8px;margin-top:8px}.scorein .sl{display:grid;grid-template-columns:minmax(0,1fr) 76px;align-items:center;gap:12px;font-size:.9rem}
+.scorein .sl span{overflow:hidden;text-overflow:ellipsis}.scorein .sc{width:76px;text-align:center;font-size:1.25rem;font-weight:700;min-height:48px}
+.scorein .schint{min-height:1em;margin:0}.scorein .scnote{width:100%}
+.qrow .qact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.qrow .qact .scorein{flex:1 1 100%}
+.qgroup .li{grid-template-columns:minmax(0,1fr)}
+.standings .stable{display:grid;margin-top:10px}.standings .strow{display:grid;grid-template-columns:28px minmax(0,1fr) 52px 48px;gap:8px;padding:9px 0;border-bottom:1px solid var(--rule);align-items:baseline;font-size:.92rem}
+.standings .strow.sh{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding-top:0}.standings .strow>:nth-child(3),.standings .strow>:nth-child(4){text-align:right}.standings p.fine svg.i{width:14px;height:14px;vertical-align:-2px}
+.standings .strow.first{font-weight:700}.standings .strow.mine{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.baddest{display:grid;gap:2px;text-align:center;padding:18px 12px;margin-bottom:12px;border:1px solid var(--ink);border-radius:var(--r)}.baddest b{font-family:var(--f-serif);font-size:2rem;font-weight:400;line-height:1.1}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -879,8 +912,10 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.8';
+const APP_VERSION='0.10';
 const CHANGES=[
+  ['0.10','2026-11-02','Badminton queuing: Start, Finish and Cancel with timing; fair rotation with balanced teams; scores confirmed by the other team and finalised by Support; session standings and BADDEST PLAYER (+5); player cap, waiting list, courts and time with a 5-game check'],
+  ['0.9','2026-11-02','BAD levels F to A+ with W/M category, crew verify on check-in; minimal player card with the invite on the back; courts load only tonight\'s data and boards can\'t overwrite each other'],
   ['0.8','2026-10-24','Game Master per session; admins add players and guests by hand and take people off a session'],
   ['0.7','2026-10-24','Points and BADges from BAD APP – Master; BADge levels and perks; name on tracker; department wording'],
   ['0.6','2026-10-24','Payments tab; Check with admin; remove and undo for payments'],
@@ -900,6 +935,21 @@ const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','W
 const LEVELS=['Beginner','Intermediate','Advanced','Pro','National'];
 const LEVEL_SHORT=LEVELS;
 const LEVEL_DESC=['New to the sport or still learning the rules','Plays regularly and can keep a rally going','Strong all-round game with good tactics','Competes in leagues or tournaments','Has played at national level'];
+/* ---------- BAD grades (badminton): our own club scale for balancing games, not BWF ----------
+   [code, description, women's rating, men's rating]. Ratings stay behind the scenes; the card shows the grade and category only. */
+const GRADES=[['F','Fresh on court, first-timer',.5,1],['E','Beginner',1,1.5],['E+','Developing beginner',1.5,2],['D','Improver',2,2.5],['D+','Strong improver',2.5,3],
+  ['C','Intermediate',3,3.5],['C+','Upper intermediate',3.5,4],['B','Advanced',4,4.5],['B+','Strong advanced',4.5,5],['A','High-level competitive',5,5.5],['A+','Elite competitive',5.5,6]];
+const GRADE_SCALE='bad1';
+const CATS={W:'Women’s',M:'Men’s'};
+const gradeRow=g=>GRADES.find(r=>r[0]===g);
+/* crew record wins; a player's own pick is only a starting point until crew verify */
+const gradeOf=uid=>{const r=(S.grades||{})[uid];return r&&gradeRow(r.g)?r.g:null};
+const catOf=uid=>{const r=(S.grades||{})[uid];if(r&&CATS[r.cat])return r.cat;const p=(S.profiles||{})[uid];return p&&CATS[p.cat]?p.cat:null};
+const gradeLabel=uid=>{const g=gradeOf(uid),c=catOf(uid);return 'LVL '+(g||'UNRATED')+(g&&c?' - '+c:'')};
+/* balancing rating: crew override replaces the table value (never add anything on top) */
+function badRating(uid){const r=(S.grades||{})[uid];if(r&&typeof r.ovr==='number')return r.ovr;const g=gradeRow(gradeOf(uid)),c=catOf(uid);return g&&c?(c==='W'?g[2]:g[3]):null}
+const LVL_NOTICE='BAD LEVELS. NOT BWF. Our club scale helps balance games. Crew has the final call.';
+const COMMUNITY_COPY=`<p><b>ALL LEVELS. A LITTLE CHAOS. GOOD SPORTSMANSHIP.</b></p><p>First timer or court regular, you’re welcome here. We’re about fun, friendly competition. Take the game seriously, not yourself.</p><p>It’s okay to be BAD. Support each other, respect your opponents and call your lines honestly.</p><p><b>BAD LEVELS. NOT BWF.</b><br>Our ratings help balance games. They’re our own club scale, not official BWF rankings. Crew may adjust your level based on how you play.</p><p>Questionable footwork? Welcome. Questionable attitude? Let’s talk. If someone crosses the line, tell crew. We’ll take it seriously.</p><p><b>PLAY HARD. BE KIND. BE BAD.</b></p>`;
 const lvlOf=(p,sp)=>{const v=p?.levels?.[sp];return v==null||v===''?null:+v};
 const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -983,6 +1033,8 @@ const QUIZ=[
 
 const S={memCfg:{},members:{},site:{},codes:{},payCfg:{},payments:{},uid:null,canEdit:false,db:null,mcp:null,profiles:{},ledger:[],requests:{},sessions:{},bookings:{},posts:{},noshows:{},contacts:{},brand:{},loaded:false,view:'card',sport:'all',clubFilter:'all'};
 const $=id=>document.getElementById(id);
+/* server time for fields the security rules check (falls back to device time where there's no Firestore) */
+const SVT=()=>(window.firebase&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const keyOf=s=>String(s||'').trim().toLowerCase();
 const slug=s=>keyOf(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'x';
@@ -1018,17 +1070,19 @@ function allKeys(){const m={};for(const e of S.ledger)if(!m[e.player])m[e.player
 /* ---------- card (minimal) ---------- */
 function avatar(p,fallback){if(!p)return `<div class="av none" aria-hidden="true">${esc((fallback||'?')[0].toUpperCase())}</div>`;return `<div class="av ${esc(p.edition||'oncourt')}" aria-hidden="true">${p.photo?`<img src="${esc(p.photo)}" alt="">`:esc(jersey(p))}</div>`}
 function cardHTML(p,st,opt){
-  const cu=uidOfProfile(p),ed=cardEdition(p,cu),lvlUp=cu&&levelIdx(cu)>=1,member=lvlUp;
-  const edName=cardEdLabel(p,cu),sp=mainSport(p),ty=typeOf(p);
+  const cu=uidOfProfile(p),ed=cardEdition(p,cu),sp=mainSport(p),ty=typeOf(p);
   const logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
   const img=p.photo||PH[hash(p.listKey||p.nickname||'BAD')%PH.length];
-  return `<div class="pc ${ed}${opt&&opt.qr&&p.ref?' hasqr':''}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD">${esc(edName)}</span><span class="num">${(()=>{const u=uidOfProfile(p),m=u?memStatus(u):null;return m&&m.state==='verified'&&m.type!=='Guest'?`<span class="mv">${ic('check')}${esc(m.type)}</span>`:'Guest'})()}</span></div>
+  const m=cu?memStatus(cu):null,mem=m&&m.state==='verified'?m.type:'Guest';
+  const plays=(p.sports&&p.sports.length?p.sports:['badminton']).includes('badminton');
+  const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
+  /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
+  return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
-    <div class="style">${ic(sportOf(sp).icon)}${esc(ty||sportOf(sp).club)}</div>
-    <div class="stats s4"><div><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b>Points</div><div><b class="num">${st.badges||0}</b>BADges</div><div><b>${esc(p.shot||'—')}</b>Signature</div><div><b>${esc(lvlOf(p,sp)==null?'—':LEVEL_SHORT[lvlOf(p,sp)])}</b>Level</div></div>
-    <div class="ft"><span class="sps">${(p.sports&&p.sports.length?p.sports:['badminton']).map(s=>ic(sportOf(s).icon)).join('')}</span>${opt&&opt.qr&&p.ref&&typeof qrData==='function'&&qrData(inviteUrl(p.ref))?`<span class="cqr"><span class="num">${esc(p.ref)}</span><img src="${qrData(inviteUrl(p.ref))}" alt="Invite QR code"></span>`:`<span class="num">${member?memberNo(p.listKey||p.nickname):'Est. 2024'}</span>`}</div>
+    ${ty?`<div class="style">${esc(ty)}</div>`:''}
+    <div class="stats lv2"><b class="lvl">${esc(lvl)}</b><span><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b><small>pts</small></span></div>
   </div>`;
 }
 
@@ -1071,16 +1125,15 @@ const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_D
 const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
 const isFounder=uid=>!!uid&&memStatus(uid).state==='verified'&&memStatus(uid).type==='Founder';
 
-/* back of the card: invite QR and code */
+/* back of the card: a large invite QR, the code, when they joined, BADges and signature. Nothing repeats from the front. */
 function cardBackHTML(p,st){
   const ed=cardEdition(p,uidOfProfile(p)),logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
-  const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'',uid=uidOfProfile(p),m=uid?memStatus(uid):null;
+  const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'';
   const since=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
-  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD">Invite</span><span class="num">${esc(jersey(p))}</span></div>
-    <div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
-    <div class="cb-code num">${esc(code||'—')}</div>
-    <div class="cb-sub">Scan to join BAD.<br>Use my code when you sign up.</div>
-    <div class="ft"><span>${m&&m.state==='verified'?esc(m.type):'Guest'}</span><span class="num">${since?'Since '+esc(since):'Est. 2024'}</span></div>
+  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
+    <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
+      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
+    <div class="stats lv2"><span><b class="num">${st.badges||0}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
 /* ---------- admin roles ----------
@@ -1267,7 +1320,7 @@ function renderStep(){
     }else{
       const acts=D.sports.filter(k=>!LEVEL_FREE.includes(k));
       el.innerHTML=head(3)+`<p class="muted" style="margin-bottom:14px">Your level for each activity helps us balance games. Be honest, there's no wrong answer.</p>`+acts.map(sp=>{const T=TYPES[sp]||{},cur=D.types[sp]||'';return `<div class="act-card"><div class="ic-row"><span class="ic-bub">${ic(SPORTS[sp].icon)}</span><b>${SPORTS[sp].club}</b></div>
-        <div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${l}</b><small>${LEVEL_DESC[i]}</small></span></button>`).join('')}</div></div>
+        ${sp==='badminton'?gradePickHTML():`<div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${l}</b><small>${LEVEL_DESC[i]}</small></span></button>`).join('')}</div></div>`}
         ${Object.keys(T).length?`<div class="field" style="margin:0"><span class="lbl">Play style</span>
           ${sp==='badminton'?(quiz&&quiz.done&&cur?`<div class="result"><span class="label">You're a</span><b class="big">${esc(cur)}</b><p>${esc(T[cur]||'')}</p></div>`:`<div class="row"><button type="button" class="btn sm" id="q-start">${ic('star')}Take the 30-second test</button><span class="fine">Five questions. No wrong answers.</span></div>`):''}
           <div class="chips" role="group">${Object.entries(T).map(([k,d])=>`<button type="button" class="chip" data-ty="${sp}" data-val="${esc(k)}" aria-pressed="${k===cur}" title="${esc(d)}">${esc(k)}</button>`).join('')}</div>
@@ -1276,6 +1329,8 @@ function renderStep(){
         <div class="field"><span class="lbl">Hand</span>${chips('hand',['Right','Left'],D.hand)}</div>`;
       const qs=$('q-start');if(qs)qs.onclick=()=>{quiz={i:0,score:{}};renderStep()};
       el.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{D.types[b.dataset.ty]=D.types[b.dataset.ty]===b.dataset.val?'':b.dataset.val;if(b.dataset.ty==='badminton')quiz=null;renderStep()});
+      el.querySelectorAll('[data-gr]').forEach(b=>b.onclick=()=>{D.grade=D.grade===b.dataset.gr?'':b.dataset.gr;renderStep()});
+      el.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{D.cat=D.cat===b.dataset.cat?'':b.dataset.cat;renderStep()});
       el.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const k=b.dataset.lv,v=+b.dataset.i;if(D.levels[k]===v)delete D.levels[k];else D.levels[k]=v;renderStep()});
     }
   }
@@ -1345,7 +1400,7 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
-    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),
+    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),grade:gradeRow(D.grade)&&D.sports.includes('badminton')?D.grade:'',cat:CATS[D.cat]?D.cat:'',
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
@@ -1366,6 +1421,18 @@ async function saveProfile(){
   $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Copied. Thank you.')}catch(e){toast('Please select the code and copy it.')}};
   $('redo').onclick=()=>{step=4;renderStep()};
 }
+
+/* badminton self-assessment on the BAD scale, plus the balancing category. Crew verify both. */
+function gradePickHTML(){
+  return `<div class="field" style="margin:0"><span class="lbl">Your BAD level</span>
+    <p class="note lvl-note"><b>${esc(LVL_NOTICE)}</b></p>
+    <div class="lvl-pick grades" role="group" aria-label="Your BAD level">
+      <button type="button" data-gr="" aria-pressed="${!D.grade}"><span class="gcode">?</span><span class="t"><b>Not sure yet</b><small>Crew will rate you after watching you play</small></span></button>
+      ${GRADES.map(([g,d])=>`<button type="button" data-gr="${g}" aria-pressed="${D.grade===g}"><span class="gcode num">${g}</span><span class="t"><b>${esc(d)}</b></span></button>`).join('')}</div>
+    <details class="rules"><summary>${ic('users')}Read the level guide</summary><div class="fine">${COMMUNITY_COPY}</div></details></div>
+  <div class="field" style="margin:0"><span class="lbl">Balancing category</span>
+    <div class="chips" role="group" aria-label="Balancing category">${Object.entries(CATS).map(([k,l])=>`<button type="button" class="chip" data-cat="${k}" aria-pressed="${D.cat===k}">${l}</button>`).join('')}</div>
+    <p class="fine">Used only to balance games, and shown on your card as W or M. Crew confirm it.</p></div>`}
 
 /* ---------- navigation ---------- */
 const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
@@ -1400,17 +1467,28 @@ function roster(sid){
   /* Core level and up skip ahead of the waitlist */
   const active=sorted.slice(0,cap).concat(sorted.slice(cap).sort((a,b)=>pri(b)-pri(a)||a.at.localeCompare(b.at)));
   const late=all.filter(e=>e.out).map(e=>{const ahead=all.filter(o=>o.at<e.at&&(!o.out||o.out>e.out)).length;return{...e,wasIn:ahead<cap,fee:feeFor(s,e.out)}}).filter(e=>e.wasIn&&e.fee.amount>0);
-  return{cap,in:active.slice(0,cap),wait:active.slice(cap),late};
+  /* the waiting list can have a limit (badminton: 4); anyone past it is turned away when they try to join */
+  const wc=s&&s.waitCap!=null&&s.waitCap!==''?Number(s.waitCap):Infinity;
+  return{cap,wc,in:active.slice(0,cap),wait:active.slice(cap,cap+wc),over:active.slice(cap+wc),late};
 }
 function feeFor(s,whenIso){const h=(sessStart(s)-new Date(whenIso))/36e5,f=Number(s.fee)||0;
   if(h>=CFG.freeHours)return{amount:0,label:'No charge'};if(h>=CFG.halfHours)return{amount:f/2,label:'Half fee'};return{amount:f,label:'Full fee'}}
 function upcoming(){const now=Date.now()-2*36e5;return Object.entries(S.sessions).filter(([,s])=>sessStart(s)>now).sort((a,b)=>sessStart(a[1])-sessStart(b[1]))}
 let pendingOut=null,guestFor=null,payFor=null;
-async function saveBooking(mut){const cur=S.bookings[S.uid]||{s:{}};const next={key:myProfile().listKey,s:{...(cur.s||{})}};mut(next.s);await S.db.doc('bookings/'+S.uid).set(next)}
-async function join(sid,pay){try{await saveBooking(s=>{s[sid]={at:new Date().toISOString(),guests:[],pay:pay||'cash'}});payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
-async function setPay(sid,pay){try{await saveBooking(s=>{s[sid]={...s[sid],pay,sent:null}});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
-async function markSent(sid){try{await saveBooking(s=>{s[sid]={...s[sid],sent:new Date().toISOString()}});toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
-async function unmarkSent(sid){try{await saveBooking(s=>{const x={...s[sid]};delete x.sent;s[sid]=x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
+/* Bookings: one change to one session per save, named in op (join, leave, guest or pay), with server times,
+   exactly as the security rules expect. Several sessions = several saves. */
+async function saveBooking(sid,kind,fn){const cur=S.bookings[S.uid]||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
+  const e=fn(o);if(!e)return;s[sid]=e;await S.db.doc('bookings/'+S.uid).set({key:myProfile().listKey,s,op:{sid,kind},u:SVT()})}
+const freshEntry=(pay,at)=>({at:at||new Date().toISOString(),t:SVT(),guests:[],pay:pay||'cash'});
+/* staff change to someone else's booking (admins and community managers for that sport) */
+async function staffBooking(uid,sid,fn,base){const cur=S.bookings[uid]||base||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
+  const e=fn(o);if(e===undefined)return;if(e===null)delete s[sid];else s[sid]=e;
+  const {op,u,...rest}=cur;await S.db.doc('bookings/'+uid).set({...rest,s,op:{sid,kind:'admin'},u:SVT()})}
+const isFull=sid=>{const r=roster(sid);return r.in.length>=r.cap&&r.wait.length>=r.wc&&!(typeof perk!=='undefined'&&perk.skipWait(S.uid))};
+async function join(sid,pay){if(isFull(sid)){toast('Sorry, this session and its waiting list are full.');return}try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
+async function setPay(sid,pay){try{await saveBooking(sid,'pay',o=>{const x={...o,pay};delete x.sent;return x});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
+async function markSent(sid){try{await saveBooking(sid,'pay',o=>({...o,sent:new Date().toISOString()}));toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
+async function unmarkSent(sid){try{await saveBooking(sid,'pay',o=>{const x={...o};delete x.sent;return x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
 const payOn=k=>{const c=S.payCfg||{};return c[k]!==false};
 function payPicker(sid,isChange){return `<div class="confirm"><b>${isChange?'Change how you pay':'How would you like to pay?'}</b>
   <div class="paypick">${Object.entries(PAY).filter(([k])=>payOn(k)).map(([k,m])=>`<button type="button" data-pay="${k}" data-sid="${sid}" data-change="${isChange?1:0}">${ic(m.icon)}<b>${m.label}</b><span class="fine">${m.sub}</span></button>`).join('')}</div>
@@ -1429,11 +1507,11 @@ function payInfo(sid,s,mine,amt){const fee=amt!=null?amt:s.fee;
     ${det}${k!=='cash'&&!mine.sent?`<button class="btn ghost sm" data-sent="${sid}" style="justify-self:start">${ic('check')}I've paid</button>`:''}${mine.sent?`<button class="linkbtn" data-unsent="${sid}" style="justify-self:start">Tapped by mistake? Undo</button>`:''}</div>`;
 }
 async function leave(sid,late){const now=new Date().toISOString();
-  try{await saveBooking(s=>{if(late)s[sid]={...s[sid],out:now,guests:(s[sid].guests||[]).map(g=>g.out?g:{...g,out:now})};else delete s[sid]});pendingOut=null;toast(late?'Your name is removed. The fee is noted.':'Your name is removed. Thank you for letting us know.')}catch(e){toast("Sorry, that didn't save. Please try again.")}}
+  try{await saveBooking(sid,'leave',o=>({...o,out:now,tout:SVT(),guests:(o.guests||[]).map(g=>g.out?g:{...g,out:now})}));pendingOut=null;toast(late?'Your name is removed. The fee is noted.':'Your name is removed. Thank you for letting us know.')}catch(e){toast("Sorry, that didn't save. Please try again.")}}
 async function addGuest(sid,name){name=name.trim().slice(0,24);if(!name){toast("Please add your guest's name.");return}
-  try{await saveBooking(s=>{s[sid]={...s[sid],guests:[...(s[sid].guests||[]),{n:name,at:new Date().toISOString()}]}});guestFor=null;toast(`${name} is on the list as your guest.`)}catch(e){toast("Sorry, that didn't save.")}}
+  try{await saveBooking(sid,'guest',o=>({...o,guests:[...(o.guests||[]),{n:name,at:new Date().toISOString()}]}));guestFor=null;toast(`${name} is on the list as your guest.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function dropGuest(sid,gi,late){const now=new Date().toISOString();
-  try{await saveBooking(s=>{const g=[...(s[sid].guests||[])];if(late)g[gi]={...g[gi],out:now};else g.splice(gi,1);s[sid]={...s[sid],guests:g}});pendingOut=null;toast(late?'Guest removed. The fee is noted under your name.':'Guest removed.')}catch(e){toast("Sorry, that didn't save.")}}
+  try{await saveBooking(sid,'guest',o=>{const g=[...(o.guests||[])];if(late)g[gi]={...g[gi],out:now};else g.splice(gi,1);return {...o,guests:g}});pendingOut=null;toast(late?'Guest removed. The fee is noted under your name.':'Guest removed.')}catch(e){toast("Sorry, that didn't save.")}}
 
 function renderPlay(){
   const el=$('v-play'),me=myProfile();
@@ -1460,7 +1538,7 @@ function sessCard(sid,s){const me=myProfile();
     else if(wpos>=0){status=`<span class="tagl">Waitlist #${wpos+1}</span>`;actions=`<button class="btn ghost sm" data-wout="${sid}">Leave waitlist</button>`}
     else if(me&&!started){const ss=signupState(s,S.uid),fmtO=t=>new Date(t).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
       if(!ss.open)status=`<span class="tagl">Sign-ups open ${esc(fmtO(ss.opens))}</span>`;
-      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':'Join waitlist'):'Count me in'}</button>`}}
+      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=r.in.length>=r.cap&&r.wait.length>=r.wc&&!perk.skipWait(S.uid)?`<span class="tagl warn">Full · waiting list full</span>`:`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':`Join waitlist${r.wc<Infinity?` · ${r.wc-r.wait.length} left`:''}`):'Count me in'}</button>`}}
     let conf='';
     if(pendingOut&&pendingOut.sid===sid){const f=feeFor(s,new Date().toISOString()),g=pendingOut.gi!=null;
       conf=`<div class="confirm"><p><b>Just so you know:</b> it's now under ${f.label==='Full fee'?'24':'48'} hours to start. Removing ${g?'your guest':'your name'} means the ${esc(f.label.toLowerCase())}, AED ${f.amount}${g?', under your name':''}.</p>
@@ -1600,13 +1678,13 @@ function renderCard(){
         <div class="tiles hstats h3">
           ${statT('Sessions',attended,'Played with BAD')}
           ${statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
-          ${statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked')}
+          ${S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
           ${memType(m.type)?.staff?'':`<details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memPick().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details>`}</section>`})()}
       <section class="hsec"><h3 class="ah">Your activities</h3>
-        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
+        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[k==='badminton'?gradeLabel(S.uid):lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       ${recentHTML(S.uid)}
@@ -1626,14 +1704,14 @@ function renderCard(){
   el.querySelectorAll('[data-askclose]').forEach(b=>b.onclick=()=>{S.askOpen=false;renderCard()});
   const an=$('ask-note');if(an)an.oninput=()=>S.askNote=an.value;
   el.querySelectorAll('[data-asksend]').forEach(b=>b.onclick=async()=>{const note=($('ask-note')?.value||'').trim(),ids=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent').map(r=>r.sid),at=new Date().toISOString();
-    try{await saveBooking(x=>{ids.forEach(id=>{x[id]={...x[id],ask:{at,note}}})});S.askOpen=false;S.askNote='';toast('Sent. An admin will check and confirm. Thank you.')}catch(e){toast("Sorry, that didn't send. Please try again.")}});
-  el.querySelectorAll('[data-askcancel]').forEach(b=>b.onclick=async()=>{try{await saveBooking(x=>{Object.keys(x).forEach(id=>{if(x[id]&&x[id].ask){const y={...x[id]};delete y.ask;x[id]=y}})});toast('Request cancelled.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{for(const id of ids)await saveBooking(id,'pay',o=>o&&({...o,ask:{at,note}}));S.askOpen=false;S.askNote='';toast('Sent. An admin will check and confirm. Thank you.')}catch(e){toast("Sorry, that didn't send. Please try again.")}});
+  el.querySelectorAll('[data-askcancel]').forEach(b=>b.onclick=async()=>{try{for(const [id,o] of Object.entries(S.bookings[S.uid]?.s||{}))if(o&&o.ask)await saveBooking(id,'pay',x=>{const y={...x};delete y.ask;return y});toast('Request cancelled.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-clearmine]').forEach(b=>b.onclick=async()=>{const due=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent'),at=new Date().toISOString();
     try{for(const r of due){const cur={...(S.payments[r.sid]||{})};cur[S.uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}S.payAll=false;toast('Cleared. Nothing pending.')}catch(e){toast("Sorry, that didn't save. Please publish the latest rules and try again.")}});
   el.querySelectorAll('[data-payalldone]').forEach(b=>b.onclick=async()=>{const k=b.dataset.payalldone,ids=myActivity().filter(r=>r.payState==='pending').map(r=>r.sid),at=new Date().toISOString();
-    try{await saveBooking(x=>{ids.forEach(id=>{x[id]={...x[id],pay:k,sent:at}})});S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{for(const id of ids)await saveBooking(id,'pay',o=>o&&({...o,pay:k,sent:at}));S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-payjump]').forEach(b=>b.onclick=()=>{const d=el.querySelector('.payrow');if(!d)return;d.open=true;S.openPay=d.dataset.payrow;d.scrollIntoView({behavior:'smooth',block:'center'})});
-  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));el.querySelectorAll('[data-rankgo]').forEach(b=>b.onclick=()=>{S.boardMode='rank';setView('board')});
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
   const r=$('redeem');if(r)r.onclick=requestFree;
   el.querySelectorAll('[data-givebadge]').forEach(b=>b.onclick=()=>openBadge(b.dataset.givebadge||''));
@@ -1691,6 +1769,110 @@ function renderClub(){
 (function(){const b=$('theme');if(!b)return;const set=t=>{if(t==='light')document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');b.setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');try{localStorage.setItem('badTheme',t)}catch(_){}};
   b.onclick=()=>set(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');set(document.documentElement.getAttribute('data-theme')==='light'?'light':'dark')})();
 
+/* ---------- BAD maths: session sizing, score checks, rotation and standings ----------
+   Pure functions, no screen or database code, so they can be unit-tested (tests/badmath.test.mjs).
+   The reasoning behind every rule is in the Badminton Queuing plan. */
+const BADMATH=(()=>{
+  const FORMATS={21:{target:21,cap:30,mins:12},30:{target:30,cap:35,mins:17}};
+  const TARGET_GAMES=5;
+
+  /* ---- session sizing ----
+     average games each = 4·C·T / (N·d): every doubles game gives 4 player-games */
+  const gamesEach=(N,C,T,d)=>N>0&&d>0?4*C*T/(N*d):0;
+  /* games still needed to bring everyone present up to the target, and the time that takes */
+  function shortfall(games,target=TARGET_GAMES){return games.reduce((s,g)=>s+Math.max(0,target-g),0)}
+  function timeNeeded(S,C,d){const K=Math.ceil(S/4);return C>0?d*Math.ceil(K/C):Infinity}
+  /* advice for crew: null when everyone can still reach the target in the time left */
+  function advice({games,courts,minsLeft,d,target=TARGET_GAMES}){
+    const S=shortfall(games,target);if(!S)return {ok:true,S:0};
+    const need=timeNeeded(S,courts,d),needMore=timeNeeded(S,courts+1,d);
+    return need<=minsLeft?{ok:true,S,need}:{ok:false,S,need,extend:Math.ceil((need-minsLeft)/5)*5,withCourt:needMore,courtEnough:needMore<=minsLeft}}
+
+  /* ---- scores ----
+     valid final scores: win at the target by 2+, or by exactly 2 past it, or at the cap by 1 or 2 */
+  function validScore(fmt,x,y){const f=FORMATS[fmt];if(!f)return false;
+    if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x===y)return false;
+    const w=Math.max(x,y),l=Math.min(x,y);
+    return (w===f.target&&l<=f.target-2)||(w>f.target&&w<f.cap&&w-l===2)||(w===f.cap&&l>=f.cap-2)}
+  function scoreHint(fmt,x,y){const f=FORMATS[fmt];if(!f)return 'Pick 21 or 30 points first.';
+    if(x===''||y===''||x==null||y==null)return 'Enter both scores.';
+    x=Number(x);y=Number(y);if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0)return 'Scores are whole numbers.';
+    if(x===y)return 'Badminton can’t end in a tie.';
+    const w=Math.max(x,y),l=Math.min(x,y);
+    if(w<f.target)return `A ${f.target}-point game ends at ${f.target} or more.`;
+    if(w>f.cap)return `${f.cap} is the most a ${f.target}-point game can reach.`;
+    if(w===f.target&&l>f.target-2)return `At ${f.target-1}–${f.target-1} you need a 2-point lead to win.`;
+    if(w>f.target&&w<f.cap&&w-l!==2)return `Past ${f.target}, the winner is exactly 2 points ahead.`;
+    if(w===f.cap&&l<f.cap-2)return `A game only reaches ${f.cap} from ${f.cap-1}–${f.cap-1} or ${f.cap-2}–${f.cap-1}.`;
+    return '';}
+  /* points scaled to a 21-point game, so mixed formats compare fairly in the tiebreak */
+  const scaled=(s,fmt)=>s*21/(FORMATS[fmt]?FORMATS[fmt].target:21);
+
+  /* ---- rotation ----
+     players: [{id, g: games this session, base: lowest count when they arrived (late-arrival credit),
+                since: when they became free (ms), deferred: times passed over, rating, cat}]
+     history: past and prepared lineups [{a:[id,id], b:[id,id]}] */
+  const eff=p=>Math.max(p.g||0,(p.base||0)-1);
+  function order(players){return [...players].sort((x,y)=>eff(x)-eff(y)||(x.since||0)-(y.since||0)||String(x.id).localeCompare(String(y.id)))}
+  function counts(history){const part={},opp={},key=(x,y)=>x<y?x+'|'+y:y+'|'+x;
+    for(const m of history){for(const t of [m.a,m.b])if(t&&t.length===2){const k=key(t[0],t[1]);part[k]=(part[k]||0)+1}
+      if(m.a&&m.b)for(const x of m.a)for(const y of m.b){const k=key(x,y);opp[k]=(opp[k]||0)+1}}
+    return {part,opp,key}}
+  const W={balance:30,partner:10000,opponent:3,mix:2,depth:5};
+  /* the cheapest of the 3 ways to split four players into two teams */
+  function pairing(four,cnt,fallbackRating){
+    const r=p=>typeof p.rating==='number'?p.rating:fallbackRating;
+    let best=null;
+    for(const [i,j,k,l] of [[0,1,2,3],[0,2,1,3],[0,3,1,2]]){
+      const a=[four[i],four[j]],b=[four[k],four[l]];
+      const bal=Math.abs(r(a[0])+r(a[1])-r(b[0])-r(b[1]));
+      const P=(cnt.part[cnt.key(a[0].id,a[1].id)]||0)+(cnt.part[cnt.key(b[0].id,b[1].id)]||0);
+      let O=0;for(const x of a)for(const y of b)O+=cnt.opp[cnt.key(x.id,y.id)]||0;
+      const w=t=>t.filter(p=>p.cat==='W').length,M=w(a)!==w(b)?1:0;
+      const cost=W.balance*bal+W.partner*P+W.opponent*O+W.mix*M;
+      if(!best||cost<best.cost)best={a:a.map(p=>p.id),b:b.map(p=>p.id),cost,bal,P,O,M}}
+    return best}
+  /* pick the next four: fairness first (fewest games, longest wait, nobody skipped twice), then the best teams */
+  function pickFour(players,history,poolSize=8){
+    const q=order(players);if(q.length<4)return null;
+    const known=q.map(p=>p.rating).filter(x=>typeof x==='number'),avg=known.length?known.reduce((s,x)=>s+x,0)/known.length:3;
+    const cnt=counts(history),pool=q.slice(0,poolSize),e4=eff(q[3]);
+    const must=pool.filter(p=>eff(p)<e4).map(p=>p.id);
+    const forced=pool.filter(p=>eff(p)===e4&&(p.deferred||0)>0).map(p=>p.id);
+    if(!must.includes(pool[0].id)&&!forced.includes(pool[0].id))forced.unshift(pool[0].id);
+    const req=[...must,...forced].slice(0,4);
+    let best=null;const n=pool.length;
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)for(let k=j+1;k<n;k++)for(let l=k+1;l<n;l++){
+      const four=[pool[i],pool[j],pool[k],pool[l]],ids=four.map(p=>p.id);
+      if(four.some(p=>eff(p)>e4))continue;                 /* never skip a player with fewer games */
+      if(req.some(id=>!ids.includes(id)))continue;         /* first in line and anyone passed over before */
+      const pr=pairing(four,cnt,avg),cost=pr.cost+W.depth*(i+j+k+l-6);
+      if(!best||cost<best.cost)best={...pr,cost,last:l}}
+    if(!best){const pr=pairing(q.slice(0,4),cnt,avg);best={...pr,last:3}}
+    const chosen=new Set([...best.a,...best.b]);
+    /* players at the same level who were passed over must go next time */
+    const deferred={};for(const p of pool.slice(0,best.last+1))deferred[p.id]=chosen.has(p.id)?0:(eff(p)===e4?(p.deferred||0)+1:(p.deferred||0));
+    return {a:best.a,b:best.b,cost:best.cost,bal:best.bal,P:best.P,O:best.O,deferred}}
+
+  /* ---- standings ----
+     games: [{a:[ids], b:[ids], score:[sa,sb], fmt}] (final results only) */
+  function standings(games){
+    const t={};const row=id=>t[id]||(t[id]={id,played:0,wins:0,losses:0,pf:0,pa:0,sp:0});
+    for(const g of games){if(!g||!g.score)continue;const [sa,sb]=g.score.map(Number);
+      for(const [team,mine,theirs] of [[g.a,sa,sb],[g.b,sb,sa]])for(const id of team){const r=row(id);r.played++;
+        if(mine>theirs)r.wins++;else r.losses++;r.pf+=mine;r.pa+=theirs;r.sp+=scaled(mine,g.fmt)}}
+    const rows=Object.values(t).map(r=>({...r,diff:r.pf-r.pa,pct:r.played?r.wins/r.played:0,sp:Math.round(r.sp*10)/10}));
+    /* most wins, then most scaled points, then fewer games played (same result in fewer chances). Names never decide. */
+    const cmp=(x,y)=>y.wins-x.wins||y.sp-x.sp||x.played-y.played;
+    rows.sort((x,y)=>cmp(x,y)||String(x.id).localeCompare(String(y.id)));
+    let rank=0;rows.forEach((r,i)=>{if(i===0||cmp(rows[i-1],r)!==0)rank=i+1;r.rank=rank});
+    return rows}
+  const winners=rows=>rows.filter(r=>r.rank===1&&r.played>0).map(r=>r.id);
+
+  return {FORMATS,TARGET_GAMES,gamesEach,shortfall,timeNeeded,advice,validScore,scoreHint,scaled,eff,order,pairing,pickFour,standings,winners,W};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=BADMATH;
+
 /* ---------- Courts: live board for badminton, volleyball, pickleball, basketball ---------- */
 /* Admins place every player. Flow: Bench (fewest games first) → Waiting courts → Courts → Game done → back to Bench. */
 const COURT_SPORTS=['badminton','volleyball','pickleball','basketball'];
@@ -1704,7 +1886,37 @@ const MARK={ /* horizontal courts, net at x=50, drawn to each sport's real propo
  volleyball:mk('<path d="M33.3 0V100M66.7 0V100" vector-effect="non-scaling-stroke"/>'),
  basketball:mk('<ellipse cx="50" cy="50" rx="6.5" ry="12" vector-effect="non-scaling-stroke"/><path d="M0 37H20.7V63H0M100 37H79.3V63H100M0 6H10A26 44 0 0 1 10 94H0M100 6H90A26 44 0 0 0 90 94H100" vector-effect="non-scaling-stroke"/>')
 };
-S.live={};S.games={};S.scores={};S.courtSid=null;let sel=null,liveQ=Promise.resolve();
+S.live={};S.games={};S.scores={};S.courtSid=null;let sel=null;
+
+/* ---------- lean court data ----------
+   Only tonight's sessions are followed live (board, games, scores), and only while the app is open on screen.
+   Your own older games load once; everyone's history loads only when the Rank board is opened. */
+S.gSess={};S.gMine={};S.gAll=null;S.subs={};S.pend=0;S.saveErr=null;
+const mergeGames=()=>{S.games={...(S.gAll||{}),...S.gMine,...S.gSess}};
+function activeSids(){const now=Date.now();
+  return Object.entries(S.sessions||{}).filter(([,s])=>COURT_SPORTS.includes(s.sport||'badminton')&&sessStart(s)>now-18*36e5&&sessStart(s)<now+12*36e5)
+    .sort((a,b)=>sessStart(a[1])-sessStart(b[1])).map(([id])=>id).slice(0,10)}
+function courtSubs(){
+  const d=S.sessData;if(!d)return;
+  const want=document.hidden?[]:activeSids(),key=want.join(',')||'-';
+  if(S.subs.key===key)return;
+  (S.subs.off||[]).forEach(f=>{try{f()}catch(_){}});S.subs={key,off:[]};
+  for(const k of Object.keys(S.live))if(!want.includes(k))delete S.live[k];
+  if(!want.length){S.gSess={};mergeGames();return}
+  for(const sid of want)S.subs.off.push(d.db.doc('live/'+sid).onSnapshot(x=>{if(x.exists)S.live[sid]=x.data();else delete S.live[sid];render()},()=>{}));
+  S.subs.off.push(d.db.collection('games').where('sid','in',want).onSnapshot(s=>{S.gSess=d.map(s);mergeGames();render()},()=>{}));
+  S.subs.off.push(d.db.collection('awards').where('sid','in',want).onSnapshot(s=>{S.awards=d.map(s);render()},()=>{}));
+  S.subs.off.push(d.db.collection('results').where('sid','in',want).onSnapshot(s=>{S.results=d.map(s);render()},()=>{}));
+  if(S.canEdit||want.some(x=>isGM(x)))S.subs.off.push(d.db.collection('scores').onSnapshot(s=>{S.scores=d.map(s);render()},()=>{}));
+}
+async function myGamesLoad(){const d=S.sessData;if(!d||!S.uid)return;
+  try{const r=await Promise.all(['a','b'].map(t=>d.db.collection('games').where(t,'array-contains',S.uid).get()));S.gMine={...d.map(r[0]),...d.map(r[1])};mergeGames();render()}catch(_){}}
+async function allGamesLoad(){if(S.gAll||S.gAllP)return;const d=S.sessData;if(!d)return;S.gAllP=true;
+  try{const s=await d.db.collection('games').get();S.gAll=d.map(s);mergeGames();render()}catch(_){}finally{S.gAllP=false}}
+{let hideT=null;
+  document.addEventListener('visibilitychange',()=>{clearTimeout(hideT);if(document.hidden)hideT=setTimeout(courtSubs,60000);else courtSubs()});
+  setInterval(courtSubs,30*60e3);
+  addEventListener('online',()=>renderCourts());addEventListener('offline',()=>renderCourts())}
 
 const gpid=(uid,name)=>`g~${uid}~${slug(name)}`;
 function people(sid){
@@ -1720,7 +1932,42 @@ function who(sid,pid){const m=people(sid);if(m[pid])return m[pid];const p=S.prof
   for(const g of Object.values(S.games))if(g.names&&g.names[pid])return{name:g.names[pid]};return{name:'Player'}}
 function pav(sid,pid){const x=who(sid,pid);return x.p?avatar(x.p):avatar(null,x.name)}
 const sessGames=sid=>Object.entries(S.games).filter(([,g])=>g.sid===sid).sort((a,b)=>(a[1].at||'').localeCompare(b[1].at||''));
-const gamesFor=(sid,pid)=>sessGames(sid).filter(([,g])=>[...g.a,...g.b].includes(pid)).length;
+/* games that count for rotation: finished or being checked, never cancelled ones */
+const liveGames=sid=>sessGames(sid).filter(([,g])=>g.st!=='cancelled');
+const gamesFor=(sid,pid)=>liveGames(sid).filter(([,g])=>[...g.a,...g.b].includes(pid)).length;
+
+/* ---------- session plan: courts, time and the 5-game check ---------- */
+const sessEnd=s=>at(s.date,s.end||'22:00');
+const addMins=(hhmm,m)=>{const [h,mi]=String(hhmm||'22:00').split(':').map(Number);const t=Math.min(23*60+59,Math.max(0,h*60+mi+m));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')};
+const msOf=t=>t&&typeof t.toMillis==='function'?t.toMillis():t&&t.seconds!=null?t.seconds*1000:typeof t==='string'?Date.parse(t):typeof t==='number'?t:NaN;
+/* game length in minutes: server times, unless the phone was offline and they disagree by more than 30 s */
+function gameMins(g){const sv=msOf(g.end)-msOf(g.start),dv=msOf(g.endDev)-msOf(g.startDev);
+  const ms=isFinite(sv)&&sv>0&&(!isFinite(dv)||Math.abs(sv-dv)<=30000)?sv:isFinite(dv)&&dv>0?dv:NaN;return isFinite(ms)?ms/60000:NaN}
+function avgMins(sid){const ds=liveGames(sid).map(([,g])=>g.interrupted?NaN:gameMins(g)).filter(x=>x>2&&x<90);return ds.length>=3?{d:ds.reduce((a,b)=>a+b,0)/ds.length,n:ds.length}:null}
+function presentIds(lv){return Object.keys(lv.checkin||{}).filter(p=>!(lv.out||[]).includes(p))}
+function planInfo(sid,lv){const s=S.sessions[sid],now=Date.now(),st=sessStart(s),en=sessEnd(s);
+  const present=presentIds(lv),N=present.length||roster(sid).in.length,C=lv.courts.length,T=Math.max(0,(en-st)/6e4);
+  const left=Math.max(0,(en-Math.max(now,st))/6e4),m=avgMins(sid),d=m?m.d:BADMATH.FORMATS[21].mins;
+  const games=present.map(p=>gamesFor(sid,p));
+  return {N,C,T,left,d,measured:m,each:BADMATH.gamesEach(N,C,T,d),adv:BADMATH.advice({games,courts:C,minsLeft:left,d}),games}}
+const fmtMins=m=>{m=Math.round(m);return m>=60?`${Math.floor(m/60)} h${m%60?' '+m%60+' min':''}`:`${m} min`};
+function planTile(sid,lv,full){const s=S.sessions[sid],P=planInfo(sid,lv),admin=S.canEdit&&canSport(s.sport||'badminton');
+  const head=`${P.N} players · ${P.C} court${P.C===1?'':'s'} · ${fmtMins(P.T)} · about <b class="num">${P.each.toFixed(1)}</b> games each`;
+  const dl=P.measured?`Average game ${Math.round(P.d)} min, from ${P.measured.n} timed games.`:`Planning with ${Math.round(P.d)}-minute games until 3 games are timed.`;
+  const warn=!P.adv.ok?`<div class="note warnbox" role="status"><b>${P.adv.S} more games are needed for everyone to reach 5.</b> That takes about ${fmtMins(P.adv.need)}, with ${fmtMins(P.left)} left.
+      <div class="row" style="gap:6px;margin-top:8px">${admin?`<button class="btn sm" data-act="extend" data-v="${P.adv.extend}">${ic('clock')}Extend ${P.adv.extend} min</button>`:''}<button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add a court${P.adv.courtEnough?' (fits in time)':''}</button></div></div>`
+    :P.games.length?`<p class="fine">${ic('check')} On track: everyone can reach 5 games${P.adv.need?`, in about ${fmtMins(P.adv.need)}`:''}.</p>`:'';
+  if(!full)return !P.adv.ok?`<div class="tile plan">${warn}</div>`:warn?`<div class="plan">${warn}</div>`:'';
+  const r=roster(sid),wc=r.wc===Infinity?'No limit':r.wc;
+  const prev=n=>`${n} players: about ${BADMATH.gamesEach(n,P.C,P.T,P.d).toFixed(1)} games each`;
+  return `<div class="tile plan"><div class="sec-h"><b>${ic('users')} Session</b><span class="fine">Ends ${fmtTime(s.end||'22:00')}</span></div>
+    <p>${head}</p><p class="fine">${dl}</p>${warn}
+    ${admin?`<div class="planctl">
+      <div><span class="label">Player cap</span><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="cap" data-v="-1" aria-label="Lower the player cap">−</button><b class="num">${r.cap}</b><button class="btn ghost sm" data-act="cap" data-v="1" aria-label="Raise the player cap">+</button></div><span class="fine">${esc(prev(r.cap+1))}</span></div>
+      <div><span class="label">Waiting list</span><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="wcap" data-v="-1" aria-label="Shorter waiting list">−</button><b class="num">${wc}</b><button class="btn ghost sm" data-act="wcap" data-v="1" aria-label="Longer waiting list">+</button></div><span class="fine">${r.wait.length} waiting${r.over.length?`, ${r.over.length} turned away`:''}</span></div>
+      <div><span class="label">Time</span><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="extend" data-v="15">+15 min</button><button class="btn ghost sm" data-act="extend" data-v="30">+30 min</button></div><span class="fine">Ends ${fmtTime(s.end||'22:00')}</span></div>
+    </div>`:'<p class="fine">Admins can change the player cap, waiting list and end time.</p>'}</div>`}
+async function sessUpdate(sid,patch,msg){try{await S.db.doc('sessions/'+sid).update(patch);toast(msg)}catch(e){toast("Sorry, that didn't save.")}}
 
 function scoreOf(gid,g){
   if(g.final)return{s:g.final,st:'confirmed'};
@@ -1754,20 +2001,46 @@ const placed=lv=>new Set([...lv.courts,...lv.waiting].flatMap(c=>c.on).filter(Bo
 /* Bench = checked-in players who are not on a court or waiting. Default order: first come, first served
    (check-in time, then the time their last game ended). Late arrivals join at the back; nobody jumps ahead for having fewer games. */
 function benchOf(sid,lv){norm(lv);const p=placed(lv),out=new Set(lv.out);
-  return Object.keys(lv.checkin).filter(x=>!p.has(x)&&!out.has(x)).map(x=>({x,t:lv.avail[x]||lv.checkin[x],c:lv.checkin[x],g:gamesFor(sid,x)}))
-    .sort((a,b)=>(!!(lv.rest||{})[a.x]-!!(lv.rest||{})[b.x])||(lv.catchup?(a.g-b.g||a.t.localeCompare(b.t)):a.t.localeCompare(b.t))).map(o=>o.x)}
+  const free=Object.keys(lv.checkin).filter(x=>!p.has(x)&&!out.has(x));
+  const ord=BADMATH.order(free.map(x=>rotP(sid,lv,x))).map(o=>o.id);
+  return [...ord.filter(x=>!isRest(lv,x)),...ord.filter(x=>isRest(lv,x))]}
+/* one player as the rotation sees them */
+function rotP(sid,lv,id){return {id,g:gamesFor(sid,id),base:(lv.base||{})[id]||0,since:msOf(lv.avail[id]||lv.checkin[id])||0,deferred:(lv.defer||{})[id]||0,
+  rating:S.profiles[id]?badRating(id):null,cat:S.profiles[id]?catOf(id):null}}
+/* lineups already played or prepared, so fresh partners and opponents are preferred */
+function lineups(sid,lv){const h=liveGames(sid).map(([,g])=>({a:g.a,b:g.b}));
+  for(const c of [...lv.courts,...lv.waiting]){const half=c.size/2,a=c.on.slice(0,half).filter(Boolean),b=c.on.slice(half).filter(Boolean);if(a.length&&b.length)h.push({a,b})}return h}
+/* fill an empty doubles slot with the next four from the rotation; other sizes fill in bench order */
+function generateInto(sid,lv,c){const bench=benchOf(sid,lv).filter(p=>!isRest(lv,p));
+  if(c.size===4&&!c.on.some(Boolean)){const r=BADMATH.pickFour(bench.map(x=>rotP(sid,lv,x)),lineups(sid,lv));if(!r)return false;
+    c.on=[...r.a,...r.b];lv.defer={...(lv.defer||{}),...r.deferred};return true}
+  const before=c.on.filter(Boolean).length;c.on=c.on.map(x=>x||bench.shift()||null);return c.on.filter(Boolean).length>before}
+/* late-arrival credit: remember the lowest games count among players already there */
+function setBase(sid,lv,pid){const others=presentIds(lv).filter(x=>x!==pid).map(x=>gamesFor(sid,x));lv.base=lv.base||{};if(others.length)lv.base[pid]=Math.min(...others)}
+/* format suggestion: 21 points at capacity; 30 below it while everyone can still reach 5 games */
+function suggestFmt(sid,lv){const P=planInfo(sid,lv);if(P.N>=roster(sid).cap)return 21;
+  const a=BADMATH.advice({games:P.games,courts:P.C,minsLeft:P.left,d:P.measured?P.measured.d*30/21:BADMATH.FORMATS[30].mins});return a.ok?30:21}
+const elapsed=c=>{const t=msOf(c.t0dev);return isFinite(t)?Math.max(0,Math.floor((Date.now()-t)/60000)):0};
 const isRest=(lv,p)=>!!(lv.rest||{})[p];
 function detach(lv,pid){for(const c of [...lv.courts,...lv.waiting])c.on=c.on.map(x=>x===pid?null:x);lv.out=lv.out.filter(x=>x!==pid)}
 function locate(lv,pid){for(const [k,arr] of [['c',lv.courts],['w',lv.waiting]])for(let ci=0;ci<arr.length;ci++){const i=arr[ci].on.indexOf(pid);if(i>=0)return[k,ci,i]}return null}
 const blank=(size)=>Array(size).fill(null);
-function saveLive(sid,lv){lv.updatedAt=new Date().toISOString();S.live[sid]=lv;renderCourts();
-  liveQ=liveQ.then(()=>S.db.doc('live/'+sid).set(lv)).catch(()=>toast("Sorry, the court board didn't save. Please try again."))}
+/* Every save carries the next revision number. The security rules turn down a save made from an old copy of the board,
+   so two phones can never undo each other's changes; the phone that lost simply shows the latest board. */
+function saveLive(sid,lv){lv.updatedAt=new Date().toISOString();lv.rev=((S.live[sid]&&S.live[sid].rev)||0)+1;S.live[sid]=lv;S.pend++;S.saveErr=null;renderCourts();
+  S.db.doc('live/'+sid).set(lv).then(()=>{S.pend--;renderCourts()},e=>{S.pend--;S.saveErr=Date.now();
+    toast(e&&e.code==='permission-denied'?'Another phone changed the board just now. You’re seeing the latest. Please make that change again.':"Sorry, the court board didn't save. Please try again.");renderCourts()})}
+function saveState(){if(S.pend>0)return navigator.onLine===false?['warn','Offline · saves when you’re back online']:['','Saving…'];
+  if(S.saveErr&&Date.now()-S.saveErr<15000)return['warn','Not saved · showing the latest board'];return['ok','Saved']}
 function startBoard(sid){const sp=S.sessions[sid].sport||'badminton',size=SIZES[sp][0][0];
-  saveLive(sid,{courts:Array.from({length:DEF_COURTS[sp]},(_,i)=>({id:'c'+(i+1),name:'Court '+(i+1),size,on:blank(size)})),waiting:[{id:'w1',size,on:blank(size)},{id:'w2',size,on:blank(size)}],walkins:[],out:[],checkin:{},avail:{},order:'arrival'});
+  saveLive(sid,{courts:Array.from({length:Number(S.sessions[sid].courts)||DEF_COURTS[sp]},(_,i)=>({id:'c'+(i+1),name:'Court '+(i+1),size,on:blank(size)})),waiting:[{id:'w1',size,on:blank(size)},{id:'w2',size,on:blank(size)}],walkins:[],out:[],checkin:{},avail:{},order:'arrival'});
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
-S.courtStep=3;S.asPlayer=false;let pendingDone=null;
+S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='';
+const CANCEL_REASONS=['Injury','Player had to leave','Wrong lineup','Court problem','Other'];
+/* timers on playing courts tick once a minute without redrawing the board */
+setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m)/60000))+' min'}),20000);
 const nm=(sid,pid)=>pid===S.uid?'You':who(sid,pid).name;
 function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
   const tag=o.act?'button':'span',me=pid===S.uid;
@@ -1775,30 +2048,53 @@ function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
 function spot(o={}){return o.act?`<button class="pl" data-act="${o.act}" ${o.data||''} aria-label="Open spot"><span class="slot">${ic('plus')}</span></button>`:`<span class="pl"><span class="slot"></span></span>`}
 function sideHTML(sid,c,k,ci,from,to,edit){let h='';for(let i=from;i<to;i++){const pid=c.on[i],d=`data-k="${k}" data-c="${ci}" data-i="${i}"`;h+=pid?pl(sid,pid,{act:edit?'slot':null,data:d,games:edit,lv:S.live[sid]}):spot({act:edit?'slot':null,data:d})}return h}
 function courtCard(sid,c,ci,edit){
-  const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,gno=sessGames(sid).filter(([,g])=>g.court===c.name).length+1;
+  const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,playing=c.st==='playing',gno=liveGames(sid).filter(([,g])=>g.court===c.name).length+1;
+  const fmt=c.fmt||(sp==='badminton'?suggestFmt(sid,S.live[sid]||{courts:[]}):null);
   let foot='';
-  if(edit){foot=pendingDone===ci
-    ?`<div class="confirm"><b>Final score?</b><div class="row" style="gap:6px"><span class="fine">Left</span><input type="number" min="0" id="sa-${ci}" class="sc" value="${c.score&&(c.score[0]||c.score[1])?c.score[0]:''}" aria-label="Score, left team"><span class="muted">–</span><input type="number" min="0" id="sb-${ci}" class="sc" value="${c.score&&(c.score[0]||c.score[1])?c.score[1]:''}" aria-label="Score, right team"><span class="fine">Right</span></div>
-      <div class="row" style="gap:6px"><button class="btn sm" data-act="done" data-c="${ci}">${ic('check')}Save game</button><button class="btn ghost sm" data-act="done" data-c="${ci}" data-noscore="1">Skip score</button><button class="btn ghost sm" data-act="nodone">Back</button></div></div>`
-    :`<div class="row" style="justify-content:flex-end;gap:6px">${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">Auto-fill</button>`:''}<button class="btn sm" data-act="askdone" data-c="${ci}" ${full<2?'disabled':''}>${ic('check')}Game done</button></div>`}
-  const sc=c.score||[0,0],live=full>=2;
-  const board=live?(edit?`<div class="scoreboard" aria-label="Live score">${[0,1].map(t=>`<div class="sb-side"><button class="sbb" data-act="pt" data-c="${ci}" data-t="${t}" data-d="-1" aria-label="Minus one, ${t?'right':'left'} team">−</button><b class="num">${sc[t]}</b><button class="sbb plus" data-act="pt" data-c="${ci}" data-t="${t}" data-d="1" aria-label="Plus one, ${t?'right':'left'} team">+</button></div>`).join('<span class="sb-mid">–</span>')}</div>`
-    :(sc[0]||sc[1]?`<div class="scoreboard ro"><b class="num">${sc[0]}</b><span class="sb-mid">–</span><b class="num">${sc[1]}</b></div>`:'')):'';
-  return `<article class="court"><div class="court-h"><b>${esc(c.name)}</b><span class="tagl${full?' solid':''}">${full?'Game '+gno:'Free'}</span></div>
-    <div class="court-body ${sp}">${MARK[sp]||''}<div class="half">${sideHTML(sid,c,'c',ci,0,half,edit)}</div><div class="net"><span>${MIDLINE[sp]||'NET'}</span></div><div class="half">${sideHTML(sid,c,'c',ci,half,c.size,edit)}</div></div>${board}${foot}</article>`;
+  if(edit){
+    if(cancelAsk===ci)foot=`<div class="confirm"><b>${playing?'Cancel this game?':'Clear this court?'}</b>${playing?`<p class="fine">No result is counted. The players go back to the front of the bench.</p>
+        <div class="chips" role="group" aria-label="Reason">${CANCEL_REASONS.map(r=>`<button class="chip sm" data-act="cancelwhy" data-v="${esc(r)}" aria-pressed="${cancelWhy===r}">${esc(r)}</button>`).join('')}</div>`:''}
+        <div class="row" style="gap:6px"><button class="btn sm" data-act="cancelgo" data-c="${ci}" ${playing&&!cancelWhy?'disabled':''}>${playing?'Cancel game':'Clear court'}</button><button class="btn ghost sm" data-act="cancelno">Back</button></div></div>`;
+    else if(playing)foot=`<div class="row cfoot"><button class="linkbtn" data-act="cancelask" data-c="${ci}">Cancel</button><button class="btn wide" data-act="finish" data-c="${ci}">${ic('check')}Finish</button></div>`;
+    else foot=`<div class="row cfoot">${full?`<button class="linkbtn" data-act="cancelask" data-c="${ci}">Clear</button>`:''}${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">${ic('users')}Fill from rotation</button>`:''}${full>=2?`<button class="btn wide" data-act="begin" data-c="${ci}" ${full<c.size&&sp==='badminton'?'disabled':''}>${ic('play')}Start</button>`:''}</div>`}
+  const fchip=fmt?(edit&&!playing?`<button class="chip sm fmt" data-act="fmt" data-c="${ci}" aria-label="Game format, tap to change">To ${fmt}</button>`:`<span class="tagl">To ${fmt}</span>`):'';
+  const tag=playing?`<span class="tagl solid timer" data-t0="${esc(c.t0dev||'')}">${elapsed(c)} min</span>`:`<span class="tagl">${full?'Game '+gno+' · ready':'Free'}</span>`;
+  return `<article class="court${playing?' on':''}"><div class="court-h"><b>${esc(c.name)}</b><span class="row" style="gap:6px">${fchip}${tag}</span></div>
+    <div class="court-body ${sp}">${MARK[sp]||''}<div class="half">${sideHTML(sid,c,'c',ci,0,half,edit&&!playing)}</div><div class="net"><span>${MIDLINE[sp]||'NET'}</span></div><div class="half">${sideHTML(sid,c,'c',ci,half,c.size,edit&&!playing)}</div></div>${foot}</article>`;
 }
 function waitRow(sid,w,wi,edit){
   const half=w.size/2,full=w.on.filter(Boolean).length;
   return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span>${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</div>
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
+/* crew and Game Masters verify the BAD grade and category; an optional rating override replaces the table rating */
+function gradePick(uid,sid){const r=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{},c=r.cat||'',g=gradeRow(r.g||''),calc=g&&(c||pr.cat)?((c||pr.cat)==='W'?g[2]:g[3]):'';
+  return `<div class="gpick" data-gp="${esc(uid)}"><select data-gk="g" aria-label="BAD level"><option value="U">UNRATED${pr.grade&&!g?' · says '+esc(pr.grade):''}</option>${GRADES.map(([k,d])=>`<option value="${k}" ${r.g===k?'selected':''}>${k} · ${esc(d)}</option>`).join('')}</select>
+    <select data-gk="cat" aria-label="Balancing category"><option value="">W / M${pr.cat&&!c?' · says '+esc(pr.cat):''}</option>${Object.keys(CATS).map(k=>`<option value="${k}" ${c===k?'selected':''}>${k}</option>`).join('')}</select>
+    <input type="number" step="0.5" min="0" max="7" inputmode="decimal" data-gk="ovr" placeholder="${calc===''?'Rating':esc(calc)}" value="${typeof r.ovr==='number'?r.ovr:''}" aria-label="Rating override. Replaces the table rating" title="Override replaces the table rating"></div>`}
+async function saveGrade(uid,sid,k,v){
+  const cur=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{};
+  const from={g:cur.g||'U',cat:cur.cat||null,ovr:typeof cur.ovr==='number'?cur.ovr:null};
+  const to={...from};
+  if(k==='g')to.g=gradeRow(v)?v:'U';
+  if(k==='cat')to.cat=CATS[v]?v:null;
+  if(k==='ovr'){const n=v===''?null:Math.round(Number(v)*2)/2;if(n!=null&&!(n>=0&&n<=7)){toast('Ratings go from 0 to 7.');return}to.ovr=n}
+  if(k!=='cat'&&!to.cat&&CATS[pr.cat])to.cat=pr.cat;   /* the player's own category, now confirmed by crew */
+  const me=myProfile(),doc={...to,by:S.uid,byName:(me&&me.nickname)||'',at:SVT(),sid,scale:GRADE_SCALE};
+  /* keep the old 5-step level (scale v1) the first time, for the record. It is never turned into a grade. */
+  if(cur.prev)doc.prev=cur.prev;else{const lv=S.levels&&S.levels[uid],ov=lv&&lv.levels?lv.levels.badminton:null,own=pr.levels?pr.levels.badminton:null;
+    doc.prev={scale:'v1',self:own==null||own===''?null:(LEVELS[own]||null),crew:ov==null?null:(LEVELS[ov]||null)}}
+  try{const b=S.db.batch();b.set(S.db.doc('grades/'+uid),doc);b.set(S.db.collection('grades/'+uid+'/log').doc(),{from,to,by:S.uid,byName:doc.byName,at:SVT(),sid});await b.commit();
+    toast(`${(S.profiles[uid]||{}).nickname||'Player'}: ${gradeRow(to.g)?to.g:'UNRATED'}${to.cat?' - '+to.cat:''}${to.ovr!=null?' · rating '+to.ovr:''}. Saved.`)}
+  catch(e){toast("Sorry, that level didn't save.");renderCourts()}}
 function levelPick(uid,sp){const own=ownLevel(uid,sp),o=S.levels[uid],ov=o&&o.levels?o.levels[sp]:(o?o.level:null);
   return `<label class="lvl"><span class="fine">Level</span><select data-lvl="${esc(uid)}" data-sp="${sp}"><option value="">${own!=null?'Their own: '+LEVELS[own]:'Not set'}</option>${LEVELS.map((l,i)=>`<option value="${i}" ${ov===i?'selected':''}>${l}</option>`).join('')}</select></label>`}
-function stepper(){const st=[['Set up','Courts'],['Check in','Who has arrived'],['Games','Place and log'],['Wrap up','Scores, sheet']];
+function stepper(){const n=S.courtSid?supportCount(S.courtSid):0,st=[['Set up','Courts and time'],['Check in','Who has arrived'],['Games','Courts and next up'],['Scores',n?`${n} to check`:'Standings']];
   return `<div class="stepper">${st.map(([t,d],i)=>`<button data-act="step" data-n="${i+1}" aria-current="${S.courtStep===i+1?'step':'false'}"><span class="qn num" style="position:static">${i+1}</span><span><b>${t}</b><span class="fine">${d}</span></span></button>`).join('')}</div>`}
 
 function renderCourts(){
   const el=$('v-courts');if(!el||S.view!=='courts')return;
+  const fa=document.activeElement;if(fa&&el.contains(fa)&&fa.matches('input,textarea')){if(!el._wait){el._wait=1;fa.addEventListener('blur',()=>{el._wait=0;setTimeout(renderCourts,0)},{once:true})}return}
   const me=myProfile();
   if(!S.courtSport){const liveS=Object.keys(S.live).map(k=>S.sessions[k]).filter(Boolean).find(x=>sessStart(x)>Date.now()-18*36e5);S.courtSport=(liveS&&liveS.sport)||(me&&COURT_SPORTS.find(k=>(me.sports||[]).includes(k)))||'badminton'}
   const list=courtSessions();
@@ -1807,7 +2103,7 @@ function renderCourts(){
   const sid=S.courtSid,s=sid&&S.sessions[sid],lv0=sid&&S.live[sid];
   const ED=courtEd(sid),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const pick=list.length>1?`<div class="sports">${list.map(([id,x])=>{const d=dParts(x.date);return `<button class="sp" data-act="pick" data-sid="${id}" aria-pressed="${id===sid}">${ic(sportOf(x.sport).icon)}${esc(x.title)} · ${d.w} ${d.d}${S.live[id]?' ●':''}</button>`}).join('')}</div>`:'';
-  const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button></div>`:'';
+  const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button>${sid&&S.live[sid]?(()=>{const v=saveState();return `<span class="tagl savest ${v[0]}" role="status">${esc(v[1])}</span>`})():''}</div>`:'';
   const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · Courts</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
     el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&!nxt?`<button class="btn ghost sm" data-act="goadmin">${ic('plus')}Add a session</button>`:''}</div>`;bindCourts(el);return}
@@ -1818,21 +2114,23 @@ function renderCourts(){
     const pend=!lv.checkin[meId]&&S.myCI?.[sid],inn=lv.checkin[meId],st=pend?['Checking you in…','Scan received. It confirms in a moment.']:loc&&loc[0]==='c'?['On '+lv.courts[loc[1]].name,'Enjoy the game.']:loc?[loc[1]===0?'You’re next':'Up in '+(loc[1]+1),loc[1]===0?'Get ready.':'Hang tight.']:inn&&!lv.out.includes(meId)?['On the bench','#'+(bench.indexOf(meId)+1)+' in line · checked in '+hhmm(inn)]:ppl[meId]?['Not checked in','Please check in with an admin when you arrive.']:null;
     const myGames=sessGames(sid).filter(([,g])=>[...g.a,...g.b].includes(meId));
     const benchMe=inn&&!loc&&!lv.out.includes(meId),rest=isRest(lv,meId),more=(lv.more||{})[meId];
-    const todo=sessGames(sid).filter(([gid,g])=>[...g.a,...g.b].includes(meId)&&!g.final&&!S.scores[meId]?.g?.[gid]).slice(-1)[0];
-    el.innerHTML=head+`${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
+    const legacy=myGames.filter(([,g])=>!v2(g));
+    const todo=legacy.filter(([gid,g])=>!g.final&&!S.scores[meId]?.g?.[gid]).slice(-1)[0];
+    el.innerHTML=head+`${S.awards[sid]?standingsHTML(sid,false):''}${playerScoresHTML(sid)}${todo?`<div class="tile prompt"><span class="label">${ic('star')} Add your score</span>${gameRow(sid,todo[0],todo[1],0,true,true)}</div>`:''}${st?`<div class="tile you"><span class="label">You</span><b class="big">${esc(rest&&benchMe?'Sitting out':st[0])}</b><span class="fine">${esc(rest&&benchMe?'Tap Ready when you want back in. You keep your place.':st[1])}</span>
       ${inn&&!lv.out.includes(meId)?`<div class="row" style="gap:6px;margin-top:6px"><button class="btn sm ${rest?'':'ghost'} inv" data-act="rest" data-v="${rest?0:1}">${rest?ic('play')+'Ready to play':ic('clock')+'Sit out a game'}</button><button class="btn sm ghost inv" data-act="more" data-v="${more?0:1}" aria-pressed="${!!more}">${ic('plus')}${more?'Up for extra: on':'Up for extra games'}</button></div>`:''}</div>`:''}
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,false)).join('')}</div></div><aside class="side">
       ${lv.waiting.some(w=>w.on.some(Boolean))?`<div class="sec"><span class="label">Next</span><div class="waits">${lv.waiting.map((w,i)=>w.on.some(Boolean)?waitRow(sid,w,i,false):'').join('')}</div></div>`:''}
       ${bench.length?`<div class="sec"><span class="label">Bench</span><div class="bench">${bench.map((p,i)=>pl(sid,p,{n:i+1,lv})).join('')}</div></div>`:''}
-      <p class="fine">Games go in order of arrival. Arriving late may mean fewer games.</p>
-      ${myGames.length?`<div class="sec"><span class="label">Your games · ${myGames.length}</span><div class="list">${myGames.map(([gid,g],i)=>gameRow(sid,gid,g,i,true)).join('')}</div></div>`:''}</aside></div>`;
-    bindCourts(el);return;
+      <p class="fine">Fewest games play first. Arrive late and you join one game behind.</p>
+      ${!S.awards[sid]?standingsHTML(sid,false):''}
+      ${legacy.length?`<div class="sec"><span class="label">Earlier games · ${legacy.length}</span><div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,true)).join('')}</div></div>`:''}</aside></div>`;
+    bindCourts(el);bindScores(el);return;
   }
   /* ---------- admin view: step by step ---------- */
   let body='';
   if(S.courtStep===1){
     const sp=s.sport||'badminton';
-    body=`<div class="tile"><div class="sec-h"><b>${ic('court')} Courts</b><button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add court</button></div>
+    body=`${planTile(sid,lv,true)}<div class="tile"><div class="sec-h"><b>${ic('court')} Courts</b><button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add court</button></div>
       <div class="list">${lv.courts.map((c,i)=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(c.name)}</div><div class="chips" style="margin-top:6px">${SIZES[sp].map(([n,l])=>`<button class="chip sm" data-act="size" data-k="c" data-c="${i}" data-n="${n}" aria-pressed="${c.size===n}">${l}</button>`).join('')}</div></div>${lv.courts.length>1&&!c.on.some(Boolean)?`<button class="btn ghost sm" data-act="del" data-k="c" data-c="${i}">${ic('x')}</button>`:''}</div>`).join('')}</div></div>
       <div class="tile"><div class="sec-h"><b>${ic('clock')} Waiting area</b><div class="row" style="gap:6px"><button class="btn ghost sm" data-act="wless" ${lv.waiting.length<2?'disabled':''} aria-label="Fewer waiting groups">−</button><b class="num">${lv.waiting.length}</b><button class="btn ghost sm" data-act="add" data-k="w" aria-label="More waiting groups">+</button></div></div>
         <p class="fine">Groups lined up to go on next. When a game ends, the first group moves onto that court.</p></div>
@@ -1847,26 +2145,26 @@ function renderCourts(){
         <input type="text" id="ci-find" placeholder="Find a player" autocomplete="off">
         <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button></div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
         <div class="row"><input type="text" id="walk-name" maxlength="24" placeholder="Walk-in player's name" style="flex:1;min-width:160px"><button class="btn ghost sm" data-act="walk">${ic('guest')}Add and check in</button></div></div>
-      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?levelPick(p,s.sport||'badminton'):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
+      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       <button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`;
   }else if(S.courtStep===3){
-    body=`<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
+    body=`${planTile(sid,lv,false)}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,true)).join('')}</div>
       <div class="sec"><span class="label">Waiting area</span><div class="waits">${lv.waiting.map((w,i)=>waitRow(sid,w,i,true)).join('')}</div></div></div>
-      <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · ${lv.catchup?'catch-up: fewest games first':'first come, first served'}</span><button class="chip sm" data-act="catchup" aria-pressed="${!!lv.catchup}">${ic('arrow')}Catch-up</button></div>
+      <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · fewest games first</span></div>
         <div class="bench">${bench.map((p,i)=>pl(sid,p,{act:'bench',data:`data-pid="${esc(p)}"`,n:i+1,games:true,lv})).join('')||'<span class="fine">Everyone checked in is placed.</span>'}</div>
         ${Object.keys(ppl).filter(p=>!lv.checkin[p]).length?`<button class="btn ghost sm" data-act="step" data-n="2" style="justify-self:start">${ic('check')}${Object.keys(ppl).filter(p=>!lv.checkin[p]).length} not checked in</button>`:''}</div></aside></div>
       ${sel?`<div class="selbar">${pav(sid,sel)}<b style="flex:1;min-width:90px">${esc(who(sid,sel).name)}</b><div class="row" style="gap:6px">${locate(lv,sel)?`<button class="btn ghost sm" data-act="tobench">To bench</button>`:''}<button class="btn ghost sm" data-act="orest">${isRest(lv,sel)?'Ready':'Rest'}</button><button class="btn ghost sm" data-act="out">Left</button><button class="btn sm" data-act="unsel">${ic('x')}</button></div></div>`:''}`;
   }else{
-    const counts=Object.keys(ppl).map(p=>[p,gamesFor(sid,p)]).sort((a,b)=>b[1]-a[1]);
-    body=`<div class="tile"><b>${ic('play')} Game log · ${sessGames(sid).length}</b><p class="fine">Confirm or correct scores. Players' own entries show as Reported.</p>
-        <div class="list">${sessGames(sid).map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')||'<span class="fine">No games logged yet.</span>'}</div></div>
-      <div class="tile"><b>${ic('users')} Games per player</b><div class="list">${counts.map(([p,n])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<span>${esc(who(sid,p).name)}</span><b class="num">${n}</b></div>`).join('')}</div></div>`;
+    const legacy=sessGames(sid).filter(([,g])=>!v2(g));
+    body=`${supportHTML(sid)}${typeof standingsHTML==='function'?standingsHTML(sid,true):''}${legacy.length?`<div class="tile"><b>${ic('play')} Earlier games · ${legacy.length}</b><p class="fine">Logged before score checks. Confirm or correct them here.</p>
+        <div class="list">${legacy.map(([gid,g],i)=>gameRow(sid,gid,g,i,false)).join('')}</div></div>`:''}`;
   }
   el.innerHTML=head+stepper()+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
+  el.querySelectorAll('[data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,S.courtSid,x.dataset.gk,x.value));
   const fd=$('ci-find');if(fd)fd.oninput=e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#ci-list .ci').forEach(r=>r.hidden=q&&!r.dataset.name.includes(q))};
-  bindCourts(el);
+  bindCourts(el);bindScores(el);
 }
 function gameRow(sid,gid,g,i,mine,bare){
   const sc=scoreOf(gid,g),names=t=>t.map(p=>esc(nm(sid,p))).join(' & ');
@@ -1890,47 +2188,66 @@ function bindCourts(el){el.onclick=async ev=>{
     try{if(act==='final')await S.db.doc('games/'+gid).update({final:v});else{const cur=S.scores[S.uid]?.g||{};await S.db.doc('scores/'+S.uid).set({g:{...cur,[gid]:v}})}toast('Score saved. Thank you.')}catch(e){toast("Sorry, the score didn't save.")}return}
   if(!courtEd(sid))return;
   if(act==='start'){S.courtStep=1;return startBoard(sid)}
+  if(act==='cap'||act==='wcap'||act==='extend'){const ss=S.sessions[sid];if(!(S.canEdit&&canSport(ss.sport||'badminton'))){toast('Only admins can change this.');return}
+    if(act==='cap'){const n=Math.max(2,(Number(ss.capacity)||20)+Number(b.dataset.v));return sessUpdate(sid,{capacity:n},`Player cap is ${n}.${Number(b.dataset.v)>0&&roster(sid).wait.length?' The next person on the waiting list is in.':''}`)}
+    if(act==='wcap'){const cur=ss.waitCap==null||ss.waitCap===''?roster(sid).wait.length:Number(ss.waitCap),n=Math.max(0,cur+Number(b.dataset.v));return sessUpdate(sid,{waitCap:n},`Waiting list holds ${n}.`)}
+    const e=addMins(ss.end||'22:00',Number(b.dataset.v));return sessUpdate(sid,{end:e},`Session now ends at ${fmtTime(e)}.`)}
   const lv=norm(clone(S.live[sid])),arr=k=>k==='w'?lv.waiting:lv.courts,sp=S.sessions[sid].sport||'badminton';
   if(act==='bench'){sel=sel===b.dataset.pid?null:b.dataset.pid;return renderCourts()}
   if(act==='qr')return showQR(sid);
-  if(act==='catchup'){lv.catchup=!lv.catchup;toast(lv.catchup?'Catch-up on: fewest games are called first.':'Back to first come, first served.');return saveLive(sid,lv)}
   if(act==='orest'){lv.rest=lv.rest||{};lv.ft=lv.ft||{};lv.rest[sel]=!lv.rest[sel];lv.ft[sel]=new Date().toISOString();sel=null;return saveLive(sid,lv)}
-  if(act==='ci'){const p=b.dataset.pid;lv.checkin[p]=new Date().toISOString();toast(`${who(sid,p).name} checked in · #${Object.keys(lv.checkin).length}`);return saveLive(sid,lv)}
+  if(act==='ci'){const p=b.dataset.pid;setBase(sid,lv,p);lv.checkin[p]=new Date().toISOString();toast(`${who(sid,p).name} checked in · #${Object.keys(lv.checkin).length}`);return saveLive(sid,lv)}
   if(act==='unci'){const p=b.dataset.pid;delete lv.checkin[p];delete lv.avail[p];detach(lv,p);return saveLive(sid,lv)}
   if(act==='order'){lv.order=b.dataset.v;return saveLive(sid,lv)}
   if(act==='unsel'){sel=null;return renderCourts()}
-  if(act==='pt'){const c=lv.courts[+b.dataset.c],t=+b.dataset.t;c.score=c.score||[0,0];c.score[t]=Math.max(0,c.score[t]+(+b.dataset.d));return saveLive(sid,lv)}
-  if(act==='askdone'){pendingDone=+b.dataset.c;return renderCourts()}
-  if(act==='nodone'){pendingDone=null;return renderCourts()}
+  if(act==='cancelask'){cancelAsk=+b.dataset.c;cancelWhy='';return renderCourts()}
+  if(act==='cancelno'){cancelAsk=null;return renderCourts()}
+  if(act==='cancelwhy'){cancelWhy=b.dataset.v;return renderCourts()}
   if(act==='slot'){const c=arr(b.dataset.k)[+b.dataset.c],i=+b.dataset.i,cur=c.on[i];
+    if(c.st==='playing'){toast('This game has started. Finish or cancel it first.');return}
+    if(sel){const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');sel=null;return renderCourts()}}
     if(!sel){if(cur){sel=cur;renderCourts()}return}
     if(cur===sel){sel=null;return renderCourts()}
     const from=locate(lv,sel);detach(lv,sel);
     if(cur){detach(lv,cur);if(from)arr(from[0])[from[1]].on[from[2]]=cur}
     c.on[i]=sel;sel=null;return saveLive(sid,lv)}
-  if(act==='tobench'){detach(lv,sel);sel=null;return saveLive(sid,lv)}
-  if(act==='out'){detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
+  if(act==='tobench'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);sel=null;return saveLive(sid,lv)}
+  if(act==='out'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
   if(act==='restore'){lv.out=lv.out.filter(x=>x!==b.dataset.pid);return saveLive(sid,lv)}
   if(act==='walk'){const n=$('walk-name').value.trim().slice(0,24);if(!n){toast("Please type the player's name.");return}
-    const wid=slug(n)+'-'+Date.now().toString(36);lv.walkins.push({id:wid,name:n});lv.checkin['w~'+wid]=new Date().toISOString();toast(`${n} is checked in.`);return saveLive(sid,lv)}
+    const wid=slug(n)+'-'+Date.now().toString(36);lv.walkins.push({id:wid,name:n});setBase(sid,lv,'w~'+wid);lv.checkin['w~'+wid]=new Date().toISOString();toast(`${n} is checked in.`);return saveLive(sid,lv)}
   if(act==='add'){const k=b.dataset.k,size=(k==='w'&&lv.courts[0]?.size)||SIZES[sp][0][0];
     if(k==='c')lv.courts.push({id:'c'+Date.now().toString(36),name:'Court '+(lv.courts.length+1),size,on:blank(size)});else lv.waiting.push({id:'w'+Date.now().toString(36),size,on:blank(size)});return saveLive(sid,lv)}
   if(act==='wless'){const i=lv.waiting.map(w=>w.on.some(Boolean)).lastIndexOf(false);lv.waiting.splice(i>=0?i:lv.waiting.length-1,1);return saveLive(sid,lv)}
-  if(act==='del'){arr(b.dataset.k).splice(+b.dataset.c,1);return saveLive(sid,lv)}
-  if(act==='size'){const c=arr(b.dataset.k)[+b.dataset.c],n=+b.dataset.n,on=c.on.filter(Boolean);c.size=n;c.on=blank(n);on.slice(0,n).forEach((p,i)=>c.on[i]=p);
+  if(act==='del'){const c=arr(b.dataset.k)[+b.dataset.c];if(c&&c.st==='playing'){toast('Finish or cancel the game on this court first.');return}arr(b.dataset.k).splice(+b.dataset.c,1);return saveLive(sid,lv)}
+  if(act==='size'){if(arr(b.dataset.k)[+b.dataset.c].st==='playing'){toast('Finish or cancel the game on this court first.');return}const c=arr(b.dataset.k)[+b.dataset.c],n=+b.dataset.n,on=c.on.filter(Boolean);c.size=n;c.on=blank(n);on.slice(0,n).forEach((p,i)=>c.on[i]=p);
     lv.waiting.forEach(w=>{if(!w.on.some(Boolean)){w.size=n;w.on=blank(n)}});return saveLive(sid,lv)}
-  if(act==='fill'){const c=arr(b.dataset.k)[+b.dataset.c],bench=benchOf(sid,lv).filter(p=>!isRest(lv,p));c.on=c.on.map(p=>p||bench.shift()||null);return saveLive(sid,lv)}
-  if(act==='done'){const ci=+b.dataset.c,c=lv.courts[ci],half=c.size/2,a=c.on.slice(0,half).filter(Boolean),bb=c.on.slice(half).filter(Boolean);
-    if(!a.length||!bb.length){toast('Please put players on both sides first.');return}
+  if(act==='fill'){const c=arr(b.dataset.k)[+b.dataset.c];if(c.st==='playing')return;if(!generateInto(sid,lv,c)){toast('Not enough players on the bench.');return}return saveLive(sid,lv)}
+  if(act==='fmt'){const c=lv.courts[+b.dataset.c];c.fmt=(c.fmt||suggestFmt(sid,lv))===21?30:21;return saveLive(sid,lv)}
+  if(act==='begin'){const c=lv.courts[+b.dataset.c],half=c.size/2;
+    if(!c.on.slice(0,half).some(Boolean)||!c.on.slice(half).some(Boolean)){toast('Please put players on both sides first.');return}
+    c.st='playing';c.t0=SVT();c.t0dev=new Date().toISOString();if(sp==='badminton')c.fmt=c.fmt||suggestFmt(sid,lv);
+    toast(`${c.name} has started${c.fmt?' · to '+c.fmt:''}.`);return saveLive(sid,lv)}
+  if(act==='finish'||act==='cancelgo'){const ci=+b.dataset.c,c=lv.courts[ci],half=c.size/2,a=c.on.slice(0,half).filter(Boolean),bb=c.on.slice(half).filter(Boolean),now=new Date().toISOString();
+    cancelAsk=null;
+    if(act==='cancelgo'&&c.st!=='playing'){c.on=blank(c.size);delete c.fmt;toast(`${c.name} is clear.`);return saveLive(sid,lv)}
     const names={};[...a,...bb].forEach(p=>names[p]=who(sid,p).name);
-    const g={sid,sport:sp,court:c.name,a,b:bb,names,at:new Date().toISOString()};
-    if(!b.dataset.noscore){const sa=$('sa-'+ci).value,sb=$('sb-'+ci).value;if(sa===''||sb===''){toast('Please enter both scores, or tap Skip score.');return}g.final=[Number(sa),Number(sb)]}
-    try{await S.db.doc('games/'+sid+'-'+Date.now().toString(36)).set(g)}catch(e){toast("Sorry, the game didn't save.");return}
-    pendingDone=null;const endT=new Date().toISOString();[...a,...bb].forEach(p=>lv.avail[p]=endT);c.on=blank(c.size);c.score=[0,0];
-    const nx=lv.waiting[0];
+    /* the game record: teams, court, format and both clocks. Finish frees the court; the score comes from the players and Support. */
+    const g={v:2,sid,sport:sp,court:c.name,a,b:bb,names,fmt:c.fmt||null,st:act==='finish'?'review':'cancelled',start:isFinite(msOf(c.t0))?c.t0:null,startDev:c.t0dev||null,end:SVT(),endDev:now,at:now};
+    if(act==='cancelgo'){g.reason=cancelWhy||'Other';g.interrupted=true;g.by=S.uid}
+    const gid=sid+'-'+Date.now().toString(36);
+    try{await S.db.doc('games/'+gid).set(g)}catch(e){toast("Sorry, the game didn't save. Please try again.");return}
+    S.gSess[gid]={...g,start:g.start||null,end:null};mergeGames();   /* count it now, before the next lineup is picked */
+    if(act==='finish')[...a,...bb].forEach(p=>lv.avail[p]=now);      /* cancelled: they keep their place in line */
+    c.on=blank(c.size);delete c.st;delete c.t0;delete c.t0dev;delete c.fmt;cancelWhy='';
+    /* bring on the next prepared lineup, or generate one straight onto the free court */
+    const nx=lv.waiting[0];let msg;
     if(nx&&nx.on.some(Boolean)){if(nx.size===c.size)c.on=[...nx.on];else nx.on.filter(Boolean).slice(0,c.size).forEach((p,i)=>c.on[i]=p);
-      lv.waiting.shift();lv.waiting.push({id:'w'+Date.now().toString(36),size:nx.size,on:blank(nx.size)});toast(`Game saved. Next up is on ${c.name}.`)}
-    else toast(`Game saved. ${c.name} is free.`);
+      lv.waiting.shift();lv.waiting.push({id:'w'+Date.now().toString(36),size:nx.size,on:blank(nx.size)});msg=`Next up is on ${c.name}.`}
+    else msg=generateInto(sid,lv,c)?`Next four are on ${c.name}.`:`${c.name} is free.`;
+    /* keep Next up prepared so players can see who's coming */
+    if(lv.waiting[0]&&!lv.waiting[0].on.some(Boolean))generateInto(sid,lv,lv.waiting[0]);
+    toast((act==='finish'?'Game finished. ':'Game cancelled. ')+msg);
     return saveLive(sid,lv)}
 }}
 
@@ -1938,6 +2255,7 @@ function bindCourts(el){el.onclick=async ev=>{
 S.boardMode='points';
 function renderBoard(){
   const f=S.sport,mode=S.boardMode;
+  if(mode==='rank'&&!S.gAll)allGamesLoad();
   const toggle=`<div class="chips"><button class="chip" data-bm="points" aria-pressed="${mode==='points'}">${ic('coin')}Points</button><button class="chip" data-bm="rank" aria-pressed="${mode==='rank'}">${ic('board')}Rank</button></div>`;
   let body;
   if(mode==='rank'){const rows=rankRows(f);
@@ -1950,6 +2268,152 @@ function renderBoard(){
   document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.bf;renderBoard()});
   document.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{S.boardMode=b.dataset.bm;renderBoard()});
 }
+
+/* ---------- Scores: submit → opposing team confirms → Support finalises ----------
+   A finished game (status review) counts for nothing until Support finalises it. Every step records who and when.
+   results/{gameId}: sub (submitted), conf (confirmed by the other team), disp (disputed), fin (final, by Support).
+   Scores are always stored the game's way round: sa for Team A, sb for Team B. */
+S.results={};
+const scoreDraft={};let disputeFor=null,correctFor=null;
+const DISPUTE_REASONS=['Wrong score','Wrong winner','Not our game','Other'];
+const resOf=gid=>S.results[gid]||{};
+const teamOf=(g,uid)=>g.a.includes(uid)?'a':g.b.includes(uid)?'b':null;
+const otherT=t=>t==='a'?'b':'a';
+const v2=g=>g&&g.v===2;
+/* where a game is in the process */
+function gState(gid,g){if(g.st==='cancelled')return 'cancelled';if(g.st==='final')return 'final';
+  const r=resOf(gid);if(r.disp)return 'disputed';if(r.sub&&r.conf)return 'ready';if(r.sub)return 'submitted';return 'noscore'}
+const teamNames=(sid,ids)=>ids.map(p=>esc(p===S.uid?'You':nm(sid,p))).join(' & ');
+const scoreTxt=(sa,sb)=>`${sa}–${sb}`;
+/* a score from one team's side: "21–17" with their own score first */
+const mySide=(t,sa,sb)=>t==='b'?[sb,sa]:[sa,sb];
+const fmtOf=g=>g.fmt||21;
+const isSupport=sid=>(S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton'))||isGM(sid);
+
+/* ---------- player side ---------- */
+function scoreInputs(gid,g,labels,opts={}){const d=scoreDraft[gid]||{},hint=d.x!==undefined&&d.y!==undefined&&d.x!==''&&d.y!==''?BADMATH.scoreHint(fmtOf(g),d.x,d.y):'';
+  return `<div class="scorein" data-scgid="${esc(gid)}">
+    <label class="sl"><span>${labels[0]}</span><input type="number" inputmode="numeric" min="0" max="35" class="sc" data-scx="x" value="${esc(d.x??'')}" aria-label="Score: ${labels[0].replace(/<[^>]+>/g,'')}"></label>
+    <label class="sl"><span>${labels[1]}</span><input type="number" inputmode="numeric" min="0" max="35" class="sc" data-scx="y" value="${esc(d.y??'')}" aria-label="Score: ${labels[1].replace(/<[^>]+>/g,'')}"></label>
+    <p class="fine schint" role="status">${esc(hint)}</p>
+    ${opts.note?`<input type="text" maxlength="80" class="scnote" data-scx="note" placeholder="${esc(opts.note)}" value="${esc(d.note||'')}">`:''}
+    <div class="row" style="gap:6px">${opts.buttons}</div></div>`}
+function playerGameTile(sid,gid,g){const t=teamOf(g,S.uid);if(!t)return '';const r=resOf(gid),st=gState(gid,g),f=fmtOf(g);
+  const mine=`<b>Your team</b> · ${teamNames(sid,g[t])}`,theirs=`<b>Opponents</b> · ${teamNames(sid,g[otherT(t)])}`;
+  const head=`<div class="row" style="justify-content:space-between"><span class="label">${esc(g.court)} · to ${f}</span>${st==='final'?`<span class="tagl solid">${ic('check')}Final</span>`:''}</div>`;
+  if(st==='noscore'||(st==='submitted'&&r.sub.team===t&&S.edit===gid)||(st==='disputed'&&S.edit===gid))
+    return `<div class="tile prompt">${head}<b>Add the final score</b>${scoreInputs(gid,g,[mine,theirs],{buttons:`<button class="btn sm" data-sc="submit" data-gid="${esc(gid)}">${ic('check')}Send score</button>${S.edit===gid?`<button class="btn ghost sm" data-sc="noedit">Back</button>`:''}`})}<p class="fine">One player from the other team confirms it, then Support makes it final.</p></div>`;
+  if(st==='submitted'&&r.sub.team===t){const [x,y]=mySide(t,r.sub.sa,r.sub.sb);
+    return `<div class="tile">${head}<p>You sent <b class="num">${scoreTxt(x,y)}</b> (${x>y?'win':'loss'}). Waiting for ${teamNames(sid,g[otherT(t)])} to confirm.</p><button class="linkbtn" data-sc="edit" data-gid="${esc(gid)}">Change the score</button></div>`}
+  if(st==='submitted'){const [x,y]=mySide(t,r.sub.sa,r.sub.sb);
+    if(disputeFor===gid)return `<div class="tile prompt">${head}<b>What’s wrong?</b><div class="chips" role="group">${DISPUTE_REASONS.map(x=>`<button class="chip sm" data-sc="why" data-v="${esc(x)}" aria-pressed="${(scoreDraft[gid]||{}).why===x}">${esc(x)}</button>`).join('')}</div>
+      <div class="row" style="gap:6px"><button class="btn sm" data-sc="dispute" data-gid="${esc(gid)}" ${(scoreDraft[gid]||{}).why?'':'disabled'}>Send to Support</button><button class="btn ghost sm" data-sc="nodispute">Back</button></div><p class="fine">Or enter the right score instead:</p>
+      ${scoreInputs(gid,g,[mine,theirs],{buttons:`<button class="btn ghost sm" data-sc="submit" data-gid="${esc(gid)}">Send this score instead</button>`})}</div>`;
+    return `<div class="tile prompt">${head}<b>Confirm the score</b><p>${teamNames(sid,g[otherT(t)])} sent <b class="num">${scoreTxt(x,y)}</b>, a ${x>y?'win':'loss'} for your team.</p>
+      <div class="row" style="gap:6px"><button class="btn sm" data-sc="confirm" data-gid="${esc(gid)}">${ic('check')}That’s right</button><button class="btn ghost sm" data-sc="askdispute" data-gid="${esc(gid)}">Something’s wrong</button></div></div>`}
+  if(st==='ready'){const [x,y]=mySide(t,r.sub.sa,r.sub.sb);return `<div class="tile">${head}<p><b class="num">${scoreTxt(x,y)}</b> agreed by both teams. Support will make it final.</p></div>`}
+  if(st==='disputed')return `<div class="tile">${head}<p>Support is checking this score.</p><button class="linkbtn" data-sc="edit" data-gid="${esc(gid)}">Enter the right score</button></div>`;
+  return '';}
+/* everything a player needs to act on, then their results tonight */
+function playerScoresHTML(sid){const mine=liveGames(sid).filter(([,g])=>v2(g)&&teamOf(g,S.uid));if(!mine.length)return '';
+  const act=mine.filter(([gid,g])=>['noscore','submitted','disputed','ready'].includes(gState(gid,g))).reverse();
+  const done=mine.filter(([gid,g])=>gState(gid,g)==='final').reverse();
+  return `${act.map(([gid,g])=>playerGameTile(sid,gid,g)).join('')}
+    ${done.length?`<div class="sec"><span class="label">Your results · ${done.length}</span><div class="list">${done.map(([gid,g])=>{const t=teamOf(g,S.uid),[x,y]=mySide(t,g.final[0],g.final[1]);
+      return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${x>y?'Won':'Lost'} · with ${teamNames(sid,g[t].filter(p=>p!==S.uid))||'—'}</div><div class="sub">v ${teamNames(sid,g[otherT(t)])} · ${esc(g.court)}</div></div><b class="num big" style="font-size:1.4rem">${scoreTxt(x,y)}</b></div>`}).join('')}</div></div>`:''}`}
+
+/* ---------- Support queue ---------- */
+const GROUPS=[['ready','Ready to finalise','Both teams agree. One tap makes it count.'],['disputed','Disputed','The teams disagree. Check with them, then enter the right score.'],
+  ['submitted','Needs confirming','One team has sent a score. If the other team can’t confirm, finalise it with a reason.'],['noscore','Needs a score','Nobody has sent a score yet. Ask the players, or enter it for guests.']];
+function supportCount(sid){return liveGames(sid).filter(([gid,g])=>v2(g)&&['ready','disputed','submitted','noscore'].includes(gState(gid,g))).length}
+function supportRow(sid,gid,g,st){const r=resOf(gid),f=fmtOf(g),A=teamNames(sid,g.a),B=teamNames(sid,g.b);
+  const claim=r.sub?`<p class="fine">${esc(nm(sid,r.sub.by))} sent <b class="num">${scoreTxt(r.sub.sa,r.sub.sb)}</b>${r.conf?` · confirmed by ${esc(nm(sid,r.conf.by))}`:''}${r.disp?` · disputed by ${esc(nm(sid,r.disp.by))}: ${esc(r.disp.why||'')}`:''}</p>`:'';
+  let act='';
+  if(st==='ready')act=`<button class="btn sm" data-sc="fin" data-gid="${esc(gid)}" data-how="agreed">${ic('check')}Finalise ${scoreTxt(r.sub.sa,r.sub.sb)}</button><button class="linkbtn" data-sc="sedit" data-gid="${esc(gid)}">Enter a different score</button>`;
+  else if(st==='submitted'&&!S.sedit[gid])act=`<button class="btn ghost sm" data-sc="fin" data-gid="${esc(gid)}" data-how="unavailable">Other team unavailable · finalise ${scoreTxt(r.sub.sa,r.sub.sb)}</button><button class="linkbtn" data-sc="sedit" data-gid="${esc(gid)}">Enter a different score</button>`;
+  if(st==='noscore'||st==='disputed'||S.sedit[gid])act=scoreInputs(gid,g,[`<b>Team A</b> · ${A}`,`<b>Team B</b> · ${B}`],{note:st==='disputed'?'What was agreed with the players':'',buttons:`<button class="btn sm" data-sc="fin" data-gid="${esc(gid)}" data-how="support">${ic('check')}Finalise this score</button>`});
+  return `<div class="li qrow"><div><div class="nm">${A} <span class="muted">v</span> ${B}</div><div class="sub">${esc(g.court)} · to ${f} · ${hhmm(new Date(msOf(g.endDev)||Date.now()).toISOString())}${isFinite(gameMins(g))?` · ${Math.round(gameMins(g))} min`:''}</div>${claim}<div class="qact">${act}</div></div></div>`}
+function supportHTML(sid){const gs=liveGames(sid).filter(([,g])=>v2(g)),by={};for(const [gid,g] of gs){const st=gState(gid,g);(by[st]=by[st]||[]).push([gid,g])}
+  const ready=by.ready||[];
+  const groups=GROUPS.map(([k,t,d])=>by[k]&&by[k].length?`<div class="tile qgroup"><div class="sec-h"><b>${t} · ${by[k].length}</b>${k==='ready'&&ready.length>1?`<button class="btn sm" data-sc="finall">${ic('check')}Finalise all ${ready.length}</button>`:''}</div><p class="fine">${d}</p><div class="list">${by[k].map(([gid,g])=>supportRow(sid,gid,g,k)).join('')}</div></div>`:'').join('');
+  const fin=(by.final||[]).slice().reverse(),can=(by.cancelled||[]);
+  return `${groups||`<div class="tile"><b>${ic('check')} All scores are final</b><p class="fine">New games show up here as soon as a court finishes.</p></div>`}
+    ${fin.length?`<div class="tile"><b>Final · ${fin.length}</b><div class="list">${fin.map(([gid,g])=>`<div class="li qrow"><div><div class="row" style="justify-content:space-between;gap:10px;flex-wrap:nowrap"><span class="nm" style="min-width:0">${teamNames(sid,g.a)} <span class="muted">v</span> ${teamNames(sid,g.b)}</span><b class="num" style="white-space:nowrap">${scoreTxt(g.final[0],g.final[1])}</b></div><div class="sub">${esc(g.court)} · to ${fmtOf(g)}${(resOf(gid).fin||{}).how==='unavailable'?' · other team unavailable':''}${(resOf(gid).fin||{}).note?' · '+esc(resOf(gid).fin.note):''}</div>
+      ${correctFor===gid?scoreInputs(gid,g,[`<b>Team A</b> · ${teamNames(sid,g.a)}`,`<b>Team B</b> · ${teamNames(sid,g.b)}`],{note:'Reason for the correction (required)',buttons:`<button class="btn sm" data-sc="fin" data-gid="${esc(gid)}" data-how="correction">Save correction</button><button class="btn ghost sm" data-sc="nocorrect">Back</button>`}):`<button class="linkbtn" data-sc="correct" data-gid="${esc(gid)}">Correct</button>`}</div></div>`).join('')}</div></div>`:''}
+    ${can.length?`<div class="tile"><b>Cancelled · ${can.length}</b><div class="list">${can.map(([gid,g])=>`<div class="li"><div><div class="nm">${teamNames(sid,g.a)} <span class="muted">v</span> ${teamNames(sid,g.b)}</div><div class="sub">${esc(g.court)} · ${esc(g.reason||'')} · no result</div></div></div>`).join('')}</div></div>`:''}`}
+S.sedit={};
+
+/* ---------- saving ---------- */
+function readDraft(gid,g,flip){const d=scoreDraft[gid]||{},x=Number(d.x),y=Number(d.y),h=BADMATH.scoreHint(fmtOf(g),d.x,d.y);
+  if(h){toast(h);return null}return flip?[y,x]:[x,y]}
+async function scoreAct(b){const k=b.dataset.sc,gid=b.dataset.gid,g=gid&&S.games[gid],sid=g&&g.sid;
+  if(k==='edit'){S.edit=gid;return renderCourts()}
+  if(k==='noedit'){S.edit=null;return renderCourts()}
+  if(k==='askdispute'){disputeFor=gid;return renderCourts()}
+  if(k==='nodispute'){disputeFor=null;return renderCourts()}
+  if(k==='why'){const id=disputeFor;scoreDraft[id]={...(scoreDraft[id]||{}),why:b.dataset.v};return renderCourts()}
+  if(k==='sedit'){S.sedit[gid]=true;return renderCourts()}
+  if(k==='correct'){correctFor=gid;const f=g.final||[];scoreDraft[gid]={x:f[0],y:f[1]};return renderCourts()}
+  if(k==='nocorrect'){correctFor=null;return renderCourts()}
+  if(k==='award'){await awardSession(S.courtSid);return renderCourts()}
+  const ref=S.db.doc('results/'+gid),cur=resOf(gid);
+  try{
+    if(k==='submit'){const t=teamOf(g,S.uid);if(!t)return;const v=readDraft(gid,g,t==='b');if(!v)return;
+      await ref.set({sid,sub:{sa:v[0],sb:v[1],by:S.uid,team:t,at:SVT()},conf:null,disp:null,fin:null});
+      S.edit=null;disputeFor=null;delete scoreDraft[gid];toast('Score sent. The other team will confirm it.')}
+    else if(k==='confirm'){await ref.set({...cur,sid,conf:{by:S.uid,at:SVT()}});toast('Confirmed. Thank you.')}
+    else if(k==='dispute'){const why=(scoreDraft[gid]||{}).why;await ref.set({...cur,sid,disp:{by:S.uid,at:SVT(),why}});disputeFor=null;toast('Sent to Support. They’ll check it with both teams.')}
+    else if(k==='fin'||k==='finall'){
+      const list=k==='finall'?liveGames(S.courtSid).filter(([id,x])=>v2(x)&&gState(id,x)==='ready').map(([id])=>id):[gid];
+      for(const id of list){const gg=S.games[id],rr=resOf(id),how=k==='finall'?'agreed':b.dataset.how;let v,note='';
+        if(how==='agreed'||how==='unavailable')v=[rr.sub.sa,rr.sub.sb];else{v=readDraft(id,gg,false);if(!v)return;note=((scoreDraft[id]||{}).note||'').trim().slice(0,80)}
+        if(how==='correction'&&!note){toast('Please add a reason for the correction.');return}
+        if(how==='unavailable')note='Other team unavailable to confirm';
+        await finalise(id,gg,v,how,note)}
+      correctFor=null;toast(list.length>1?`${list.length} scores are final.`:'Score is final. It counts now.')}
+  }catch(e){console.warn(e);toast("Sorry, that didn't save. Please try again.")}
+  renderCourts()}
+/* Support: the result, the game record and an add-only log entry, saved together */
+async function finalise(gid,g,v,how,note){const cur=resOf(gid),b=S.db.batch(),fin={sa:v[0],sb:v[1],by:S.uid,at:SVT(),how};if(note)fin.note=note;
+  b.set(S.db.doc('results/'+gid),{sid:g.sid,sub:cur.sub||null,conf:cur.conf||null,disp:cur.disp||null,fin});
+  b.update(S.db.doc('games/'+gid),{st:'final',final:v,finBy:S.uid,finAt:SVT()});
+  b.set(S.db.collection('results/'+gid+'/log').doc(),{sid:g.sid,sa:v[0],sb:v[1],how,note:note||'',by:S.uid,at:SVT(),was:g.final||null});
+  await b.commit();delete scoreDraft[gid];delete S.sedit[gid]}
+function bindScores(el){
+  el.querySelectorAll('[data-scgid] [data-scx]').forEach(x=>x.oninput=()=>{const gid=x.closest('[data-scgid]').dataset.scgid,d=scoreDraft[gid]=scoreDraft[gid]||{};d[x.dataset.scx]=x.value;
+    const g=S.games[gid],h=x.closest('[data-scgid]').querySelector('.schint');if(h&&g&&x.dataset.scx!=='note')h.textContent=d.x!==undefined&&d.y!==undefined&&d.x!==''&&d.y!==''?BADMATH.scoreHint(fmtOf(g),d.x,d.y):''});
+  el.querySelectorAll('[data-sc]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();scoreAct(b)})}
+
+/* ---------- session standings and BADDEST PLAYER ----------
+   Only final scores count. Most wins, then most points (scaled to a 21-point game), then fewer games. Exact ties share the title. */
+S.awards={};
+function sessStandings(sid){return BADMATH.standings(liveGames(sid).filter(([,g])=>v2(g)&&g.st==='final'&&g.final).map(([,g])=>({a:g.a,b:g.b,score:g.final,fmt:fmtOf(g)})))}
+const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
+function standingsHTML(sid,crew){const rows=sessStandings(sid),aw=S.awards[sid],pend=supportCount(sid),s=S.sessions[sid];
+  if(!rows.length)return crew?`<div class="tile"><b>${ic('board')} Standings</b><p class="fine">They appear as soon as the first score is final.</p></div>`:'';
+  const win=BADMATH.winners(rows),changed=aw&&!sameSet(aw.winners||[],win);
+  const admin=S.canEdit&&canSport((s||{}).sport||'badminton');
+  const badd=aw?`<div class="baddest"><span class="label">BADDEST PLAYER${(aw.winners||[]).length>1?'S':''}</span><b>${(aw.winners||[]).map(p=>esc(nm(sid,p))).join(' & ')}</b><span class="fine">+5 points${(aw.winners||[]).some(p=>!S.profiles[p])?' · guests need a card to collect points':''}</span></div>`:'';
+  const fin=!crew||!admin?'':pend?`<p class="fine">Finalise the ${pend} score${pend===1?'':'s'} above, then finalise the session to award BADDEST PLAYER.</p>`
+    :aw&&!changed?`<p class="fine">${ic('check')} Session finalised. A score correction here will let you update the award.</p>`
+    :`<div class="row" style="gap:8px;align-items:center"><button class="btn sm" data-sc="award">${ic('star')}${aw?'Update the award':'Finalise session · award BADDEST PLAYER'}</button>${changed?`<span class="fine">Standings changed after a correction.</span>`:''}</div>`;
+  return `<div class="tile standings">${badd}<div class="sec-h"><b>${ic('board')} ${aw?'Final standings':'Standings · live'}</b><span class="fine">Wins, then points</span></div>
+    <div class="stable" role="table" aria-label="Session standings"><div class="strow sh" role="row"><span>#</span><span>Player</span><span>W–L</span><span>Pts</span></div>
+    ${rows.map(r=>`<div class="strow${r.id===S.uid?' mine':''}${r.rank===1?' first':''}" role="row"><span class="num">${r.rank}</span><span>${esc(r.id===S.uid?'You':nm(sid,r.id))}${crew?`<small class="fine"> · ${r.played} game${r.played===1?'':'s'} · ${r.diff>0?'+':''}${r.diff}</small>`:''}</span><span class="num">${r.wins}–${r.losses}</span><span class="num">${Number.isInteger(r.sp)?r.sp:r.sp.toFixed(1)}</span></div>`).join('')}</div>
+    <p class="fine">Points from 30-point games are scaled to 21 so every game counts the same. Win % and point difference are for interest only.</p>${fin}</div>`}
+/* admin: finalise the session. One award per session; a later correction updates it with a reversal entry, never a second +5. */
+async function awardSession(sid){const s=S.sessions[sid],rows=sessStandings(sid),win=BADMATH.winners(rows);if(!win.length){toast('No final scores yet.');return}
+  const prev=(S.awards[sid]||{}).winners||[],t=`${s.title||'Badminton'} · ${fmtD(s.date)}`,dept=sportOf(s.sport).club;
+  const have=new Set((S.ledger||[]).map(e=>e._id));let n=0;
+  try{
+    for(const uid of win)if(S.profiles[uid]&&!prev.includes(uid)){const id=`baddest-${sid}-${uid}`;
+      if(!have.has(id)){await addLedger(id,{uid,type:'BADDEST PLAYER',pts:5,dept,date:s.date,sid,reason:'BADDEST PLAYER · '+t});n++}}
+    for(const uid of prev)if(S.profiles[uid]&&!win.includes(uid)){const k=(S.ledger||[]).filter(e=>String(e._id).startsWith(`baddest-${sid}-${uid}-undo`)).length;
+      await addLedger(`baddest-${sid}-${uid}-undo${k+1}`,{uid,type:'BADDEST PLAYER',pts:-5,dept,date:s.date,sid,reason:'BADDEST PLAYER changed after a correction · '+t})}
+    const top=rows.slice(0,5).map(r=>({id:r.id,rank:r.rank,wins:r.wins,sp:r.sp,played:r.played}));
+    await S.db.doc('awards/'+sid).set({sid,winners:win,top,by:S.uid,at:SVT(),rev:((S.awards[sid]||{}).rev||0)+1,prev:prev});
+    toast(`BADDEST PLAYER: ${win.map(p=>nm(sid,p)).join(' & ')}${n?` · +5 points`:''}`)}
+  catch(e){console.warn(e);toast("Sorry, the award didn't save. Please try again.")}}
 
 /* ---------- QR check-in, rest / extra games, levels ---------- */
 const APP_URL=window.BAD_WEB?location.origin+location.pathname:'https://claude.ai/artifact/2WfMUPuiwZQBxY6TFkBAMk';
@@ -1966,7 +2430,7 @@ function qrData(text,size=240){const k=size+'|'+text;if(_qrCache[k])return _qrCa
 const newCode=()=>Math.random().toString(36).slice(2,8).padEnd(6,'x');
 const ownLevel=(uid,sp)=>{const p=S.profiles[uid];if(!p)return null;return p.levels&&p.levels[sp]!=null?p.levels[sp]:(p.level??null)};
 const effLevel=(uid,sp)=>{const o=S.levels[uid];if(o&&o.levels&&o.levels[sp]!=null)return o.levels[sp];if(o&&o.level!=null&&!o.levels)return o.level;return ownLevel(uid,sp)};
-const lvlTag=(uid,sp)=>{const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
+const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
 
 /* player: complete a scanned check-in */
 async function processCheckin(){
@@ -1975,7 +2439,7 @@ async function processCheckin(){
   if(!myProfile()){if(!p.told){p.told=1;toast('Please register first. You’ll be checked in right after.');if(S.view!=='create')startCreator()}return}
   S.pendingCI=null;
   try{
-    if(!S.bookings[S.uid]?.s?.[p.sid]||S.bookings[S.uid].s[p.sid].out)await saveBooking(x=>{x[p.sid]={at:new Date().toISOString(),guests:[]}});
+    if(!S.bookings[S.uid]?.s?.[p.sid]||S.bookings[S.uid].s[p.sid].out)await saveBooking(p.sid,'join',()=>freshEntry('cash'));
     const cur=S.myCI||{};await S.db.doc('checkins/'+S.uid).set({...cur,[p.sid]:{...(cur[p.sid]||{}),at:cur[p.sid]?.at||new Date().toISOString(),code:p.code}});
     S.courtSport=s.sport||'badminton';S.courtSid=p.sid;setView('courts');toast('You’re checked in. Thank you!');
   }catch(e){toast('Sorry, check-in didn’t save. Please ask an admin.')}
@@ -1989,7 +2453,7 @@ function syncCheckins(){
   for(const [sid,lv0] of Object.entries(S.live)){const q=S.qr[sid];if(!S.sessions[sid])continue;
     const lv=norm(clone(lv0)),ppl=people(sid);let changed=false;lv.rest=lv.rest||{};lv.more=lv.more||{};lv.ft=lv.ft||{};
     for(const [uid,doc] of Object.entries(S.checkins)){const e=doc&&doc[sid];if(!e)continue;
-      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){lv.checkin[uid]=e.at;changed=true}
+      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){setBase(sid,lv,uid);lv.checkin[uid]=e.at;changed=true}
       if(lv.checkin[uid]&&e.ft&&e.ft>(lv.ft[uid]||'')){lv.rest[uid]=!!e.rest;lv.more[uid]=!!e.more;lv.ft[uid]=e.ft;changed=true}}
     if(changed)saveLive(sid,lv)}
 }
@@ -2010,7 +2474,7 @@ async function setLevel(uid,sp,v){try{const cur={...((S.levels[uid]||{}).levels|
 
 /* sample players (for trying the app) */
 async function removeSamples(quiet){
-  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);if(!ids.length)return;const set=new Set(ids);
+  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);if(!ids.length)return;await allGamesLoad();const set=new Set(ids);
   try{for(const id of ids){await S.db.doc('profiles/'+id).delete();await S.db.doc('bookings/'+id).delete()}
     for(const [gid,g] of Object.entries(S.games||{}))if([...(g.a||[]),...(g.b||[])].some(x=>set.has(x)))await S.db.doc('games/'+gid).delete();
     for(const [sid,lv] of Object.entries(S.live||{})){const j=JSON.stringify(lv);if(ids.some(i=>j.includes('"'+i+'"')))await S.db.doc('live/'+sid).delete()}
@@ -2098,7 +2562,9 @@ function aSessions(list,up){
       <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
       <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
       <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
-      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:20}"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:newSport==='badminton'?16:20}"></div>
+      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${newSport==='badminton'?4:''}"></div>
+      ${COURT_SPORTS.includes(newSport)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${DEF_COURTS[newSport]||1}"></div>`:''}
       <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div>
       <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens"><p class="fine">Leave blank to open straight away. Member level and up can join 24 hours before this.</p></div></div>
     <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc"> Time to be confirmed</label>
@@ -2216,7 +2682,7 @@ function bindAdmin(){
   q('[data-nsp]').forEach(b=>b.onclick=()=>{newSport=b.dataset.nsp;renderAdmin()});
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
-    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
     const lk=$('p-link').value.trim()||S.site?.url||'';if(!/^https:\/\//.test(lk)){toast(S.site?.url?'Please use a full https:// link.':'Please add a link, or set the BAD site link in Settings.');return}$('p-link').value=lk;
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};
@@ -2247,17 +2713,15 @@ function bindAdmin(){
   q('[data-upfree]').forEach(b=>b.onclick=()=>pcSet(b.dataset.upfree,at=>({ok:true,waived:true,at,by:window.BAD_USER?.email||''}),'Done. Nothing to pay.',unpaidList));
   const pq=$('pay-q');if(pq)pq.oninput=()=>{const v=pq.value.toLowerCase();S.payQ=pq.value;document.querySelectorAll('#a-unpaid .li').forEach(li=>li.hidden=v&&!li.dataset.q.includes(v))};
   q('[data-pcrm]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcrm,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const s={...bk.s};
-    c.items.forEach(r=>{const x={...s[r.sid]};delete x.sent;delete x.ask;s[r.sid]=x});
-    try{await S.db.doc('bookings/'+uid).set({...bk,s});toast('Request removed. It stays as unpaid.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{for(const r of c.items)await staffBooking(uid,r.sid,o=>{if(!o)return undefined;const x={...o};delete x.sent;delete x.ask;return x});toast('Request removed. It stays as unpaid.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-pundo]').forEach(b=>b.onclick=async()=>{const [sid,uid]=b.dataset.pundo.split('|'),cur={...(S.payments[sid]||{})};delete cur[uid];
     try{await S.db.doc('payments/'+sid).set(cur);toast('Undone. It shows as unpaid again.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-uparm]').forEach(b=>b.onclick=()=>{S.rmArm=S.rmArm===b.dataset.uparm?null:b.dataset.uparm;renderNow()});
   q('[data-uprmno]').forEach(b=>b.onclick=()=>{S.rmArm=null;renderNow()});
-  q('[data-uprm]').forEach(b=>b.onclick=async()=>{const [uid,sid]=b.dataset.uprm.split('|'),bk=S.bookings[uid];S.rmArm=null;if(!bk)return;const s={...bk.s};(sid==='*'?pendingFor(uid).filter(r=>canSport(S.sessions[r.sid].sport)).map(r=>r.sid):[sid]).forEach(k=>delete s[k]);
-    try{await S.db.doc('bookings/'+uid).set({...bk,s});toast(`Removed. ${S.profiles[uid]?.nickname||'They'} no longer owe${S.profiles[uid]?'s':''} for this one.`)}catch(e){toast("Sorry, that didn't save.")}});
-  q('[data-pcno]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcno,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const s={...bk.s},at=new Date().toISOString();
-    c.items.forEach(r=>{const x={...s[r.sid]};delete x.sent;x.ask={...(x.ask||{}),no:at};s[r.sid]=x});
-    try{await S.db.doc('bookings/'+uid).set({...bk,s});toast('Noted. The player will see it wasn’t found yet.')}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-uprm]').forEach(b=>b.onclick=async()=>{const [uid,sid]=b.dataset.uprm.split('|'),bk=S.bookings[uid];S.rmArm=null;if(!bk)return;const ks=(sid==='*'?pendingFor(uid).filter(r=>canSport(S.sessions[r.sid].sport)).map(r=>r.sid):[sid]);
+    try{for(const k of ks)await staffBooking(uid,k,()=>null);toast(`Removed. ${S.profiles[uid]?.nickname||'They'} no longer owe${S.profiles[uid]?'s':''} for this one.`)}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-pcno]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcno,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const at=new Date().toISOString();
+    try{for(const r of c.items)await staffBooking(uid,r.sid,o=>{if(!o)return undefined;const x={...o};delete x.sent;x.ask={...(x.ask||{}),no:at};return x});toast('Noted. The player will see it wasn’t found yet.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-tracker]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.tracker,v=x.value.trim().slice(0,30),clash=Object.entries(S.profiles).find(([u])=>u!==uid&&normName(trackerName(u))===normName(v));
     if(v&&clash){toast(`${clash[1].nickname} already uses that name.`);x.value=S.profiles[uid]?.listName||'';return}
     try{await S.db.doc('profiles/'+uid).update({listName:v,updatedAt:new Date().toISOString()});toast(v?`Saved. ${S.profiles[uid]?.nickname||'They'} match${S.profiles[uid]?'es':''} "${v}" on the tracker.`:'Cleared.')}catch(e){toast("Sorry, that didn't save.")}});
@@ -2265,15 +2729,15 @@ function bindAdmin(){
   q('[data-gmrm]').forEach(b=>b.onclick=async()=>{const s=S.sessions[adminSid];try{await S.db.doc('sessions/'+adminSid).update({gms:(s.gms||[]).filter(x=>x!==b.dataset.gmrm)});toast('Removed.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-addmode]').forEach(b=>b.onclick=()=>{S.addMode=b.dataset.addmode;renderNow()});
   on('ap-go',async()=>{const u=$('ap-uid').value;if(!u){toast('Please pick a player.');return}const cur=S.bookings[u]||{s:{}},sid=adminSid;
-    try{await S.db.doc('bookings/'+u).set({...cur,key:S.profiles[u]?.listKey||cur.key||'',s:{...(cur.s||{}),[sid]:{at:new Date().toISOString(),guests:[],pay:'cash',byAdmin:window.BAD_USER?.email||''}}});toast(`${S.profiles[u]?.nickname||'Player'} is in.`)}catch(e){toast("Sorry, that didn't save.")}});
+    try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:S.profiles[u]?.listKey||cur.key||'',s:cur.s||{}});toast(`${S.profiles[u]?.nickname||'Player'} is in.`)}catch(e){toast("Sorry, that didn't save.")}});
   on('ag-go',async()=>{const n=$('ag-name').value.trim().slice(0,30),host=$('ag-host').value,sid=adminSid,at=new Date().toISOString();if(!n){toast("Please type the guest's name.");return}
-    try{if(host){const cur=S.bookings[host];const x={...cur.s[sid]};x.guests=[...(x.guests||[]),{n,at,byAdmin:true}];await S.db.doc('bookings/'+host).set({...cur,s:{...cur.s,[sid]:x}})}
-      else{const id='g-'+slug(n)+'-'+Date.now().toString(36);await S.db.doc('bookings/'+id).set({key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{[sid]:{at,guests:[],pay:'cash',byAdmin:true}}})}
+    try{if(host)await staffBooking(host,sid,o=>({...o,guests:[...(o.guests||[]),{n,at,byAdmin:true}]}));
+      else{const id='g-'+slug(n)+'-'+Date.now().toString(36);await staffBooking(id,sid,()=>freshEntry('cash',at),{key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{}})}
       toast(`${n} is in.`);$('ag-name').value=''}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-rrarm]').forEach(b=>b.onclick=()=>{S.rosterRm=b.dataset.rrarm;renderNow();setTimeout(()=>{if(S.rosterRm===b.dataset.rrarm){S.rosterRm=null;renderNow()}},4000)});
   q('[data-rrm]').forEach(b=>b.onclick=async()=>{const [uid,gi]=b.dataset.rrm.split('|'),sid=adminSid,cur=S.bookings[uid];S.rosterRm=null;if(!cur)return;const s={...cur.s};
-    if(gi===''){delete s[sid]}else{const x={...s[sid]};x.guests=(x.guests||[]).filter((_,i)=>i!==+gi);s[sid]=x}
-    try{if(cur.guest&&!Object.keys(s).length)await S.db.doc('bookings/'+uid).delete();else await S.db.doc('bookings/'+uid).set({...cur,s});toast('Taken off the session.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{if(cur.guest&&gi===''&&Object.keys(s).length<=1)await S.db.doc('bookings/'+uid).delete();
+      else await staffBooking(uid,sid,o=>gi===''?null:{...o,guests:(o.guests||[]).filter((_,i)=>i!==+gi)});toast('Taken off the session.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-freeall]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.freeall,list=pendingFor(uid),at=new Date().toISOString();
     try{for(const r of list){const cur={...(S.payments[r.sid]||{})};cur[uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
@@ -2599,15 +3063,17 @@ S.contacts={};S.brand={};
       toast('Starter sessions and sample players are in.')}catch(e){console.warn('seed',e)}}
   const col=(path,fn)=>db.collection(path).onSnapshot(s=>{fn(s);done()},()=>done());
   const map=s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());return o};
+  S.sessData={db,map};
   col('profiles',s=>S.profiles=map(s));
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
-  col('sessions',s=>S.sessions=map(s));
+  col('sessions',s=>{S.sessions=map(s);courtSubs()});
   col('bookings',s=>S.bookings=map(s));
   col('posts',s=>S.posts=map(s));
-  col('live',s=>S.live=map(s));
-  col('games',s=>S.games=map(s));
-  col('scores',s=>S.scores=map(s));
+  /* Lean data: court data is loaded only for tonight's sessions, and paused while the app is in the background.
+     Older games load once, only when a screen needs them (your stats, the Rank board). */
+  done();done();done();
+  if(S.uid)myGamesLoad();
   if(S.uid)db.doc('checkins/'+S.uid).onSnapshot(d=>{S.myCI=d.exists?d.data():{};render()},()=>{});
   db.doc('config/codes').onSnapshot(d=>{S.codes=d.exists?(d.data().list||{}):{};render()},()=>{});
   db.collection('products').onSnapshot(s=>{S.products=map(s);if(S.view==='shop'||S.view==='admin')render()},()=>{});
@@ -2616,6 +3082,7 @@ S.contacts={};S.brand={};
   db.doc('config/points').onSnapshot(d=>{S.ptsCfg=d.exists?d.data():null;render()},()=>{});
   db.doc('config/sheetPoints').onSnapshot(d=>{S.sheetPts=d.exists?d.data():null;render()},()=>{});
   db.collection('badges').onSnapshot(s=>{S.badges=map(s);render()},()=>{});
+  db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};render()},()=>{});

@@ -191,3 +191,93 @@ test('push devices belong to one player; test notifications are for yourself onl
   await assertFails(setDoc(doc(db, 'pushQueue', 'test-p2'), { type: 'test', uid: 'p2', at: serverTimestamp() }));
   await assertFails(setDoc(doc(db, 'pushQueue', 'chg'), { type: 'session-change', sid: SID, at: serverTimestamp() }));
 });
+
+// ---------- BAD grades ----------
+const gradeDoc = (by, extra = {}) => ({ g: 'C+', cat: 'M', ovr: null, by, byName: 'Crew', at: serverTimestamp(), sid: SID, scale: 'bad1', ...extra });
+test('crew, admins and the session Game Master can set a grade; players cannot', async () => {
+  await assertSucceeds(setDoc(doc(ctx('crew1'), 'grades', 'p2'), gradeDoc('crew1')));
+  await assertSucceeds(setDoc(doc(ctx('a1', 'cm@x.com'), 'grades', 'p2'), gradeDoc('a1', { g: 'B' })));
+  await assertSucceeds(setDoc(doc(ctx('gm1'), 'grades', 'p2'), gradeDoc('gm1', { g: 'U', cat: null })));
+  await assertFails(setDoc(doc(ctx('gm1'), 'grades', 'p2'), gradeDoc('gm1', { sid: VSID })));   // not their session
+  await assertFails(setDoc(doc(ctx('p2', 'fei@x.com'), 'grades', 'p2'), gradeDoc('p2')));         // not even their own
+  await assertSucceeds(getDoc(doc(ctx('p1', 'p1@x.com'), 'grades', 'p2')));
+});
+test('grades must use the BAD scale, a real category and a sensible override, signed and timed by the server', async () => {
+  const db = ctx('crew1');
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { g: 'Z' })));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { cat: 'X' })));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { ovr: 9 })));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('someoneElse')));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { at: Timestamp.fromMillis(0) })));
+  await assertSucceeds(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { ovr: 4.5 })));
+});
+test('the grade log is add-only and readable by crew only', async () => {
+  const db = ctx('crew1'), ref = doc(db, 'grades', 'p2', 'log', 'x1');
+  await assertSucceeds(setDoc(ref, { from: {}, to: {}, by: 'crew1', byName: 'Crew', at: serverTimestamp(), sid: SID }));
+  await assertFails(updateDoc(ref, { by: 'crew1' }));
+  await assertFails(deleteDoc(ref));
+  await assertFails(getDoc(doc(ctx('p1', 'p1@x.com'), 'grades', 'p2', 'log', 'x1')));
+});
+test('players can save their own self-assessed grade and category, on the BAD scale', async () => {
+  const db = ctx('p2', 'fei@x.com');
+  await assertSucceeds(setDoc(doc(db, 'profiles', 'p2'), { nickname: 'Fei', listName: 'Fei', grade: 'D+', cat: 'W' }));
+  await assertFails(setDoc(doc(db, 'profiles', 'p2'), { nickname: 'Fei', listName: 'Fei', grade: '3' }));
+  await assertFails(setDoc(doc(db, 'profiles', 'p2'), { nickname: 'Fei', listName: 'Fei', cat: 'Man' }));
+});
+
+// ---------- scores: submit, the other team confirms, Support finalises ----------
+const GID = 'friday-g1';
+const seedGame = (extra = {}) => env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), 'games', GID), { v: 2, sid: SID, sport: 'badminton', st: 'review', fmt: 21, a: ['p1', 'p3'], b: ['p2', 'p4'], ...extra }));
+const sub = (by, team, sa, sb) => ({ sid: SID, sub: { sa, sb, by, team, at: serverTimestamp() }, conf: null, disp: null, fin: null });
+test('a player in the game submits a valid score; others cannot', async () => {
+  await seedGame();
+  await assertFails(setDoc(doc(ctx('p9', 'p9@x.com'), 'results', GID), sub('p9', 'a', 21, 17)));   // not in the game
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), sub('p1', 'b', 21, 17)));   // wrong team
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), sub('p1', 'a', 21, 20)));   // not a valid score
+  await assertSucceeds(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), sub('p1', 'a', 21, 17)));
+});
+test('only the other team can confirm or dispute; a teammate cannot', async () => {
+  await seedGame();
+  await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), 'results', GID), { sid: SID, sub: { sa: 21, sb: 17, by: 'p1', team: 'a', at: Timestamp.now() }, conf: null, disp: null, fin: null }));
+  await assertFails(updateDoc(doc(ctx('p3', 'p3@x.com'), 'results', GID), { conf: { by: 'p3', at: serverTimestamp() } }));
+  await assertFails(updateDoc(doc(ctx('p2', 'p2@x.com'), 'results', GID), { conf: { by: 'p4', at: serverTimestamp() } }));
+  await assertSucceeds(updateDoc(doc(ctx('p2', 'p2@x.com'), 'results', GID), { disp: { by: 'p2', at: serverTimestamp(), why: 'Wrong score' } }));
+  await assertSucceeds(updateDoc(doc(ctx('p4', 'p4@x.com'), 'results', GID), { conf: { by: 'p4', at: serverTimestamp() } }));
+});
+test('Support finalises with a valid score; players cannot finalise; corrections need a reason', async () => {
+  await seedGame();
+  const fin = (by, sa, sb, how = 'support', note) => ({ sid: SID, sub: null, conf: null, disp: null, fin: { sa, sb, by, at: serverTimestamp(), how, ...(note ? { note } : {}) } });
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), fin('p1', 21, 10)));
+  await assertFails(setDoc(doc(ctx('gm1'), 'results', GID), fin('gm1', 21, 20)));
+  await assertSucceeds(setDoc(doc(ctx('gm1'), 'results', GID), fin('gm1', 21, 10)));
+  await assertFails(setDoc(doc(ctx('a1', 'cm@x.com'), 'results', GID), fin('a1', 21, 12, 'correction')));
+  await assertSucceeds(setDoc(doc(ctx('a1', 'cm@x.com'), 'results', GID), fin('a1', 21, 12, 'correction', 'Agreed with both teams')));
+  await assertFails(updateDoc(doc(ctx('p2', 'p2@x.com'), 'results', GID), { sub: { sa: 10, sb: 21, by: 'p2', team: 'b', at: serverTimestamp() } }));  // final is locked for players
+});
+test('30-point games accept 35–34 and reject 30–29', async () => {
+  await seedGame({ fmt: 30 });
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), sub('p1', 'a', 30, 29)));
+  await assertSucceeds(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), sub('p1', 'a', 35, 34)));
+});
+test('no results for cancelled games', async () => {
+  await seedGame({ st: 'cancelled' });
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'results', GID), sub('p1', 'a', 21, 17)));
+});
+
+// ---------- BADDEST PLAYER ----------
+const award = by => ({ sid: SID, winners: ['p1'], top: [], by, at: serverTimestamp(), rev: 1, prev: [] });
+const baddest = (pts = 5) => ({ v: 2, synced: false, uid: 'p1', type: 'BADDEST PLAYER', pts, sid: SID, date: '2026-10-30', reason: 'BADDEST PLAYER' });
+test('admins for the sport award BADDEST PLAYER; players and other sports cannot', async () => {
+  await assertSucceeds(setDoc(doc(ctx('a1', 'cm@x.com'), 'awards', SID), award('a1')));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'awards', SID), award('p1')));
+  await assertFails(setDoc(doc(ctx('a1', 'cm@x.com'), 'awards', VSID), { ...award('a1'), sid: VSID }));   // volleyball isn't theirs
+});
+test('the +5 is created once per player per session and can never be edited or doubled', async () => {
+  const db = ctx('a1', 'cm@x.com'), ref = doc(db, 'ledger', `baddest-${SID}-p1`);
+  await assertFails(setDoc(doc(db, 'ledger', 'whatever'), baddest()));              // must use the fixed id
+  await assertFails(setDoc(ref, baddest(50)));                                       // only +5 or -5
+  await assertSucceeds(setDoc(ref, baddest()));
+  await assertFails(setDoc(ref, baddest()));                                         // a second write is an update: refused
+  await assertSucceeds(setDoc(doc(db, 'ledger', `baddest-${SID}-p1-undo1`), baddest(-5)));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'ledger', `baddest-${SID}-p1x`), baddest()));
+});

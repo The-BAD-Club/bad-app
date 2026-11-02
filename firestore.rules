@@ -55,7 +55,9 @@ service cloud.firestore {
     }
     function validSession(d) {
       return str(d.sport, 20) && str(d.title, 80) && str(d.date, 10) && (!('fee' in d) || d.fee is number) && (!('capacity' in d) || d.capacity is int)
-        && (!('gms' in d) || (d.gms is list && d.gms.size() <= 4));
+        && (!('gms' in d) || (d.gms is list && d.gms.size() <= 4))
+        && (!('waitCap' in d) || d.waitCap == null || (d.waitCap is int && d.waitCap >= 0))
+        && (!('courts' in d) || d.courts == null || (d.courts is int && d.courts >= 1 && d.courts <= 8));
     }
 
     match /posts/{id} {
@@ -76,13 +78,15 @@ service cloud.firestore {
     }
     function validProfile(d) {
       return d.keys().hasOnly(['nickname', 'listName', 'listKey', 'number', 'edition', 'photo', 'sports', 'primary', 'types', 'levels', 'level',
-                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample'])
+                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat'])
         && str(d.nickname, 16) && optStr(d, 'listName', 30) && optStr(d, 'listKey', 40) && optStr(d, 'number', 3)
         && optStr(d, 'photo', 400000) && optStr(d, 'ref', 20) && optStr(d, 'referredBy', 16) && optStr(d, 'shot', 20)
         && (!('sports' in d) || (d.sports is list && d.sports.size() <= 10))
         && (!('refs' in d) || (d.refs is list && d.refs.size() <= 6))
         && (!('sample' in d) || isFull())
-        && (!('memReq' in d) || (d.memReq is map && d.memReq.keys().hasOnly(['type', 'at']) && str(d.memReq.type, 30)));
+        && (!('memReq' in d) || (d.memReq is map && d.memReq.keys().hasOnly(['type', 'at']) && str(d.memReq.type, 30)))
+        && (!('grade' in d) || d.grade in ['', 'F', 'E', 'E+', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A', 'A+'])
+        && (!('cat' in d) || d.cat in ['', 'W', 'M']);
     }
 
     // Bookings: one document per player, one entry per session. Every change names the session it touches (op.sid),
@@ -122,6 +126,54 @@ service cloud.firestore {
       allow create, update: if canDept(sportOf(request.resource.data.sid)) || isGM(request.resource.data.sid);
       allow delete: if canDept(sportOf(resource.data.sid)) || isGM(resource.data.sid);
     }
+    // Scores for checked games (v2): a player in the game submits, a player from the OTHER team confirms or disputes,
+    // and Support (admins for the sport or the session's Game Master) finalises. Scores must fit the game's format.
+    match /results/{gid} {
+      allow read: if signedIn();
+      allow create, update: if resultOk(gid);
+      match /log/{lid} {
+        allow read: if signedIn();
+        allow create: if staffFor(gameOf(gid)) && request.resource.data.by == uid() && request.resource.data.at == request.time;
+      }
+    }
+    function gameOf(gid) { return get(/databases/$(database)/documents/games/$(gid)).data; }
+    function staffFor(g) { return canDept(g.get('sport', 'badminton')) || isGM(g.get('sid', '')); }
+    function inT(g, t) { return t in ['a', 'b'] && uid() in g.get(t, []); }
+    function otherOf(t) { return t == 'a' ? 'b' : 'a'; }
+    function okScore(f, x, y) {
+      let w = x > y ? x : y;
+      let l = x > y ? y : x;
+      let k = f == 21 ? 30 : 35;
+      return f in [21, 30] && x is int && y is int && x != y && l >= 0
+        && ((w == f && l <= f - 2) || (w > f && w < k && w - l == 2) || (w == k && l >= k - 2));
+    }
+    function fmtOf(g) { return g.get('fmt', 21) == null ? 21 : g.get('fmt', 21); }
+    function resultOk(gid) {
+      let d = request.resource.data;
+      let g = gameOf(gid);
+      let old = resource == null ? {'sub': null, 'conf': null, 'disp': null, 'fin': null} : resource.data;
+      let ch = resource == null ? d.keys() : d.diff(resource.data).affectedKeys();
+      return g.get('v', 0) == 2 && g.get('st', '') in ['review', 'final'] && d.sid == g.sid
+        && d.keys().hasOnly(['sid', 'sub', 'conf', 'disp', 'fin'])
+        && (
+          // a player sends (or re-sends) the score: confirmation and dispute start again
+          (old.get('fin', null) == null && ch.hasOnly(['sid', 'sub', 'conf', 'disp', 'fin']) && d.get('fin', null) == null
+            && d.get('conf', null) == null && d.get('disp', null) == null
+            && d.sub.keys().hasOnly(['sa', 'sb', 'by', 'team', 'at']) && d.sub.by == uid() && inT(g, d.sub.team)
+            && d.sub.at == request.time && okScore(fmtOf(g), d.sub.sa, d.sub.sb))
+          // a player from the other team confirms exactly what was sent
+          || (old.get('fin', null) == null && old.get('sub', null) != null && ch.hasOnly(['conf']) && inT(g, otherOf(old.sub.team))
+            && d.conf.keys().hasOnly(['by', 'at']) && d.conf.by == uid() && d.conf.at == request.time)
+          // ...or disputes it, with a reason
+          || (old.get('fin', null) == null && old.get('sub', null) != null && ch.hasOnly(['disp']) && inT(g, otherOf(old.sub.team))
+            && d.disp.keys().hasOnly(['by', 'at', 'why']) && d.disp.by == uid() && d.disp.at == request.time && str(d.disp.why, 40))
+          // Support finalises; a correction of a final score needs a reason
+          || (staffFor(g) && ch.hasOnly(['sid', 'fin', 'sub', 'conf', 'disp']) && d.sub == old.get('sub', null) && d.conf == old.get('conf', null) && d.disp == old.get('disp', null)
+            && d.fin.keys().hasOnly(['sa', 'sb', 'by', 'at', 'how', 'note']) && d.fin.by == uid() && d.fin.at == request.time
+            && d.fin.how in ['agreed', 'unavailable', 'support', 'correction'] && okScore(fmtOf(g), d.fin.sa, d.fin.sb)
+            && optStr(d.fin, 'note', 80) && (old.get('fin', null) == null || (d.fin.how == 'correction' && str(d.fin.get('note', ''), 80) && d.fin.note.size() > 0)))
+        );
+    }
     // The court board: every save carries the next revision number, so two organisers can never overwrite each other.
     match /live/{sid} {
       allow read: if signedIn();
@@ -139,6 +191,30 @@ service cloud.firestore {
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 5
         && str(request.resource.data.reason, 80) && request.resource.data.synced == false;
       allow update, delete: if isFull();
+    }
+    // BAD grades (badminton): everyone can read the grade and category shown on cards. Crew, admins and the session's
+    // Game Master set them; every change also writes a log entry that can't be edited, with who and when.
+    match /grades/{id} {
+      allow read: if signedIn();
+      allow create, update: if canGrade(request.resource.data.get('sid', '')) && validGrade(request.resource.data);
+      match /log/{lid} {
+        allow read: if isAdminAny() || isCrew();
+        allow create: if canGrade(request.resource.data.get('sid', '')) && request.resource.data.by == uid() && request.resource.data.at == request.time;
+      }
+    }
+    function canGrade(sid) { return isAdminAny() || isCrew() || (sid != '' && isGM(sid)); }
+    function validGrade(d) {
+      return d.keys().hasOnly(['g', 'cat', 'ovr', 'by', 'byName', 'at', 'sid', 'scale', 'prev'])
+        && d.g in ['U', 'F', 'E', 'E+', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A', 'A+']
+        && (d.cat == null || d.cat in ['W', 'M'])
+        && (d.ovr == null || (d.ovr is number && d.ovr >= 0 && d.ovr <= 7))
+        && d.by == uid() && d.at == request.time && d.scale == 'bad1' && optStr(d, 'byName', 16);
+    }
+    // BADDEST PLAYER award per session: admins for that sport, signed and timed by the server
+    match /awards/{sid} {
+      allow read: if signedIn();
+      allow create, update: if canDept(sportOf(sid)) && request.resource.data.sid == sid && request.resource.data.by == uid()
+        && request.resource.data.at == request.time && request.resource.data.winners is list && request.resource.data.winners.size() <= 8;
     }
     match /refcodes/{code} {
       allow read: if signedIn();
@@ -171,8 +247,11 @@ service cloud.firestore {
     match /standing/{id} { allow read: if isSelf(id) || isAdminAny(); }        // written by the Apps Script only
     match /ledger/{id} {
       allow read: if isAdminAny() || (signedIn() && resource.data.get('uid', '') == uid());
-      allow create: if isFull() && request.resource.data.v == 2 && request.resource.data.synced == false
-        && request.resource.data.type in ['Event or tournament', 'BAD Retreat', 'No-show', 'Free session redeemed', 'Adjustment'];
+      allow create: if request.resource.data.v == 2 && request.resource.data.synced == false && (
+        (isFull() && request.resource.data.type in ['Event or tournament', 'BAD Retreat', 'No-show', 'Free session redeemed', 'Adjustment'])
+        // BADDEST PLAYER: +5 (or a -5 reversal after a correction), by an admin for that sport, once per player per session (fixed id, no updates)
+        || (request.resource.data.type == 'BADDEST PLAYER' && request.resource.data.pts in [5, -5] && str(request.resource.data.sid, 80)
+            && canDept(sportOf(request.resource.data.sid)) && id.matches('baddest-' + request.resource.data.sid + '-.*')));
       allow delete: if isFull() && resource.data.get('synced', false) == false;
     }
     match /checkins/{id} { allow read, write: if isSelf(id) || isAdminAny(); }

@@ -13,7 +13,7 @@ function qrData(text,size=240){const k=size+'|'+text;if(_qrCache[k])return _qrCa
 const newCode=()=>Math.random().toString(36).slice(2,8).padEnd(6,'x');
 const ownLevel=(uid,sp)=>{const p=S.profiles[uid];if(!p)return null;return p.levels&&p.levels[sp]!=null?p.levels[sp]:(p.level??null)};
 const effLevel=(uid,sp)=>{const o=S.levels[uid];if(o&&o.levels&&o.levels[sp]!=null)return o.levels[sp];if(o&&o.level!=null&&!o.levels)return o.level;return ownLevel(uid,sp)};
-const lvlTag=(uid,sp)=>{const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
+const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
 
 /* player: complete a scanned check-in */
 async function processCheckin(){
@@ -22,7 +22,7 @@ async function processCheckin(){
   if(!myProfile()){if(!p.told){p.told=1;toast('Please register first. You’ll be checked in right after.');if(S.view!=='create')startCreator()}return}
   S.pendingCI=null;
   try{
-    if(!S.bookings[S.uid]?.s?.[p.sid]||S.bookings[S.uid].s[p.sid].out)await saveBooking(x=>{x[p.sid]={at:new Date().toISOString(),guests:[]}});
+    if(!S.bookings[S.uid]?.s?.[p.sid]||S.bookings[S.uid].s[p.sid].out)await saveBooking(p.sid,'join',()=>freshEntry('cash'));
     const cur=S.myCI||{};await S.db.doc('checkins/'+S.uid).set({...cur,[p.sid]:{...(cur[p.sid]||{}),at:cur[p.sid]?.at||new Date().toISOString(),code:p.code}});
     S.courtSport=s.sport||'badminton';S.courtSid=p.sid;setView('courts');toast('You’re checked in. Thank you!');
   }catch(e){toast('Sorry, check-in didn’t save. Please ask an admin.')}
@@ -36,7 +36,7 @@ function syncCheckins(){
   for(const [sid,lv0] of Object.entries(S.live)){const q=S.qr[sid];if(!S.sessions[sid])continue;
     const lv=norm(clone(lv0)),ppl=people(sid);let changed=false;lv.rest=lv.rest||{};lv.more=lv.more||{};lv.ft=lv.ft||{};
     for(const [uid,doc] of Object.entries(S.checkins)){const e=doc&&doc[sid];if(!e)continue;
-      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){lv.checkin[uid]=e.at;changed=true}
+      if(q&&e.code===q.code&&ppl[uid]&&!lv.checkin[uid]){setBase(sid,lv,uid);lv.checkin[uid]=e.at;changed=true}
       if(lv.checkin[uid]&&e.ft&&e.ft>(lv.ft[uid]||'')){lv.rest[uid]=!!e.rest;lv.more[uid]=!!e.more;lv.ft[uid]=e.ft;changed=true}}
     if(changed)saveLive(sid,lv)}
 }
@@ -57,7 +57,7 @@ async function setLevel(uid,sp,v){try{const cur={...((S.levels[uid]||{}).levels|
 
 /* sample players (for trying the app) */
 async function removeSamples(quiet){
-  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);if(!ids.length)return;const set=new Set(ids);
+  const ids=Object.entries(S.profiles).filter(([,p])=>p.sample).map(([id])=>id);if(!ids.length)return;await allGamesLoad();const set=new Set(ids);
   try{for(const id of ids){await S.db.doc('profiles/'+id).delete();await S.db.doc('bookings/'+id).delete()}
     for(const [gid,g] of Object.entries(S.games||{}))if([...(g.a||[]),...(g.b||[])].some(x=>set.has(x)))await S.db.doc('games/'+gid).delete();
     for(const [sid,lv] of Object.entries(S.live||{})){const j=JSON.stringify(lv);if(ids.some(i=>j.includes('"'+i+'"')))await S.db.doc('live/'+sid).delete()}

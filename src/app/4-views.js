@@ -31,17 +31,28 @@ function roster(sid){
   /* Core level and up skip ahead of the waitlist */
   const active=sorted.slice(0,cap).concat(sorted.slice(cap).sort((a,b)=>pri(b)-pri(a)||a.at.localeCompare(b.at)));
   const late=all.filter(e=>e.out).map(e=>{const ahead=all.filter(o=>o.at<e.at&&(!o.out||o.out>e.out)).length;return{...e,wasIn:ahead<cap,fee:feeFor(s,e.out)}}).filter(e=>e.wasIn&&e.fee.amount>0);
-  return{cap,in:active.slice(0,cap),wait:active.slice(cap),late};
+  /* the waiting list can have a limit (badminton: 4); anyone past it is turned away when they try to join */
+  const wc=s&&s.waitCap!=null&&s.waitCap!==''?Number(s.waitCap):Infinity;
+  return{cap,wc,in:active.slice(0,cap),wait:active.slice(cap,cap+wc),over:active.slice(cap+wc),late};
 }
 function feeFor(s,whenIso){const h=(sessStart(s)-new Date(whenIso))/36e5,f=Number(s.fee)||0;
   if(h>=CFG.freeHours)return{amount:0,label:'No charge'};if(h>=CFG.halfHours)return{amount:f/2,label:'Half fee'};return{amount:f,label:'Full fee'}}
 function upcoming(){const now=Date.now()-2*36e5;return Object.entries(S.sessions).filter(([,s])=>sessStart(s)>now).sort((a,b)=>sessStart(a[1])-sessStart(b[1]))}
 let pendingOut=null,guestFor=null,payFor=null;
-async function saveBooking(mut){const cur=S.bookings[S.uid]||{s:{}};const next={key:myProfile().listKey,s:{...(cur.s||{})}};mut(next.s);await S.db.doc('bookings/'+S.uid).set(next)}
-async function join(sid,pay){try{await saveBooking(s=>{s[sid]={at:new Date().toISOString(),guests:[],pay:pay||'cash'}});payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
-async function setPay(sid,pay){try{await saveBooking(s=>{s[sid]={...s[sid],pay,sent:null}});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
-async function markSent(sid){try{await saveBooking(s=>{s[sid]={...s[sid],sent:new Date().toISOString()}});toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
-async function unmarkSent(sid){try{await saveBooking(s=>{const x={...s[sid]};delete x.sent;s[sid]=x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
+/* Bookings: one change to one session per save, named in op (join, leave, guest or pay), with server times,
+   exactly as the security rules expect. Several sessions = several saves. */
+async function saveBooking(sid,kind,fn){const cur=S.bookings[S.uid]||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
+  const e=fn(o);if(!e)return;s[sid]=e;await S.db.doc('bookings/'+S.uid).set({key:myProfile().listKey,s,op:{sid,kind},u:SVT()})}
+const freshEntry=(pay,at)=>({at:at||new Date().toISOString(),t:SVT(),guests:[],pay:pay||'cash'});
+/* staff change to someone else's booking (admins and community managers for that sport) */
+async function staffBooking(uid,sid,fn,base){const cur=S.bookings[uid]||base||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
+  const e=fn(o);if(e===undefined)return;if(e===null)delete s[sid];else s[sid]=e;
+  const {op,u,...rest}=cur;await S.db.doc('bookings/'+uid).set({...rest,s,op:{sid,kind:'admin'},u:SVT()})}
+const isFull=sid=>{const r=roster(sid);return r.in.length>=r.cap&&r.wait.length>=r.wc&&!(typeof perk!=='undefined'&&perk.skipWait(S.uid))};
+async function join(sid,pay){if(isFull(sid)){toast('Sorry, this session and its waiting list are full.');return}try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
+async function setPay(sid,pay){try{await saveBooking(sid,'pay',o=>{const x={...o,pay};delete x.sent;return x});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
+async function markSent(sid){try{await saveBooking(sid,'pay',o=>({...o,sent:new Date().toISOString()}));toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
+async function unmarkSent(sid){try{await saveBooking(sid,'pay',o=>{const x={...o};delete x.sent;return x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
 const payOn=k=>{const c=S.payCfg||{};return c[k]!==false};
 function payPicker(sid,isChange){return `<div class="confirm"><b>${isChange?'Change how you pay':'How would you like to pay?'}</b>
   <div class="paypick">${Object.entries(PAY).filter(([k])=>payOn(k)).map(([k,m])=>`<button type="button" data-pay="${k}" data-sid="${sid}" data-change="${isChange?1:0}">${ic(m.icon)}<b>${m.label}</b><span class="fine">${m.sub}</span></button>`).join('')}</div>
@@ -60,11 +71,11 @@ function payInfo(sid,s,mine,amt){const fee=amt!=null?amt:s.fee;
     ${det}${k!=='cash'&&!mine.sent?`<button class="btn ghost sm" data-sent="${sid}" style="justify-self:start">${ic('check')}I've paid</button>`:''}${mine.sent?`<button class="linkbtn" data-unsent="${sid}" style="justify-self:start">Tapped by mistake? Undo</button>`:''}</div>`;
 }
 async function leave(sid,late){const now=new Date().toISOString();
-  try{await saveBooking(s=>{if(late)s[sid]={...s[sid],out:now,guests:(s[sid].guests||[]).map(g=>g.out?g:{...g,out:now})};else delete s[sid]});pendingOut=null;toast(late?'Your name is removed. The fee is noted.':'Your name is removed. Thank you for letting us know.')}catch(e){toast("Sorry, that didn't save. Please try again.")}}
+  try{await saveBooking(sid,'leave',o=>({...o,out:now,tout:SVT(),guests:(o.guests||[]).map(g=>g.out?g:{...g,out:now})}));pendingOut=null;toast(late?'Your name is removed. The fee is noted.':'Your name is removed. Thank you for letting us know.')}catch(e){toast("Sorry, that didn't save. Please try again.")}}
 async function addGuest(sid,name){name=name.trim().slice(0,24);if(!name){toast("Please add your guest's name.");return}
-  try{await saveBooking(s=>{s[sid]={...s[sid],guests:[...(s[sid].guests||[]),{n:name,at:new Date().toISOString()}]}});guestFor=null;toast(`${name} is on the list as your guest.`)}catch(e){toast("Sorry, that didn't save.")}}
+  try{await saveBooking(sid,'guest',o=>({...o,guests:[...(o.guests||[]),{n:name,at:new Date().toISOString()}]}));guestFor=null;toast(`${name} is on the list as your guest.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function dropGuest(sid,gi,late){const now=new Date().toISOString();
-  try{await saveBooking(s=>{const g=[...(s[sid].guests||[])];if(late)g[gi]={...g[gi],out:now};else g.splice(gi,1);s[sid]={...s[sid],guests:g}});pendingOut=null;toast(late?'Guest removed. The fee is noted under your name.':'Guest removed.')}catch(e){toast("Sorry, that didn't save.")}}
+  try{await saveBooking(sid,'guest',o=>{const g=[...(o.guests||[])];if(late)g[gi]={...g[gi],out:now};else g.splice(gi,1);return {...o,guests:g}});pendingOut=null;toast(late?'Guest removed. The fee is noted under your name.':'Guest removed.')}catch(e){toast("Sorry, that didn't save.")}}
 
 function renderPlay(){
   const el=$('v-play'),me=myProfile();
@@ -91,7 +102,7 @@ function sessCard(sid,s){const me=myProfile();
     else if(wpos>=0){status=`<span class="tagl">Waitlist #${wpos+1}</span>`;actions=`<button class="btn ghost sm" data-wout="${sid}">Leave waitlist</button>`}
     else if(me&&!started){const ss=signupState(s,S.uid),fmtO=t=>new Date(t).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
       if(!ss.open)status=`<span class="tagl">Sign-ups open ${esc(fmtO(ss.opens))}</span>`;
-      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':'Join waitlist'):'Count me in'}</button>`}}
+      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=r.in.length>=r.cap&&r.wait.length>=r.wc&&!perk.skipWait(S.uid)?`<span class="tagl warn">Full · waiting list full</span>`:`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':`Join waitlist${r.wc<Infinity?` · ${r.wc-r.wait.length} left`:''}`):'Count me in'}</button>`}}
     let conf='';
     if(pendingOut&&pendingOut.sid===sid){const f=feeFor(s,new Date().toISOString()),g=pendingOut.gi!=null;
       conf=`<div class="confirm"><p><b>Just so you know:</b> it's now under ${f.label==='Full fee'?'24':'48'} hours to start. Removing ${g?'your guest':'your name'} means the ${esc(f.label.toLowerCase())}, AED ${f.amount}${g?', under your name':''}.</p>
@@ -231,13 +242,13 @@ function renderCard(){
         <div class="tiles hstats h3">
           ${statT('Sessions',attended,'Played with BAD')}
           ${statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
-          ${statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked')}
+          ${S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
           ${memType(m.type)?.staff?'':`<details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memPick().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details>`}</section>`})()}
       <section class="hsec"><h3 class="ah">Your activities</h3>
-        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
+        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[k==='badminton'?gradeLabel(S.uid):lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       ${recentHTML(S.uid)}
@@ -257,14 +268,14 @@ function renderCard(){
   el.querySelectorAll('[data-askclose]').forEach(b=>b.onclick=()=>{S.askOpen=false;renderCard()});
   const an=$('ask-note');if(an)an.oninput=()=>S.askNote=an.value;
   el.querySelectorAll('[data-asksend]').forEach(b=>b.onclick=async()=>{const note=($('ask-note')?.value||'').trim(),ids=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent').map(r=>r.sid),at=new Date().toISOString();
-    try{await saveBooking(x=>{ids.forEach(id=>{x[id]={...x[id],ask:{at,note}}})});S.askOpen=false;S.askNote='';toast('Sent. An admin will check and confirm. Thank you.')}catch(e){toast("Sorry, that didn't send. Please try again.")}});
-  el.querySelectorAll('[data-askcancel]').forEach(b=>b.onclick=async()=>{try{await saveBooking(x=>{Object.keys(x).forEach(id=>{if(x[id]&&x[id].ask){const y={...x[id]};delete y.ask;x[id]=y}})});toast('Request cancelled.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{for(const id of ids)await saveBooking(id,'pay',o=>o&&({...o,ask:{at,note}}));S.askOpen=false;S.askNote='';toast('Sent. An admin will check and confirm. Thank you.')}catch(e){toast("Sorry, that didn't send. Please try again.")}});
+  el.querySelectorAll('[data-askcancel]').forEach(b=>b.onclick=async()=>{try{for(const [id,o] of Object.entries(S.bookings[S.uid]?.s||{}))if(o&&o.ask)await saveBooking(id,'pay',x=>{const y={...x};delete y.ask;return y});toast('Request cancelled.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-clearmine]').forEach(b=>b.onclick=async()=>{const due=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent'),at=new Date().toISOString();
     try{for(const r of due){const cur={...(S.payments[r.sid]||{})};cur[S.uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}S.payAll=false;toast('Cleared. Nothing pending.')}catch(e){toast("Sorry, that didn't save. Please publish the latest rules and try again.")}});
   el.querySelectorAll('[data-payalldone]').forEach(b=>b.onclick=async()=>{const k=b.dataset.payalldone,ids=myActivity().filter(r=>r.payState==='pending').map(r=>r.sid),at=new Date().toISOString();
-    try{await saveBooking(x=>{ids.forEach(id=>{x[id]={...x[id],pay:k,sent:at}})});S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{for(const id of ids)await saveBooking(id,'pay',o=>o&&({...o,pay:k,sent:at}));S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-payjump]').forEach(b=>b.onclick=()=>{const d=el.querySelector('.payrow');if(!d)return;d.open=true;S.openPay=d.dataset.payrow;d.scrollIntoView({behavior:'smooth',block:'center'})});
-  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));el.querySelectorAll('[data-rankgo]').forEach(b=>b.onclick=()=>{S.boardMode='rank';setView('board')});
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
   const r=$('redeem');if(r)r.onclick=requestFree;
   el.querySelectorAll('[data-givebadge]').forEach(b=>b.onclick=()=>openBadge(b.dataset.givebadge||''));

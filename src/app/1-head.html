@@ -731,6 +731,39 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .lvls .li{align-items:center}
 .bgpick .li{width:100%;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:10px 4px}
 .bgpick .li:hover{background:var(--chip)}
+.savest{align-self:center;font-size:.7rem}.savest.ok{opacity:.7}.savest.warn{border-style:dashed;background:transparent;box-shadow:inset 0 0 0 1px var(--rule);color:var(--muted)}
+/* minimal card (v0.9) */
+.pc .hd img{margin-bottom:0}
+.pc .stats.lv2{grid-template-columns:1fr auto;align-items:baseline;border-top:1px solid color-mix(in srgb,var(--fg) 35%,transparent);margin-top:14px;padding-top:12px}
+.pc .stats.lv2>*{font-size:1rem;font-weight:700;letter-spacing:.06em;color:var(--fg);text-transform:none}
+.pc .stats.lv2 b{display:inline;font-size:1rem;font-weight:700;letter-spacing:.06em}
+.pc .stats.lv2 small{font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-left:6px;font-weight:600}
+.pc .stats.lv2>:last-child{text-align:right}
+.pc .style{margin-top:2px}
+.cback .cb-mid{margin:auto 0;display:grid;justify-items:center;gap:10px}
+.cback .cb-mid .qrbox{margin:0;width:56%;max-width:170px}
+.cback .cb-mid .cb-code{font-family:inherit;font-size:.9rem;font-weight:800;letter-spacing:.16em;margin:0;text-transform:uppercase}
+.cback .cb-mid .cb-sub{margin:-4px 0 0;font-size:.52rem;letter-spacing:.16em;text-transform:uppercase}
+.cback .stats.lv2{margin-top:0}
+.lvl-pick.grades .gcode{min-width:2.2em;font-weight:800;font-size:1rem;letter-spacing:.04em}
+.lvl-note{margin:0 0 10px;font-size:.78rem;letter-spacing:.02em}
+.gpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.gpick select,.gpick input{min-height:36px;font-size:.85rem;padding:4px 8px}.gpick input{width:78px}
+@media (max-width:760px){#v-create .pc .hd,.mini .pc .hd{font-size:.48rem;letter-spacing:.14em}#v-create .pc .hd img,.mini .pc .hd img{height:12px}}
+.gpick select{width:auto}.gpick [data-gk=g]{flex:1 1 100%}.gpick [data-gk=cat]{flex:1 1 0;min-width:0}.gpick [data-gk=ovr]{flex:0 0 72px}
+.plan p{margin:6px 0 0}.plan .warnbox{margin-top:10px;border:1px dashed var(--rule);background:transparent}
+.planctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}.planctl>div{display:grid;gap:4px}
+.plan .fine svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.court .cfoot{justify-content:flex-end;gap:10px;align-items:center}.court .cfoot .btn.wide{flex:1;max-width:220px}
+.court.on{box-shadow:inset 0 0 0 1.5px var(--ink)}.court .fmt{min-height:28px}
+.scorein{display:grid;gap:8px;margin-top:8px}.scorein .sl{display:grid;grid-template-columns:minmax(0,1fr) 76px;align-items:center;gap:12px;font-size:.9rem}
+.scorein .sl span{overflow:hidden;text-overflow:ellipsis}.scorein .sc{width:76px;text-align:center;font-size:1.25rem;font-weight:700;min-height:48px}
+.scorein .schint{min-height:1em;margin:0}.scorein .scnote{width:100%}
+.qrow .qact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.qrow .qact .scorein{flex:1 1 100%}
+.qgroup .li{grid-template-columns:minmax(0,1fr)}
+.standings .stable{display:grid;margin-top:10px}.standings .strow{display:grid;grid-template-columns:28px minmax(0,1fr) 52px 48px;gap:8px;padding:9px 0;border-bottom:1px solid var(--rule);align-items:baseline;font-size:.92rem}
+.standings .strow.sh{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding-top:0}.standings .strow>:nth-child(3),.standings .strow>:nth-child(4){text-align:right}.standings p.fine svg.i{width:14px;height:14px;vertical-align:-2px}
+.standings .strow.first{font-weight:700}.standings .strow.mine{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.baddest{display:grid;gap:2px;text-align:center;padding:18px 12px;margin-bottom:12px;border:1px solid var(--ink);border-radius:var(--r)}.baddest b{font-family:var(--f-serif);font-size:2rem;font-weight:400;line-height:1.1}
 </style>
 
 <div class="wrap">

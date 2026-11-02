@@ -79,7 +79,9 @@ function aSessions(list,up){
       <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
       <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
       <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
-      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:20}"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:newSport==='badminton'?16:20}"></div>
+      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${newSport==='badminton'?4:''}"></div>
+      ${COURT_SPORTS.includes(newSport)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${DEF_COURTS[newSport]||1}"></div>`:''}
       <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div>
       <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens"><p class="fine">Leave blank to open straight away. Member level and up can join 24 hours before this.</p></div></div>
     <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc"> Time to be confirmed</label>
@@ -197,7 +199,7 @@ function bindAdmin(){
   q('[data-nsp]').forEach(b=>b.onclick=()=>{newSport=b.dataset.nsp;renderAdmin()});
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
-    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
     const lk=$('p-link').value.trim()||S.site?.url||'';if(!/^https:\/\//.test(lk)){toast(S.site?.url?'Please use a full https:// link.':'Please add a link, or set the BAD site link in Settings.');return}$('p-link').value=lk;
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};
@@ -228,17 +230,15 @@ function bindAdmin(){
   q('[data-upfree]').forEach(b=>b.onclick=()=>pcSet(b.dataset.upfree,at=>({ok:true,waived:true,at,by:window.BAD_USER?.email||''}),'Done. Nothing to pay.',unpaidList));
   const pq=$('pay-q');if(pq)pq.oninput=()=>{const v=pq.value.toLowerCase();S.payQ=pq.value;document.querySelectorAll('#a-unpaid .li').forEach(li=>li.hidden=v&&!li.dataset.q.includes(v))};
   q('[data-pcrm]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcrm,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const s={...bk.s};
-    c.items.forEach(r=>{const x={...s[r.sid]};delete x.sent;delete x.ask;s[r.sid]=x});
-    try{await S.db.doc('bookings/'+uid).set({...bk,s});toast('Request removed. It stays as unpaid.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{for(const r of c.items)await staffBooking(uid,r.sid,o=>{if(!o)return undefined;const x={...o};delete x.sent;delete x.ask;return x});toast('Request removed. It stays as unpaid.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-pundo]').forEach(b=>b.onclick=async()=>{const [sid,uid]=b.dataset.pundo.split('|'),cur={...(S.payments[sid]||{})};delete cur[uid];
     try{await S.db.doc('payments/'+sid).set(cur);toast('Undone. It shows as unpaid again.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-uparm]').forEach(b=>b.onclick=()=>{S.rmArm=S.rmArm===b.dataset.uparm?null:b.dataset.uparm;renderNow()});
   q('[data-uprmno]').forEach(b=>b.onclick=()=>{S.rmArm=null;renderNow()});
-  q('[data-uprm]').forEach(b=>b.onclick=async()=>{const [uid,sid]=b.dataset.uprm.split('|'),bk=S.bookings[uid];S.rmArm=null;if(!bk)return;const s={...bk.s};(sid==='*'?pendingFor(uid).filter(r=>canSport(S.sessions[r.sid].sport)).map(r=>r.sid):[sid]).forEach(k=>delete s[k]);
-    try{await S.db.doc('bookings/'+uid).set({...bk,s});toast(`Removed. ${S.profiles[uid]?.nickname||'They'} no longer owe${S.profiles[uid]?'s':''} for this one.`)}catch(e){toast("Sorry, that didn't save.")}});
-  q('[data-pcno]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcno,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const s={...bk.s},at=new Date().toISOString();
-    c.items.forEach(r=>{const x={...s[r.sid]};delete x.sent;x.ask={...(x.ask||{}),no:at};s[r.sid]=x});
-    try{await S.db.doc('bookings/'+uid).set({...bk,s});toast('Noted. The player will see it wasn’t found yet.')}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-uprm]').forEach(b=>b.onclick=async()=>{const [uid,sid]=b.dataset.uprm.split('|'),bk=S.bookings[uid];S.rmArm=null;if(!bk)return;const ks=(sid==='*'?pendingFor(uid).filter(r=>canSport(S.sessions[r.sid].sport)).map(r=>r.sid):[sid]);
+    try{for(const k of ks)await staffBooking(uid,k,()=>null);toast(`Removed. ${S.profiles[uid]?.nickname||'They'} no longer owe${S.profiles[uid]?'s':''} for this one.`)}catch(e){toast("Sorry, that didn't save.")}});
+  q('[data-pcno]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcno,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const at=new Date().toISOString();
+    try{for(const r of c.items)await staffBooking(uid,r.sid,o=>{if(!o)return undefined;const x={...o};delete x.sent;x.ask={...(x.ask||{}),no:at};return x});toast('Noted. The player will see it wasn’t found yet.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-tracker]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.tracker,v=x.value.trim().slice(0,30),clash=Object.entries(S.profiles).find(([u])=>u!==uid&&normName(trackerName(u))===normName(v));
     if(v&&clash){toast(`${clash[1].nickname} already uses that name.`);x.value=S.profiles[uid]?.listName||'';return}
     try{await S.db.doc('profiles/'+uid).update({listName:v,updatedAt:new Date().toISOString()});toast(v?`Saved. ${S.profiles[uid]?.nickname||'They'} match${S.profiles[uid]?'es':''} "${v}" on the tracker.`:'Cleared.')}catch(e){toast("Sorry, that didn't save.")}});
@@ -246,15 +246,15 @@ function bindAdmin(){
   q('[data-gmrm]').forEach(b=>b.onclick=async()=>{const s=S.sessions[adminSid];try{await S.db.doc('sessions/'+adminSid).update({gms:(s.gms||[]).filter(x=>x!==b.dataset.gmrm)});toast('Removed.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-addmode]').forEach(b=>b.onclick=()=>{S.addMode=b.dataset.addmode;renderNow()});
   on('ap-go',async()=>{const u=$('ap-uid').value;if(!u){toast('Please pick a player.');return}const cur=S.bookings[u]||{s:{}},sid=adminSid;
-    try{await S.db.doc('bookings/'+u).set({...cur,key:S.profiles[u]?.listKey||cur.key||'',s:{...(cur.s||{}),[sid]:{at:new Date().toISOString(),guests:[],pay:'cash',byAdmin:window.BAD_USER?.email||''}}});toast(`${S.profiles[u]?.nickname||'Player'} is in.`)}catch(e){toast("Sorry, that didn't save.")}});
+    try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:S.profiles[u]?.listKey||cur.key||'',s:cur.s||{}});toast(`${S.profiles[u]?.nickname||'Player'} is in.`)}catch(e){toast("Sorry, that didn't save.")}});
   on('ag-go',async()=>{const n=$('ag-name').value.trim().slice(0,30),host=$('ag-host').value,sid=adminSid,at=new Date().toISOString();if(!n){toast("Please type the guest's name.");return}
-    try{if(host){const cur=S.bookings[host];const x={...cur.s[sid]};x.guests=[...(x.guests||[]),{n,at,byAdmin:true}];await S.db.doc('bookings/'+host).set({...cur,s:{...cur.s,[sid]:x}})}
-      else{const id='g-'+slug(n)+'-'+Date.now().toString(36);await S.db.doc('bookings/'+id).set({key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{[sid]:{at,guests:[],pay:'cash',byAdmin:true}}})}
+    try{if(host)await staffBooking(host,sid,o=>({...o,guests:[...(o.guests||[]),{n,at,byAdmin:true}]}));
+      else{const id='g-'+slug(n)+'-'+Date.now().toString(36);await staffBooking(id,sid,()=>freshEntry('cash',at),{key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{}})}
       toast(`${n} is in.`);$('ag-name').value=''}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-rrarm]').forEach(b=>b.onclick=()=>{S.rosterRm=b.dataset.rrarm;renderNow();setTimeout(()=>{if(S.rosterRm===b.dataset.rrarm){S.rosterRm=null;renderNow()}},4000)});
   q('[data-rrm]').forEach(b=>b.onclick=async()=>{const [uid,gi]=b.dataset.rrm.split('|'),sid=adminSid,cur=S.bookings[uid];S.rosterRm=null;if(!cur)return;const s={...cur.s};
-    if(gi===''){delete s[sid]}else{const x={...s[sid]};x.guests=(x.guests||[]).filter((_,i)=>i!==+gi);s[sid]=x}
-    try{if(cur.guest&&!Object.keys(s).length)await S.db.doc('bookings/'+uid).delete();else await S.db.doc('bookings/'+uid).set({...cur,s});toast('Taken off the session.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{if(cur.guest&&gi===''&&Object.keys(s).length<=1)await S.db.doc('bookings/'+uid).delete();
+      else await staffBooking(uid,sid,o=>gi===''?null:{...o,guests:(o.guests||[]).filter((_,i)=>i!==+gi)});toast('Taken off the session.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-freeall]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.freeall,list=pendingFor(uid),at=new Date().toISOString();
     try{for(const r of list){const cur={...(S.payments[r.sid]||{})};cur[uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
