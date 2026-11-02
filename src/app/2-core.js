@@ -4,6 +4,21 @@ const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','W
 const LEVELS=['Beginner','Intermediate','Advanced','Pro','National'];
 const LEVEL_SHORT=LEVELS;
 const LEVEL_DESC=['New to the sport or still learning the rules','Plays regularly and can keep a rally going','Strong all-round game with good tactics','Competes in leagues or tournaments','Has played at national level'];
+/* ---------- BAD grades (badminton): our own club scale for balancing games, not BWF ----------
+   [code, description, women's rating, men's rating]. Ratings stay behind the scenes; the card shows the grade and category only. */
+const GRADES=[['F','Fresh on court, first-timer',.5,1],['E','Beginner',1,1.5],['E+','Developing beginner',1.5,2],['D','Improver',2,2.5],['D+','Strong improver',2.5,3],
+  ['C','Intermediate',3,3.5],['C+','Upper intermediate',3.5,4],['B','Advanced',4,4.5],['B+','Strong advanced',4.5,5],['A','High-level competitive',5,5.5],['A+','Elite competitive',5.5,6]];
+const GRADE_SCALE='bad1';
+const CATS={W:'Women’s',M:'Men’s'};
+const gradeRow=g=>GRADES.find(r=>r[0]===g);
+/* crew record wins; a player's own pick is only a starting point until crew verify */
+const gradeOf=uid=>{const r=(S.grades||{})[uid];return r&&gradeRow(r.g)?r.g:null};
+const catOf=uid=>{const r=(S.grades||{})[uid];if(r&&CATS[r.cat])return r.cat;const p=(S.profiles||{})[uid];return p&&CATS[p.cat]?p.cat:null};
+const gradeLabel=uid=>{const g=gradeOf(uid),c=catOf(uid);return 'LVL '+(g||'UNRATED')+(g&&c?' - '+c:'')};
+/* balancing rating: crew override replaces the table value (never add anything on top) */
+function badRating(uid){const r=(S.grades||{})[uid];if(r&&typeof r.ovr==='number')return r.ovr;const g=gradeRow(gradeOf(uid)),c=catOf(uid);return g&&c?(c==='W'?g[2]:g[3]):null}
+const LVL_NOTICE='BAD LEVELS. NOT BWF. Our club scale helps balance games. Crew has the final call.';
+const COMMUNITY_COPY=`<p><b>ALL LEVELS. A LITTLE CHAOS. GOOD SPORTSMANSHIP.</b></p><p>First timer or court regular, you’re welcome here. We’re about fun, friendly competition. Take the game seriously, not yourself.</p><p>It’s okay to be BAD. Support each other, respect your opponents and call your lines honestly.</p><p><b>BAD LEVELS. NOT BWF.</b><br>Our ratings help balance games. They’re our own club scale, not official BWF rankings. Crew may adjust your level based on how you play.</p><p>Questionable footwork? Welcome. Questionable attitude? Let’s talk. If someone crosses the line, tell crew. We’ll take it seriously.</p><p><b>PLAY HARD. BE KIND. BE BAD.</b></p>`;
 const lvlOf=(p,sp)=>{const v=p?.levels?.[sp];return v==null||v===''?null:+v};
 const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -122,17 +137,19 @@ function allKeys(){const m={};for(const e of S.ledger)if(!m[e.player])m[e.player
 /* ---------- card (minimal) ---------- */
 function avatar(p,fallback){if(!p)return `<div class="av none" aria-hidden="true">${esc((fallback||'?')[0].toUpperCase())}</div>`;return `<div class="av ${esc(p.edition||'oncourt')}" aria-hidden="true">${p.photo?`<img src="${esc(p.photo)}" alt="">`:esc(jersey(p))}</div>`}
 function cardHTML(p,st,opt){
-  const cu=uidOfProfile(p),ed=cardEdition(p,cu),lvlUp=cu&&levelIdx(cu)>=1,member=lvlUp;
-  const edName=cardEdLabel(p,cu),sp=mainSport(p),ty=typeOf(p);
+  const cu=uidOfProfile(p),ed=cardEdition(p,cu),sp=mainSport(p),ty=typeOf(p);
   const logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
   const img=p.photo||PH[hash(p.listKey||p.nickname||'BAD')%PH.length];
-  return `<div class="pc ${ed}${opt&&opt.qr&&p.ref?' hasqr':''}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD">${esc(edName)}</span><span class="num">${(()=>{const u=uidOfProfile(p),m=u?memStatus(u):null;return m&&m.state==='verified'&&m.type!=='Guest'?`<span class="mv">${ic('check')}${esc(m.type)}</span>`:'Guest'})()}</span></div>
+  const m=cu?memStatus(cu):null,mem=m&&m.state==='verified'?m.type:'Guest';
+  const plays=(p.sports&&p.sports.length?p.sports:['badminton']).includes('badminton');
+  const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
+  /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
+  return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
-    <div class="style">${ic(sportOf(sp).icon)}${esc(ty||sportOf(sp).club)}</div>
-    <div class="stats s4"><div><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b>Points</div><div><b class="num">${st.badges||0}</b>BADges</div><div><b>${esc(p.shot||'—')}</b>Signature</div><div><b>${esc(lvlOf(p,sp)==null?'—':LEVEL_SHORT[lvlOf(p,sp)])}</b>Level</div></div>
-    <div class="ft"><span class="sps">${(p.sports&&p.sports.length?p.sports:['badminton']).map(s=>ic(sportOf(s).icon)).join('')}</span>${opt&&opt.qr&&p.ref&&typeof qrData==='function'&&qrData(inviteUrl(p.ref))?`<span class="cqr"><span class="num">${esc(p.ref)}</span><img src="${qrData(inviteUrl(p.ref))}" alt="Invite QR code"></span>`:`<span class="num">${member?memberNo(p.listKey||p.nickname):'Est. 2024'}</span>`}</div>
+    ${ty?`<div class="style">${esc(ty)}</div>`:''}
+    <div class="stats lv2"><b class="lvl">${esc(lvl)}</b><span><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b><small>pts</small></span></div>
   </div>`;
 }
 
@@ -175,16 +192,15 @@ const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_D
 const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
 const isFounder=uid=>!!uid&&memStatus(uid).state==='verified'&&memStatus(uid).type==='Founder';
 
-/* back of the card: invite QR and code */
+/* back of the card: a large invite QR, the code, when they joined, BADges and signature. Nothing repeats from the front. */
 function cardBackHTML(p,st){
   const ed=cardEdition(p,uidOfProfile(p)),logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
-  const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'',uid=uidOfProfile(p),m=uid?memStatus(uid):null;
+  const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'';
   const since=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
-  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD">Invite</span><span class="num">${esc(jersey(p))}</span></div>
-    <div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
-    <div class="cb-code num">${esc(code||'—')}</div>
-    <div class="cb-sub">Scan to join BAD.<br>Use my code when you sign up.</div>
-    <div class="ft"><span>${m&&m.state==='verified'?esc(m.type):'Guest'}</span><span class="num">${since?'Since '+esc(since):'Est. 2024'}</span></div>
+  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
+    <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
+      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
+    <div class="stats lv2"><span><b class="num">${st.badges||0}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
 /* ---------- admin roles ----------

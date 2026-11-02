@@ -76,13 +76,15 @@ service cloud.firestore {
     }
     function validProfile(d) {
       return d.keys().hasOnly(['nickname', 'listName', 'listKey', 'number', 'edition', 'photo', 'sports', 'primary', 'types', 'levels', 'level',
-                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample'])
+                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat'])
         && str(d.nickname, 16) && optStr(d, 'listName', 30) && optStr(d, 'listKey', 40) && optStr(d, 'number', 3)
         && optStr(d, 'photo', 400000) && optStr(d, 'ref', 20) && optStr(d, 'referredBy', 16) && optStr(d, 'shot', 20)
         && (!('sports' in d) || (d.sports is list && d.sports.size() <= 10))
         && (!('refs' in d) || (d.refs is list && d.refs.size() <= 6))
         && (!('sample' in d) || isFull())
-        && (!('memReq' in d) || (d.memReq is map && d.memReq.keys().hasOnly(['type', 'at']) && str(d.memReq.type, 30)));
+        && (!('memReq' in d) || (d.memReq is map && d.memReq.keys().hasOnly(['type', 'at']) && str(d.memReq.type, 30)))
+        && (!('grade' in d) || d.grade in ['', 'F', 'E', 'E+', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A', 'A+'])
+        && (!('cat' in d) || d.cat in ['', 'W', 'M']);
     }
 
     // Bookings: one document per player, one entry per session. Every change names the session it touches (op.sid),
@@ -139,6 +141,24 @@ service cloud.firestore {
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 5
         && str(request.resource.data.reason, 80) && request.resource.data.synced == false;
       allow update, delete: if isFull();
+    }
+    // BAD grades (badminton): everyone can read the grade and category shown on cards. Crew, admins and the session's
+    // Game Master set them; every change also writes a log entry that can't be edited, with who and when.
+    match /grades/{id} {
+      allow read: if signedIn();
+      allow create, update: if canGrade(request.resource.data.get('sid', '')) && validGrade(request.resource.data);
+      match /log/{lid} {
+        allow read: if isAdminAny() || isCrew();
+        allow create: if canGrade(request.resource.data.get('sid', '')) && request.resource.data.by == uid() && request.resource.data.at == request.time;
+      }
+    }
+    function canGrade(sid) { return isAdminAny() || isCrew() || (sid != '' && isGM(sid)); }
+    function validGrade(d) {
+      return d.keys().hasOnly(['g', 'cat', 'ovr', 'by', 'byName', 'at', 'sid', 'scale', 'prev'])
+        && d.g in ['U', 'F', 'E', 'E+', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A', 'A+']
+        && (d.cat == null || d.cat in ['W', 'M'])
+        && (d.ovr == null || (d.ovr is number && d.ovr >= 0 && d.ovr <= 7))
+        && d.by == uid() && d.at == request.time && d.scale == 'bad1' && optStr(d, 'byName', 16);
     }
     match /refcodes/{code} {
       allow read: if signedIn();

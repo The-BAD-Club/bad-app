@@ -41,6 +41,7 @@ S.contacts={};S.brand={};
   db.doc('config/points').onSnapshot(d=>{S.ptsCfg=d.exists?d.data():null;render()},()=>{});
   db.doc('config/sheetPoints').onSnapshot(d=>{S.sheetPts=d.exists?d.data():null;render()},()=>{});
   db.collection('badges').onSnapshot(s=>{S.badges=map(s);render()},()=>{});
+  db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};render()},()=>{});

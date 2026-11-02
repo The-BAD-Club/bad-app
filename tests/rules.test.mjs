@@ -191,3 +191,36 @@ test('push devices belong to one player; test notifications are for yourself onl
   await assertFails(setDoc(doc(db, 'pushQueue', 'test-p2'), { type: 'test', uid: 'p2', at: serverTimestamp() }));
   await assertFails(setDoc(doc(db, 'pushQueue', 'chg'), { type: 'session-change', sid: SID, at: serverTimestamp() }));
 });
+
+// ---------- BAD grades ----------
+const gradeDoc = (by, extra = {}) => ({ g: 'C+', cat: 'M', ovr: null, by, byName: 'Crew', at: serverTimestamp(), sid: SID, scale: 'bad1', ...extra });
+test('crew, admins and the session Game Master can set a grade; players cannot', async () => {
+  await assertSucceeds(setDoc(doc(ctx('crew1'), 'grades', 'p2'), gradeDoc('crew1')));
+  await assertSucceeds(setDoc(doc(ctx('a1', 'cm@x.com'), 'grades', 'p2'), gradeDoc('a1', { g: 'B' })));
+  await assertSucceeds(setDoc(doc(ctx('gm1'), 'grades', 'p2'), gradeDoc('gm1', { g: 'U', cat: null })));
+  await assertFails(setDoc(doc(ctx('gm1'), 'grades', 'p2'), gradeDoc('gm1', { sid: VSID })));   // not their session
+  await assertFails(setDoc(doc(ctx('p2', 'fei@x.com'), 'grades', 'p2'), gradeDoc('p2')));         // not even their own
+  await assertSucceeds(getDoc(doc(ctx('p1', 'p1@x.com'), 'grades', 'p2')));
+});
+test('grades must use the BAD scale, a real category and a sensible override, signed and timed by the server', async () => {
+  const db = ctx('crew1');
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { g: 'Z' })));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { cat: 'X' })));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { ovr: 9 })));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('someoneElse')));
+  await assertFails(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { at: Timestamp.fromMillis(0) })));
+  await assertSucceeds(setDoc(doc(db, 'grades', 'p2'), gradeDoc('crew1', { ovr: 4.5 })));
+});
+test('the grade log is add-only and readable by crew only', async () => {
+  const db = ctx('crew1'), ref = doc(db, 'grades', 'p2', 'log', 'x1');
+  await assertSucceeds(setDoc(ref, { from: {}, to: {}, by: 'crew1', byName: 'Crew', at: serverTimestamp(), sid: SID }));
+  await assertFails(updateDoc(ref, { by: 'crew1' }));
+  await assertFails(deleteDoc(ref));
+  await assertFails(getDoc(doc(ctx('p1', 'p1@x.com'), 'grades', 'p2', 'log', 'x1')));
+});
+test('players can save their own self-assessed grade and category, on the BAD scale', async () => {
+  const db = ctx('p2', 'fei@x.com');
+  await assertSucceeds(setDoc(doc(db, 'profiles', 'p2'), { nickname: 'Fei', listName: 'Fei', grade: 'D+', cat: 'W' }));
+  await assertFails(setDoc(doc(db, 'profiles', 'p2'), { nickname: 'Fei', listName: 'Fei', grade: '3' }));
+  await assertFails(setDoc(doc(db, 'profiles', 'p2'), { nickname: 'Fei', listName: 'Fei', cat: 'Man' }));
+});

@@ -738,6 +738,24 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .bgpick .li{width:100%;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:10px 4px}
 .bgpick .li:hover{background:var(--chip)}
 .savest{align-self:center;font-size:.7rem}.savest.ok{opacity:.7}.savest.warn{border-style:dashed;background:transparent;box-shadow:inset 0 0 0 1px var(--rule);color:var(--muted)}
+/* minimal card (v0.9) */
+.pc .hd img{margin-bottom:0}
+.pc .stats.lv2{grid-template-columns:1fr auto;align-items:baseline;border-top:1px solid color-mix(in srgb,var(--fg) 35%,transparent);margin-top:14px;padding-top:12px}
+.pc .stats.lv2>*{font-size:1rem;font-weight:700;letter-spacing:.06em;color:var(--fg);text-transform:none}
+.pc .stats.lv2 b{display:inline;font-size:1rem;font-weight:700;letter-spacing:.06em}
+.pc .stats.lv2 small{font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-left:6px;font-weight:600}
+.pc .stats.lv2>:last-child{text-align:right}
+.pc .style{margin-top:2px}
+.cback .cb-mid{margin:auto 0;display:grid;justify-items:center;gap:10px}
+.cback .cb-mid .qrbox{margin:0;width:56%;max-width:170px}
+.cback .cb-mid .cb-code{font-family:inherit;font-size:.9rem;font-weight:800;letter-spacing:.16em;margin:0;text-transform:uppercase}
+.cback .cb-mid .cb-sub{margin:-4px 0 0;font-size:.52rem;letter-spacing:.16em;text-transform:uppercase}
+.cback .stats.lv2{margin-top:0}
+.lvl-pick.grades .gcode{min-width:2.2em;font-weight:800;font-size:1rem;letter-spacing:.04em}
+.lvl-note{margin:0 0 10px;font-size:.78rem;letter-spacing:.02em}
+.gpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.gpick select,.gpick input{min-height:36px;font-size:.85rem;padding:4px 8px}.gpick input{width:78px}
+@media (max-width:760px){#v-create .pc .hd,.mini .pc .hd{font-size:.48rem;letter-spacing:.14em}#v-create .pc .hd img,.mini .pc .hd img{height:12px}}
+.gpick select{width:auto}.gpick [data-gk=g]{flex:1 1 100%}.gpick [data-gk=cat]{flex:1 1 0;min-width:0}.gpick [data-gk=ovr]{flex:0 0 72px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -880,8 +898,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.8';
+const APP_VERSION='0.9';
 const CHANGES=[
+  ['0.9','2026-11-02','BAD levels F to A+ with W/M category, crew verify on check-in; minimal player card with the invite on the back; courts load only tonight\'s data and boards can\'t overwrite each other'],
   ['0.8','2026-10-24','Game Master per session; admins add players and guests by hand and take people off a session'],
   ['0.7','2026-10-24','Points and BADges from BAD APP – Master; BADge levels and perks; name on tracker; department wording'],
   ['0.6','2026-10-24','Payments tab; Check with admin; remove and undo for payments'],
@@ -901,6 +920,21 @@ const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','W
 const LEVELS=['Beginner','Intermediate','Advanced','Pro','National'];
 const LEVEL_SHORT=LEVELS;
 const LEVEL_DESC=['New to the sport or still learning the rules','Plays regularly and can keep a rally going','Strong all-round game with good tactics','Competes in leagues or tournaments','Has played at national level'];
+/* ---------- BAD grades (badminton): our own club scale for balancing games, not BWF ----------
+   [code, description, women's rating, men's rating]. Ratings stay behind the scenes; the card shows the grade and category only. */
+const GRADES=[['F','Fresh on court, first-timer',.5,1],['E','Beginner',1,1.5],['E+','Developing beginner',1.5,2],['D','Improver',2,2.5],['D+','Strong improver',2.5,3],
+  ['C','Intermediate',3,3.5],['C+','Upper intermediate',3.5,4],['B','Advanced',4,4.5],['B+','Strong advanced',4.5,5],['A','High-level competitive',5,5.5],['A+','Elite competitive',5.5,6]];
+const GRADE_SCALE='bad1';
+const CATS={W:'Women’s',M:'Men’s'};
+const gradeRow=g=>GRADES.find(r=>r[0]===g);
+/* crew record wins; a player's own pick is only a starting point until crew verify */
+const gradeOf=uid=>{const r=(S.grades||{})[uid];return r&&gradeRow(r.g)?r.g:null};
+const catOf=uid=>{const r=(S.grades||{})[uid];if(r&&CATS[r.cat])return r.cat;const p=(S.profiles||{})[uid];return p&&CATS[p.cat]?p.cat:null};
+const gradeLabel=uid=>{const g=gradeOf(uid),c=catOf(uid);return 'LVL '+(g||'UNRATED')+(g&&c?' - '+c:'')};
+/* balancing rating: crew override replaces the table value (never add anything on top) */
+function badRating(uid){const r=(S.grades||{})[uid];if(r&&typeof r.ovr==='number')return r.ovr;const g=gradeRow(gradeOf(uid)),c=catOf(uid);return g&&c?(c==='W'?g[2]:g[3]):null}
+const LVL_NOTICE='BAD LEVELS. NOT BWF. Our club scale helps balance games. Crew has the final call.';
+const COMMUNITY_COPY=`<p><b>ALL LEVELS. A LITTLE CHAOS. GOOD SPORTSMANSHIP.</b></p><p>First timer or court regular, you’re welcome here. We’re about fun, friendly competition. Take the game seriously, not yourself.</p><p>It’s okay to be BAD. Support each other, respect your opponents and call your lines honestly.</p><p><b>BAD LEVELS. NOT BWF.</b><br>Our ratings help balance games. They’re our own club scale, not official BWF rankings. Crew may adjust your level based on how you play.</p><p>Questionable footwork? Welcome. Questionable attitude? Let’s talk. If someone crosses the line, tell crew. We’ll take it seriously.</p><p><b>PLAY HARD. BE KIND. BE BAD.</b></p>`;
 const lvlOf=(p,sp)=>{const v=p?.levels?.[sp];return v==null||v===''?null:+v};
 const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1019,17 +1053,19 @@ function allKeys(){const m={};for(const e of S.ledger)if(!m[e.player])m[e.player
 /* ---------- card (minimal) ---------- */
 function avatar(p,fallback){if(!p)return `<div class="av none" aria-hidden="true">${esc((fallback||'?')[0].toUpperCase())}</div>`;return `<div class="av ${esc(p.edition||'oncourt')}" aria-hidden="true">${p.photo?`<img src="${esc(p.photo)}" alt="">`:esc(jersey(p))}</div>`}
 function cardHTML(p,st,opt){
-  const cu=uidOfProfile(p),ed=cardEdition(p,cu),lvlUp=cu&&levelIdx(cu)>=1,member=lvlUp;
-  const edName=cardEdLabel(p,cu),sp=mainSport(p),ty=typeOf(p);
+  const cu=uidOfProfile(p),ed=cardEdition(p,cu),sp=mainSport(p),ty=typeOf(p);
   const logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
   const img=p.photo||PH[hash(p.listKey||p.nickname||'BAD')%PH.length];
-  return `<div class="pc ${ed}${opt&&opt.qr&&p.ref?' hasqr':''}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD">${esc(edName)}</span><span class="num">${(()=>{const u=uidOfProfile(p),m=u?memStatus(u):null;return m&&m.state==='verified'&&m.type!=='Guest'?`<span class="mv">${ic('check')}${esc(m.type)}</span>`:'Guest'})()}</span></div>
+  const m=cu?memStatus(cu):null,mem=m&&m.state==='verified'?m.type:'Guest';
+  const plays=(p.sports&&p.sports.length?p.sports:['badminton']).includes('badminton');
+  const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
+  /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
+  return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
-    <div class="style">${ic(sportOf(sp).icon)}${esc(ty||sportOf(sp).club)}</div>
-    <div class="stats s4"><div><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b>Points</div><div><b class="num">${st.badges||0}</b>BADges</div><div><b>${esc(p.shot||'—')}</b>Signature</div><div><b>${esc(lvlOf(p,sp)==null?'—':LEVEL_SHORT[lvlOf(p,sp)])}</b>Level</div></div>
-    <div class="ft"><span class="sps">${(p.sports&&p.sports.length?p.sports:['badminton']).map(s=>ic(sportOf(s).icon)).join('')}</span>${opt&&opt.qr&&p.ref&&typeof qrData==='function'&&qrData(inviteUrl(p.ref))?`<span class="cqr"><span class="num">${esc(p.ref)}</span><img src="${qrData(inviteUrl(p.ref))}" alt="Invite QR code"></span>`:`<span class="num">${member?memberNo(p.listKey||p.nickname):'Est. 2024'}</span>`}</div>
+    ${ty?`<div class="style">${esc(ty)}</div>`:''}
+    <div class="stats lv2"><b class="lvl">${esc(lvl)}</b><span><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b><small>pts</small></span></div>
   </div>`;
 }
 
@@ -1072,16 +1108,15 @@ const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_D
 const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
 const isFounder=uid=>!!uid&&memStatus(uid).state==='verified'&&memStatus(uid).type==='Founder';
 
-/* back of the card: invite QR and code */
+/* back of the card: a large invite QR, the code, when they joined, BADges and signature. Nothing repeats from the front. */
 function cardBackHTML(p,st){
   const ed=cardEdition(p,uidOfProfile(p)),logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
-  const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'',uid=uidOfProfile(p),m=uid?memStatus(uid):null;
+  const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'';
   const since=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
-  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD">Invite</span><span class="num">${esc(jersey(p))}</span></div>
-    <div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
-    <div class="cb-code num">${esc(code||'—')}</div>
-    <div class="cb-sub">Scan to join BAD.<br>Use my code when you sign up.</div>
-    <div class="ft"><span>${m&&m.state==='verified'?esc(m.type):'Guest'}</span><span class="num">${since?'Since '+esc(since):'Est. 2024'}</span></div>
+  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
+    <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
+      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
+    <div class="stats lv2"><span><b class="num">${st.badges||0}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
 /* ---------- admin roles ----------
@@ -1268,7 +1303,7 @@ function renderStep(){
     }else{
       const acts=D.sports.filter(k=>!LEVEL_FREE.includes(k));
       el.innerHTML=head(3)+`<p class="muted" style="margin-bottom:14px">Your level for each activity helps us balance games. Be honest, there's no wrong answer.</p>`+acts.map(sp=>{const T=TYPES[sp]||{},cur=D.types[sp]||'';return `<div class="act-card"><div class="ic-row"><span class="ic-bub">${ic(SPORTS[sp].icon)}</span><b>${SPORTS[sp].club}</b></div>
-        <div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${l}</b><small>${LEVEL_DESC[i]}</small></span></button>`).join('')}</div></div>
+        ${sp==='badminton'?gradePickHTML():`<div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${l}</b><small>${LEVEL_DESC[i]}</small></span></button>`).join('')}</div></div>`}
         ${Object.keys(T).length?`<div class="field" style="margin:0"><span class="lbl">Play style</span>
           ${sp==='badminton'?(quiz&&quiz.done&&cur?`<div class="result"><span class="label">You're a</span><b class="big">${esc(cur)}</b><p>${esc(T[cur]||'')}</p></div>`:`<div class="row"><button type="button" class="btn sm" id="q-start">${ic('star')}Take the 30-second test</button><span class="fine">Five questions. No wrong answers.</span></div>`):''}
           <div class="chips" role="group">${Object.entries(T).map(([k,d])=>`<button type="button" class="chip" data-ty="${sp}" data-val="${esc(k)}" aria-pressed="${k===cur}" title="${esc(d)}">${esc(k)}</button>`).join('')}</div>
@@ -1277,6 +1312,8 @@ function renderStep(){
         <div class="field"><span class="lbl">Hand</span>${chips('hand',['Right','Left'],D.hand)}</div>`;
       const qs=$('q-start');if(qs)qs.onclick=()=>{quiz={i:0,score:{}};renderStep()};
       el.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{D.types[b.dataset.ty]=D.types[b.dataset.ty]===b.dataset.val?'':b.dataset.val;if(b.dataset.ty==='badminton')quiz=null;renderStep()});
+      el.querySelectorAll('[data-gr]').forEach(b=>b.onclick=()=>{D.grade=D.grade===b.dataset.gr?'':b.dataset.gr;renderStep()});
+      el.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{D.cat=D.cat===b.dataset.cat?'':b.dataset.cat;renderStep()});
       el.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const k=b.dataset.lv,v=+b.dataset.i;if(D.levels[k]===v)delete D.levels[k];else D.levels[k]=v;renderStep()});
     }
   }
@@ -1346,7 +1383,7 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
-    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),
+    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),grade:gradeRow(D.grade)&&D.sports.includes('badminton')?D.grade:'',cat:CATS[D.cat]?D.cat:'',
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
@@ -1367,6 +1404,18 @@ async function saveProfile(){
   $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Copied. Thank you.')}catch(e){toast('Please select the code and copy it.')}};
   $('redo').onclick=()=>{step=4;renderStep()};
 }
+
+/* badminton self-assessment on the BAD scale, plus the balancing category. Crew verify both. */
+function gradePickHTML(){
+  return `<div class="field" style="margin:0"><span class="lbl">Your BAD level</span>
+    <p class="note lvl-note"><b>${esc(LVL_NOTICE)}</b></p>
+    <div class="lvl-pick grades" role="group" aria-label="Your BAD level">
+      <button type="button" data-gr="" aria-pressed="${!D.grade}"><span class="gcode">?</span><span class="t"><b>Not sure yet</b><small>Crew will rate you after watching you play</small></span></button>
+      ${GRADES.map(([g,d])=>`<button type="button" data-gr="${g}" aria-pressed="${D.grade===g}"><span class="gcode num">${g}</span><span class="t"><b>${esc(d)}</b></span></button>`).join('')}</div>
+    <details class="rules"><summary>${ic('users')}Read the level guide</summary><div class="fine">${COMMUNITY_COPY}</div></details></div>
+  <div class="field" style="margin:0"><span class="lbl">Balancing category</span>
+    <div class="chips" role="group" aria-label="Balancing category">${Object.entries(CATS).map(([k,l])=>`<button type="button" class="chip" data-cat="${k}" aria-pressed="${D.cat===k}">${l}</button>`).join('')}</div>
+    <p class="fine">Used only to balance games, and shown on your card as W or M. Crew confirm it.</p></div>`}
 
 /* ---------- navigation ---------- */
 const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
@@ -1607,7 +1656,7 @@ function renderCard(){
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
           ${memType(m.type)?.staff?'':`<details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memPick().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details>`}</section>`})()}
       <section class="hsec"><h3 class="ah">Your activities</h3>
-        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
+        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[k==='badminton'?gradeLabel(S.uid):lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       ${recentHTML(S.uid)}
@@ -1824,6 +1873,27 @@ function waitRow(sid,w,wi,edit){
   return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span>${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</div>
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
+/* crew and Game Masters verify the BAD grade and category; an optional rating override replaces the table rating */
+function gradePick(uid,sid){const r=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{},c=r.cat||'',g=gradeRow(r.g||''),calc=g&&(c||pr.cat)?((c||pr.cat)==='W'?g[2]:g[3]):'';
+  return `<div class="gpick" data-gp="${esc(uid)}"><select data-gk="g" aria-label="BAD level"><option value="U">UNRATED${pr.grade&&!g?' · says '+esc(pr.grade):''}</option>${GRADES.map(([k,d])=>`<option value="${k}" ${r.g===k?'selected':''}>${k} · ${esc(d)}</option>`).join('')}</select>
+    <select data-gk="cat" aria-label="Balancing category"><option value="">W / M${pr.cat&&!c?' · says '+esc(pr.cat):''}</option>${Object.keys(CATS).map(k=>`<option value="${k}" ${c===k?'selected':''}>${k}</option>`).join('')}</select>
+    <input type="number" step="0.5" min="0" max="7" inputmode="decimal" data-gk="ovr" placeholder="${calc===''?'Rating':esc(calc)}" value="${typeof r.ovr==='number'?r.ovr:''}" aria-label="Rating override. Replaces the table rating" title="Override replaces the table rating"></div>`}
+const SVT=()=>(window.firebase&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString();
+async function saveGrade(uid,sid,k,v){
+  const cur=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{};
+  const from={g:cur.g||'U',cat:cur.cat||null,ovr:typeof cur.ovr==='number'?cur.ovr:null};
+  const to={...from};
+  if(k==='g')to.g=gradeRow(v)?v:'U';
+  if(k==='cat')to.cat=CATS[v]?v:null;
+  if(k==='ovr'){const n=v===''?null:Math.round(Number(v)*2)/2;if(n!=null&&!(n>=0&&n<=7)){toast('Ratings go from 0 to 7.');return}to.ovr=n}
+  if(k!=='cat'&&!to.cat&&CATS[pr.cat])to.cat=pr.cat;   /* the player's own category, now confirmed by crew */
+  const me=myProfile(),doc={...to,by:S.uid,byName:(me&&me.nickname)||'',at:SVT(),sid,scale:GRADE_SCALE};
+  /* keep the old 5-step level (scale v1) the first time, for the record. It is never turned into a grade. */
+  if(cur.prev)doc.prev=cur.prev;else{const lv=S.levels&&S.levels[uid],ov=lv&&lv.levels?lv.levels.badminton:null,own=pr.levels?pr.levels.badminton:null;
+    doc.prev={scale:'v1',self:own==null||own===''?null:(LEVELS[own]||null),crew:ov==null?null:(LEVELS[ov]||null)}}
+  try{const b=S.db.batch();b.set(S.db.doc('grades/'+uid),doc);b.set(S.db.collection('grades/'+uid+'/log').doc(),{from,to,by:S.uid,byName:doc.byName,at:SVT(),sid});await b.commit();
+    toast(`${(S.profiles[uid]||{}).nickname||'Player'}: ${gradeRow(to.g)?to.g:'UNRATED'}${to.cat?' - '+to.cat:''}${to.ovr!=null?' · rating '+to.ovr:''}. Saved.`)}
+  catch(e){toast("Sorry, that level didn't save.");renderCourts()}}
 function levelPick(uid,sp){const own=ownLevel(uid,sp),o=S.levels[uid],ov=o&&o.levels?o.levels[sp]:(o?o.level:null);
   return `<label class="lvl"><span class="fine">Level</span><select data-lvl="${esc(uid)}" data-sp="${sp}"><option value="">${own!=null?'Their own: '+LEVELS[own]:'Not set'}</option>${LEVELS.map((l,i)=>`<option value="${i}" ${ov===i?'selected':''}>${l}</option>`).join('')}</select></label>`}
 function stepper(){const st=[['Set up','Courts'],['Check in','Who has arrived'],['Games','Place and log'],['Wrap up','Scores, sheet']];
@@ -1879,7 +1949,7 @@ function renderCourts(){
         <input type="text" id="ci-find" placeholder="Find a player" autocomplete="off">
         <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button></div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
         <div class="row"><input type="text" id="walk-name" maxlength="24" placeholder="Walk-in player's name" style="flex:1;min-width:160px"><button class="btn ghost sm" data-act="walk">${ic('guest')}Add and check in</button></div></div>
-      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?levelPick(p,s.sport||'badminton'):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
+      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       <button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`;
   }else if(S.courtStep===3){
     body=`<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
@@ -1897,6 +1967,7 @@ function renderCourts(){
   }
   el.innerHTML=head+stepper()+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
+  el.querySelectorAll('[data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,S.courtSid,x.dataset.gk,x.value));
   const fd=$('ci-find');if(fd)fd.oninput=e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#ci-list .ci').forEach(r=>r.hidden=q&&!r.dataset.name.includes(q))};
   bindCourts(el);
 }
@@ -1998,7 +2069,7 @@ function qrData(text,size=240){const k=size+'|'+text;if(_qrCache[k])return _qrCa
 const newCode=()=>Math.random().toString(36).slice(2,8).padEnd(6,'x');
 const ownLevel=(uid,sp)=>{const p=S.profiles[uid];if(!p)return null;return p.levels&&p.levels[sp]!=null?p.levels[sp]:(p.level??null)};
 const effLevel=(uid,sp)=>{const o=S.levels[uid];if(o&&o.levels&&o.levels[sp]!=null)return o.levels[sp];if(o&&o.level!=null&&!o.levels)return o.level;return ownLevel(uid,sp)};
-const lvlTag=(uid,sp)=>{const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
+const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
 
 /* player: complete a scanned check-in */
 async function processCheckin(){
@@ -2650,6 +2721,7 @@ S.contacts={};S.brand={};
   db.doc('config/points').onSnapshot(d=>{S.ptsCfg=d.exists?d.data():null;render()},()=>{});
   db.doc('config/sheetPoints').onSnapshot(d=>{S.sheetPts=d.exists?d.data():null;render()},()=>{});
   db.collection('badges').onSnapshot(s=>{S.badges=map(s);render()},()=>{});
+  db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};render()},()=>{});

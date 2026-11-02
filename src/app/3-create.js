@@ -78,7 +78,7 @@ function renderStep(){
     }else{
       const acts=D.sports.filter(k=>!LEVEL_FREE.includes(k));
       el.innerHTML=head(3)+`<p class="muted" style="margin-bottom:14px">Your level for each activity helps us balance games. Be honest, there's no wrong answer.</p>`+acts.map(sp=>{const T=TYPES[sp]||{},cur=D.types[sp]||'';return `<div class="act-card"><div class="ic-row"><span class="ic-bub">${ic(SPORTS[sp].icon)}</span><b>${SPORTS[sp].club}</b></div>
-        <div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${l}</b><small>${LEVEL_DESC[i]}</small></span></button>`).join('')}</div></div>
+        ${sp==='badminton'?gradePickHTML():`<div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${LEVELS.map((l,i)=>`<button type="button" data-lv="${sp}" data-i="${i}" aria-pressed="${D.levels[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${l}</b><small>${LEVEL_DESC[i]}</small></span></button>`).join('')}</div></div>`}
         ${Object.keys(T).length?`<div class="field" style="margin:0"><span class="lbl">Play style</span>
           ${sp==='badminton'?(quiz&&quiz.done&&cur?`<div class="result"><span class="label">You're a</span><b class="big">${esc(cur)}</b><p>${esc(T[cur]||'')}</p></div>`:`<div class="row"><button type="button" class="btn sm" id="q-start">${ic('star')}Take the 30-second test</button><span class="fine">Five questions. No wrong answers.</span></div>`):''}
           <div class="chips" role="group">${Object.entries(T).map(([k,d])=>`<button type="button" class="chip" data-ty="${sp}" data-val="${esc(k)}" aria-pressed="${k===cur}" title="${esc(d)}">${esc(k)}</button>`).join('')}</div>
@@ -87,6 +87,8 @@ function renderStep(){
         <div class="field"><span class="lbl">Hand</span>${chips('hand',['Right','Left'],D.hand)}</div>`;
       const qs=$('q-start');if(qs)qs.onclick=()=>{quiz={i:0,score:{}};renderStep()};
       el.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{D.types[b.dataset.ty]=D.types[b.dataset.ty]===b.dataset.val?'':b.dataset.val;if(b.dataset.ty==='badminton')quiz=null;renderStep()});
+      el.querySelectorAll('[data-gr]').forEach(b=>b.onclick=()=>{D.grade=D.grade===b.dataset.gr?'':b.dataset.gr;renderStep()});
+      el.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{D.cat=D.cat===b.dataset.cat?'':b.dataset.cat;renderStep()});
       el.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const k=b.dataset.lv,v=+b.dataset.i;if(D.levels[k]===v)delete D.levels[k];else D.levels[k]=v;renderStep()});
     }
   }
@@ -156,7 +158,7 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
-    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),
+    sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),grade:gradeRow(D.grade)&&D.sports.includes('badminton')?D.grade:'',cat:CATS[D.cat]?D.cat:'',
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
@@ -177,3 +179,15 @@ async function saveProfile(){
   $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Copied. Thank you.')}catch(e){toast('Please select the code and copy it.')}};
   $('redo').onclick=()=>{step=4;renderStep()};
 }
+
+/* badminton self-assessment on the BAD scale, plus the balancing category. Crew verify both. */
+function gradePickHTML(){
+  return `<div class="field" style="margin:0"><span class="lbl">Your BAD level</span>
+    <p class="note lvl-note"><b>${esc(LVL_NOTICE)}</b></p>
+    <div class="lvl-pick grades" role="group" aria-label="Your BAD level">
+      <button type="button" data-gr="" aria-pressed="${!D.grade}"><span class="gcode">?</span><span class="t"><b>Not sure yet</b><small>Crew will rate you after watching you play</small></span></button>
+      ${GRADES.map(([g,d])=>`<button type="button" data-gr="${g}" aria-pressed="${D.grade===g}"><span class="gcode num">${g}</span><span class="t"><b>${esc(d)}</b></span></button>`).join('')}</div>
+    <details class="rules"><summary>${ic('users')}Read the level guide</summary><div class="fine">${COMMUNITY_COPY}</div></details></div>
+  <div class="field" style="margin:0"><span class="lbl">Balancing category</span>
+    <div class="chips" role="group" aria-label="Balancing category">${Object.entries(CATS).map(([k,l])=>`<button type="button" class="chip" data-cat="${k}" aria-pressed="${D.cat===k}">${l}</button>`).join('')}</div>
+    <p class="fine">Used only to balance games, and shown on your card as W or M. Crew confirm it.</p></div>`}

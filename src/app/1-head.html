@@ -732,6 +732,24 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .bgpick .li{width:100%;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:10px 4px}
 .bgpick .li:hover{background:var(--chip)}
 .savest{align-self:center;font-size:.7rem}.savest.ok{opacity:.7}.savest.warn{border-style:dashed;background:transparent;box-shadow:inset 0 0 0 1px var(--rule);color:var(--muted)}
+/* minimal card (v0.9) */
+.pc .hd img{margin-bottom:0}
+.pc .stats.lv2{grid-template-columns:1fr auto;align-items:baseline;border-top:1px solid color-mix(in srgb,var(--fg) 35%,transparent);margin-top:14px;padding-top:12px}
+.pc .stats.lv2>*{font-size:1rem;font-weight:700;letter-spacing:.06em;color:var(--fg);text-transform:none}
+.pc .stats.lv2 b{display:inline;font-size:1rem;font-weight:700;letter-spacing:.06em}
+.pc .stats.lv2 small{font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-left:6px;font-weight:600}
+.pc .stats.lv2>:last-child{text-align:right}
+.pc .style{margin-top:2px}
+.cback .cb-mid{margin:auto 0;display:grid;justify-items:center;gap:10px}
+.cback .cb-mid .qrbox{margin:0;width:56%;max-width:170px}
+.cback .cb-mid .cb-code{font-family:inherit;font-size:.9rem;font-weight:800;letter-spacing:.16em;margin:0;text-transform:uppercase}
+.cback .cb-mid .cb-sub{margin:-4px 0 0;font-size:.52rem;letter-spacing:.16em;text-transform:uppercase}
+.cback .stats.lv2{margin-top:0}
+.lvl-pick.grades .gcode{min-width:2.2em;font-weight:800;font-size:1rem;letter-spacing:.04em}
+.lvl-note{margin:0 0 10px;font-size:.78rem;letter-spacing:.02em}
+.gpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.gpick select,.gpick input{min-height:36px;font-size:.85rem;padding:4px 8px}.gpick input{width:78px}
+@media (max-width:760px){#v-create .pc .hd,.mini .pc .hd{font-size:.48rem;letter-spacing:.14em}#v-create .pc .hd img,.mini .pc .hd img{height:12px}}
+.gpick select{width:auto}.gpick [data-gk=g]{flex:1 1 100%}.gpick [data-gk=cat]{flex:1 1 0;min-width:0}.gpick [data-gk=ovr]{flex:0 0 72px}
 </style>
 
 <div class="wrap">

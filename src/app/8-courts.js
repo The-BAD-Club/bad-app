@@ -130,6 +130,27 @@ function waitRow(sid,w,wi,edit){
   return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span>${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</div>
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
+/* crew and Game Masters verify the BAD grade and category; an optional rating override replaces the table rating */
+function gradePick(uid,sid){const r=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{},c=r.cat||'',g=gradeRow(r.g||''),calc=g&&(c||pr.cat)?((c||pr.cat)==='W'?g[2]:g[3]):'';
+  return `<div class="gpick" data-gp="${esc(uid)}"><select data-gk="g" aria-label="BAD level"><option value="U">UNRATED${pr.grade&&!g?' · says '+esc(pr.grade):''}</option>${GRADES.map(([k,d])=>`<option value="${k}" ${r.g===k?'selected':''}>${k} · ${esc(d)}</option>`).join('')}</select>
+    <select data-gk="cat" aria-label="Balancing category"><option value="">W / M${pr.cat&&!c?' · says '+esc(pr.cat):''}</option>${Object.keys(CATS).map(k=>`<option value="${k}" ${c===k?'selected':''}>${k}</option>`).join('')}</select>
+    <input type="number" step="0.5" min="0" max="7" inputmode="decimal" data-gk="ovr" placeholder="${calc===''?'Rating':esc(calc)}" value="${typeof r.ovr==='number'?r.ovr:''}" aria-label="Rating override. Replaces the table rating" title="Override replaces the table rating"></div>`}
+const SVT=()=>(window.firebase&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString();
+async function saveGrade(uid,sid,k,v){
+  const cur=(S.grades||{})[uid]||{},pr=S.profiles[uid]||{};
+  const from={g:cur.g||'U',cat:cur.cat||null,ovr:typeof cur.ovr==='number'?cur.ovr:null};
+  const to={...from};
+  if(k==='g')to.g=gradeRow(v)?v:'U';
+  if(k==='cat')to.cat=CATS[v]?v:null;
+  if(k==='ovr'){const n=v===''?null:Math.round(Number(v)*2)/2;if(n!=null&&!(n>=0&&n<=7)){toast('Ratings go from 0 to 7.');return}to.ovr=n}
+  if(k!=='cat'&&!to.cat&&CATS[pr.cat])to.cat=pr.cat;   /* the player's own category, now confirmed by crew */
+  const me=myProfile(),doc={...to,by:S.uid,byName:(me&&me.nickname)||'',at:SVT(),sid,scale:GRADE_SCALE};
+  /* keep the old 5-step level (scale v1) the first time, for the record. It is never turned into a grade. */
+  if(cur.prev)doc.prev=cur.prev;else{const lv=S.levels&&S.levels[uid],ov=lv&&lv.levels?lv.levels.badminton:null,own=pr.levels?pr.levels.badminton:null;
+    doc.prev={scale:'v1',self:own==null||own===''?null:(LEVELS[own]||null),crew:ov==null?null:(LEVELS[ov]||null)}}
+  try{const b=S.db.batch();b.set(S.db.doc('grades/'+uid),doc);b.set(S.db.collection('grades/'+uid+'/log').doc(),{from,to,by:S.uid,byName:doc.byName,at:SVT(),sid});await b.commit();
+    toast(`${(S.profiles[uid]||{}).nickname||'Player'}: ${gradeRow(to.g)?to.g:'UNRATED'}${to.cat?' - '+to.cat:''}${to.ovr!=null?' · rating '+to.ovr:''}. Saved.`)}
+  catch(e){toast("Sorry, that level didn't save.");renderCourts()}}
 function levelPick(uid,sp){const own=ownLevel(uid,sp),o=S.levels[uid],ov=o&&o.levels?o.levels[sp]:(o?o.level:null);
   return `<label class="lvl"><span class="fine">Level</span><select data-lvl="${esc(uid)}" data-sp="${sp}"><option value="">${own!=null?'Their own: '+LEVELS[own]:'Not set'}</option>${LEVELS.map((l,i)=>`<option value="${i}" ${ov===i?'selected':''}>${l}</option>`).join('')}</select></label>`}
 function stepper(){const st=[['Set up','Courts'],['Check in','Who has arrived'],['Games','Place and log'],['Wrap up','Scores, sheet']];
@@ -185,7 +206,7 @@ function renderCourts(){
         <input type="text" id="ci-find" placeholder="Find a player" autocomplete="off">
         <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button></div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
         <div class="row"><input type="text" id="walk-name" maxlength="24" placeholder="Walk-in player's name" style="flex:1;min-width:160px"><button class="btn ghost sm" data-act="walk">${ic('guest')}Add and check in</button></div></div>
-      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?levelPick(p,s.sport||'badminton'):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
+      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div>${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):''}</div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}</div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       <button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`;
   }else if(S.courtStep===3){
     body=`<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
@@ -203,6 +224,7 @@ function renderCourts(){
   }
   el.innerHTML=head+stepper()+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
+  el.querySelectorAll('[data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,S.courtSid,x.dataset.gk,x.value));
   const fd=$('ci-find');if(fd)fd.oninput=e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#ci-list .ci').forEach(r=>r.hidden=q&&!r.dataset.name.includes(q))};
   bindCourts(el);
 }
