@@ -192,6 +192,7 @@ function bindAdmin(){
   const past=$('a-past');if(past)past.onchange=()=>{showPast=past.checked;renderAdmin()};
   on('a-new',()=>{showNew=!showNew;renderAdmin()});
   q('#a-plist [data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,'',x.dataset.gk,x.value));
+  q('#a-plist [data-greset]').forEach(x=>x.onclick=()=>saveGrade(x.dataset.greset,'','ovr',''));
   const aq=$('a-q');if(aq)aq.oninput=()=>{const v=aq.value.trim().toLowerCase();q('#a-plist [data-q]').forEach(li=>li.hidden=!!v&&!li.dataset.q.includes(v))};
   q('[data-ns]').forEach(b=>b.onclick=async()=>{const key=b.dataset.ns,id='ns-'+slug(key),cur=S.noshows[id]||{player:key,name:nameOf(b.dataset.uid,key),dates:[]};
     const dates=new Set(cur.dates||[]),d=b.dataset.d;dates.has(d)?dates.delete(d):dates.add(d);
