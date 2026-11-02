@@ -773,6 +773,9 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .standings .strow.sh{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding-top:0}.standings .strow>:nth-child(3),.standings .strow>:nth-child(4){text-align:right}.standings p.fine svg.i{width:14px;height:14px;vertical-align:-2px}
 .standings .strow.first{font-weight:700}.standings .strow.mine{background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .baddest{display:grid;gap:2px;text-align:center;padding:18px 12px;margin-bottom:12px;border:1px solid var(--ink);border-radius:var(--r)}.baddest b{font-family:var(--f-serif);font-size:2rem;font-weight:400;line-height:1.1}
+/* the photo fades out by itself (a mask), so it blends into every card colour with no visible edge */
+.pc .ph{-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 42%,rgba(0,0,0,.55) 68%,rgba(0,0,0,.18) 86%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 42%,rgba(0,0,0,.55) 68%,rgba(0,0,0,.18) 86%,transparent 100%);bottom:30%!important}
+.pc .ph::after,.pc.member .ph::after{display:none}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
