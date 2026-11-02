@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.9';
+const APP_VERSION='0.10';
 const CHANGES=[
+  ['0.10','2026-11-02','Badminton queuing: Start, Finish and Cancel with timing; fair rotation with balanced teams; scores confirmed by the other team and finalised by Support; session standings and BADDEST PLAYER (+5); player cap, waiting list, courts and time with a 5-game check'],
   ['0.9','2026-11-02','BAD levels F to A+ with W/M category, crew verify on check-in; minimal player card with the invite on the back; courts load only tonight\'s data and boards can\'t overwrite each other'],
   ['0.8','2026-10-24','Game Master per session; admins add players and guests by hand and take people off a session'],
   ['0.7','2026-10-24','Points and BADges from BAD APP – Master; BADge levels and perks; name on tracker; department wording'],
