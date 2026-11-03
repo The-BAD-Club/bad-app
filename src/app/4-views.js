@@ -193,7 +193,7 @@ function ptsTilesHTML(pt,fd,req){const c=PS();
       <div class="bar"><i style="width:${Math.min(100,pt.balance/c.free*100)}%"></i></div>
       ${pt.playBy?`<span class="fine">Play by ${esc(fmtD(pt.playBy))} to keep them.</span>`:''}
       ${req?'<span class="tagl">Free session requested</span>':pt.canRedeem?(pt.unpaid?`<span class="fine">Please settle your AED ${pt.unpaid} first, then you can use your free session.</span>`:`<button class="btn sm" id="redeem">${ic('ticket')}Use ${c.free} for a free session</button>`):''}</div>`;
-  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="stat"><b class="num">${pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div>
+  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div>
       ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100)}%"></i></div>`:''}
       ${canGiveBadge()?`<button class="btn ghost sm" data-givebadge="">Give a BADge</button>`:''}</div>`;
   const pay=`<div class="paystat ${pt.unpaid?'owe':'ok'}">${pt.unpaid?`${ic('wallet')}<span>AED ${pt.unpaid} unpaid</span>`:`${ic('check')}<span>Paid up</span>`}</div>`;
@@ -220,6 +220,11 @@ function activityHTML(){
       return due?`<details class="payrow" data-payrow="${esc(r.sid)}" ${open?'open':''}><summary>${row}</summary><div class="paybody">${payFor&&payFor.sid===r.sid?payPicker(r.sid,true):payInfo(r.sid,r.s,r.x,r.amount)}</div></details>`:row}).join('')||`<div class="empty">${ic('play')}<span>No sessions yet. Your bookings, games and payments will show here.</span></div>`}</div>
     ${due.length?`<p class="fine">Cash is confirmed by an admin at the session. For bank transfer or Ziina, open the session above and tap I've paid after sending.</p>`:''}</div>`;
 }
+/* Home: a checked game shows its result or what's still needed; scores are added on the Courts screen */
+function homeGameRow(gid,g){const sid=g.sid,t=typeof teamOf==='function'?teamOf(g,S.uid):null,st=typeof gState==='function'?gState(gid,g):g.st;
+  const sc=g.final?(t==='b'?[g.final[1],g.final[0]]:g.final):null;
+  const label={final:sc?(sc[0]>sc[1]?'Won':'Lost'):'Final',noscore:'Score needed',submitted:'Waiting for confirmation',ready:'Agreed · Support will finalise',disputed:'Support is checking',cancelled:'Cancelled · no result',played:'Played'}[st]||'';
+  return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${teamNames(sid,g.a)} <span class="muted">vs</span> ${teamNames(sid,g.b)}</div><div class="sub">${esc(g.court||'')}${label?' · '+esc(label):''}</div>${st==='noscore'||st==='submitted'?`<button class="linkbtn" data-goscore="${esc(sid)}">Open in Courts${ic('arrow')}</button>`:''}</div><b class="num big" style="font-size:1.5rem">${sc?sc[0]+'–'+sc[1]:'—'}</b></div>`}
 function renderCard(){
   const el=$('v-card'),p=myProfile();
   if(!p){
@@ -264,7 +269,7 @@ function renderCard(){
       <section class="hsec"><h3 class="ah">Your activities</h3>
         <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[k==='badminton'?gradeLabel(S.uid):(p.lv2&&p.lv2[k]!=null)?lvlName(k,p.lv2[k]):lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${activityHTML()}
-      ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
+      ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>g.v===2?homeGameRow(gid,g):gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       ${recentHTML(S.uid)}
       <section class="tile refer"><span class="label">Invite a friend</span>
         <div class="inv one"><div class="stat"><b class="num" id="my-ref">${esc(p.ref||refCode(S.uid,p))}</b><span class="fine">Flip your card to show your QR code, or share the link. Friends use your code when they register.</span>
@@ -289,7 +294,7 @@ function renderCard(){
   el.querySelectorAll('[data-payalldone]').forEach(b=>b.onclick=async()=>{const k=b.dataset.payalldone,ids=myActivity().filter(r=>r.payState==='pending').map(r=>r.sid),at=new Date().toISOString();
     try{for(const id of ids)await saveBooking(id,'pay',o=>o&&({...o,pay:k,sent:at}));S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-payjump]').forEach(b=>b.onclick=()=>{const d=el.querySelector('.payrow');if(!d)return;d.open=true;S.openPay=d.dataset.payrow;d.scrollIntoView({behavior:'smooth',block:'center'})});
-  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));el.querySelectorAll('[data-rankgo]').forEach(b=>b.onclick=()=>{S.boardMode='rank';setView('board')});
+  $('edit').onclick=()=>startCreator(p);el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));el.querySelectorAll('[data-goscore]').forEach(b=>b.onclick=()=>{const x=S.sessions[b.dataset.goscore];S.courtSport=(x&&x.sport)||'badminton';S.courtSid=b.dataset.goscore;S.asPlayer=true;setView('courts')});el.querySelectorAll('[data-rankgo]').forEach(b=>b.onclick=()=>{S.boardMode='rank';setView('board')});
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
   const r=$('redeem');if(r)r.onclick=requestFree;
   el.querySelectorAll('[data-givebadge]').forEach(b=>b.onclick=()=>openBadge(b.dataset.givebadge||''));

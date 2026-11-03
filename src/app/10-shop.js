@@ -20,13 +20,22 @@ function countdown(iso){const ms=new Date(iso).getTime()-Date.now();if(ms<=0)ret
 const dropWhen=iso=>new Date(iso).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
 function prodTag(p,pid){if(!released(p))return`<span class="ptag">Drops in ${countdown(p.releaseAt)}</span>`;if(firstPick(p)&&Date.now()<new Date(p.releaseAt).getTime())return`<span class="ptag">${ic('star')}First pick for you</span>`;const l=leftAll(p,pid);if(!l)return'<span class="ptag dark">Sold out</span>';if(l<=5)return`<span class="ptag">Only ${l} left</span>`;return p.drop==='limited'?'<span class="ptag">Limited</span>':''}
 
+/* Featured drop: FRAGMENTS RELEASE runs on its own pre-order site for now. Images come from that site. */
+const FEATURED_DROP={url:'https://fragments-release.thebadclub-co.workers.dev/',base:'https://fragments-release.thebadclub-co.workers.dev/assets/',
+  title:'FRAGMENTS RELEASE',set:'The Ritual Set',sub:'Three bandanas. Small pieces, a shared identity.',status:'Pre-orders are open',note:'Pickup at BAD rallies · arrives in about 3–4 weeks',
+  designs:[['BEYOND','bandana-design-01-clean.webp','Net lines and stars: going past the barrier'],['CADENCE','bandana-design-02-clean.webp','Measured border, black field, BAD at the centre'],['CURRENT','bandana-design-03-clean.webp','Grey waves for effort and motion']]};
+function dropHTML(){const d=FEATURED_DROP;
+  return `<a class="drop" href="${d.url}" target="_blank" rel="noopener"><div class="drop-img" style="background-image:url('${d.base}bandana-pack-clean.webp')"></div>
+    <div class="drop-body"><span class="label">${esc(d.status)}</span><h3>${esc(d.title)}</h3><p><b>${esc(d.set)}</b> · ${esc(d.sub)}</p>
+      <div class="drop-designs">${d.designs.map(([n,f,t])=>`<figure><div style="background-image:url('${d.base}${f}')"></div><figcaption><b>${n}</b><span>${esc(t)}</span></figcaption></figure>`).join('')}</div>
+      <span class="btn wide">${ic('bag')}Pre-order the set${ic('arrow')}</span><span class="fine">${esc(d.note)}</span></div></a>`}
 function renderShop(){
   const el=$('v-shop');if(!el)return;
   const all=liveProducts(),f=S.shopFilter,list=all.filter(([,p])=>f==='all'||p.drop===f);
   const next=all.filter(([,p])=>p.drop==='limited'&&!released(p)).sort((a,b)=>new Date(a[1].releaseAt)-new Date(b[1].releaseAt))[0];
   const bagN=S.bag.reduce((t,i)=>t+i.qty,0),bagT=S.bag.reduce((t,i)=>t+i.qty*i.price,0);
   const mine=Object.entries(S.myOrders).sort((a,b)=>String(b[1].createdAt).localeCompare(String(a[1].createdAt)));
-  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, essentials stay.</p></div>
+  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, essentials stay.</p></div>${dropHTML()}
     ${next?(()=>{const [pid,p]=next;return `<button class="dropban" data-pid="${esc(pid)}">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="">`:''}<div class="db-t"><span class="label">Next limited drop${p.dropName?' · '+esc(p.dropName):''}</span><b>${esc(p.name)}</b><span class="fine">${esc(dropWhen(p.releaseAt))}</span></div><span class="db-c num">${countdown(p.releaseAt)}</span></button>`})():''}
     <div class="chips" role="group" aria-label="Filter">${[['all','All'],['limited','Limited drops'],['essentials','Essentials']].map(([k,l])=>`<button class="chip" data-sf="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
     ${list.length?`<div class="pgrid">${list.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">${esc(p.drop==='limited'?(p.dropName||'Limited drop'):'Essentials')}</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div>`
