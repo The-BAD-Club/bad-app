@@ -78,7 +78,7 @@ service cloud.firestore {
     }
     function validProfile(d) {
       return d.keys().hasOnly(['nickname', 'listName', 'listKey', 'number', 'edition', 'photo', 'sports', 'primary', 'types', 'levels', 'level',
-                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat'])
+                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat', 'lv2'])
         && str(d.nickname, 16) && optStr(d, 'listName', 30) && optStr(d, 'listKey', 40) && optStr(d, 'number', 3)
         && optStr(d, 'photo', 400000) && optStr(d, 'ref', 20) && optStr(d, 'referredBy', 16) && optStr(d, 'shot', 20)
         && (!('sports' in d) || (d.sports is list && d.sports.size() <= 10))
@@ -86,7 +86,8 @@ service cloud.firestore {
         && (!('sample' in d) || isFull())
         && (!('memReq' in d) || (d.memReq is map && d.memReq.keys().hasOnly(['type', 'at']) && str(d.memReq.type, 30)))
         && (!('grade' in d) || d.grade in ['', 'F', 'E', 'E+', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A', 'A+'])
-        && (!('cat' in d) || d.cat in ['', 'W', 'M']);
+        && (!('cat' in d) || d.cat in ['', 'W', 'M'])
+        && (!('lv2' in d) || (d.lv2 is map && d.lv2.size() <= 10));
     }
 
     // Bookings: one document per player, one entry per session. Every change names the session it touches (op.sid),
@@ -209,6 +210,16 @@ service cloud.firestore {
         && (d.cat == null || d.cat in ['W', 'M'])
         && (d.ovr == null || (d.ovr is number && d.ovr >= 0 && d.ovr <= 7))
         && d.by == uid() && d.at == request.time && d.scale == 'bad1' && optStr(d, 'byName', 16);
+    }
+    // BAD PACE run log: runners save their own run for a session; crew for that sport (or the Game Master) can save anyone's
+    match /runs/{id} {
+      allow read: if signedIn();
+      allow create, update: if request.resource.data.keys().hasOnly(['sid', 'pid', 'km', 'secs', 'by', 'at'])
+        && str(request.resource.data.sid, 80) && str(request.resource.data.pid, 120) && id == request.resource.data.sid + '_' + request.resource.data.pid
+        && request.resource.data.km is number && request.resource.data.km > 0 && request.resource.data.km <= 100
+        && request.resource.data.secs is int && request.resource.data.secs > 0 && request.resource.data.secs < 86400
+        && request.resource.data.by == uid() && request.resource.data.at == request.time
+        && (request.resource.data.pid == uid() || canDept(sportOf(request.resource.data.sid)) || isGM(request.resource.data.sid));
     }
     // BADDEST PLAYER award per session: admins for that sport, signed and timed by the server
     match /awards/{sid} {

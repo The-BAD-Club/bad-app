@@ -19,6 +19,16 @@ const gradeLabel=uid=>{const g=gradeOf(uid),c=catOf(uid);return 'LVL '+(g||'UNRA
 function badRating(uid){const r=(S.grades||{})[uid];if(r&&typeof r.ovr==='number')return r.ovr;const g=gradeRow(gradeOf(uid)),c=catOf(uid);return g&&c?(c==='W'?g[2]:g[3]):null}
 const LVL_NOTICE='BAD LEVELS. NOT BWF. Our club scale helps balance games. Crew has the final call.';
 const COMMUNITY_COPY=`<p><b>ALL LEVELS. A LITTLE CHAOS. GOOD SPORTSMANSHIP.</b></p><p>First timer or court regular, you’re welcome here. We’re about fun, friendly competition. Take the game seriously, not yourself.</p><p>It’s okay to be BAD. Support each other, respect your opponents and call your lines honestly.</p><p><b>BAD LEVELS. NOT BWF.</b><br>Our ratings help balance games. They’re our own club scale, not official BWF rankings. Crew may adjust your level based on how you play.</p><p>Questionable footwork? Welcome. Questionable attitude? Let’s talk. If someone crosses the line, tell crew. We’ll take it seriously.</p><p><b>PLAY HARD. BE KIND. BE BAD.</b></p>`;
+/* levels for the other sports, in each sport's own words (scale v2). Index 0 to 5; the rating is index + 1. */
+const LEVELS_BY={
+ volleyball:[['Beginner','Learning to pass, set and serve'],['Recreational','Keeps a rally going, plays for fun'],['Intermediate','Reliable passing, knows rotations'],['Advanced','Attacks and blocks with purpose'],['Competitive','Plays leagues or tournaments'],['Elite','Club or national level']],
+ pickleball:[['2.0 Beginner','New to the game, learning the rules'],['2.5 Advanced beginner','Can rally, working on the kitchen'],['3.0 Intermediate','Dinks and drives with control'],['3.5 Advanced intermediate','Third-shot drops, good positioning'],['4.0 Advanced','Consistent, strategic, few errors'],['4.5+ Expert','Tournament level']],
+ basketball:[['Beginner','Learning to dribble, pass and shoot'],['Pickup','Plays casual games'],['Rec league','Plays a league, knows the plays'],['Competitive','Strong all-round game'],['Varsity','School, college or club team level'],['Elite','Semi-pro or higher']],
+ run:[['Walk–run','Mixing walking and running'],['Easy','About 7:00/km or slower'],['Steady','About 6:00–7:00/km'],['Tempo','About 5:00–6:00/km'],['Fast','About 4:30–5:00/km'],['Elite','Faster than 4:30/km']],
+ dance:[['New mover','First time in a class'],['Beginner','Picks up simple routines'],['Improver','Learns routines with practice'],['Intermediate','Picks up choreo quickly'],['Advanced','Clean, confident, adds style'],['Performer','Ready for the stage']]
+};
+const TEAM_SPORTS=['volleyball','basketball','pickleball'];
+const lvlName=(sp,i)=>(LEVELS_BY[sp]&&LEVELS_BY[sp][i])?LEVELS_BY[sp][i][0]:null;
 const lvlOf=(p,sp)=>{const v=p?.levels?.[sp];return v==null||v===''?null:+v};
 const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -43,6 +53,7 @@ const P={
  pickleball:'<rect x="4" y="3" width="10" height="12" rx="5" transform="rotate(-30 9 9)"/><path d="M12.5 14.5l4 6"/><circle cx="18.5" cy="6.5" r="2.5"/>',
  run:'<path d="M3 17h7l3-3 4 2 4 1v2H3z"/><path d="M10 14l-1-4 4-2 3 3"/><circle cx="16" cy="5" r="1.5"/>',
  basketball:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5.6 5.6a9 9 0 0 1 0 12.8M18.4 5.6a9 9 0 0 0 0 12.8"/>',
+ dance:'<circle cx="13" cy="4.5" r="1.8"/><path d="M13 7l-2 6 3 3v5M11 13l-4 2M13 9l4 2 2-3M14 16l-3 5"/>',
  training:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
  retreat:'<path d="M2 20l7-12 4 6 2-3 7 9z"/><circle cx="17" cy="5" r="2"/>',
  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -72,21 +83,23 @@ const SPORTS={
  badminton:{club:'The BAD Club',sport:'Badminton',icon:'badminton'},
  volleyball:{club:'VolleyBAD',sport:'Volleyball',icon:'volleyball'},
  pickleball:{club:'BADDINK',sport:'Pickleball',icon:'pickleball'},
- run:{club:'Runaways',sport:'Run club',icon:'run'},
+ run:{club:'BAD PACE',sport:'Running',icon:'run'},
+ dance:{club:'BAD HABITS',sport:'Dance',icon:'dance'},
  basketball:{club:'BADSHOTS',sport:'Basketball',icon:'basketball'},
  training:{club:'Training Department',sport:'Training',icon:'training',noType:true},
  retreat:{club:'BAD Retreat',sport:'Retreats',icon:'retreat',noType:true},
  vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true}
 };
-const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Run club',basketball:'Basketball',training:'Coaching and drills',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 const LEVEL_FREE=['retreat','vibe'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
-const PLAYABLE=['badminton','volleyball','pickleball','run','basketball'];
+const PLAYABLE=['badminton','volleyball','pickleball','run','basketball','dance'];
 const TYPES={
  badminton:{'Smasher':'Ends rallies from the back.','Net Ninja':'Lives at the tape.','The Wall':'Returns everything.','Trickster':'Holds, flicks, deceives.','Rally Machine':'No errors. Ever.'},
  volleyball:{'Spiker':'Goes up, brings it down.','Setter':'Makes everyone look good.','Libero':'Nothing hits the floor.','Blocker':'The wall at the net.','All-rounder':'Wherever the team needs.'},
  pickleball:{'Banger':'Drives first, asks later.','Dinker':'Patience at the kitchen line.','Drop Artist':'Soft third shots, every time.','Erne Hunter':'Lives on the sideline.','All-court':'Comfortable anywhere.'},
  run:{'Sprinter':'Short, fast, gone.','Tempo Runner':'Steady and strong.','Long Hauler':'Half marathons for fun.','Trail Runner':'Off-road when possible.','Social Pacer':'Here for the chat.'},
+ dance:{'Freestyler':'Feels it, moves it.','Choreo Queen':'Learns the routine first.','Hype Dancer':'Brings the energy.','Smooth Operator':'Every move clean.','Showstopper':'Made for the stage.'},
  basketball:{'Shooter':'Lives behind the arc.','Playmaker':'Sees the pass first.','Slasher':'Straight to the rim.','Rim Protector':'Nothing gets in.','Glue':'Does all the little things.'}
 };
 /* signature: one word that sums up how you play, any sport */

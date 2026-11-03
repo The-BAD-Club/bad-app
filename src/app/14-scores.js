@@ -10,7 +10,7 @@ const teamOf=(g,uid)=>g.a.includes(uid)?'a':g.b.includes(uid)?'b':null;
 const otherT=t=>t==='a'?'b':'a';
 const v2=g=>g&&g.v===2;
 /* where a game is in the process */
-function gState(gid,g){if(g.st==='cancelled')return 'cancelled';if(g.st==='final')return 'final';
+function gState(gid,g){if(g.st==='played')return 'played';if(g.st==='cancelled')return 'cancelled';if(g.st==='final')return 'final';
   const r=resOf(gid);if(r.disp)return 'disputed';if(r.sub&&r.conf)return 'ready';if(r.sub)return 'submitted';return 'noscore'}
 const teamNames=(sid,ids)=>ids.map(p=>esc(p===S.uid?'You':nm(sid,p))).join(' & ');
 const scoreTxt=(sa,sb)=>`${sa}–${sb}`;
@@ -156,7 +156,7 @@ function standingsHTML(sid,crew){const rows=sessStandings(sid),aw=S.awards[sid],
     ${rows.map(r=>`<div class="strow${r.id===S.uid?' mine':''}${r.rank===1?' first':''}" role="row"><span class="num">${r.rank}</span><span>${esc(r.id===S.uid?'You':nm(sid,r.id))}${crew?`<small class="fine"> · ${r.played} game${r.played===1?'':'s'} · ${r.diff>0?'+':''}${r.diff}</small>`:''}</span><span class="num">${r.wins}–${r.losses}</span><span class="num">${Number.isInteger(r.sp)?r.sp:r.sp.toFixed(1)}</span></div>`).join('')}</div>
     <p class="fine">Points from 30-point games are scaled to 21 so every game counts the same. Win % and point difference are for interest only.</p>${fin}</div>`}
 /* admin: finalise the session. One award per session; a later correction updates it with a reversal entry, never a second +5. */
-async function awardSession(sid){const s=S.sessions[sid],rows=sessStandings(sid),win=BADMATH.winners(rows);if(!win.length){toast('No final scores yet.');return}
+async function awardSession(sid,picked){const s=S.sessions[sid],rows=picked?[]:sessStandings(sid),win=picked||BADMATH.winners(rows);if(!win.length){toast(picked?'Pick at least one player.':'No final scores yet.');return}
   const prev=(S.awards[sid]||{}).winners||[],t=`${s.title||'Badminton'} · ${fmtD(s.date)}`,dept=sportOf(s.sport).club;
   const have=new Set((S.ledger||[]).map(e=>e._id));let n=0;
   try{

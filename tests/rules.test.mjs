@@ -281,3 +281,16 @@ test('the +5 is created once per player per session and can never be edited or d
   await assertSucceeds(setDoc(doc(db, 'ledger', `baddest-${SID}-p1-undo1`), baddest(-5)));
   await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'ledger', `baddest-${SID}-p1x`), baddest()));
 });
+
+// ---------- BAD PACE runs ----------
+const RSID = 'run-2026-11-04';
+const run = (pid, by, km = 5, secs = 1800) => ({ sid: RSID, pid, km, secs, by, at: serverTimestamp() });
+test('runners log their own run; crew for running can log anyone; others cannot', async () => {
+  await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), 'sessions', RSID), { sport: 'run', title: 'BAD PACE', date: '2026-11-04' }));
+  await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), 'admins', 'runcm@x.com'), { role: 'cm', sports: ['run'] }));
+  await assertSucceeds(setDoc(doc(ctx('p1', 'p1@x.com'), 'runs', `${RSID}_p1`), run('p1', 'p1')));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'runs', `${RSID}_p2`), run('p2', 'p1')));
+  await assertSucceeds(setDoc(doc(ctx('r1', 'runcm@x.com'), 'runs', `${RSID}_w~mo`), run('w~mo', 'r1')));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'runs', `${RSID}_p1`), run('p1', 'p1', 500)));   // 500 km
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'runs', 'other-id'), run('p1', 'p1')));           // id must match
+});
