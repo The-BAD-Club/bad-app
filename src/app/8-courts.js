@@ -18,9 +18,14 @@ S.live={};S.games={};S.scores={};S.courtSid=null;let sel=null;
    Your own older games load once; everyone's history loads only when the Rank board is opened. */
 S.gSess={};S.gMine={};S.gAll=null;S.subs={};S.pend=0;S.saveErr=null;
 const mergeGames=()=>{S.games={...(S.gAll||{}),...S.gMine,...S.gSess}};
-function activeSids(){const now=Date.now();
-  return Object.entries(S.sessions||{}).filter(([,s])=>COURT_SPORTS.includes(s.sport||'badminton')&&sessStart(s)>now-18*36e5&&sessStart(s)<now+12*36e5)
-    .sort((a,b)=>sessStart(a[1])-sessStart(b[1])).map(([id])=>id).slice(0,10)}
+/* sessions whose court data we follow live: the same ones the Courts tab can open (crew: from 18 h ago to 7 days ahead;
+   players: around today), plus whichever session is open on screen */
+function activeSids(){const now=Date.now(),crew=S.canEdit||Object.keys(S.sessions||{}).some(id=>isGM(id));
+  const ids=Object.entries(S.sessions||{}).filter(([,s])=>COURT_SPORTS.includes(s.sport||'badminton')&&sessStart(s)>now-18*36e5&&sessStart(s)<now+(crew?7*864e5:12*36e5))
+    .sort((a,b)=>sessStart(a[1])-sessStart(b[1])).map(([id])=>id);
+  if(S.courtSid&&S.sessions[S.courtSid]&&!ids.includes(S.courtSid))ids.unshift(S.courtSid);
+  return ids.slice(0,30)}
+const chunks=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
 function courtSubs(){
   const d=S.sessData;if(!d)return;
   const want=document.hidden?[]:activeSids(),key=want.join(',')||'-';
@@ -29,9 +34,11 @@ function courtSubs(){
   for(const k of Object.keys(S.live))if(!want.includes(k))delete S.live[k];
   if(!want.length){S.gSess={};mergeGames();return}
   for(const sid of want)S.subs.off.push(d.db.doc('live/'+sid).onSnapshot(x=>{if(x.exists)S.live[sid]=x.data();else delete S.live[sid];render()},()=>{}));
-  S.subs.off.push(d.db.collection('games').where('sid','in',want).onSnapshot(s=>{S.gSess=d.map(s);mergeGames();render()},()=>{}));
-  S.subs.off.push(d.db.collection('awards').where('sid','in',want).onSnapshot(s=>{S.awards=d.map(s);render()},()=>{}));
-  S.subs.off.push(d.db.collection('results').where('sid','in',want).onSnapshot(s=>{S.results=d.map(s);render()},()=>{}));
+  const part={games:{},results:{},awards:{}},put=(k,i,m)=>{part[k][i]=m;return Object.assign({},...Object.values(part[k]))};
+  chunks(want,10).forEach((ids,i)=>{
+    S.subs.off.push(d.db.collection('games').where('sid','in',ids).onSnapshot(s=>{S.gSess=put('games',i,d.map(s));mergeGames();render()},()=>{}));
+    S.subs.off.push(d.db.collection('results').where('sid','in',ids).onSnapshot(s=>{S.results=put('results',i,d.map(s));render()},()=>{}));
+    S.subs.off.push(d.db.collection('awards').where('sid','in',ids).onSnapshot(s=>{S.awards=put('awards',i,d.map(s));render()},()=>{}))});
   if(S.canEdit||want.some(x=>isGM(x)))S.subs.off.push(d.db.collection('scores').onSnapshot(s=>{S.scores=d.map(s);render()},()=>{}));
 }
 async function myGamesLoad(){const d=S.sessData;if(!d||!S.uid)return;
@@ -236,7 +243,7 @@ function renderCourts(){
   if(!S.courtSport){const liveS=Object.keys(S.live).map(k=>S.sessions[k]).filter(Boolean).find(x=>sessStart(x)>Date.now()-18*36e5);S.courtSport=(liveS&&liveS.sport)||(me&&COURT_SPORTS.find(k=>(me.sports||[]).includes(k)))||'badminton'}
   const list=courtSessions();
   const sportChips=`<div class="sports">${COURT_SPORTS.map(k=>`<button class="sp" data-act="sport" data-v="${k}" aria-pressed="${k===S.courtSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`;
-  if(!list.find(([sid])=>sid===S.courtSid))S.courtSid=(list.find(([sid])=>S.live[sid])||list[0]||[null])[0];
+  if(!list.find(([sid])=>sid===S.courtSid)){S.courtSid=(list.find(([sid])=>S.live[sid])||list[0]||[null])[0];setTimeout(courtSubs,0)}
   const sid=S.courtSid,s=sid&&S.sessions[sid],lv0=sid&&S.live[sid];
   const ED=courtEd(sid),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const pick=list.length>1?`<div class="sports">${list.map(([id,x])=>{const d=dParts(x.date);return `<button class="sp" data-act="pick" data-sid="${id}" aria-pressed="${id===sid}">${ic(sportOf(x.sport).icon)}${esc(x.title)} · ${d.w} ${d.d}${S.live[id]?' ●':''}</button>`}).join('')}</div>`:'';
@@ -331,14 +338,15 @@ function bindCourts(el){el.onclick=async ev=>{
   if(act==='sport'){S.courtSport=b.dataset.v;S.courtSid=null;sel=null;pendingDone=null;return renderCourts()}
   if(act==='goadmin'){return setView('admin')}
   if(act==='rest'||act==='more'){return setFlag(sid,act,b.dataset.v==='1')}
-  if(act==='pick'){S.courtSid=b.dataset.sid;sel=null;pendingDone=null;return renderCourts()}
+  if(act==='pick'){S.courtSid=b.dataset.sid;setTimeout(courtSubs,0);sel=null;pendingDone=null;return renderCourts()}
   if(act==='as'){S.asPlayer=b.dataset.v==='1';sel=null;return renderCourts()}
   if(act==='step'){S.courtStep=+b.dataset.n;sel=null;pendingDone=null;window.scrollTo(0,0);return renderCourts()}
   if(act==='myscore'||act==='final'){const gid=b.dataset.gid,a=$('ga-'+gid).value,bb=$('gb-'+gid).value;if(a===''||bb===''){toast('Please enter both scores.');return}
     const v=[Number(a),Number(bb)];
     try{if(act==='final')await S.db.doc('games/'+gid).update({final:v});else{const cur=S.scores[S.uid]?.g||{};await S.db.doc('scores/'+S.uid).set({g:{...cur,[gid]:v}})}toast('Score saved. Thank you.')}catch(e){toast("Sorry, the score didn't save.")}return}
   if(!courtEd(sid))return;
-  if(act==='start'){S.courtStep=1;return startBoard(sid)}
+  if(act==='start'){try{const x=await S.db.doc('live/'+sid).get();if(x.exists){S.live[sid]=x.data();S.courtStep=2;courtSubs();toast('This board was already open. Your check-ins and games are back.');return renderCourts()}}catch(_){}
+    S.courtStep=1;return startBoard(sid)}
   if(act==='cap'||act==='wcap'||act==='extend'){const ss=S.sessions[sid];if(!(S.canEdit&&canSport(ss.sport||'badminton'))){toast('Only admins can change this.');return}
     if(act==='cap'){const n=Math.max(2,(Number(ss.capacity)||20)+Number(b.dataset.v));return sessUpdate(sid,{capacity:n},`Player cap is ${n}.${Number(b.dataset.v)>0&&roster(sid).wait.length?' The next person on the waiting list is in.':''}`)}
     if(act==='wcap'){const cur=ss.waitCap==null||ss.waitCap===''?roster(sid).wait.length:Number(ss.waitCap),n=Math.max(0,cur+Number(b.dataset.v));return sessUpdate(sid,{waitCap:n},`Waiting list holds ${n}.`)}
