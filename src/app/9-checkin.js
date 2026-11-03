@@ -13,7 +13,10 @@ function qrData(text,size=240){const k=size+'|'+text;if(_qrCache[k])return _qrCa
 const newCode=()=>Math.random().toString(36).slice(2,8).padEnd(6,'x');
 const ownLevel=(uid,sp)=>{const p=S.profiles[uid];if(!p)return null;return p.levels&&p.levels[sp]!=null?p.levels[sp]:(p.level??null)};
 const effLevel=(uid,sp)=>{const o=S.levels[uid];if(o&&o.levels&&o.levels[sp]!=null)return o.levels[sp];if(o&&o.level!=null&&!o.levels)return o.level;return ownLevel(uid,sp)};
-const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){if(!S.profiles[uid]){const x=boardLvl(S.live[S.courtSid],uid);return gradeRow(x.g)?x.g+(x.cat?' '+x.cat:''):'Unrated'}const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l=effLevel(uid,sp);return l==null?'':'L'+(l+1)};
+/* other sports: the crew's pick wins, then the player's own (scale v2) */
+const lvl2Of=(uid,sp)=>{const o=(S.levels||{})[uid];if(o&&o.lv2&&o.lv2[sp]!=null)return o.lv2[sp];const p=(S.profiles||{})[uid];return p&&p.lv2&&p.lv2[sp]!=null?p.lv2[sp]:null};
+function sportRating(uid,sp){const i=lvl2Of(uid,sp);if(i==null)return null;return i+1+(TEAM_SPORTS.includes(sp)&&catOf(uid)==='M'?0.5:0)}
+const lvlTag=(uid,sp)=>{if((sp||'badminton')==='badminton'){if(!S.profiles[uid]){const x=boardLvl(S.live[S.courtSid],uid);return gradeRow(x.g)?x.g+(x.cat?' '+x.cat:''):'Unrated'}const g=gradeOf(uid),c=catOf(uid);return g?g+(c?' '+c:''):'Unrated'}const l2=lvl2Of(uid,sp);if(l2!=null)return lvlName(sp,l2)||'';return 'Unrated'};
 
 /* player: complete a scanned check-in */
 async function processCheckin(){
@@ -58,6 +61,7 @@ async function showQR(sid){
   $('qr-close').onclick=()=>ov.remove();
   $('qr-new').onclick=async()=>{const n={code:newCode(),at:new Date().toISOString()};try{await S.db.doc('qr/'+sid).set(n);S.qr[sid]=n;draw(`${APP_URL}#ci-${sid}-${n.code}`);toast('New code. The old one no longer works.')}catch(e){toast('Sorry, that didn’t save.')}};
 }
+async function setLevel2(uid,sp,v){try{const cur={...((S.levels[uid]||{}).lv2||{})};if(v==='')delete cur[sp];else cur[sp]=+v;await S.db.doc('levels/'+uid).set({...(S.levels[uid]||{}),lv2:cur,at:new Date().toISOString(),by:S.uid});toast(`${(S.profiles[uid]||{}).nickname||'Player'}: ${v===''?'not set':lvlName(sp,+v)}. Saved.`)}catch(e){toast('Sorry, that didn’t save.')}}
 async function setLevel(uid,sp,v){try{const cur={...((S.levels[uid]||{}).levels||{})};if(v==='')delete cur[sp];else cur[sp]=+v;await S.db.doc('levels/'+uid).set({levels:cur,at:new Date().toISOString()});toast('Level saved. Only admins see this.')}catch(e){toast('Sorry, that didn’t save.')}}
 
 /* sample players (for trying the app) */
