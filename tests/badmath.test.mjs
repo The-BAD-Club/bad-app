@@ -113,3 +113,38 @@ test('standings: fewer games played breaks a tie on wins and points', () => {
   // x: 1 win, 21 pts, 1 game. y: 2 wins. So y first; check x ahead of anyone with 1 win and more games.
   assert.equal(rows[0].id, 'y');
 });
+
+// ---------- matching rules ----------
+const L = (id, g, since, extra = {}) => ({ id, g: 0, since, band: M.bandOf(g), rating: { F: 0.5, E: 1, 'E+': 1.5, D: 2, C: 3, B: 4, A: 5 }[g], cat: 'M', ...extra });
+test('levels group into bands', () => {
+  assert.equal(M.bandOf('E+'), 0); assert.equal(M.bandOf('D+'), 1); assert.equal(M.bandOf('C'), 2); assert.equal(M.bandOf('A+'), 4); assert.equal(M.bandOf('U'), null);
+});
+test('1 strong player and 3 Beginners: allowed, each Beginner faces a Beginner', () => {
+  const r = M.pickFour([L('pro', 'A', 1), L('b1', 'E', 2), L('b2', 'E', 3), L('b3', 'F', 4)], []);
+  assert.equal(r.Bk, 0);
+  const proTeam = r.a.includes('pro') ? r.a : r.b;
+  assert.equal(proTeam.length, 2, 'the strong player partners a Beginner');
+});
+test('3 strong players and 1 Beginner are never put together when there is another way', () => {
+  const ps = [L('b1', 'E', 1), L('p1', 'A', 2), L('p2', 'B', 3), L('p3', 'A', 4), L('b2', 'E+', 5), L('m1', 'C', 6)];
+  const r = M.pickFour(ps, []);
+  const four = [...r.a, ...r.b];
+  assert.ok(four.includes('b1'), 'first in line still plays');
+  assert.equal(r.Bk, 0, 'the Beginner gets a Beginner opponent');
+  assert.ok(four.includes('b2'));
+});
+test('a Beginner always has a Beginner opponent when two Beginners play', () => {
+  const r = M.pickFour([L('b1', 'E', 1), L('b2', 'F', 2), L('x', 'B', 3), L('y', 'B', 4)], []);
+  const bTeam = r.a.includes('b1') ? r.a : r.b;
+  assert.ok(!bTeam.includes('b2'), 'the two Beginners are on opposite sides');
+});
+test('teams stay balanced: two strong and two newer players split one of each', () => {
+  const r = M.pickFour([L('s1', 'A', 1), L('s2', 'A', 2), L('n1', 'D', 3), L('n2', 'D', 4)], []);
+  assert.equal(r.bal, 0);
+});
+test('mixing: repeat opponents are avoided when fresh match-ups exist', () => {
+  const ps = ['a', 'b', 'c', 'd'].map((id, i) => L(id, 'C', i));
+  const r = M.pickFour(ps, [{ a: ['a', 'c'], b: ['b', 'd'] }, { a: ['a', 'd'], b: ['b', 'c'] }]);
+  // only a+b / c+d keeps a and b off the same side again... all partners used once, so it must choose the least repeated
+  assert.ok(r.P <= 1);
+});
