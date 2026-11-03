@@ -215,7 +215,7 @@ function cardBackHTML(p,st){
   return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
     <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
       <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
-    <div class="stats lv2"><span><b class="num">${st.badges||0}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
+    <div class="stats lv2"><span><b class="num">${isFounder(uidOfProfile(p))?'<span class="inf">∞</span>':(st.badges||0)}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
 /* ---------- admin roles ----------

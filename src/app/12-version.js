@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.13';
+const APP_VERSION='0.14';
 const CHANGES=[
+  ['0.14','2026-11-04','Design review: phone tab bar back at the bottom (it sat over the logo), no overlapping buttons on any screen; ∞ BADges for Founders; FRAGMENTS RELEASE pre-order in the Shop; Home shows checked games\' results'],
   ['0.13','2026-11-04','Cancel a session and email everyone who signed up; payment dashboard per session with reminders by email or WhatsApp; payments saved in each player\'s own record so players see their own status'],
   ['0.12','2026-11-04','Matching rules for Beginners and balance; BAD PACE (was Runaways) with check-in and a run log; BAD HABITS dance crew; levels for every sport in its own words; balanced teams for volleyball and basketball; player counts on courts; BADDEST PLAYER for every sport'],
   ['0.11','2026-11-04','Courts: boards reload after refresh; sign-up QR for admins; rename or remove on check-in; Save now; undo and redo; drag and drop; re-pair; pause and close courts; Finish asks first; Still playing, Void and Delete for games; Edit finished scores'],
