@@ -140,7 +140,8 @@ function benchOf(sid,lv){norm(lv);const p=placed(lv),out=new Set(lv.out);
   return [...ord.filter(x=>!isRest(lv,x)),...ord.filter(x=>isRest(lv,x))]}
 /* one player as the rotation sees them */
 function rotP(sid,lv,id){return {id,g:gamesFor(sid,id),base:(lv.base||{})[id]||0,since:msOf(lv.avail[id]||lv.checkin[id])||0,deferred:(lv.defer||{})[id]||0,
-  rating:S.profiles[id]?badRating(id):boardRating(lv,id),cat:S.profiles[id]?catOf(id):(boardLvl(lv,id).cat||null)}}
+  rating:S.profiles[id]?badRating(id):boardRating(lv,id),cat:S.profiles[id]?catOf(id):(boardLvl(lv,id).cat||null),
+  band:BADMATH.bandOf(S.profiles[id]?gradeOf(id):boardLvl(lv,id).g)}}
 /* lineups already played or prepared, so fresh partners and opponents are preferred */
 function lineups(sid,lv){const h=liveGames(sid).map(([,g])=>({a:g.a,b:g.b}));
   for(const c of [...lv.courts,...lv.waiting]){const half=c.size/2,a=c.on.slice(0,half).filter(Boolean),b=c.on.slice(half).filter(Boolean);if(a.length&&b.length)h.push({a,b})}return h}
@@ -157,6 +158,8 @@ function suggestFmt(sid,lv){const P=planInfo(sid,lv);if(P.N>=roster(sid).cap)ret
 const inG=c=>!!c&&(c.st==='playing'||c.st==='paused');
 /* minutes played, not counting pauses */
 const elapsed=c=>{const t=msOf(c.t0dev);if(!isFinite(t))return 0;const end=c.st==='paused'?msOf(c.pAt):Date.now();return Math.max(0,Math.floor((end-t-(c.pausedMs||0))/60000))};
+function beginnerWarn(sid,lv,c){if(!c||c.size!==4||c.on.filter(Boolean).length!==4)return '';const P=c.on.map(id=>rotP(sid,lv,id));
+  return BADMATH.beginnerBreaks(P.slice(0,2),P.slice(2))?'A Beginner has no Beginner opponent here.':''}
 /* team strength for crew: the sum of each side's balancing ratings */
 function teamStr(sid,lv,c){if(!c||c.size!==4)return '';const r=id=>{const x=rotP(sid,lv,id);return typeof x.rating==='number'?x.rating:null};
   const a=c.on.slice(0,2).map(r),b=c.on.slice(2).map(r);if([...a,...b].some(x=>x==null))return '';const sa=a[0]+a[1],sb=b[0]+b[1];return `teams ${sa} v ${sb}`}
@@ -206,7 +209,7 @@ function courtCard(sid,c,ci,edit){
     else if(finishAsk===ci)foot=`<div class="confirm"><b>Finish this game?</b><p class="fine">The players go back to the bench${S.live[sid]&&S.live[sid].waiting&&S.live[sid].waiting[0]&&S.live[sid].waiting[0].on.some(Boolean)?' and Next up comes on':''}. Scores come next.</p><div class="row" style="gap:6px"><button class="btn sm" data-act="finish" data-c="${ci}">${ic('check')}Finish game</button><button class="btn ghost sm" data-act="finishno">Keep playing</button></div></div>`;
     else if(playing||c.st==='paused')foot=`<div class="row cfoot"><button class="linkbtn" data-act="cancelask" data-c="${ci}">Cancel</button><button class="btn ghost sm" data-act="${c.st==='paused'?'resume':'pause'}" data-c="${ci}">${c.st==='paused'?ic('play')+'Resume':ic('clock')+'Pause'}</button><button class="btn wide" data-act="finishask" data-c="${ci}">${ic('check')}Finish</button></div>`;
     else if(c.closed)foot=`<div class="row cfoot"><span class="fine" style="margin-right:auto">Closed: no games go on this court.</span><button class="btn ghost sm" data-act="close" data-c="${ci}">Reopen court</button></div>`;
-    else foot=`${full===4&&c.size===4&&teamStr(sid,S.live[sid],c)?`<p class="fine tstr">${esc(teamStr(sid,S.live[sid],c))}</p>`:''}<div class="row cfoot">${full?`<button class="linkbtn" data-act="cancelask" data-c="${ci}">Clear</button>`:`<button class="linkbtn" data-act="close" data-c="${ci}">Close court</button>`}${full===4&&c.size===4?`<button class="btn ghost sm" data-act="repair" data-c="${ci}" title="Try the next way of pairing these four">⇄ Re-pair</button>`:''}${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">${ic('users')}Fill from rotation</button>`:''}${full>=2?`<button class="btn wide" data-act="begin" data-c="${ci}" ${full<c.size&&sp==='badminton'?'disabled':''}>${ic('play')}Start</button>`:''}</div>`}
+    else foot=`${full===4&&c.size===4&&(teamStr(sid,S.live[sid],c)||beginnerWarn(sid,S.live[sid],c))?`<p class="fine tstr">${esc([teamStr(sid,S.live[sid],c),beginnerWarn(sid,S.live[sid],c)].filter(Boolean).join(' · '))}</p>`:''}<div class="row cfoot">${full?`<button class="linkbtn" data-act="cancelask" data-c="${ci}">Clear</button>`:`<button class="linkbtn" data-act="close" data-c="${ci}">Close court</button>`}${full===4&&c.size===4?`<button class="btn ghost sm" data-act="repair" data-c="${ci}" title="Try the next way of pairing these four">⇄ Re-pair</button>`:''}${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">${ic('users')}Fill from rotation</button>`:''}${full>=2?`<button class="btn wide" data-act="begin" data-c="${ci}" ${full<c.size&&sp==='badminton'?'disabled':''}>${ic('play')}Start</button>`:''}</div>`}
   const fchip=fmt?(edit&&!playing?`<button class="chip sm fmt" data-act="fmt" data-c="${ci}" aria-label="Game format, tap to change">To ${fmt}</button>`:`<span class="tagl">To ${fmt}</span>`):'';
   const tag=c.st==='paused'?`<span class="tagl warn">Paused · ${elapsed(c)} min</span>`:playing?`<span class="tagl solid timer" data-t0="${esc(c.t0dev||'')}" data-pm="${c.pausedMs||0}">${elapsed(c)} min</span>`:c.closed?`<span class="tagl">Closed</span>`:`<span class="tagl">${full?'Game '+gno+' · ready':'Free'}</span>`;
   return `<article class="court${playing?' on':''}${c.closed?' closed':''}"><div class="court-h"><b>${esc(c.name)}</b><span class="row" style="gap:6px">${fchip}${tag}</span></div>
@@ -408,7 +411,7 @@ function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&e
   if(act==='close'){const c=lv.courts[+b.dataset.c];c.closed=!c.closed;toast(c.closed?`${c.name} is closed. No games go on it until you reopen it.`:`${c.name} is open again.`);return saveLive(sid,lv)}
   if(act==='repair'){const c=lv.courts[+b.dataset.c];const four=c.on.filter(Boolean);if(four.length!==4)return;
     const opts=[[0,1,2,3],[0,2,1,3],[0,3,1,2]],cur=opts.findIndex(o=>o.every((k,j)=>c.on[j]===four[k])),nx=opts[(cur+1)%3];c.on=nx.map(k=>four[k]);
-    const t=teamStr(sid,lv,c);toast(`New pairs${t?` · ${t}`:''}.`);return saveLive(sid,lv)}
+    const t=teamStr(sid,lv,c),bk=beginnerWarn(sid,lv,c);toast(`New pairs${t?` · ${t}`:''}.${bk?' '+bk:''}`);return saveLive(sid,lv)}
   if(act==='cancelask'){cancelAsk=+b.dataset.c;cancelWhy='';return renderCourts()}
   if(act==='cancelno'){cancelAsk=null;return renderCourts()}
   if(act==='cancelwhy'){cancelWhy=b.dataset.v;return renderCourts()}

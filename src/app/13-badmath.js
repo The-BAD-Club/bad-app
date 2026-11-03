@@ -47,7 +47,12 @@ const BADMATH=(()=>{
     for(const m of history){for(const t of [m.a,m.b])if(t&&t.length===2){const k=key(t[0],t[1]);part[k]=(part[k]||0)+1}
       if(m.a&&m.b)for(const x of m.a)for(const y of m.b){const k=key(x,y);opp[k]=(opp[k]||0)+1}}
     return {part,opp,key}}
-  const W={balance:30,partner:10000,opponent:3,mix:2,depth:5};
+  /* level groups: 0 Beginner (F, E, E+), 1 Improver (D, D+), 2 Intermediate (C, C+), 3 Advanced (B, B+), 4 Elite (A, A+) */
+  const BANDS={F:0,E:0,'E+':0,D:1,'D+':1,C:2,'C+':2,B:3,'B+':3,A:4,'A+':4};
+  const bandOf=g=>g in BANDS?BANDS[g]:null;
+  /* every Beginner needs at least one Beginner opponent: 1 strong + 3 Beginners is fine, 3 strong + 1 Beginner is not */
+  function beginnerBreaks(a,b){let n=0;for(const [mine,theirs] of [[a,b],[b,a]])for(const p of mine)if(p.band===0&&!theirs.some(o=>o.band===0))n++;return n}
+  const W={balance:30,partner:10000,beginner:5000,opponent:8,mix:2,depth:5};
   /* the cheapest of the 3 ways to split four players into two teams */
   function pairing(four,cnt,fallbackRating){
     const r=p=>typeof p.rating==='number'?p.rating:fallbackRating;
@@ -58,8 +63,9 @@ const BADMATH=(()=>{
       const P=(cnt.part[cnt.key(a[0].id,a[1].id)]||0)+(cnt.part[cnt.key(b[0].id,b[1].id)]||0);
       let O=0;for(const x of a)for(const y of b)O+=cnt.opp[cnt.key(x.id,y.id)]||0;
       const w=t=>t.filter(p=>p.cat==='W').length,M=w(a)!==w(b)?1:0;
-      const cost=W.balance*bal+W.partner*P+W.opponent*O+W.mix*M;
-      if(!best||cost<best.cost)best={a:a.map(p=>p.id),b:b.map(p=>p.id),cost,bal,P,O,M}}
+      const Bk=beginnerBreaks(a,b);
+      const cost=W.balance*bal+W.partner*P+W.beginner*Bk+W.opponent*O+W.mix*M;
+      if(!best||cost<best.cost)best={a:a.map(p=>p.id),b:b.map(p=>p.id),cost,bal,P,O,M,Bk}}
     return best}
   /* pick the next four: fairness first (fewest games, longest wait, nobody skipped twice), then the best teams */
   function pickFour(players,history,poolSize=8){
@@ -81,7 +87,7 @@ const BADMATH=(()=>{
     const chosen=new Set([...best.a,...best.b]);
     /* players at the same level who were passed over must go next time */
     const deferred={};for(const p of pool.slice(0,best.last+1))deferred[p.id]=chosen.has(p.id)?0:(eff(p)===e4?(p.deferred||0)+1:(p.deferred||0));
-    return {a:best.a,b:best.b,cost:best.cost,bal:best.bal,P:best.P,O:best.O,deferred}}
+    return {a:best.a,b:best.b,cost:best.cost,bal:best.bal,P:best.P,O:best.O,Bk:best.Bk,deferred}}
 
   /* ---- standings ----
      games: [{a:[ids], b:[ids], score:[sa,sb], fmt}] (final results only) */
@@ -98,6 +104,6 @@ const BADMATH=(()=>{
     return rows}
   const winners=rows=>rows.filter(r=>r.rank===1&&r.played>0).map(r=>r.id);
 
-  return {FORMATS,TARGET_GAMES,gamesEach,shortfall,timeNeeded,advice,validScore,scoreHint,scaled,eff,order,pairing,pickFour,standings,winners,W};
+  return {BANDS,bandOf,beginnerBreaks,FORMATS,TARGET_GAMES,gamesEach,shortfall,timeNeeded,advice,validScore,scoreHint,scaled,eff,order,pairing,pickFour,standings,winners,W};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BADMATH;
