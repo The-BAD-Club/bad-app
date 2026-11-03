@@ -221,6 +221,14 @@ service cloud.firestore {
         && request.resource.data.by == uid() && request.resource.data.at == request.time
         && (request.resource.data.pid == uid() || canDept(sportOf(request.resource.data.sid)) || isGM(request.resource.data.sid));
     }
+    // Email queue: admins queue cancellation notices and payment reminders; the Apps Script on the BAD Gmail sends them
+    match /mail/{id} {
+      allow read: if isAdminAny();
+      allow create: if isAdminAny() && request.resource.data.status == 'queued' && request.resource.data.by == uid() && request.resource.data.at == request.time
+        && request.resource.data.type in ['cancel', 'reminder'] && str(request.resource.data.sid, 80) && canDept(sportOf(request.resource.data.sid))
+        && request.resource.data.to is list && request.resource.data.to.size() >= 1 && request.resource.data.to.size() <= 100
+        && str(request.resource.data.subject, 150) && str(request.resource.data.text, 4000);
+    }
     // BADDEST PLAYER award per session: admins for that sport, signed and timed by the server
     match /awards/{sid} {
       allow read: if signedIn();

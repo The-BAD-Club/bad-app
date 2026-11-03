@@ -96,6 +96,30 @@ function syncMembersTab_() {
 
 /* ---------- Points and BADges ---------- */
 const LEDGER_TYPES = ['Event or tournament', 'BAD Retreat', 'No-show', 'Free session redeemed', 'Adjustment'];
+/* ---------- Emails from the BAD Gmail ----------
+   The app queues emails in Firestore (mail/{id}, status 'queued'): session cancellations and payment reminders.
+   sendMail() sends them and marks each one sent. Run setupMail() once to send every 5 minutes. */
+function setupMail() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'sendMail').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('sendMail').timeBased().everyMinutes(5).create();
+  sendMail();
+}
+function sendMail() {
+  const queued = list_('mail').filter(m => m.status === 'queued');
+  queued.forEach(m => {
+    try {
+      const to = (m.to || []).filter(e => /@/.test(String(e)));
+      if (!to.length) { patch_('mail/' + m.id, { status: 'failed', error: 'No email address', sentAt: new Date().toISOString() }); return; }
+      const opts = { name: 'The BAD Club', replyTo: 'thebadclub.co@gmail.com' };
+      if (to.length === 1) MailApp.sendEmail(to[0], m.subject || 'The BAD Club', m.text || '', opts);
+      else MailApp.sendEmail('thebadclub.co@gmail.com', m.subject || 'The BAD Club', m.text || '', Object.assign({ bcc: to.join(',') }, opts));
+      patch_('mail/' + m.id, { status: 'sent', sentAt: new Date().toISOString(), count: to.length });
+    } catch (e) {
+      try { patch_('mail/' + m.id, { status: 'failed', error: String(e).slice(0, 300), sentAt: new Date().toISOString() }); } catch (_) {}
+    }
+  });
+}
+
 function book_() { return SpreadsheetApp.getActive() || SpreadsheetApp.openById(SHEET_ID); }
 
 function syncPoints() {

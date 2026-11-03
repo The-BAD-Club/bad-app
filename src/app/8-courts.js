@@ -23,7 +23,7 @@ const mergeGames=()=>{S.games={...(S.gAll||{}),...S.gMine,...S.gSess}};
 /* sessions whose court data we follow live: the same ones the Courts tab can open (crew: from 18 h ago to 7 days ahead;
    players: around today), plus whichever session is open on screen */
 function activeSids(){const now=Date.now(),crew=S.canEdit||Object.keys(S.sessions||{}).some(id=>isGM(id));
-  const ids=Object.entries(S.sessions||{}).filter(([,s])=>BOARD_SPORTS.includes(s.sport||'badminton')&&sessStart(s)>now-18*36e5&&sessStart(s)<now+(crew?7*864e5:12*36e5))
+  const ids=Object.entries(S.sessions||{}).filter(([,s])=>!s.cancelled&&BOARD_SPORTS.includes(s.sport||'badminton')&&sessStart(s)>now-18*36e5&&sessStart(s)<now+(crew?7*864e5:12*36e5))
     .sort((a,b)=>sessStart(a[1])-sessStart(b[1])).map(([id])=>id);
   if(S.courtSid&&S.sessions[S.courtSid]&&!ids.includes(S.courtSid))ids.unshift(S.courtSid);
   return ids.slice(0,30)}
@@ -127,7 +127,7 @@ const isGM=sid=>!!sid&&!!S.uid&&(S.sessions[sid]?.gms||[]).includes(S.uid);
 const courtEd=sid=>(S.canEdit&&canSport(S.courtSport))||isGM(sid);
 function courtSessions(){
   const now=Date.now();
-  return Object.entries(S.sessions).filter(([sid,s])=>(s.sport||'badminton')===S.courtSport&&(S.live[sid]?sessStart(s)>now-18*36e5:((S.canEdit||isGM(sid))?sessStart(s)>now-12*36e5&&sessStart(s)<now+7*864e5:Math.abs(sessStart(s)-now)<12*36e5)))
+  return Object.entries(S.sessions).filter(([sid,s])=>!s.cancelled&&(s.sport||'badminton')===S.courtSport&&(S.live[sid]?sessStart(s)>now-18*36e5:((S.canEdit||isGM(sid))?sessStart(s)>now-12*36e5&&sessStart(s)<now+7*864e5:Math.abs(sessStart(s)-now)<12*36e5)))
     .sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
 }
 const clone=o=>JSON.parse(JSON.stringify(o));

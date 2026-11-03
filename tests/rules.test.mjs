@@ -294,3 +294,24 @@ test('runners log their own run; crew for running can log anyone; others cannot'
   await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'runs', `${RSID}_p1`), run('p1', 'p1', 500)));   // 500 km
   await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'runs', 'other-id'), run('p1', 'p1')));           // id must match
 });
+
+// ---------- payments in each player's own record ----------
+const payw = (sid, val) => ({ s: { [sid]: val }, op: { sid }, u: serverTimestamp() });
+test('finance admins and the sport\'s community manager confirm payments; players and app admins cannot', async () => {
+  await assertSucceeds(setDoc(doc(ctx('f1', 'founder@x.com'), 'pay', 'p2'), payw(SID, { ok: true, method: 'cash' })));
+  await assertSucceeds(setDoc(doc(ctx('a1', 'cm@x.com'), 'pay', 'p2'), payw(SID, { ok: true, method: 'cash' })));
+  await assertFails(setDoc(doc(ctx('a2', 'app@x.com'), 'pay', 'p2'), payw(SID, { ok: true })));
+  await assertFails(setDoc(doc(ctx('p2', 'fei@x.com'), 'pay', 'p2'), payw(SID, { ok: true })));
+  await assertSucceeds(getDoc(doc(ctx('p2', 'fei@x.com'), 'pay', 'p2')));
+  await assertFails(getDoc(doc(ctx('p1', 'p1@x.com'), 'pay', 'p2')));
+});
+
+// ---------- email queue ----------
+const mail = (by, extra = {}) => ({ status: 'queued', by, at: serverTimestamp(), type: 'cancel', sid: SID, to: ['a@x.com'], subject: 'Cancelled', text: 'Sorry', ...extra });
+test('admins for the sport queue emails; players cannot; nobody reads them but admins', async () => {
+  await assertSucceeds(setDoc(doc(ctx('a1', 'cm@x.com'), 'mail', 'm1'), mail('a1')));
+  await assertFails(setDoc(doc(ctx('a1', 'cm@x.com'), 'mail', 'm2'), mail('a1', { sid: VSID })));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'mail', 'm3'), mail('p1')));
+  await assertFails(setDoc(doc(ctx('a1', 'cm@x.com'), 'mail', 'm4'), mail('a1', { status: 'sent' })));
+  await assertFails(getDoc(doc(ctx('p1', 'p1@x.com'), 'mail', 'm1')));
+});

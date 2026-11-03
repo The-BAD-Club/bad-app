@@ -46,7 +46,9 @@ S.contacts={};S.brand={};
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});
-  db.collection('payments').onSnapshot(s=>{S.payments=map(s);render()},()=>{});
+  if(S.canEdit)db.collection('payments').onSnapshot(s=>{S.payOld=map(s);rebuildPayments();render()},()=>{});
+  if(S.canEdit)db.collection('pay').onSnapshot(s=>{S.payNew=map(s);rebuildPayments();render()},()=>{});
+  else if(S.uid)db.doc('pay/'+S.uid).onSnapshot(d=>{S.payNew=d.exists?{[S.uid]:d.data()}:{};rebuildPayments();render()},()=>{});
   db.doc('config/brand').onSnapshot(d=>{S.brand=d.exists?d.data():{};applyBrand();done()},()=>done());
   if(S.canEdit){
     db.collection('contacts').onSnapshot(s=>{S.contacts=map(s);if(S.view==='admin')render()},()=>{});
