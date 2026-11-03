@@ -42,6 +42,11 @@ function syncCheckins(){
 }
 
 /* admin: QR panel */
+/* admins: a big QR code that opens the app so new players can make their card */
+function showSignupQR(){const ov=document.createElement('div');ov.className='qrov';
+  ov.innerHTML=`<div class="qrcard"><img src="${LOGO.badK}" alt="BAD" style="height:34px"><h2>Get your BAD card</h2><p class="muted">Scan with your phone camera to sign up and make your player card.</p><div id="qrbox"></div><p class="fine num">${esc(APP_URL.replace(/^https?:\/\//,''))}</p><div class="row" style="justify-content:center"><button class="btn sm" id="qr-close">Close</button></div></div>`;
+  document.body.appendChild(ov);const b=$('qrbox');if(window.QRCode)new QRCode(b,{text:APP_URL,width:260,height:260,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});else b.innerHTML=`<p class="code">${esc(APP_URL)}</p>`;
+  $('qr-close').onclick=()=>ov.remove();ov.onclick=e=>{if(e.target===ov)ov.remove()}}
 async function showQR(sid){
   let q=S.qr[sid];if(!q){q={code:newCode(),at:new Date().toISOString()};try{await S.db.doc('qr/'+sid).set(q);S.qr[sid]=q}catch(e){toast('Sorry, the QR code didn’t save.');return}}
   const s=S.sessions[sid],url=`${APP_URL}#ci-${sid}-${q.code}`;

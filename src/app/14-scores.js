@@ -45,9 +45,11 @@ function playerGameTile(sid,gid,g){const t=teamOf(g,S.uid);if(!t)return '';const
   return '';}
 /* everything a player needs to act on, then their results tonight */
 function playerScoresHTML(sid){const mine=liveGames(sid).filter(([,g])=>v2(g)&&teamOf(g,S.uid));if(!mine.length)return '';
+  const needsMe=([gid,g])=>{const st=gState(gid,g),r=resOf(gid),t=teamOf(g,S.uid);return st==='noscore'||(st==='submitted'&&r.sub.team!==t)||S.edit===gid||disputeFor===gid};
   const act=mine.filter(([gid,g])=>['noscore','submitted','disputed','ready'].includes(gState(gid,g))).reverse();
+  const now=act.filter(needsMe),later=act.filter(x=>!needsMe(x));
   const done=mine.filter(([gid,g])=>gState(gid,g)==='final').reverse();
-  return `${act.map(([gid,g])=>playerGameTile(sid,gid,g)).join('')}
+  return `${now.map(([gid,g])=>playerGameTile(sid,gid,g)).join('')}${later.length?`<div class="sec"><span class="label">Waiting for others · ${later.length}</span>${later.map(([gid,g])=>playerGameTile(sid,gid,g)).join('')}</div>`:''}
     ${done.length?`<div class="sec"><span class="label">Your results · ${done.length}</span><div class="list">${done.map(([gid,g])=>{const t=teamOf(g,S.uid),[x,y]=mySide(t,g.final[0],g.final[1]);
       return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${x>y?'Won':'Lost'} · with ${teamNames(sid,g[t].filter(p=>p!==S.uid))||'—'}</div><div class="sub">v ${teamNames(sid,g[otherT(t)])} · ${esc(g.court)}</div></div><b class="num big" style="font-size:1.4rem">${scoreTxt(x,y)}</b></div>`}).join('')}</div></div>`:''}`}
 
@@ -61,14 +63,22 @@ function supportRow(sid,gid,g,st){const r=resOf(gid),f=fmtOf(g),A=teamNames(sid,
   if(st==='ready')act=`<button class="btn sm" data-sc="fin" data-gid="${esc(gid)}" data-how="agreed">${ic('check')}Finalise ${scoreTxt(r.sub.sa,r.sub.sb)}</button><button class="linkbtn" data-sc="sedit" data-gid="${esc(gid)}">Enter a different score</button>`;
   else if(st==='submitted'&&!S.sedit[gid])act=`<button class="btn ghost sm" data-sc="fin" data-gid="${esc(gid)}" data-how="unavailable">Other team unavailable · finalise ${scoreTxt(r.sub.sa,r.sub.sb)}</button><button class="linkbtn" data-sc="sedit" data-gid="${esc(gid)}">Enter a different score</button>`;
   if(st==='noscore'||st==='disputed'||S.sedit[gid])act=scoreInputs(gid,g,[`<b>Team A</b> · ${A}`,`<b>Team B</b> · ${B}`],{note:st==='disputed'?'What was agreed with the players':'',buttons:`<button class="btn sm" data-sc="fin" data-gid="${esc(gid)}" data-how="support">${ic('check')}Finalise this score</button>`});
+  act+=gameTools(sid,gid,g);
   return `<div class="li qrow"><div><div class="nm">${A} <span class="muted">v</span> ${B}</div><div class="sub">${esc(g.court)} · to ${f} · ${hhmm(new Date(msOf(g.endDev)||Date.now()).toISOString())}${isFinite(gameMins(g))?` · ${Math.round(gameMins(g))} min`:''}</div>${claim}<div class="qact">${act}</div></div></div>`}
+/* fix a mistake: put the game back on its court, void it (kept, counts for nothing) or delete it (admins) */
+let toolFor=null,toolAsk=null;
+function gameTools(sid,gid,g){const admin=S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton');
+  if(toolFor!==gid)return `<button class="linkbtn" data-sc="tools" data-gid="${esc(gid)}">More</button>`;
+  if(toolAsk)return `<div class="confirm"><b>${toolAsk==='void'?'Void this game?':toolAsk==='del'?'Delete this game?':'Put this game back on court?'}</b><p class="fine">${toolAsk==='void'?'It stays in the record as void and counts for nothing.':toolAsk==='del'?'It’s removed completely, with no record left.':`The players go back on ${esc(g.court)} and the timer carries on.`}</p>
+    <div class="row" style="gap:6px"><button class="btn sm" data-sc="${toolAsk}go" data-gid="${esc(gid)}">${toolAsk==='void'?'Void':toolAsk==='del'?'Delete':'Back on court'}</button><button class="btn ghost sm" data-sc="toolno">Keep</button></div></div>`;
+  return `<div class="row" style="gap:6px"><button class="btn ghost sm" data-sc="toolask" data-v="still" data-gid="${esc(gid)}">${ic('play')}Still playing</button><button class="btn ghost sm" data-sc="toolask" data-v="void" data-gid="${esc(gid)}">Void</button>${admin?`<button class="btn ghost sm" data-sc="toolask" data-v="del" data-gid="${esc(gid)}">Delete</button>`:''}<button class="linkbtn" data-sc="toolno">Close</button></div>`}
 function supportHTML(sid){const gs=liveGames(sid).filter(([,g])=>v2(g)),by={};for(const [gid,g] of gs){const st=gState(gid,g);(by[st]=by[st]||[]).push([gid,g])}
   const ready=by.ready||[];
   const groups=GROUPS.map(([k,t,d])=>by[k]&&by[k].length?`<div class="tile qgroup"><div class="sec-h"><b>${t} · ${by[k].length}</b>${k==='ready'&&ready.length>1?`<button class="btn sm" data-sc="finall">${ic('check')}Finalise all ${ready.length}</button>`:''}</div><p class="fine">${d}</p><div class="list">${by[k].map(([gid,g])=>supportRow(sid,gid,g,k)).join('')}</div></div>`:'').join('');
   const fin=(by.final||[]).slice().reverse(),can=(by.cancelled||[]);
   return `${groups||`<div class="tile"><b>${ic('check')} All scores are final</b><p class="fine">New games show up here as soon as a court finishes.</p></div>`}
     ${fin.length?`<div class="tile"><b>Final · ${fin.length}</b><div class="list">${fin.map(([gid,g])=>`<div class="li qrow"><div><div class="row" style="justify-content:space-between;gap:10px;flex-wrap:nowrap"><span class="nm" style="min-width:0">${teamNames(sid,g.a)} <span class="muted">v</span> ${teamNames(sid,g.b)}</span><b class="num" style="white-space:nowrap">${scoreTxt(g.final[0],g.final[1])}</b></div><div class="sub">${esc(g.court)} · to ${fmtOf(g)}${(resOf(gid).fin||{}).how==='unavailable'?' · other team unavailable':''}${(resOf(gid).fin||{}).note?' · '+esc(resOf(gid).fin.note):''}</div>
-      ${correctFor===gid?scoreInputs(gid,g,[`<b>Team A</b> · ${teamNames(sid,g.a)}`,`<b>Team B</b> · ${teamNames(sid,g.b)}`],{note:'Reason for the correction (required)',buttons:`<button class="btn sm" data-sc="fin" data-gid="${esc(gid)}" data-how="correction">Save correction</button><button class="btn ghost sm" data-sc="nocorrect">Back</button>`}):`<button class="linkbtn" data-sc="correct" data-gid="${esc(gid)}">Correct</button>`}</div></div>`).join('')}</div></div>`:''}
+      ${correctFor===gid?scoreInputs(gid,g,[`<b>Team A</b> · ${teamNames(sid,g.a)}`,`<b>Team B</b> · ${teamNames(sid,g.b)}`],{note:'Reason for the correction (required)',buttons:`<button class="btn sm" data-sc="fin" data-gid="${esc(gid)}" data-how="correction">${ic('check')}Save</button><button class="btn ghost sm" data-sc="nocorrect">Back</button>`}):`<div class="row" style="gap:10px"><button class="linkbtn" data-sc="correct" data-gid="${esc(gid)}">${ic('edit')}Edit</button>${gameTools(sid,gid,g)}</div>`}</div></div>`).join('')}</div></div>`:''}
     ${can.length?`<div class="tile"><b>Cancelled · ${can.length}</b><div class="list">${can.map(([gid,g])=>`<div class="li"><div><div class="nm">${teamNames(sid,g.a)} <span class="muted">v</span> ${teamNames(sid,g.b)}</div><div class="sub">${esc(g.court)} · ${esc(g.reason||'')} · no result</div></div></div>`).join('')}</div></div>`:''}`}
 S.sedit={};
 
@@ -85,6 +95,21 @@ async function scoreAct(b){const k=b.dataset.sc,gid=b.dataset.gid,g=gid&&S.games
   if(k==='correct'){correctFor=gid;const f=g.final||[];scoreDraft[gid]={x:f[0],y:f[1]};return renderCourts()}
   if(k==='nocorrect'){correctFor=null;return renderCourts()}
   if(k==='award'){await awardSession(S.courtSid);return renderCourts()}
+  if(k==='tools'){toolFor=gid;toolAsk=null;return renderCourts()}
+  if(k==='toolask'){toolFor=gid;toolAsk=b.dataset.v;return renderCourts()}
+  if(k==='toolno'){toolFor=null;toolAsk=null;return renderCourts()}
+  if(k==='voidgo'||k==='delgo'||k==='stillgo'){toolFor=null;toolAsk=null;
+    try{if(k==='voidgo'){await S.db.doc('games/'+gid).update({st:'cancelled',reason:'Voided',interrupted:true,by:S.uid,was:g.st,wasFinal:g.final||null});toast('Game voided. It no longer counts.')}
+      else if(k==='delgo'){await S.db.doc('games/'+gid).delete();delete S.gSess[gid];mergeGames();toast('Game deleted.')}
+      else{const lv=norm(clone(S.live[sid]||{courts:[]})),c=lv.courts.find(x=>x.name===g.court);
+        if(!c){toast(`${g.court} isn't on the board any more.`);return}
+        if(c.on.some(Boolean)){toast(`${c.name} has players on it. Clear it first, or void this game instead.`);return}
+        for(const p of [...g.a,...g.b])detach(lv,p);
+        const half=c.size/2,pad=(t)=>t.concat(Array(half).fill(null)).slice(0,half);c.on=[...pad(g.a),...pad(g.b)];
+        c.st='playing';c.t0=g.start||null;c.t0dev=g.startDev||new Date().toISOString();c.fmt=g.fmt||null;c.pausedMs=g.pausedMs||0;
+        await S.db.doc('games/'+gid).delete();delete S.gSess[gid];mergeGames();saveLive(sid,lv);toast(`Back on ${c.name}. The timer carries on.`)}}
+    catch(e){console.warn(e);toast("Sorry, that didn't save.")}
+    return renderCourts()}
   const ref=S.db.doc('results/'+gid),cur=resOf(gid);
   try{
     if(k==='submit'){const t=teamOf(g,S.uid);if(!t)return;const v=readDraft(gid,g,t==='b');if(!v)return;

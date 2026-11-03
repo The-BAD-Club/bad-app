@@ -772,6 +772,11 @@ input[type=datetime-local]{font:inherit;color:var(--ink);background:var(--bg);bo
 .pc .ph::after,.pc.member .ph::after{display:none}
 #a-plist .glevel{grid-column:2/-1;display:grid;gap:6px;min-width:0;margin-top:2px}.glevel .gpick{max-width:420px;min-width:0}.glevel .gpick select{min-width:0;max-width:100%;text-overflow:ellipsis}
 .walkin{display:grid;gap:8px;margin-top:6px;padding-top:12px;border-top:1px solid var(--rule)}.walkin select{width:100%}.ci-lvl{grid-column:3/-1;min-width:0}.ci-lvl:empty{display:none}.ci-lvl .gpick{max-width:420px}.ci-lvl .gpick select{min-width:0;max-width:100%}
+.hbtns .icon{min-width:36px;font-size:1.05rem;padding:0 8px}.court.closed{opacity:.6}.court .tstr{margin:6px 0 0;text-align:right}
+.cied{grid-column:1/-1;display:grid;gap:8px;padding:10px 0 4px}.linkbtn.danger{color:var(--ink);text-decoration:underline}.btn.icon{padding:0 10px}
+.court-body .pl[data-act],.bench .pl[data-act],.waits .pl[data-act]{touch-action:none;cursor:grab}
+.pl.ghost{position:fixed;z-index:999;pointer-events:none;transform:translate(-50%,-50%) scale(1.08);opacity:.92;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt{outline:2px dashed var(--ink);outline-offset:3px;border-radius:12px}
 </style>
 
 <div class="wrap">
