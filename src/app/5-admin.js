@@ -95,7 +95,9 @@ function aSessions(list,up){
   return `${picker}${form}
   <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))+'–'+esc(fmtTime(s.end||''))} · AED ${esc(s.fee)}</span><h3 class="big">${esc(s.title)}</h3>
     <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
-    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button></div></div>
+    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}</div>
+    ${cancelOpen&&!s.cancelled?cancelPanel(adminSid,s,r):''}</div>
+  ${payDash(adminSid,s,r)}
   ${gmPanel(adminSid,s)}
   ${box(`Players <span class="hint num">${r.in.length}</span>`,`<div class="list">${rosterHTML}</div>${addPlayerPanel(adminSid,r)}`)}
   ${r.wait.length?box('Waitlist',`<div class="list">${r.wait.map((e,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span><div class="nm">${nm(e)}</div>${rmRosterBtn(e)}</div>`).join('')}</div>`):''}
@@ -170,6 +172,37 @@ function aSettings(){
   ${boxD('Brand and logos',brandPanel())}`;
 }
 let postType='event',newSport='badminton';
+/* who can confirm payments: owner and founder admins, admins with finance access, and community managers for that sport (same as the rules) */
+const canPayFor=sp=>{const r=myRole(),em=(window.BAD_USER&&window.BAD_USER.email||'').toLowerCase();return r==='owner'||r==='founder'||!!(S.admins&&S.admins[em]&&S.admins[em].finance)||(r==='cm'&&mySports().includes(sp||'badminton'))};
+let cancelOpen=false,cancelWhyS='Not enough players';
+const CANCEL_WHY=['Not enough players','Venue not available','Weather','Coach or crew unavailable','Other'];
+/* everyone booked (players and waiting list) who has an email on file */
+function sessionEmails(sid){const r=roster(sid),ids=[...new Set([...r.in,...r.wait].filter(e=>!e.guest).map(e=>e.uid))];
+  return ids.map(u=>({uid:u,email:((S.contacts[u]||{}).email||'').trim(),name:nameOf(u,(S.bookings[u]||{}).key)})).filter(x=>/@/.test(x.email))}
+function cancelPanel(sid,s,r){const em=sessionEmails(sid),ppl=[...r.in,...r.wait].filter(e=>!e.guest).length;
+  const msg=`Hi BADDIE,\n\nSorry, ${s.title} on ${fmtS(s)}${s.timeTbc?'':' at '+fmtTime(s.start)} is cancelled: ${cancelWhyS.toLowerCase()}.\n\nYou won't be charged for it. We'll see you at the next one.\n\nThe BAD Club`;
+  return `<div class="confirm" style="margin-top:12px"><b>Cancel ${esc(s.title)}?</b>
+    <div class="chips" role="group" aria-label="Reason">${CANCEL_WHY.map(w=>`<button class="chip sm" data-cwhy="${esc(w)}" aria-pressed="${cancelWhyS===w}">${esc(w)}</button>`).join('')}</div>
+    <label class="fine" for="s-cmsg">Email to everyone who signed up (${em.length} of ${ppl} have an email on file)</label><textarea id="s-cmsg" rows="7">${esc(msg)}</textarea>
+    <label class="chip sm" style="justify-self:start"><input type="checkbox" id="s-cmail" ${em.length?'checked':'disabled'}> Email them automatically</label>
+    <p class="fine">Emails go from the BAD Gmail within a few minutes. Nobody is charged for a cancelled session.</p>
+    <div class="row" style="gap:6px"><button class="btn sm" id="s-cancelgo">${ic('x')}Cancel session</button><button class="btn ghost sm" id="s-cancelno">Keep it on</button></div></div>`}
+/* payment dashboard for one session: who has paid, who has sent money to check, who is still pending */
+function payDash(sid,s,r){if(!(Number(s.fee)>0))return '';const fee=Number(s.fee)||0;
+  const rows=r.in.filter(e=>!e.guest).map(e=>{const P=S.payments[sid]?.[e.uid]||{},b=S.bookings[e.uid]?.s?.[sid]||{},g=(b.guests||[]).filter(x=>!x.out).length;
+    return {uid:e.uid,name:nameOf(e.uid,e.key),st:P.waived?'free':P.ok?'paid':b.sent?'sent':'pending',method:PAY[P.method||b.pay||'cash']?.label||'Cash',amount:fee*(1+g),c:S.contacts[e.uid]||{}}});
+  const grp=k=>rows.filter(x=>x.st===k),pend=grp('pending'),sent=grp('sent'),paid=[...grp('paid'),...grp('free')];
+  const collected=grp('paid').reduce((t,x)=>t+x.amount,0),due=[...pend,...sent].reduce((t,x)=>t+x.amount,0);
+  const can=typeof canPayFor==='function'?canPayFor(s.sport):true;
+  const wa=x=>{const m=String(x.c.whatsapp||x.c.mobile||'').replace(/[^0-9]/g,'').replace(/^0/,'971');return m?`https://wa.me/${m}?text=${encodeURIComponent(`Hi ${x.name}, a friendly reminder from The BAD Club: AED ${x.amount} for ${s.title} on ${fmtS(s)} is still pending. You can pay in the BAD App under Home. Thank you!`)}`:''};
+  const line=(x,acts)=>`<div class="li payrow"><div class="row" style="justify-content:space-between;gap:10px"><div><div class="nm">${esc(x.name)}</div><div class="sub">${esc(x.method)} · AED ${x.amount}${x.st==='free'?' · free':''}</div></div></div>${acts?`<div class="row payacts">${acts}</div>`:''}</div>`;
+  return box(`Payments <span class="hint num">${paid.length}/${rows.length} paid</span>`,`<div class="tiles t4">${tile(`<small>AED</small> ${collected}`,'Collected')}${tile(`<small>AED</small> ${due}`,'Still to collect')}${tile(sent.length,'To check')}${tile(pend.length,'Pending')}</div>
+    ${sent.length?`<span class="label">Sent · check and confirm</span><div class="list">${sent.map(x=>line(x,can?`<button class="btn sm" data-paid="${esc(x.uid)}">${ic('check')}Confirm</button>`:'')).join('')}</div>`:''}
+    ${pend.length?`<div class="row" style="justify-content:space-between;margin-top:10px"><span class="label">Pending</span>${pend.some(x=>/@/.test(x.c.email||''))?`<button class="btn ghost sm" id="s-remindall">${ic('mail')}Email reminders to ${pend.filter(x=>/@/.test(x.c.email||'')).length}</button>`:''}</div>
+      <div class="list">${pend.map(x=>line(x,`${wa(x)?`<a class="btn ghost sm" href="${esc(wa(x))}" target="_blank" rel="noopener">${ic('phone')}WhatsApp</a>`:''}${/@/.test(x.c.email||'')?`<button class="btn ghost sm" data-remind="${esc(x.uid)}">${ic('mail')}Email</button>`:''}${can?`<button class="btn sm" data-paid="${esc(x.uid)}">${ic('check')}Paid</button>`:''}`)).join('')}</div>`:''}
+    ${paid.length?`<details style="margin-top:10px"><summary class="label">Paid · ${paid.length}</summary><div class="list">${paid.map(x=>line(x,`<span class="tagl solid">${ic('check')}${x.st==='free'?'Free':'Paid'}</span>`)).join('')}</div></details>`:''}`)}
+/* queue an email: the Apps Script on the BAD Gmail sends it within a few minutes */
+async function queueMail(o){await S.db.collection('mail').add({status:'queued',by:S.uid,at:SVT(),...o})}
 function payTag(sid,uid){const b=S.bookings[uid]?.s?.[sid]||{},k=b.pay||'cash',P=S.payments[sid]?.[uid]||{},ok=P.ok&&!P.waived,fr=!!P.waived;
   return `<div class="row" style="gap:6px;margin-top:4px"><span class="tagl${ok||fr?' solid':''}">${ic(PAY[k]?.icon||'cash')}${PAY[k]?.label||'Cash'}${fr?' · Free':ok?' · Paid':b.sent?' · Sent':''}</span>${fr?'':`<button class="chip sm" data-paid="${esc(uid)}" aria-pressed="${ok}">${ok?'Undo paid':'Mark paid'}</button>`}${ok?'':`<button class="chip sm" data-free="${esc(uid)}" aria-pressed="${fr}">${fr?'Undo free':'Make free'}</button>`}</div>`}
 function payPanel(){const c=S.payCfg||{};
@@ -186,6 +219,20 @@ function payPanel(){const c=S.payCfg||{};
 const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BADDINK Pickleball',run:'BAD PACE Run',dance:'BAD HABITS Dance',basketball:'BADSHOTS Run',training:'Training',retreat:'BAD Retreat'}[k]||'Session');
 function bindAdmin(){
   const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+  on('s-cancelask',()=>{cancelOpen=true;renderNow()});
+  on('s-cancelno',()=>{cancelOpen=false;renderNow()});
+  q('[data-cwhy]').forEach(b=>b.onclick=()=>{cancelWhyS=b.dataset.cwhy;renderNow()});
+  on('s-cancelgo',async()=>{const sid=adminSid,s=S.sessions[sid],text=($('s-cmsg')||{}).value||'',mail=($('s-cmail')||{}).checked,em=sessionEmails(sid);
+    try{await S.db.doc('sessions/'+sid).update({cancelled:true,cancelReason:cancelWhyS,cancelledAt:new Date().toISOString(),cancelledBy:(window.BAD_USER&&window.BAD_USER.email)||''});
+      if(mail&&em.length)await queueMail({type:'cancel',sid,to:em.map(x=>x.email).slice(0,100),subject:`Cancelled: ${s.title} · ${fmtS(s)}`,text:text.slice(0,4000)});
+      cancelOpen=false;toast(mail&&em.length?`Session cancelled. ${em.length} email${em.length===1?'':'s'} going out from the BAD Gmail.`:'Session cancelled.')}catch(e){console.warn(e);toast("Sorry, that didn't save.")}});
+  on('s-uncancel',async()=>{try{await S.db.doc('sessions/'+adminSid).update({cancelled:false});toast('Session is back on. Let players know it’s happening.')}catch(e){toast("Sorry, that didn't save.")}});
+  const remind=async list=>{const s=S.sessions[adminSid];let n=0;for(const x of list){const em=((S.contacts[x.uid]||{}).email||'').trim();if(!/@/.test(em))continue;
+      const amt=pendingFor(x.uid).filter(r=>r.sid===adminSid).reduce((t,r)=>t+r.amount,0)||Number(s.fee)||0;
+      await queueMail({type:'reminder',sid:adminSid,to:[em],subject:`Payment reminder: ${s.title} · ${fmtS(s)}`,text:`Hi ${nameOf(x.uid,(S.bookings[x.uid]||{}).key)},\n\nA friendly reminder that AED ${amt} for ${s.title} on ${fmtS(s)} is still pending.\n\nYou can pay in the BAD App: open Home and tap your session to see the payment options. If you've already paid, tap "I've paid" so we can confirm it.\n\nThank you!\nThe BAD Club`});n++}
+    toast(n?`${n} reminder${n===1?'':'s'} going out from the BAD Gmail.`:'No email on file.')};
+  q('[data-remind]').forEach(b=>b.onclick=()=>remind([{uid:b.dataset.remind}]).catch(()=>toast("Sorry, that didn't send.")));
+  on('s-remindall',()=>{const r=roster(adminSid),list=r.in.filter(e=>!e.guest&&!S.payments[adminSid]?.[e.uid]?.ok&&!S.bookings[e.uid]?.s?.[adminSid]?.sent).map(e=>({uid:e.uid}));remind(list).catch(()=>toast("Sorry, that didn't send."))});
   q('[data-at]').forEach(b=>b.onclick=()=>{aTab=b.dataset.at;renderAdmin();scrollTo({top:0})});
   q('[data-go]').forEach(b=>b.onclick=()=>{aTab=b.dataset.go;if(b.dataset.sid){adminSid=b.dataset.sid;adminPicked=true}if(b.dataset.new)showNew=true;renderAdmin();scrollTo({top:0})});
   q('[data-courts]').forEach(b=>b.onclick=()=>{S.courtSport=b.dataset.courts;setView('courts')});
@@ -224,9 +271,9 @@ function bindAdmin(){
   if(aTab==='shop')bindShopAdmin();
   bindCodes();if(aTab==='settings')bindBrand();
   q('[data-free]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.free,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.waived;if(was)delete cur[uid];else cur[uid]={ok:true,waived:true,at:new Date().toISOString(),by:window.BAD_USER?.email||''};
-    try{await S.db.doc('payments/'+adminSid).set(cur);toast(was?'Back to pending.':'Done. Nothing to pay for this one.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{await setPayment(uid,adminSid,cur[uid]||null);toast(was?'Back to pending.':'Done. Nothing to pay for this one.')}catch(e){toast("Sorry, that didn't save.")}});
   const pcSet=async(uid,mk,msg,src)=>{const c=(src||payChecks)().find(x=>x.uid===uid);if(!c)return;const at=new Date().toISOString();
-    try{for(const r of c.items){const cur={...(S.payments[r.sid]||{})};cur[uid]=mk(at,r);await S.db.doc('payments/'+r.sid).set(cur)}toast(msg)}catch(e){toast("Sorry, that didn't save.")}};
+    try{for(const r of c.items)await setPayment(uid,r.sid,mk(at,r));toast(msg)}catch(e){toast("Sorry, that didn't save.")}};
   q('[data-pcok]').forEach(b=>b.onclick=()=>pcSet(b.dataset.pcok,(at,r)=>({ok:true,at,method:S.bookings[b.dataset.pcok]?.s?.[r.sid]?.pay||'cash',by:window.BAD_USER?.email||''}),'Payment confirmed. Thank you.'));
   q('[data-pcfree]').forEach(b=>b.onclick=()=>pcSet(b.dataset.pcfree,at=>({ok:true,waived:true,at,by:window.BAD_USER?.email||''}),'Done. Nothing to pay.'));
   q('[data-upok]').forEach(b=>b.onclick=()=>pcSet(b.dataset.upok,(at,r)=>({ok:true,at,method:S.bookings[b.dataset.upok]?.s?.[r.sid]?.pay||'cash',by:window.BAD_USER?.email||''}),'Marked as paid. Thank you.',unpaidList));
@@ -235,7 +282,7 @@ function bindAdmin(){
   q('[data-pcrm]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.pcrm,c=payChecks().find(x=>x.uid===uid),bk=S.bookings[uid];if(!c||!bk)return;const s={...bk.s};
     try{for(const r of c.items)await staffBooking(uid,r.sid,o=>{if(!o)return undefined;const x={...o};delete x.sent;delete x.ask;return x});toast('Request removed. It stays as unpaid.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-pundo]').forEach(b=>b.onclick=async()=>{const [sid,uid]=b.dataset.pundo.split('|'),cur={...(S.payments[sid]||{})};delete cur[uid];
-    try{await S.db.doc('payments/'+sid).set(cur);toast('Undone. It shows as unpaid again.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{await setPayment(uid,sid,null);toast('Undone. It shows as unpaid again.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-uparm]').forEach(b=>b.onclick=()=>{S.rmArm=S.rmArm===b.dataset.uparm?null:b.dataset.uparm;renderNow()});
   q('[data-uprmno]').forEach(b=>b.onclick=()=>{S.rmArm=null;renderNow()});
   q('[data-uprm]').forEach(b=>b.onclick=async()=>{const [uid,sid]=b.dataset.uprm.split('|'),bk=S.bookings[uid];S.rmArm=null;if(!bk)return;const ks=(sid==='*'?pendingFor(uid).filter(r=>canSport(S.sessions[r.sid].sport)).map(r=>r.sid):[sid]);
@@ -259,9 +306,9 @@ function bindAdmin(){
     try{if(cur.guest&&gi===''&&Object.keys(s).length<=1)await S.db.doc('bookings/'+uid).delete();
       else await staffBooking(uid,sid,o=>gi===''?null:{...o,guests:(o.guests||[]).filter((_,i)=>i!==+gi)});toast('Taken off the session.')}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-freeall]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.freeall,list=pendingFor(uid),at=new Date().toISOString();
-    try{for(const r of list){const cur={...(S.payments[r.sid]||{})};cur[uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
+    try{for(const r of list)await setPayment(uid,r.sid,{ok:true,waived:true,at,by:window.BAD_USER?.email||''});toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
-    try{await S.db.doc('payments/'+adminSid).set(cur);toast(was?'Marked as unpaid.':'Payment confirmed.')}catch(e){toast("Sorry, that didn't save.")}});
+    try{await setPayment(uid,adminSid,was?null:cur[uid]);toast(was?'Marked as unpaid.':'Payment confirmed.')}catch(e){toast("Sorry, that didn't save.")}});
   on('pc-save',async()=>{const d={accName:$('pc-acc').value.trim(),bankName:$('pc-bank').value.trim(),iban:$('pc-iban').value.trim(),ziinaLink:$('pc-ziina').value.trim(),careemName:$('pc-cname').value.trim(),careemNo:$('pc-cno').value.trim(),careemLink:$('pc-clink').value.trim()};
     q('[data-pon]').forEach(x=>d[x.dataset.pon]=x.checked);
     if(d.ziinaLink&&!/^https:\/\//.test(d.ziinaLink)){toast('Please use a full https:// link for Ziina.');return}
@@ -347,7 +394,7 @@ function payChecksHTML(){const L=payChecks();if(!L.length)return '';
 
 /* a player's unpaid sessions (for admins) */
 function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
-  for(const [sid,x] of Object.entries(b)){const s=S.sessions[sid];if(!s)continue;const r=roster(sid),P=S.payments[sid]?.[uid];if(P&&P.ok)continue;
+  for(const [sid,x] of Object.entries(b)){const s=S.sessions[sid];if(!s||s.cancelled)continue;const r=roster(sid),P=S.payments[sid]?.[uid];if(P&&P.ok)continue;
     let amount=0;if(x.out)amount=feeFor(s,x.out).amount;else if(r.in.some(e=>e.uid===uid&&!e.guest)){const g=(x.guests||[]).filter(g=>!g.out||r.late.some(e=>e.uid===uid&&e.guest===g.n)).length;amount=(Number(s.fee)||0)*(1+g)}
     if(amount)out.push({sid,amount})}
   return out}

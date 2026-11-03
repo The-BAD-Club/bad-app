@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.13 | 2026-11-04 | Cancel a session and email everyone who signed up; payment dashboard per session with reminders by email or WhatsApp; payments saved in each player's own record so players see their own status |
 | 0.12 | 2026-11-04 | Matching rules for Beginners and balance; BAD PACE (was Runaways) with check-in and a run log; BAD HABITS dance crew; levels for every sport in its own words; balanced teams for volleyball and basketball; player counts on courts; BADDEST PLAYER for every sport |
 | 0.11 | 2026-11-04 | Courts: boards reload after refresh; sign-up QR for admins; rename or remove on check-in; Save now; undo and redo; drag and drop; re-pair; pause and close courts; Finish asks first; Still playing, Void and Delete for games; Edit finished scores |
 | 0.10 | 2026-11-02 | Badminton queuing: Start, Finish and Cancel with timing; fair rotation with balanced teams; scores confirmed by the other team and finalised by Support; session standings and BADDEST PLAYER (+5); player cap, waiting list, courts and time with a 5-game check; bookings saved the way the security rules expect |

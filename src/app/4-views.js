@@ -41,6 +41,17 @@ function upcoming(){const now=Date.now()-2*36e5;return Object.entries(S.sessions
 let pendingOut=null,guestFor=null,payFor=null;
 /* Bookings: one change to one session per save, named in op (join, leave, guest or pay), with server times,
    exactly as the security rules expect. Several sessions = several saves. */
+/* Payments live in each player's own record, pay/{uid}: s.{sessionId} = {ok, waived, method, at, by}.
+   Players can read only their own; finance admins and community managers write, one session per save.
+   The old shared records (payments/{sessionId}) are still read for history. S.payments[sid][uid] combines both. */
+S.payOld={};S.payNew={};
+function rebuildPayments(){const m={};for(const [sid,x] of Object.entries(S.payOld||{}))m[sid]={...x};
+  for(const [uid,d] of Object.entries(S.payNew||{}))for(const [sid,v] of Object.entries((d&&d.s)||{})){m[sid]=m[sid]||{};if(v)m[sid][uid]=v;else delete m[sid][uid]}
+  S.payments=m}
+async function setPayment(uid,sid,val){const cur=(S.payNew[uid]&&S.payNew[uid].s)||{},s={...cur};
+  /* an old shared record for this session is replaced by the new one, so an explicit 'not paid' wins over it */
+  s[sid]=val||null;await S.db.doc('pay/'+uid).set({s,op:{sid},u:SVT()});
+  S.payNew[uid]={...(S.payNew[uid]||{}),s};rebuildPayments();render()}
 async function saveBooking(sid,kind,fn){const cur=S.bookings[S.uid]||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
   const e=fn(o);if(!e)return;s[sid]=e;await S.db.doc('bookings/'+S.uid).set({key:myProfile().listKey,s,op:{sid,kind},u:SVT()})}
 const freshEntry=(pay,at)=>({at:at||new Date().toISOString(),t:SVT(),guests:[],pay:pay||'cash'});
@@ -48,8 +59,9 @@ const freshEntry=(pay,at)=>({at:at||new Date().toISOString(),t:SVT(),guests:[],p
 async function staffBooking(uid,sid,fn,base){const cur=S.bookings[uid]||base||{s:{}},s={...(cur.s||{})},o=s[sid]?{...s[sid]}:null;
   const e=fn(o);if(e===undefined)return;if(e===null)delete s[sid];else s[sid]=e;
   const {op,u,...rest}=cur;await S.db.doc('bookings/'+uid).set({...rest,s,op:{sid,kind:'admin'},u:SVT()})}
+const isCancelled=sid=>!!(S.sessions[sid]&&S.sessions[sid].cancelled);
 const isFull=sid=>{const r=roster(sid);return r.in.length>=r.cap&&r.wait.length>=r.wc&&!(typeof perk!=='undefined'&&perk.skipWait(S.uid))};
-async function join(sid,pay){if(isFull(sid)){toast('Sorry, this session and its waiting list are full.');return}try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
+async function join(sid,pay){if(isCancelled(sid)){toast('This session is cancelled.');return}if(isFull(sid)){toast('Sorry, this session and its waiting list are full.');return}try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
 async function setPay(sid,pay){try{await saveBooking(sid,'pay',o=>{const x={...o,pay};delete x.sent;return x});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function markSent(sid){try{await saveBooking(sid,'pay',o=>({...o,sent:new Date().toISOString()}));toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
 async function unmarkSent(sid){try{await saveBooking(sid,'pay',o=>{const x={...o};delete x.sent;return x});toast('Done. It shows as not paid yet.')}catch(e){toast("Sorry, that didn't save.")}}
@@ -97,7 +109,9 @@ function sessCard(sid,s){const me=myProfile();
     const pos=r.in.findIndex(e=>e.uid===S.uid&&!e.guest),wpos=r.wait.findIndex(e=>e.uid===S.uid&&!e.guest);
     const myG=[...r.in.map(e=>({...e,st:'In'})),...r.wait.map(e=>({...e,st:'Waitlist'}))].filter(e=>e.uid===S.uid&&e.guest);
     let status='',actions='';
-    if(mine&&mine.out){const f=feeFor(s,mine.out);status=`<span class="tagl">Dropped · ${esc(f.label)}${f.amount?` · AED ${f.amount}`:''}</span>`;if(me&&!started)actions=`<button class="btn sm" data-joinask="${sid}">${ic('plus')}Join again</button>`}
+    if(s.cancelled){status=`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span>`}
+    if(s.cancelled){}
+    else if(mine&&mine.out){const f=feeFor(s,mine.out);status=`<span class="tagl">Dropped · ${esc(f.label)}${f.amount?` · AED ${f.amount}`:''}</span>`;if(me&&!started)actions=`<button class="btn sm" data-joinask="${sid}">${ic('plus')}Join again</button>`}
     else if(pos>=0){status=`<span class="tagl solid">${ic('check')}You're in</span>`;if(!started)actions=`<button class="btn ghost sm" data-out="${sid}">I can't make it</button>`}
     else if(wpos>=0){status=`<span class="tagl">Waitlist #${wpos+1}</span>`;actions=`<button class="btn ghost sm" data-wout="${sid}">Leave waitlist</button>`}
     else if(me&&!started){const ss=signupState(s,S.uid),fmtO=t=>new Date(t).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
@@ -271,7 +285,7 @@ function renderCard(){
     try{for(const id of ids)await saveBooking(id,'pay',o=>o&&({...o,ask:{at,note}}));S.askOpen=false;S.askNote='';toast('Sent. An admin will check and confirm. Thank you.')}catch(e){toast("Sorry, that didn't send. Please try again.")}});
   el.querySelectorAll('[data-askcancel]').forEach(b=>b.onclick=async()=>{try{for(const [id,o] of Object.entries(S.bookings[S.uid]?.s||{}))if(o&&o.ask)await saveBooking(id,'pay',x=>{const y={...x};delete y.ask;return y});toast('Request cancelled.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-clearmine]').forEach(b=>b.onclick=async()=>{const due=myActivity().filter(r=>r.payState==='pending'||r.payState==='sent'),at=new Date().toISOString();
-    try{for(const r of due){const cur={...(S.payments[r.sid]||{})};cur[S.uid]={ok:true,waived:true,at,by:window.BAD_USER?.email||''};await S.db.doc('payments/'+r.sid).set(cur)}S.payAll=false;toast('Cleared. Nothing pending.')}catch(e){toast("Sorry, that didn't save. Please publish the latest rules and try again.")}});
+    try{for(const r of due)await setPayment(S.uid,r.sid,{ok:true,waived:true,at,by:window.BAD_USER?.email||''});S.payAll=false;toast('Cleared. Nothing pending.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-payalldone]').forEach(b=>b.onclick=async()=>{const k=b.dataset.payalldone,ids=myActivity().filter(r=>r.payState==='pending').map(r=>r.sid),at=new Date().toISOString();
     try{for(const id of ids)await saveBooking(id,'pay',o=>o&&({...o,pay:k,sent:at}));S.payAll=false;toast('Thank you. An admin will confirm your payments.')}catch(e){toast("Sorry, that didn't save.")}});
   el.querySelectorAll('[data-payjump]').forEach(b=>b.onclick=()=>{const d=el.querySelector('.payrow');if(!d)return;d.open=true;S.openPay=d.dataset.payrow;d.scrollIntoView({behavior:'smooth',block:'center'})});
