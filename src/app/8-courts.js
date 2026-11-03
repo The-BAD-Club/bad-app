@@ -58,6 +58,8 @@ function people(sid){
     else{const p=S.profiles[e.uid];m[e.uid]={name:p?.nickname||S.bookings[e.uid]?.name||allKeys()[e.key]||e.key||'Player',p,uid:e.uid}}
   }
   for(const w of (S.live[sid]?.walkins||[]))m['w~'+w.id]={name:w.name,walk:true};
+  const lv=S.live[sid]||{};for(const k of Object.keys(lv.hide||{}))if(lv.hide[k]&&!(lv.checkin||{})[k])delete m[k];
+  for(const [k,n] of Object.entries(lv.names||{}))if(m[k]&&n)m[k]={...m[k],name:n};
   return m;
 }
 function who(sid,pid){const m=people(sid);if(m[pid])return m[pid];const p=S.profiles[pid];if(p)return{name:p.nickname,p,uid:pid};
@@ -74,11 +76,11 @@ const addMins=(hhmm,m)=>{const [h,mi]=String(hhmm||'22:00').split(':').map(Numbe
 const msOf=t=>t&&typeof t.toMillis==='function'?t.toMillis():t&&t.seconds!=null?t.seconds*1000:typeof t==='string'?Date.parse(t):typeof t==='number'?t:NaN;
 /* game length in minutes: server times, unless the phone was offline and they disagree by more than 30 s */
 function gameMins(g){const sv=msOf(g.end)-msOf(g.start),dv=msOf(g.endDev)-msOf(g.startDev);
-  const ms=isFinite(sv)&&sv>0&&(!isFinite(dv)||Math.abs(sv-dv)<=30000)?sv:isFinite(dv)&&dv>0?dv:NaN;return isFinite(ms)?ms/60000:NaN}
+  const ms=isFinite(sv)&&sv>0&&(!isFinite(dv)||Math.abs(sv-dv)<=30000)?sv:isFinite(dv)&&dv>0?dv:NaN;return isFinite(ms)?Math.max(0,ms-(g.pausedMs||0))/60000:NaN}
 function avgMins(sid){const ds=liveGames(sid).map(([,g])=>g.interrupted?NaN:gameMins(g)).filter(x=>x>2&&x<90);return ds.length>=3?{d:ds.reduce((a,b)=>a+b,0)/ds.length,n:ds.length}:null}
 function presentIds(lv){return Object.keys(lv.checkin||{}).filter(p=>!(lv.out||[]).includes(p))}
 function planInfo(sid,lv){const s=S.sessions[sid],now=Date.now(),st=sessStart(s),en=sessEnd(s);
-  const present=presentIds(lv),N=present.length||roster(sid).in.length,C=lv.courts.length,T=Math.max(0,(en-st)/6e4);
+  const present=presentIds(lv),N=present.length||roster(sid).in.length,C=lv.courts.filter(c=>!c.closed).length||1,T=Math.max(0,(en-st)/6e4);
   const left=Math.max(0,(en-Math.max(now,st))/6e4),m=avgMins(sid),d=m?m.d:BADMATH.FORMATS[21].mins;
   const games=present.map(p=>gamesFor(sid,p));
   return {N,C,T,left,d,measured:m,each:BADMATH.gamesEach(N,C,T,d),adv:BADMATH.advice({games,courts:C,minsLeft:left,d}),games}}
@@ -152,14 +154,28 @@ function setBase(sid,lv,pid){const others=presentIds(lv).filter(x=>x!==pid).map(
 /* format suggestion: 21 points at capacity; 30 below it while everyone can still reach 5 games */
 function suggestFmt(sid,lv){const P=planInfo(sid,lv);if(P.N>=roster(sid).cap)return 21;
   const a=BADMATH.advice({games:P.games,courts:P.C,minsLeft:P.left,d:P.measured?P.measured.d*30/21:BADMATH.FORMATS[30].mins});return a.ok?30:21}
-const elapsed=c=>{const t=msOf(c.t0dev);return isFinite(t)?Math.max(0,Math.floor((Date.now()-t)/60000)):0};
+const inG=c=>!!c&&(c.st==='playing'||c.st==='paused');
+/* minutes played, not counting pauses */
+const elapsed=c=>{const t=msOf(c.t0dev);if(!isFinite(t))return 0;const end=c.st==='paused'?msOf(c.pAt):Date.now();return Math.max(0,Math.floor((end-t-(c.pausedMs||0))/60000))};
+/* team strength for crew: the sum of each side's balancing ratings */
+function teamStr(sid,lv,c){if(!c||c.size!==4)return '';const r=id=>{const x=rotP(sid,lv,id);return typeof x.rating==='number'?x.rating:null};
+  const a=c.on.slice(0,2).map(r),b=c.on.slice(2).map(r);if([...a,...b].some(x=>x==null))return '';const sa=a[0]+a[1],sb=b[0]+b[1];return `teams ${sa} v ${sb}`}
 const isRest=(lv,p)=>!!(lv.rest||{})[p];
 function detach(lv,pid){for(const c of [...lv.courts,...lv.waiting])c.on=c.on.map(x=>x===pid?null:x);lv.out=lv.out.filter(x=>x!==pid)}
 function locate(lv,pid){for(const [k,arr] of [['c',lv.courts],['w',lv.waiting]])for(let ci=0;ci<arr.length;ci++){const i=arr[ci].on.indexOf(pid);if(i>=0)return[k,ci,i]}return null}
 const blank=(size)=>Array(size).fill(null);
 /* Every save carries the next revision number. The security rules turn down a save made from an old copy of the board,
    so two phones can never undo each other's changes; the phone that lost simply shows the latest board. */
-function saveLive(sid,lv){lv.updatedAt=new Date().toISOString();lv.rev=((S.live[sid]&&S.live[sid].rev)||0)+1;S.live[sid]=lv;S.pend++;S.saveErr=null;renderCourts();
+/* undo and redo: each phone keeps the last 30 board changes. A finished game is part of its step, so undoing a Finish removes the game too. */
+S.hist={};const H=sid=>S.hist[sid]||(S.hist[sid]={u:[],r:[]});
+function saveLive(sid,lv,meta){const prev=S.live[sid];if(prev&&!(meta&&meta.noHist)){const h=H(sid);h.u.push({lv:JSON.parse(JSON.stringify(prev)),gid:meta&&meta.gid,game:meta&&meta.game});if(h.u.length>30)h.u.shift();if(!(meta&&meta.redo))h.r=[]}
+  return saveLiveRaw(sid,lv)}
+async function undoRedo(sid,dir){const h=H(sid),from=dir==='undo'?h.u:h.r,to=dir==='undo'?h.r:h.u,e=from.pop();if(!e){toast(dir==='undo'?'Nothing to undo.':'Nothing to redo.');return}
+  const cur=JSON.parse(JSON.stringify(S.live[sid]));to.push({lv:cur,gid:e.gid,game:e.game});
+  try{if(e.gid){if(dir==='undo')await S.db.doc('games/'+e.gid).delete();else await S.db.doc('games/'+e.gid).set(e.game);
+      if(dir==='undo'){delete S.gSess[e.gid];mergeGames()}}}catch(_){toast("The game record couldn't be changed. The board was still restored.")}
+  const lv=JSON.parse(JSON.stringify(e.lv));delete lv.rev;saveLiveRaw(sid,lv);toast(dir==='undo'?'Undone.':'Redone.')}
+function saveLiveRaw(sid,lv){lv.updatedAt=new Date().toISOString();lv.rev=((S.live[sid]&&S.live[sid].rev)||0)+1;S.live[sid]=lv;S.pend++;S.saveErr=null;renderCourts();
   S.db.doc('live/'+sid).set(lv).then(()=>{S.pend--;renderCourts()},e=>{S.pend--;S.saveErr=Date.now();
     toast(e&&e.code==='permission-denied'?'Another phone changed the board just now. You’re seeing the latest. Please make that change again.':"Sorry, the court board didn't save. Please try again.");renderCourts()})}
 function saveState(){if(S.pend>0)return navigator.onLine===false?['warn','Offline · saves when you’re back online']:['','Saving…'];
@@ -169,10 +185,10 @@ function startBoard(sid){const sp=S.sessions[sid].sport||'badminton',size=SIZES[
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
-S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='';
+S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='',ciEdit=null,ciRm=false,finishAsk=null;
 const CANCEL_REASONS=['Injury','Player had to leave','Wrong lineup','Court problem','Other'];
 /* timers on playing courts tick once a minute without redrawing the board */
-setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m)/60000))+' min'}),20000);
+setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m-Number(t.dataset.pm||0))/60000))+' min'}),20000);
 const nm=(sid,pid)=>pid===S.uid?'You':who(sid,pid).name;
 function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
   const tag=o.act?'button':'span',me=pid===S.uid;
@@ -180,18 +196,20 @@ function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
 function spot(o={}){return o.act?`<button class="pl" data-act="${o.act}" ${o.data||''} aria-label="Open spot"><span class="slot">${ic('plus')}</span></button>`:`<span class="pl"><span class="slot"></span></span>`}
 function sideHTML(sid,c,k,ci,from,to,edit){let h='';for(let i=from;i<to;i++){const pid=c.on[i],d=`data-k="${k}" data-c="${ci}" data-i="${i}"`;h+=pid?pl(sid,pid,{act:edit?'slot':null,data:d,games:edit,lv:S.live[sid]}):spot({act:edit?'slot':null,data:d})}return h}
 function courtCard(sid,c,ci,edit){
-  const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,playing=c.st==='playing',gno=liveGames(sid).filter(([,g])=>g.court===c.name).length+1;
+  const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,playing=inG(c),gno=liveGames(sid).filter(([,g])=>g.court===c.name).length+1;
   const fmt=c.fmt||(sp==='badminton'?suggestFmt(sid,S.live[sid]||{courts:[]}):null);
   let foot='';
   if(edit){
     if(cancelAsk===ci)foot=`<div class="confirm"><b>${playing?'Cancel this game?':'Clear this court?'}</b>${playing?`<p class="fine">No result is counted. The players go back to the front of the bench.</p>
         <div class="chips" role="group" aria-label="Reason">${CANCEL_REASONS.map(r=>`<button class="chip sm" data-act="cancelwhy" data-v="${esc(r)}" aria-pressed="${cancelWhy===r}">${esc(r)}</button>`).join('')}</div>`:''}
         <div class="row" style="gap:6px"><button class="btn sm" data-act="cancelgo" data-c="${ci}" ${playing&&!cancelWhy?'disabled':''}>${playing?'Cancel game':'Clear court'}</button><button class="btn ghost sm" data-act="cancelno">Back</button></div></div>`;
-    else if(playing)foot=`<div class="row cfoot"><button class="linkbtn" data-act="cancelask" data-c="${ci}">Cancel</button><button class="btn wide" data-act="finish" data-c="${ci}">${ic('check')}Finish</button></div>`;
-    else foot=`<div class="row cfoot">${full?`<button class="linkbtn" data-act="cancelask" data-c="${ci}">Clear</button>`:''}${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">${ic('users')}Fill from rotation</button>`:''}${full>=2?`<button class="btn wide" data-act="begin" data-c="${ci}" ${full<c.size&&sp==='badminton'?'disabled':''}>${ic('play')}Start</button>`:''}</div>`}
+    else if(finishAsk===ci)foot=`<div class="confirm"><b>Finish this game?</b><p class="fine">The players go back to the bench${S.live[sid]&&S.live[sid].waiting&&S.live[sid].waiting[0]&&S.live[sid].waiting[0].on.some(Boolean)?' and Next up comes on':''}. Scores come next.</p><div class="row" style="gap:6px"><button class="btn sm" data-act="finish" data-c="${ci}">${ic('check')}Finish game</button><button class="btn ghost sm" data-act="finishno">Keep playing</button></div></div>`;
+    else if(playing||c.st==='paused')foot=`<div class="row cfoot"><button class="linkbtn" data-act="cancelask" data-c="${ci}">Cancel</button><button class="btn ghost sm" data-act="${c.st==='paused'?'resume':'pause'}" data-c="${ci}">${c.st==='paused'?ic('play')+'Resume':ic('clock')+'Pause'}</button><button class="btn wide" data-act="finishask" data-c="${ci}">${ic('check')}Finish</button></div>`;
+    else if(c.closed)foot=`<div class="row cfoot"><span class="fine" style="margin-right:auto">Closed: no games go on this court.</span><button class="btn ghost sm" data-act="close" data-c="${ci}">Reopen court</button></div>`;
+    else foot=`${full===4&&c.size===4&&teamStr(sid,S.live[sid],c)?`<p class="fine tstr">${esc(teamStr(sid,S.live[sid],c))}</p>`:''}<div class="row cfoot">${full?`<button class="linkbtn" data-act="cancelask" data-c="${ci}">Clear</button>`:`<button class="linkbtn" data-act="close" data-c="${ci}">Close court</button>`}${full===4&&c.size===4?`<button class="btn ghost sm" data-act="repair" data-c="${ci}" title="Try the next way of pairing these four">⇄ Re-pair</button>`:''}${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">${ic('users')}Fill from rotation</button>`:''}${full>=2?`<button class="btn wide" data-act="begin" data-c="${ci}" ${full<c.size&&sp==='badminton'?'disabled':''}>${ic('play')}Start</button>`:''}</div>`}
   const fchip=fmt?(edit&&!playing?`<button class="chip sm fmt" data-act="fmt" data-c="${ci}" aria-label="Game format, tap to change">To ${fmt}</button>`:`<span class="tagl">To ${fmt}</span>`):'';
-  const tag=playing?`<span class="tagl solid timer" data-t0="${esc(c.t0dev||'')}">${elapsed(c)} min</span>`:`<span class="tagl">${full?'Game '+gno+' · ready':'Free'}</span>`;
-  return `<article class="court${playing?' on':''}"><div class="court-h"><b>${esc(c.name)}</b><span class="row" style="gap:6px">${fchip}${tag}</span></div>
+  const tag=c.st==='paused'?`<span class="tagl warn">Paused · ${elapsed(c)} min</span>`:playing?`<span class="tagl solid timer" data-t0="${esc(c.t0dev||'')}" data-pm="${c.pausedMs||0}">${elapsed(c)} min</span>`:c.closed?`<span class="tagl">Closed</span>`:`<span class="tagl">${full?'Game '+gno+' · ready':'Free'}</span>`;
+  return `<article class="court${playing?' on':''}${c.closed?' closed':''}"><div class="court-h"><b>${esc(c.name)}</b><span class="row" style="gap:6px">${fchip}${tag}</span></div>
     <div class="court-body ${sp}">${MARK[sp]||''}<div class="half">${sideHTML(sid,c,'c',ci,0,half,edit&&!playing)}</div><div class="net"><span>${MIDLINE[sp]||'NET'}</span></div><div class="half">${sideHTML(sid,c,'c',ci,half,c.size,edit&&!playing)}</div></div>${foot}</article>`;
 }
 function waitRow(sid,w,wi,edit){
@@ -199,6 +217,11 @@ function waitRow(sid,w,wi,edit){
   return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span>${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</div>
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
+/* check-in list: rename a guest or walk-in, or take anyone off tonight's list */
+function ciEditor(sid,p){const x=who(sid,p),member=!!x.uid&&!!S.profiles[p],admin=S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton');
+  return `<div class="cied">${member?`<p class="fine">${esc(x.name)} is a member, so their name comes from their card.</p>`:`<label class="fine" for="ci-nm">Name</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input type="text" id="ci-nm" maxlength="24" value="${esc(x.name)}" style="flex:1;min-width:0"><button class="btn sm" data-act="cirename" data-pid="${esc(p)}">Save</button></div>`}
+    ${ciRm?`<div class="confirm"><b>Take ${esc(x.name)} off tonight's list?</b><p class="fine">${admin&&!x.walk?'They’re removed from the session list too.':x.walk?'The walk-in is removed.':'They’re hidden from tonight’s board. An admin can take them off the session list.'}</p><div class="row" style="gap:6px"><button class="btn sm" data-act="cirmgo" data-pid="${esc(p)}">Remove</button><button class="btn ghost sm" data-act="cirmno">Keep</button></div></div>`
+      :`<button class="linkbtn danger" data-act="cirm" data-pid="${esc(p)}">Remove from tonight</button>`}<button class="linkbtn" data-act="ciedit" data-pid="">Done</button></div>`}
 /* guests and walk-ins have no card, so their level and category live on tonight's board */
 const boardLvl=(lv,pid)=>((lv&&lv.lvl)||{})[pid]||{};
 function boardRating(lv,pid){const x=boardLvl(lv,pid),r=gradeRow(x.g);return r&&x.cat?(x.cat==='W'?r[2]:r[3]):null}
@@ -247,7 +270,7 @@ function renderCourts(){
   const sid=S.courtSid,s=sid&&S.sessions[sid],lv0=sid&&S.live[sid];
   const ED=courtEd(sid),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const pick=list.length>1?`<div class="sports">${list.map(([id,x])=>{const d=dParts(x.date);return `<button class="sp" data-act="pick" data-sid="${id}" aria-pressed="${id===sid}">${ic(sportOf(x.sport).icon)}${esc(x.title)} · ${d.w} ${d.d}${S.live[id]?' ●':''}</button>`}).join('')}</div>`:'';
-  const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button>${sid&&S.live[sid]?(()=>{const v=saveState();return `<span class="tagl savest ${v[0]}" role="status">${esc(v[1])}</span>`})():''}</div>`:'';
+  const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button>${sid&&S.live[sid]&&!S.asPlayer?(()=>{const v=saveState(),h=H(sid);return `<span class="tagl savest ${v[0]}" role="status">${esc(v[1])}</span><span class="row hbtns" style="gap:4px"><button class="btn ghost sm icon" data-act="undo" ${h.u.length?'':'disabled'} aria-label="Undo" title="Undo">↶</button><button class="btn ghost sm icon" data-act="redo" ${h.r.length?'':'disabled'} aria-label="Redo" title="Redo">↷</button><button class="btn ghost sm" data-act="savenow">${ic('check')}Save now</button></span>`})():''}</div>`:'';
   const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · Courts</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
     el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&!nxt?`<button class="btn ghost sm" data-act="goadmin">${ic('plus')}Add a session</button>`:''}</div>`;bindCourts(el);return}
@@ -287,7 +310,7 @@ function renderCourts(){
         <button class="btn wide" data-act="qr">${ic('eye')}Show check-in QR code</button>
         <p class="fine">Players scan the code when they arrive. You can also check people in by name below, for guests or anyone without their phone.</p>
         <input type="text" id="ci-find" placeholder="Find a player" autocomplete="off">
-        <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button></div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
+        <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button><button class="btn sm ghost icon" data-act="ciedit" data-pid="${esc(p)}" aria-label="Edit or remove ${esc(who(sid,p).name)}">${ic('edit')}</button></div>${ciEdit===p?ciEditor(sid,p):''}</div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
         <div class="walkin"><span class="label">Walk-in</span>
           <input type="text" id="walk-name" maxlength="24" placeholder="Name: search members or add a walk-in" autocomplete="off">
           <div id="walk-sugg" class="list" aria-live="polite"></div>
@@ -333,7 +356,24 @@ function gameRow(sid,gid,g,i,mine,bare){
 }
 
 /* ---------- actions (placing players is admin-only) ---------- */
-function bindCourts(el){el.onclick=async ev=>{
+/* drag and drop: drag a player's icon onto a court spot, a waiting spot or the bench. It does exactly what tap-and-tap does. */
+function enableDrag(el){if(el._drag)return;el._drag=true;let d=null;
+  el.addEventListener('pointerdown',ev=>{const t=ev.target.closest('.pl[data-act="slot"],.pl[data-act="bench"]');if(!t||ev.button>0)return;
+    const pid=t.dataset.act==='bench'?t.dataset.pid:(()=>{const lv=S.live[S.courtSid],arr=t.dataset.k==='w'?lv.waiting:lv.courts;return (arr[+t.dataset.c]||{on:[]}).on[+t.dataset.i]})();
+    if(!pid)return;d={pid,t,x:ev.clientX,y:ev.clientY,on:false,id:ev.pointerId}});
+  el.addEventListener('pointermove',ev=>{if(!d||ev.pointerId!==d.id)return;
+    if(!d.on){if(Math.hypot(ev.clientX-d.x,ev.clientY-d.y)<8)return;d.on=true;d.g=d.t.cloneNode(true);d.g.className+=' ghost';document.body.appendChild(d.g);document.body.classList.add('dragging');try{d.t.setPointerCapture(ev.pointerId)}catch(_){}}
+    d.g.style.left=ev.clientX+'px';d.g.style.top=ev.clientY+'px';ev.preventDefault();
+    document.querySelectorAll('.droptgt').forEach(x=>x.classList.remove('droptgt'));const u=document.elementFromPoint(ev.clientX,ev.clientY);const tg=u&&u.closest('.pl[data-act="slot"],.bench,.pl[data-act="bench"]');if(tg)tg.classList.add('droptgt')},{passive:false});
+  const end=ev=>{if(!d)return;const was=d;d=null;document.querySelectorAll('.droptgt').forEach(x=>x.classList.remove('droptgt'));document.body.classList.remove('dragging');if(!was.on)return;was.g.remove();
+    el._skipClick=true;setTimeout(()=>el._skipClick=false,50);
+    const u=document.elementFromPoint(ev.clientX,ev.clientY),slot=u&&u.closest('.pl[data-act="slot"]'),bench=u&&u.closest('.bench,.pl[data-act="bench"]');
+    sel=was.pid;
+    if(slot&&slot!==was.t)el.onclick({target:slot});
+    else if(bench&&was.t.dataset.act==='slot')el.onclick({target:{closest:()=>({dataset:{act:'tobench'}})}});
+    else{sel=null;renderCourts()}};
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',ev=>{if(d&&d.g)d.g.remove();d=null;document.body.classList.remove('dragging')})}
+function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
   const b=ev.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,sid=S.courtSid;
   if(act==='sport'){S.courtSport=b.dataset.v;S.courtSid=null;sel=null;pendingDone=null;return renderCourts()}
   if(act==='goadmin'){return setView('admin')}
@@ -359,24 +399,45 @@ function bindCourts(el){el.onclick=async ev=>{
   if(act==='unci'){const p=b.dataset.pid;delete lv.checkin[p];delete lv.avail[p];detach(lv,p);return saveLive(sid,lv)}
   if(act==='order'){lv.order=b.dataset.v;return saveLive(sid,lv)}
   if(act==='unsel'){sel=null;return renderCourts()}
+  if(act==='undo'||act==='redo')return undoRedo(sid,act);
+  if(act==='savenow'){saveLive(sid,lv,{noHist:true});S.lastManual=Date.now();return}
+  if(act==='finishask'){finishAsk=+b.dataset.c;return renderCourts()}
+  if(act==='finishno'){finishAsk=null;return renderCourts()}
+  if(act==='pause'){const c=lv.courts[+b.dataset.c];if(c.st!=='playing')return;c.st='paused';c.pAt=new Date().toISOString();toast(`${c.name} is paused. The timer has stopped.`);return saveLive(sid,lv)}
+  if(act==='resume'){const c=lv.courts[+b.dataset.c];if(c.st!=='paused')return;c.pausedMs=(c.pausedMs||0)+Math.max(0,Date.now()-msOf(c.pAt));delete c.pAt;c.st='playing';toast(`${c.name} is back on.`);return saveLive(sid,lv)}
+  if(act==='close'){const c=lv.courts[+b.dataset.c];c.closed=!c.closed;toast(c.closed?`${c.name} is closed. No games go on it until you reopen it.`:`${c.name} is open again.`);return saveLive(sid,lv)}
+  if(act==='repair'){const c=lv.courts[+b.dataset.c];const four=c.on.filter(Boolean);if(four.length!==4)return;
+    const opts=[[0,1,2,3],[0,2,1,3],[0,3,1,2]],cur=opts.findIndex(o=>o.every((k,j)=>c.on[j]===four[k])),nx=opts[(cur+1)%3];c.on=nx.map(k=>four[k]);
+    const t=teamStr(sid,lv,c);toast(`New pairs${t?` · ${t}`:''}.`);return saveLive(sid,lv)}
   if(act==='cancelask'){cancelAsk=+b.dataset.c;cancelWhy='';return renderCourts()}
   if(act==='cancelno'){cancelAsk=null;return renderCourts()}
   if(act==='cancelwhy'){cancelWhy=b.dataset.v;return renderCourts()}
   if(act==='slot'){const c=arr(b.dataset.k)[+b.dataset.c],i=+b.dataset.i,cur=c.on[i];
-    if(c.st==='playing'){toast('This game has started. Finish or cancel it first.');return}
-    if(sel){const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');sel=null;return renderCourts()}}
+    if(inG(c)){toast('This game has started. Finish or cancel it first.');return}
+    if(sel){const f=locate(lv,sel);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');sel=null;return renderCourts()}}
     if(!sel){if(cur){sel=cur;renderCourts()}return}
     if(cur===sel){sel=null;return renderCourts()}
     const from=locate(lv,sel);detach(lv,sel);
     if(cur){detach(lv,cur);if(from)arr(from[0])[from[1]].on[from[2]]=cur}
     c.on[i]=sel;sel=null;return saveLive(sid,lv)}
-  if(act==='tobench'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);sel=null;return saveLive(sid,lv)}
-  if(act==='out'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&lv.courts[f[1]].st==='playing'){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
+  if(act==='tobench'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);sel=null;return saveLive(sid,lv)}
+  if(act==='out'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
   if(act==='restore'){lv.out=lv.out.filter(x=>x!==b.dataset.pid);return saveLive(sid,lv)}
   if(act==='memberin'){const u=b.dataset.pid,pp=S.profiles[u];if(!pp)return;
     if(S.canEdit&&canSport(sp)&&!S.bookings[u]?.s?.[sid]){try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:pp.listKey||'',s:(S.bookings[u]||{}).s||{}})}catch(e){toast("Couldn't add them to the session list, but they're checked in.")}}
     setBase(sid,lv,u);lv.checkin[u]=new Date().toISOString();const wn=$('walk-name');if(wn){wn.value='';wn.blur()}
     toast(`${pp.nickname} is checked in${S.canEdit&&canSport(sp)?' and on the session list':''}.`);return saveLive(sid,lv)}
+  if(act==='ciedit'){ciEdit=b.dataset.pid||null;ciRm=false;return renderCourts()}
+  if(act==='cirm'){ciRm=true;return renderCourts()}
+  if(act==='cirmno'){ciRm=false;return renderCourts()}
+  if(act==='cirename'){const p=b.dataset.pid,n=($('ci-nm')||{}).value.trim().slice(0,24);if(!n){toast('Please type a name.');return}
+    if(p.startsWith('w~')){const w=lv.walkins.find(x=>'w~'+x.id===p);if(w)w.name=n}else lv.names={...(lv.names||{}),[p]:n};
+    ciEdit=null;toast(`Saved as ${n}.`);return saveLive(sid,lv)}
+  if(act==='cirmgo'){const p=b.dataset.pid,x=who(sid,p),admin=S.canEdit&&canSport(sp);ciEdit=null;ciRm=false;
+    if(p.startsWith('w~')){lv.walkins=lv.walkins.filter(w=>'w~'+w.id!==p);delete lv.checkin[p];detach(lv,p);toast(`${x.name} removed.`);return saveLive(sid,lv)}
+    if(admin){try{if(p.startsWith('g~')){const [,host]=p.split('~');await staffBooking(host,sid,o=>o?{...o,guests:(o.guests||[]).filter(g=>gpid(host,g.n)!==p)}:undefined)}
+        else await staffBooking(p,sid,()=>null);toast(`${x.name} is off the session list.`)}catch(e){toast("Sorry, that didn't save.")}}
+    lv.hide={...(lv.hide||{}),[p]:true};detach(lv,p);delete lv.checkin[p];if(!admin)toast(`${x.name} is hidden from tonight's board.`);return saveLive(sid,lv)}
   if(act==='walkcat'){walkCat=walkCat===b.dataset.v?'':b.dataset.v;document.querySelectorAll('[data-act=walkcat]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===walkCat));return}
   if(act==='walk'){const n=$('walk-name').value.trim().slice(0,24);if(!n){toast("Please type the player's name.");return}
     const wid=slug(n)+'-'+Date.now().toString(36),wg=($('walk-g')||{}).value||'U';lv.walkins.push({id:wid,name:n});
@@ -384,10 +445,10 @@ function bindCourts(el){el.onclick=async ev=>{
   if(act==='add'){const k=b.dataset.k,size=(k==='w'&&lv.courts[0]?.size)||SIZES[sp][0][0];
     if(k==='c')lv.courts.push({id:'c'+Date.now().toString(36),name:'Court '+(lv.courts.length+1),size,on:blank(size)});else lv.waiting.push({id:'w'+Date.now().toString(36),size,on:blank(size)});return saveLive(sid,lv)}
   if(act==='wless'){const i=lv.waiting.map(w=>w.on.some(Boolean)).lastIndexOf(false);lv.waiting.splice(i>=0?i:lv.waiting.length-1,1);return saveLive(sid,lv)}
-  if(act==='del'){const c=arr(b.dataset.k)[+b.dataset.c];if(c&&c.st==='playing'){toast('Finish or cancel the game on this court first.');return}arr(b.dataset.k).splice(+b.dataset.c,1);return saveLive(sid,lv)}
-  if(act==='size'){if(arr(b.dataset.k)[+b.dataset.c].st==='playing'){toast('Finish or cancel the game on this court first.');return}const c=arr(b.dataset.k)[+b.dataset.c],n=+b.dataset.n,on=c.on.filter(Boolean);c.size=n;c.on=blank(n);on.slice(0,n).forEach((p,i)=>c.on[i]=p);
+  if(act==='del'){const c=arr(b.dataset.k)[+b.dataset.c];if(inG(c)){toast('Finish or cancel the game on this court first.');return}arr(b.dataset.k).splice(+b.dataset.c,1);return saveLive(sid,lv)}
+  if(act==='size'){if(inG(arr(b.dataset.k)[+b.dataset.c])){toast('Finish or cancel the game on this court first.');return}const c=arr(b.dataset.k)[+b.dataset.c],n=+b.dataset.n,on=c.on.filter(Boolean);c.size=n;c.on=blank(n);on.slice(0,n).forEach((p,i)=>c.on[i]=p);
     lv.waiting.forEach(w=>{if(!w.on.some(Boolean)){w.size=n;w.on=blank(n)}});return saveLive(sid,lv)}
-  if(act==='fill'){const c=arr(b.dataset.k)[+b.dataset.c];if(c.st==='playing')return;if(!generateInto(sid,lv,c)){toast('Not enough players on the bench.');return}return saveLive(sid,lv)}
+  if(act==='fill'){const c=arr(b.dataset.k)[+b.dataset.c];if(inG(c)||c.closed)return;if(!generateInto(sid,lv,c)){toast('Not enough players on the bench.');return}return saveLive(sid,lv)}
   if(act==='fmt'){const c=lv.courts[+b.dataset.c];c.fmt=(c.fmt||suggestFmt(sid,lv))===21?30:21;return saveLive(sid,lv)}
   if(act==='begin'){const c=lv.courts[+b.dataset.c],half=c.size/2;
     if(!c.on.slice(0,half).some(Boolean)||!c.on.slice(half).some(Boolean)){toast('Please put players on both sides first.');return}
@@ -395,25 +456,28 @@ function bindCourts(el){el.onclick=async ev=>{
     toast(`${c.name} has started${c.fmt?' · to '+c.fmt:''}.`);return saveLive(sid,lv)}
   if(act==='finish'||act==='cancelgo'){const ci=+b.dataset.c,c=lv.courts[ci],half=c.size/2,a=c.on.slice(0,half).filter(Boolean),bb=c.on.slice(half).filter(Boolean),now=new Date().toISOString();
     cancelAsk=null;
-    if(act==='cancelgo'&&c.st!=='playing'){c.on=blank(c.size);delete c.fmt;toast(`${c.name} is clear.`);return saveLive(sid,lv)}
+    finishAsk=null;
+    if(act==='cancelgo'&&!inG(c)){c.on=blank(c.size);delete c.fmt;toast(`${c.name} is clear.`);return saveLive(sid,lv)}
     const names={};[...a,...bb].forEach(p=>names[p]=who(sid,p).name);
     /* the game record: teams, court, format and both clocks. Finish frees the court; the score comes from the players and Support. */
     const g={v:2,sid,sport:sp,court:c.name,a,b:bb,names,fmt:c.fmt||null,st:act==='finish'?'review':'cancelled',start:isFinite(msOf(c.t0))?c.t0:null,startDev:c.t0dev||null,end:SVT(),endDev:now,at:now};
     if(act==='cancelgo'){g.reason=cancelWhy||'Other';g.interrupted=true;g.by=S.uid}
+    g.pausedMs=(c.pausedMs||0)+(c.st==='paused'?Math.max(0,Date.now()-msOf(c.pAt)):0);
     const gid=sid+'-'+Date.now().toString(36);
     try{await S.db.doc('games/'+gid).set(g)}catch(e){toast("Sorry, the game didn't save. Please try again.");return}
     S.gSess[gid]={...g,start:g.start||null,end:null};mergeGames();   /* count it now, before the next lineup is picked */
     if(act==='finish')[...a,...bb].forEach(p=>lv.avail[p]=now);      /* cancelled: they keep their place in line */
-    c.on=blank(c.size);delete c.st;delete c.t0;delete c.t0dev;delete c.fmt;cancelWhy='';
+    c.on=blank(c.size);delete c.st;delete c.t0;delete c.t0dev;delete c.fmt;delete c.pausedMs;delete c.pAt;cancelWhy='';
     /* bring on the next prepared lineup, or generate one straight onto the free court */
     const nx=lv.waiting[0];let msg;
-    if(nx&&nx.on.some(Boolean)){if(nx.size===c.size)c.on=[...nx.on];else nx.on.filter(Boolean).slice(0,c.size).forEach((p,i)=>c.on[i]=p);
+    if(c.closed)msg=`${c.name} is closed.`;
+    else if(nx&&nx.on.some(Boolean)){if(nx.size===c.size)c.on=[...nx.on];else nx.on.filter(Boolean).slice(0,c.size).forEach((p,i)=>c.on[i]=p);
       lv.waiting.shift();lv.waiting.push({id:'w'+Date.now().toString(36),size:nx.size,on:blank(nx.size)});msg=`Next up is on ${c.name}.`}
     else msg=generateInto(sid,lv,c)?`Next four are on ${c.name}.`:`${c.name} is free.`;
     /* keep Next up prepared so players can see who's coming */
     if(lv.waiting[0]&&!lv.waiting[0].on.some(Boolean))generateInto(sid,lv,lv.waiting[0]);
     toast((act==='finish'?'Game finished. ':'Game cancelled. ')+msg);
-    return saveLive(sid,lv)}
+    return saveLive(sid,lv,{gid,game:g})}
 }}
 
 /* ---------- board: points or club rank ---------- */

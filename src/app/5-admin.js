@@ -22,7 +22,8 @@ function renderAdmin(){
   const T=ATABS.find(t=>t[0]===aTab)||ATABS[0];
   const nav=`<nav class="anav" aria-label="Admin sections">${TABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
   const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,payments:aPayments,shop:aShop,settings:aSettings}[aTab]||aToday)(list,up);
-  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><h2>${T[1]}</h2></div>${nav}<div class="abody">${body}</div></div>`;
+  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><div class="row" style="justify-content:space-between;align-items:flex-end;gap:10px"><h2>${T[1]}</h2><button class="btn ghost sm" id="a-signup">${ic('card')}Sign-up QR</button></div></div>${nav}<div class="abody">${body}</div></div>`;
+  const sq=$('a-signup');if(sq)sq.onclick=showSignupQR;
   bindAdmin();const act=el.querySelector('.anav [aria-current="page"]');if(act&&innerWidth<1000)act.scrollIntoView({block:'nearest',inline:'center'});
 }
 
