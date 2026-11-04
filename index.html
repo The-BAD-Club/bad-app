@@ -894,6 +894,7 @@ html.guest .jointop{margin-left:0}
 .phfoot{display:block;line-height:1.8}.phfoot svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:6px}.phfoot a{color:inherit}
 .phome .hsess{border:1px solid var(--line)!important;box-shadow:none!important;outline:0}.phome .list{gap:8px}
 .story p{margin:0 0 10px;max-width:60ch;line-height:1.55;color:var(--muted)}.story p b{color:var(--ink);font-weight:600}.story p:last-child{margin-bottom:0}details.story p:first-of-type{margin-top:10px}
+.phero h2.phtitle{font-family:inherit;font-size:clamp(1.6rem,7vw,2.6rem);margin:0}
 
 </style>
 
@@ -1044,8 +1045,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.26';
+const APP_VERSION='0.27';
 const CHANGES=[
+  ['0.27','2026-11-04','Home opens with THE BAD CLUB'],
   ['0.26','2026-11-04','Home for first-time visitors: why we made BAD in three short paragraphs, and Your first time in three steps'],
   ['0.25','2026-11-04','Simpler Home: Bold. Agile. Defiant., one line about BAD, Join BAD, the next 3 sessions, the departments and one line on points'],
   ['0.24','2026-11-04','Home and the loading screen use the BAD logo, with Bold. Agile. Defiant. small in the bottom-left corner while loading; visitors see the real upcoming sessions on Home; house rules now apply to every department, Side Quest and event'],
@@ -3781,7 +3783,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const first=[['card','Make your card','Free, and it takes a minute.'],['play','Pick a session','Book your spot in Play.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
   el.innerHTML=`<div class="phome">
     <section class="phero">
-      ${MANIFESTO}
+      <h2 class="manifesto phtitle">THE BAD CLUB</h2>
       <p class="muted">A Dubai sports community. Every level is welcome.</p>
       ${cta}
     </section>

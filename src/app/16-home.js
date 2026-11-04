@@ -20,7 +20,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const first=[['card','Make your card','Free, and it takes a minute.'],['play','Pick a session','Book your spot in Play.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
   el.innerHTML=`<div class="phome">
     <section class="phero">
-      ${MANIFESTO}
+      <h2 class="manifesto phtitle">THE BAD CLUB</h2>
       <p class="muted">A Dubai sports community. Every level is welcome.</p>
       ${cta}
     </section>
