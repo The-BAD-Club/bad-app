@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.21';
+const APP_VERSION='0.22';
 const CHANGES=[
+  ['0.22','2026-11-04','Shop: every FRAGMENTS pre-order (THE RITUAL SET, BADASS shorts, REVERSE jersey) with pictures and prices; the full Volume II lineup with its product photos, Clubhouse Kit shown sold out, Rally Towel and Socks AED 55; sold-out products stay visible; edit a session from Admin → Sessions'],
   ['0.21','2026-11-04','House rules (Guide and Play): play with anyone, respect the rotation, check in, drop out early, pay, call it honestly, respect everyone, leave it better, photos; BOLD. AGILE. DEFIANT. on Home and the Guide; no promise of balanced games anywhere'],
   ['0.20','2026-11-04','Nobody skips the waiting list: it is first come, first served; Core and up now get sign-ups 48 hours early instead (Members 24 hours); BADge colours: Rookie white, Member black, Core silver, Legend titanium, Founder vanta; delete a session from Admin → Sessions'],
   ['0.19','2026-11-04','Drag players up or down the Arrived list (grab the number); points now reset after 6 months without playing; the Guide and Home show how many sessions or Side Quests make a free session'],

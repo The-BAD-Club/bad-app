@@ -4,7 +4,7 @@ let adminSid=null;
 const nameOf=(uid,key)=>S.profiles[uid]?.nickname||S.bookings[uid]?.name||allKeys()[key]||key||'Unknown';
 function mcpErr(e){const c=e&&e.code;return c==='server_not_connected'?'Add Google Sheets in claude.ai Settings → Connectors.':c==='needs_reauth'?'Reconnect Google Sheets in claude.ai Settings → Connectors.':(c==='not_in_manifest'||c==='approval_required')?'Allow Google Sheets for this page, then try again.':(e&&e.message)||'Something went wrong.'}
 
-let aTab='today',showNew=false,showPast=false,adminPicked=false;
+let aTab='today',showNew=false,editSid=null,showPast=false,adminPicked=false;
 const ATABS=[['today','Today','clock'],['sessions','Sessions','ticket'],['players','Players','users'],['points','Points & BADges','coin'],['posts','Club posts','club'],['payments','Payments','wallet'],['shop','Shop','bag'],['settings','Settings','admin']];
 const fmtS=x=>{const d=dParts(x.date);return `${d.w} ${d.d} ${d.m}`};
 const unpaidOf=sid=>{const r=roster(sid);return r.in.filter(e=>!e.guest&&!S.payments[sid]?.[e.uid]?.ok)};
@@ -72,21 +72,24 @@ function aSessions(list,up){
   const shown=showPast?list.slice().reverse():up.concat(s&&!up.some(([i])=>i===adminSid)?[[adminSid,s]]:[]);
   const picker=`<div class="sports" role="group" aria-label="Pick a session">${shown.map(([id,x])=>`<button type="button" class="sp" data-sid="${esc(id)}" aria-pressed="${id===adminSid}">${ic(sportOf(x.sport).icon)}${fmtS(x)} · ${esc(x.title)}</button>`).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
     <div class="row" style="justify-content:space-between"><label class="chip sm"><input type="checkbox" id="a-past" ${showPast?'checked':''}> Show past sessions</label><button class="btn sm${showNew?' ghost':''}" id="a-new">${showNew?ic('x')+'Close':ic('plus')+'Add a session'}</button></div>`;
-  const form=showNew?box('Add a session',`
-    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).filter(canSport).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===newSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
+  /* the same form adds a session or edits one (editSid) */
+  const E=editSid&&S.sessions[editSid]?S.sessions[editSid]:null,sp0=newSport,v=(k,d)=>esc(E&&E[k]!=null&&E[k]!==''?E[k]:d);
+  const form=showNew||E?box(E?'Edit session':'Add a session',`
+    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).filter(canSport).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===sp0}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
     <div class="fgrid">
-      <div class="field"><label for="n-title">Name</label><input type="text" id="n-title" value="${esc(defaultTitle(newSport))}"></div>
-      <div class="field"><label for="n-date">Date</label><input type="date" id="n-date"></div>
-      <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
-      <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
-      <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
-      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:newSport==='badminton'?16:20}"></div>
-      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${newSport==='badminton'?4:''}"></div>
-      ${COURT_SPORTS.includes(newSport)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${DEF_COURTS[newSport]||1}"></div>`:''}
-      <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div>
-      <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens"><p class="fine">Leave blank to open straight away. Member level and up can join 24 hours before this.</p></div></div>
-    <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc"> Time to be confirmed</label>
-    <div class="row"><button class="btn" id="n-go">${ic('plus')}Post session</button></div>`,'formbox'):'';
+      <div class="field"><label for="n-title">Name</label><input type="text" id="n-title" value="${v('title',defaultTitle(sp0))}"></div>
+      <div class="field"><label for="n-date">Date</label><input type="date" id="n-date" value="${v('date','')}"></div>
+      <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${v('start',sp0==='volleyball'?'19:00':'20:00')}"></div>
+      <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${v('end',sp0==='volleyball'?'22:30':'22:00')}"></div>
+      <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="${v('fee',40)}"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${v('capacity',sp0==='volleyball'?18:sp0==='pickleball'?16:sp0==='badminton'?16:20)}"></div>
+      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${E?(E.waitCap==null?'':esc(E.waitCap)):(sp0==='badminton'?4:'')}"></div>
+      ${COURT_SPORTS.includes(sp0)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${v('courts',DEF_COURTS[sp0]||1)}"></div>`:''}
+      <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue" value="${v('venue','')}"></div>
+      <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens" value="${v('opens','')}"><p class="fine">Leave blank to open straight away. Members can join 24 hours before this, Core and up 48 hours before.</p></div></div>
+    <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc" ${E&&E.timeTbc?'checked':''}> Time to be confirmed</label>
+    ${E?`<p class="fine">Changes show for everyone straight away. People already signed up stay signed up.</p>`:''}
+    <div class="row">${E?`<button class="btn" id="n-save">${ic('check')}Save changes</button><button class="btn ghost" id="n-cancel">Cancel</button>`:`<button class="btn" id="n-go">${ic('plus')}Post session</button>`}</div>`,'formbox'):'';
   if(!s)return picker+form+'<div class="empty">No sessions yet.</div>';
   const paid=r.in.filter(e=>!e.guest&&S.payments[adminSid]?.[e.uid]?.ok).length,owed=owedOf(adminSid);
   const nm=e=>e.guest?`${esc(e.guest)} <span class="tagl">Guest of ${esc(nameOf(e.uid,e.key))}</span>`:esc(nameOf(e.uid,e.key))+(S.bookings[e.uid]?.guest?' <span class="tagl">Guest</span>':'')+(S.bookings[e.uid]?.s?.[adminSid]?.byAdmin?' <span class="tagl">Added by admin</span>':'');
@@ -95,7 +98,7 @@ function aSessions(list,up){
   return `${picker}${form}
   <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))+'–'+esc(fmtTime(s.end||''))} · AED ${esc(s.fee)}</span><h3 class="big">${esc(s.title)}</h3>
     <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
-    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}<button class="btn ghost sm" id="s-delask">${ic('x')}Delete</button></div>
+    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}<button class="btn ghost sm" id="s-edit">${ic('edit')}Edit</button><button class="btn ghost sm" id="s-delask">${ic('x')}Delete</button></div>
     ${S.delAsk===adminSid?(()=>{const n=r.in.length+r.wait.length;return `<div class="confirm"><b>Delete ${esc(s.title)} for good?</b><p class="fine">${n?`${n} ${n===1?'person is':'people are'} signed up. Deleting doesn't tell them. To let them know by email, use Cancel session instead.`:'No one has signed up yet.'} The court board for this session goes too. This can't be undone.</p><div class="row" style="gap:6px"><button class="btn sm" id="s-delgo">Delete session</button><button class="btn ghost sm" id="s-delno">Keep it</button></div></div>`})():''}
     ${cancelOpen&&!s.cancelled?cancelPanel(adminSid,s,r):''}</div>
   ${payDash(adminSid,s,r)}
@@ -267,7 +270,14 @@ function bindAdmin(){
   q('[data-courts]').forEach(b=>b.onclick=()=>{S.courtSport=b.dataset.courts;setView('courts')});
   q('.sp[data-sid]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sid;adminPicked=true;renderAdmin()});
   const past=$('a-past');if(past)past.onchange=()=>{showPast=past.checked;renderAdmin()};
-  on('a-new',()=>{showNew=!showNew;renderAdmin()});
+  on('a-new',()=>{showNew=!showNew;editSid=null;renderAdmin()});
+  on('s-edit',()=>{editSid=adminSid;showNew=false;const x=S.sessions[adminSid];if(x)newSport=x.sport||'badminton';renderAdmin();scrollTo({top:0})});
+  on('n-cancel',()=>{editSid=null;renderAdmin()});
+  on('n-save',async()=>{const sid=editSid,old=S.sessions[sid];if(!old)return;const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
+    const sp=newSport||old.sport||'badminton';if(!canSport(sp)){toast('You can only move sessions to your own departments.');return}
+    const d={sport:sp,date,start:$('n-start').value||old.start||'20:00',end:$('n-end').value||old.end||'22:00',timeTbc:$('n-tbc').checked,title:$('n-title').value.trim()||old.title,fee:Number($('n-fee').value)||0,capacity:Math.max(1,Number($('n-cap').value)||old.capacity||20),
+      waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):(old.courts??null),venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''};
+    try{await S.db.doc('sessions/'+sid).update(d);editSid=null;toast('Session updated.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   q('#a-plist [data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,'',x.dataset.gk,x.value));
   q('#a-plist [data-greset]').forEach(x=>x.onclick=()=>saveGrade(x.dataset.greset,'','ovr',''));
   const aq=$('a-q');if(aq)aq.oninput=()=>{const v=aq.value.trim().toLowerCase();q('#a-plist [data-q]').forEach(li=>li.hidden=!!v&&!li.dataset.q.includes(v))};
