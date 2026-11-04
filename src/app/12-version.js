@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.48';
+const APP_VERSION='0.49';
 const CHANGES=[
+  ['0.49','2026-11-05','WTH is BAD and the Gallery use the club photos (sessions, VolleyBAD, Taste BADs, BAD-O-WEEN, the Off-Court shoot) (the Gallery shows them as BAD moments until event albums are added); stills from the film are gone; landscape photos get a wider frame'],
   ['0.48','2026-11-05','Home: Join BAD sits right after the video'],
   ['0.47','2026-11-05','Home: A COMMUNITY BUILT LIKE A BRAND in regular capitals'],
   ['0.46','2026-11-05','Home: A COMMUNITY BUILT LIKE A BRAND in thin capitals'],

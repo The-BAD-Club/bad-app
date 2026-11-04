@@ -933,6 +933,10 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
 .vh-snd{position:absolute;top:14px;right:14px;z-index:2;width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.35);color:#fff;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px)}
 .vh-snd .i{width:20px;height:20px}
 @media(min-width:760px){.vhero{margin:0;border-radius:28px;aspect-ratio:4/3}.vh-in{padding:32px}.vh-in .phtitle{font-size:3rem!important}}
+.hstrip figure.wide{flex-basis:92%;max-width:520px;aspect-ratio:3/2}.hstrip.sm figure.wide{flex-basis:70%}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pgrid figure{margin:0;border-radius:14px;overflow:hidden;aspect-ratio:4/5;background:#0d0d0d}.pgrid figure.wide{grid-column:1/-1;aspect-ratio:3/2}.pgrid img{width:100%;height:100%;object-fit:cover;display:block}
+@media(min-width:760px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:480px){.hstats.h3{grid-template-columns:repeat(2,minmax(0,1fr))!important}.hstats.h3 .tile:first-child{grid-column:1/-1}}.hstats .tile{min-width:0}.hstats .tile .label{overflow-wrap:anywhere}
 </style>
 
 <div class="wrap">
