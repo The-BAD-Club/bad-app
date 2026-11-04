@@ -54,6 +54,7 @@ function faqList(){const c=PS();return [
   ['About BAD',[
     ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
     ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
+    ['What does BAD stand for?','BAD came from BADminton. Bold. Agile. Defiant. came later, as something to live by: bold enough to try something different, agile enough to adapt as we go, and defiant enough to question the norm.'],
     ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
     ['Is BAD a registered company?','Yes. The BAD Club LLC, License No. 2649469.01.'],
     ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
@@ -81,7 +82,6 @@ function renderFaq(){const el=$('v-faq');if(!el)return;
 function renderWth(){const el=$('v-wth');if(!el)return;
   el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">WTH is BAD</span><h2>We were all BAD players once.</h2></div>
   ${homePhotosHTML(true)}<section class="hsec story">${STORY_HTML}</section>
-  <section class="hsec"><h3 class="ah">What we stand for</h3><p class="manifesto wthm">Bold. Agile. Defiant.</p><p class="fine"><b>Bold</b> enough to put our ideas out there and try something different. <b>Agile</b> enough to change, adapt and figure things out as we go. <b>Defiant</b> enough to question the norm.</p></section>
   <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="faq">FAQs</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}

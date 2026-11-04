@@ -93,3 +93,4 @@ html.guest .gate-back{padding:8px 0}
 .phome .list .li>.ic-bub,.phome .bigfaq>.ic-bub,.phome .igcard>:first-child{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;justify-self:start}
 .phome .bigfaq b{font-size:1.05rem}
 .phome .homelinks button{border-radius:18px;padding:12px 14px}
+footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
