@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.44';
+const APP_VERSION='0.45';
 const CHANGES=[
+  ['0.45','2026-11-05','Bold. Agile. Defiant. now lives only in the FAQs under About BAD (removed from the footer and the WTH is BAD page)'],
   ['0.44','2026-11-05','Home: THE BAD CLUB, a community built like a brand.'],
   ['0.43','2026-11-05','Home: no photo strip before the FAQs; every Home card shares one border, icon column and text alignment'],
   ['0.42','2026-11-05','Design pass on every screen: the footer leads with The BAD Club LLC and its licence number (also on the sign-in screen); old footer taglines removed; list rows line up left; BADges and stats tiles tidied; bigger tap areas for Back and Sign out; shorter labels where text was cut off'],

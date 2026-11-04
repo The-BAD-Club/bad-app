@@ -1034,6 +1034,7 @@ html.guest .gate-back{padding:8px 0}
 .phome .list .li>.ic-bub,.phome .bigfaq>.ic-bub,.phome .igcard>:first-child{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;justify-self:start}
 .phome .bigfaq b{font-size:1.05rem}
 .phome .homelinks button{border-radius:18px;padding:12px 14px}
+footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
 
 </style>
 
@@ -1074,7 +1075,7 @@ html.guest .gate-back{padding:8px 0}
   <section class="view" id="v-board" hidden></section>
   <section class="view" id="v-shop" hidden></section>
   <section class="view" id="v-admin" hidden></section>
-  <footer class="sign"><span class="legal"><b>The BAD Club LLC</b><span>License No. 2649469.01</span></span><span class="sig-line">Bold. Agile. Defiant.</span><button class="signout" onclick="badSignOut()">Sign out</button></footer>
+  <footer class="sign"><span class="legal"><b>The BAD Club LLC</b><span>License No. 2649469.01</span></span><button class="signout" onclick="badSignOut()">Sign out</button></footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="photo-in" accept="image/*" hidden>
@@ -1183,8 +1184,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.44';
+const APP_VERSION='0.45';
 const CHANGES=[
+  ['0.45','2026-11-05','Bold. Agile. Defiant. now lives only in the FAQs under About BAD (removed from the footer and the WTH is BAD page)'],
   ['0.44','2026-11-05','Home: THE BAD CLUB, a community built like a brand.'],
   ['0.43','2026-11-05','Home: no photo strip before the FAQs; every Home card shares one border, icon column and text alignment'],
   ['0.42','2026-11-05','Design pass on every screen: the footer leads with The BAD Club LLC and its licence number (also on the sign-in screen); old footer taglines removed; list rows line up left; BADges and stats tiles tidied; bigger tap areas for Back and Sign out; shorter labels where text was cut off'],
@@ -4230,6 +4232,7 @@ function faqList(){const c=PS();return [
   ['About BAD',[
     ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
     ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
+    ['What does BAD stand for?','BAD came from BADminton. Bold. Agile. Defiant. came later, as something to live by: bold enough to try something different, agile enough to adapt as we go, and defiant enough to question the norm.'],
     ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
     ['Is BAD a registered company?','Yes. The BAD Club LLC, License No. 2649469.01.'],
     ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
@@ -4257,7 +4260,6 @@ function renderFaq(){const el=$('v-faq');if(!el)return;
 function renderWth(){const el=$('v-wth');if(!el)return;
   el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">WTH is BAD</span><h2>We were all BAD players once.</h2></div>
   ${homePhotosHTML(true)}<section class="hsec story">${STORY_HTML}</section>
-  <section class="hsec"><h3 class="ah">What we stand for</h3><p class="manifesto wthm">Bold. Agile. Defiant.</p><p class="fine"><b>Bold</b> enough to put our ideas out there and try something different. <b>Agile</b> enough to change, adapt and figure things out as we go. <b>Defiant</b> enough to question the norm.</p></section>
   <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="faq">FAQs</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
