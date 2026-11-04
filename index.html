@@ -893,6 +893,7 @@ html.guest .jointop{margin-left:0}
 .dchip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md,14px);font-weight:600;font-size:.88rem;min-width:0}.dchip svg.i{flex:none;width:20px;height:20px}.dchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .phfoot{display:block;line-height:1.8}.phfoot svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:6px}.phfoot a{color:inherit}
 .phome .hsess{border:1px solid var(--line)!important;box-shadow:none!important;outline:0}.phome .list{gap:8px}
+.story p{margin:0 0 10px;max-width:60ch;line-height:1.55;color:var(--muted)}.story p b{color:var(--ink);font-weight:600}.story p:last-child{margin-bottom:0}details.story p:first-of-type{margin-top:10px}
 
 </style>
 
@@ -1043,8 +1044,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.25';
+const APP_VERSION='0.26';
 const CHANGES=[
+  ['0.26','2026-11-04','Home for first-time visitors: why we made BAD in three short paragraphs, and Your first time in three steps'],
   ['0.25','2026-11-04','Simpler Home: Bold. Agile. Defiant., one line about BAD, Join BAD, the next 3 sessions, the departments and one line on points'],
   ['0.24','2026-11-04','Home and the loading screen use the BAD logo, with Bold. Agile. Defiant. small in the bottom-left corner while loading; visitors see the real upcoming sessions on Home; house rules now apply to every department, Side Quest and event'],
   ['0.23','2026-11-04','Public Home: anyone can see The BAD Club (who we are, every week, what we do, the departments, why join, house rules, Instagram) without signing in, and sign in from there; your own page is now called My BAD; while the app loads only The BAD Club logo shows, never the registration screen'],
@@ -3773,12 +3775,18 @@ function renderHome(){const el=$('v-home');if(!el)return;
     ?`<div class="row"><button class="btn" data-hjoin="1">${ic('card')}Join BAD</button></div>`
     :`<div class="row"><button class="btn" data-hgo="card">${ic('card')}${me?'Open My BAD':'Make my card'}</button><button class="btn ghost" data-hgo="play">${ic('play')}Find a session</button></div>`;
   const depts=Object.keys(SPORTS).filter(k=>k!=='vibe');
+  const story=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
+      <p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p>
+      <p>BAD is still a passion project, a community built like a brand. It started with badminton and now plays volleyball, pickleball, basketball, runs and dances too.</p>`;
+  const first=[['card','Make your card','Free, and it takes a minute.'],['play','Pick a session','Book your spot in Play.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
   el.innerHTML=`<div class="phome">
     <section class="phero">
       ${MANIFESTO}
-      <p class="muted">A Dubai sports community. Every level is welcome, and everyone plays with everyone.</p>
+      <p class="muted">A Dubai sports community. Every level is welcome.</p>
       ${cta}
     </section>
+    ${guest?`<section class="hsec story"><h3 class="ah">Why we made BAD</h3>${story}</section>`:`<details class="hsec how story"><summary class="ah">Why we made BAD</summary>${story}</details>`}
+    ${guest?`<section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>`:''}
     ${next.length?`<section class="hsec"><div class="sec-h"><h3 class="ah">Coming up</h3><button class="linkbtn" data-hgo="play">See all${ic('arrow')}</button></div><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`}
     <section class="hsec"><h3 class="ah">Departments</h3><div class="dgrid">${depts.map(k=>`<div class="dchip">${ic(SPORTS[k].icon)}<span>${esc(k==='training'?'Training':SPORTS[k].club)}</span></div>`).join('')}</div></section>
