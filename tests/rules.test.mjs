@@ -346,7 +346,7 @@ test('jersey numbers belong to one player', async () => {
 // ---------- crew (admin role): courts and check-in for their department only ----------
 test('crew run the board for their department, nothing more', async () => {
   const c = ctx('cr1', 'crewa@x.com');
-  await assertSucceeds(setDoc(doc(c, 'live', SID), { rev: 1, courts: [] }));                       // badminton board
+  await assertSucceeds(setDoc(doc(c, 'live', SID), { rev: 4, courts: [] }));                       // badminton board
   await assertFails(setDoc(doc(c, 'live', VSID), { rev: 1, courts: [] }));                          // not volleyball
   await assertSucceeds(setDoc(doc(c, 'noshows', 'ns-fei'), { player: 'fei', name: 'Fei', dates: [SID] }));
   await assertFails(updateDoc(doc(c, 'sessions', SID), { capacity: 30 }));                          // no session changes
