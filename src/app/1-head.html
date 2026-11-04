@@ -832,6 +832,29 @@ details.rules .hrules{margin-top:10px}
 .slist-a .li{border:1px solid var(--line);border-radius:var(--r-md,14px);padding:10px 12px}
 .sedit{display:inline-flex;align-items:center;gap:4px;font-size:.8rem}.sedit svg.i{width:13px;height:13px}
 .og100{font-size:.62rem;letter-spacing:.12em;text-transform:none;white-space:nowrap;opacity:.9}.og100 b{font-weight:900}
+.pc .stats.cbadge{align-items:center}.pc .cb-lv{display:inline-flex;align-items:center;gap:10px;min-width:0}.pc .cb-art{flex:none;width:34px;height:34px;display:block}.pc .cb-lv b{font-size:1rem;letter-spacing:.08em;text-transform:uppercase}
+.mini .pc .cb-art{width:26px;height:26px}
+/* Shop, minimal: no frames, no tiles, smaller pictures on the page background */
+.pgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 12px}
+@media (min-width:700px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:26px 18px}}
+@media (min-width:1100px){.pgrid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.pimg{aspect-ratio:1;background:none;border-radius:0;overflow:visible}
+.pimg img{object-fit:contain;padding:6%}
+.pcard:hover .pimg img{transform:scale(1.04)}
+.pimg .ptag{position:absolute;left:0;top:0;background:none;color:var(--muted);padding:0;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.pimg .ptag.dark{background:none;color:var(--ink)}
+.pmeta b{font-size:.82rem;font-weight:600;letter-spacing:.02em}.pmeta .num{font-size:.8rem}.pmeta .fine{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase}
+.v2,.preo{padding:0;border:0;background:none;border-radius:0;gap:14px}
+.preo-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:560px){.preo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.preo-img{aspect-ratio:1;border-radius:0;background-color:transparent;background-size:contain}
+.pth{width:30px;height:30px;border:0;border-radius:0;background-color:transparent;background-size:contain;opacity:.45}.pth.on{opacity:1;border:0;box-shadow:0 2px 0 var(--ink)}
+.preo-meta b{font-size:.85rem}.preo-meta p{display:none}.preo-meta .btn{margin-top:4px}
+html.nocard .tabs button:not([data-v=home]){display:none}
+.gpass{margin-top:6px;border:1px solid var(--line);border-radius:var(--r-md,14px);padding:12px 14px}.gpass summary{cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;list-style:none}.gpass summary::-webkit-details-marker{display:none}.gpass[open]{display:grid;gap:10px}.gpass .fgrid{margin:0}
+.gpnote{margin:4px 0}
+.pimg{position:relative;overflow:hidden}.pimg img{position:absolute;inset:18px 0 0;width:100%;height:calc(100% - 18px);object-fit:contain}
+.pgrid,.preo-grid{min-width:0}.pcard,.preo-item{min-width:0}.pmeta,.preo-meta{min-width:0;overflow-wrap:anywhere}
 </style>
 
 <div class="wrap">

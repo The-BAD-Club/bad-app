@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.28 | 2026-11-04 | Card: pick your colour (black, white or grey), the BADge icon on the front, no LVL; cleaner Shop with no frames and smaller pictures; check-in QR on every session (Admin list and session cards); sign-up QR on My BAD for admins; people without a card only see Home; quick guest pass for trials (name and mobile); BOLD. AGILE. DEFIANT. only small, bottom left |
 | 0.27 | 2026-11-04 | Home opens with THE BAD CLUB |
 | 0.26 | 2026-11-04 | Home for first-time visitors: why we made BAD in three short paragraphs, and Your first time in three steps |
 | 0.25 | 2026-11-04 | Simpler Home: Bold. Agile. Defiant., one line about BAD, Join BAD, the next 3 sessions, the departments and one line on points |
