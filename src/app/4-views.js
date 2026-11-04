@@ -19,21 +19,27 @@ function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-l
 
 /* ---------- sessions logic ---------- */
 const sessStart=s=>at(s.date,s.start||'20:00');
-/* sign-ups can open at a set time; Member level and up get in 24 hours early */
+/* sign-ups can open at a set time; Members get in 24 hours early, Core and up 48 hours early */
 const opensMs=s=>s&&s.opens?+at(s.opens.slice(0,10),s.opens.slice(11,16)||'00:00'):0;
-function signupState(s,uid){const o=opensMs(s),now=Date.now();if(!o||now>=o)return{open:true};if(perk.early(uid)&&now>=o-864e5)return{open:true,early:true};return{open:false,opens:o,earlyAt:o-864e5}}
+function signupState(s,uid){const o=opensMs(s),now=Date.now();if(!o||now>=o)return{open:true};const lead=perk.early48(uid)?2*864e5:perk.early(uid)?864e5:0;if(lead&&now>=o-lead)return{open:true,early:true};return{open:false,opens:o,earlyAt:o-(lead||864e5)}}
 function roster(sid){
   const s=S.sessions[sid];const cap=Number(s?.capacity)||20;
   const all=[];for(const [uid,b] of Object.entries(S.bookings)){const x=b.s&&b.s[sid];if(!x)continue;
     all.push({uid,key:b.key,at:x.at,out:x.out||null,guest:null});
     (x.guests||[]).forEach((g,gi)=>all.push({uid,key:b.key,at:g.at,out:g.out||x.out||null,guest:g.n,gi}))}
-  const sorted=all.filter(e=>!e.out).sort((a,b)=>a.at.localeCompare(b.at)),pri=e=>!e.guest&&typeof perk!=='undefined'&&perk.skipWait(e.uid)?1:0;
-  /* Core level and up skip ahead of the waitlist */
-  const active=sorted.slice(0,cap).concat(sorted.slice(cap).sort((a,b)=>pri(b)-pri(a)||a.at.localeCompare(b.at)));
-  const late=all.filter(e=>e.out).map(e=>{const ahead=all.filter(o=>o.at<e.at&&(!o.out||o.out>e.out)).length;return{...e,wasIn:ahead<cap,fee:feeFor(s,e.out)}}).filter(e=>e.wasIn&&e.fee.amount>0);
-  /* the waiting list can have a limit (badminton: 4); anyone past it is turned away when they try to join */
+  /* Nobody skips the waiting list: it is strictly first come, first served. Joins and drop-outs are replayed in time
+     order: you're in if there was room when you joined, otherwise you join the waiting list (if it has room).
+     Core level and up get their priority earlier instead: sign-ups open to them 48 hours early (Members: 24 hours). */
   const wc=s&&s.waitCap!=null&&s.waitCap!==''?Number(s.waitCap):Infinity;
-  return{cap,wc,in:active.slice(0,cap),wait:active.slice(cap,cap+wc),over:active.slice(cap+wc),late};
+  const ev=[];all.forEach(e=>{ev.push([e.at,0,e]);if(e.out)ev.push([e.out,1,e])});ev.sort((a,b)=>String(a[0]).localeCompare(String(b[0]))||a[1]-b[1]);
+  let inn=[],wait=[],over=[];const rank=(a,b)=>a.at.localeCompare(b.at);
+  for(const [,k,e] of ev){if(k===0){if(inn.length<cap)inn.push(e);else if(wait.length<wc){wait.push(e);wait.sort(rank)}else over.push(e)}
+    else{const i=inn.indexOf(e);if(i>=0){inn.splice(i,1);if(wait.length)inn.push(wait.shift())}else{wait=wait.filter(x=>x!==e);over=over.filter(x=>x!==e)}
+      while(wait.length<wc&&over.length){wait.push(over.shift());wait.sort(rank)}}}
+  /* a raised cap lets the next people in line in */
+  while(inn.length<cap&&wait.length){inn.push(wait.shift());if(over.length&&wait.length<wc){wait.push(over.shift());wait.sort(rank)}}
+  const late=all.filter(e=>e.out).map(e=>{const ahead=all.filter(o=>o.at<e.at&&(!o.out||o.out>e.out)).length;return{...e,wasIn:ahead<cap,fee:feeFor(s,e.out)}}).filter(e=>e.wasIn&&e.fee.amount>0);
+  return{cap,wc,in:inn.filter(e=>!e.out).sort((a,b)=>a.at.localeCompare(b.at)),wait:wait.filter(e=>!e.out),over:over.filter(e=>!e.out),late};
 }
 function feeFor(s,whenIso){const h=(sessStart(s)-new Date(whenIso))/36e5,f=Number(s.fee)||0;
   if(h>=CFG.freeHours)return{amount:0,label:'No charge'};if(h>=CFG.halfHours)return{amount:f/2,label:'Half fee'};return{amount:f,label:'Full fee'}}
@@ -67,7 +73,7 @@ async function staffBooking(uid,sid,fn,base){const cur=S.bookings[uid]||base||{s
   const e=fn(o);if(e===undefined)return;if(e===null)delete s[sid];else s[sid]=e;
   const {op,u,...rest}=cur;await S.db.doc('bookings/'+uid).set({...rest,s,op:{sid,kind:'admin'},u:SVT()})}
 const isCancelled=sid=>!!(S.sessions[sid]&&S.sessions[sid].cancelled);
-const isFull=sid=>{const r=roster(sid);return r.in.length>=r.cap&&r.wait.length>=r.wc&&!(typeof perk!=='undefined'&&perk.skipWait(S.uid))};
+const isFull=sid=>{const r=roster(sid);return r.in.length>=r.cap&&r.wait.length>=r.wc};
 async function join(sid,pay){if(isCancelled(sid)){toast('This session is cancelled.');return}if(isFull(sid)){toast('Sorry, this session and its waiting list are full.');return}try{await saveBooking(sid,'join',()=>freshEntry(pay));payFor=null;toast("You're in. See you there.")}catch(e){toast("Sorry, that didn't save. Please try again.")}}
 async function setPay(sid,pay){try{await saveBooking(sid,'pay',o=>{const x={...o,pay};delete x.sent;return x});payFor=null;toast(`Payment set to ${PAY[pay].label}.`)}catch(e){toast("Sorry, that didn't save.")}}
 async function markSent(sid){try{await saveBooking(sid,'pay',o=>({...o,sent:new Date().toISOString()}));toast('Thank you. An admin will confirm your payment.')}catch(e){toast("Sorry, that didn't save.")}}
@@ -123,7 +129,7 @@ function sessCard(sid,s){const me=myProfile();
     else if(wpos>=0){status=`<span class="tagl">Waitlist #${wpos+1}</span>`;actions=`<button class="btn ghost sm" data-wout="${sid}">Leave waitlist</button>`}
     else if(me&&!started){const ss=signupState(s,S.uid),fmtO=t=>new Date(t).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
       if(!ss.open)status=`<span class="tagl">Sign-ups open ${esc(fmtO(ss.opens))}</span>`;
-      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=r.in.length>=r.cap&&r.wait.length>=r.wc&&!perk.skipWait(S.uid)?`<span class="tagl warn">Full · waiting list full</span>`:`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?(perk.skipWait(S.uid)?'Join · you skip the waitlist':`Join waitlist${r.wc<Infinity?` · ${r.wc-r.wait.length} left`:''}`):'Count me in'}</button>`}}
+      else{if(ss.early)status=`<span class="tagl solid">${ic('star')}Early access</span>`;actions=r.in.length>=r.cap&&r.wait.length>=r.wc?`<span class="tagl warn">Full · waiting list full</span>`:`<button class="btn sm" data-joinask="${sid}">${ic('plus')}${r.in.length>=r.cap?`Join waitlist${r.wc<Infinity?` · ${r.wc-r.wait.length} left`:''}`:'Count me in'}</button>`}}
     let conf='';
     if(pendingOut&&pendingOut.sid===sid){const f=feeFor(s,new Date().toISOString()),g=pendingOut.gi!=null;
       conf=`<div class="confirm"><p><b>Just so you know:</b> it's now under ${f.label==='Full fee'?'24':'48'} hours to start. Removing ${g?'your guest':'your name'} means the ${esc(f.label.toLowerCase())}, AED ${f.amount}${g?', under your name':''}.</p>
@@ -377,7 +383,7 @@ function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid
   <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
   <section class="hsec"><h3 class="ah">Points</h3><div class="gcard">${ic('coin')}<div><p><b>${c.per} points</b> for every session you play, whatever the sport. At <b>${c.free} points</b> your next session is free.</p><p>That's <b>${toFree().sessions} sessions</b>${toFree().quests?`, or <b>${toFree().quests} Side Quests</b> (each one counts as an event, ${c.other['Event or tournament']} points)`:''}, or any mix of the two.</p><p class="fine">Points reset if you go ${expWords(c.expire)} without playing. A no-show or late cancellation costs points.</p>${pt&&pt.started?`<p class="fine">You have <b class="num">${isFounder(me)?'∞':pt.balance}</b> points.</p>`:''}</div></div></section>
   <section class="hsec"><h3 class="ah">BADges and levels</h3><p class="fine">BADges are a thank you from the founders and crew, for helping out, bringing friends and showing up. They never expire. More BADges, higher level, better perks.</p>
-    <div class="list lvls">${c.levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{label:l.k})}</span><div><div class="nm">${esc(l.k)}${+l.at?` <span class="fine">· ${l.at} BADges</span>`:''}</div><div class="sub">${esc(l.d||'')}</div></div></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{label:topName()})}</span><div><div class="nm">${esc(topName())} <span class="fine">· Founders</span></div><div class="sub">${esc(c.top.d||'')}</div></div></div></div>
+    <div class="list lvls">${c.levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{label:l.k})}</span><div><div class="nm">${esc(l.k)} <span class="fine">· ${BADGE_COLOUR[i]||''}${+l.at?` · ${l.at} BADges`:''}</span></div><div class="sub">${esc(l.d||'')}</div></div></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{label:topName()})}</span><div><div class="nm">${esc(topName())} <span class="fine">· Vanta · Founders</span></div><div class="sub">${esc(c.top.d||'')}</div></div></div></div>
     <div class="gcard f100c"><b class="f100">FIRST 100</b><div><p>The first 100 people to make a card start <b>one level up</b>, get a First 100 mark on their card and wear a number from 0 to 99.${first100Left()?` <b class="num">${first100Left()}</b> spots left.`:' All 100 spots are taken: new numbers are 100 to 999.'}</p><p class="fine">Every jersey number belongs to one player, first come first served.</p></div></div></section>
   <section class="hsec"><h3 class="ah">BAD levels</h3><div class="gcard">${ic('badminton')}<div><p><b>${esc(LVL_NOTICE)}</b></p><p class="fine">Levels run from F to A+, with a W or M rating. They only exist to make games fair.</p></div></div></section>
   <section class="hsec"><h3 class="ah">Joining and dropping out</h3><div class="gcard">${ic('clock')}<div><p>Drop out for free up to 48 hours before. From 48 to 24 hours, half the fee applies. Under 24 hours, the full fee.</p><p class="fine">Pay by cash, bank transfer, Ziina or Careem Pay. Your payment status is on Home.</p></div></div></section>
