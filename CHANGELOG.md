@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.31 | 2026-11-04 | Join BAD on the public Home is now a big full-width button |
 | 0.30 | 2026-11-04 | While the app loads you only see the BAD logo; the app fades in once it's ready, with nothing showing through |
 | 0.29 | 2026-11-04 | Volume II prices: Tote Bag AED 55, Socks AED 55, Rally Towel AED 55 and live; items already in the Shop update on their own |
 | 0.28 | 2026-11-04 | Card: pick your colour (black, white or grey), the BADge icon on the front, no LVL; cleaner Shop with no frames and smaller pictures; check-in QR on every session (Admin list and session cards); sign-up QR on My BAD for admins; people without a card only see Home; quick guest pass for trials (name and mobile); BOLD. AGILE. DEFIANT. only small, bottom left |
