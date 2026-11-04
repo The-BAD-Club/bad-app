@@ -202,7 +202,7 @@ function memStatus(uid){const p=S.profiles[uid]||{},v=(S.members||{})[uid]||{},w
 const uidOfProfile=p=>Object.keys(S.profiles||{}).find(k=>S.profiles[k]===p);
 
 /* admin access: owner emails from config, plus anyone in admins/{email} */
-const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||!!(S.admins||{})[e])};
+const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||['founder','app','cm'].includes(((S.admins||{})[e]||{}).role))};
 const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_DEFAULT.find(d=>d.k===k)||{}).admin};
 const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
 const isFounder=uid=>!!uid&&memStatus(uid).state==='verified'&&memStatus(uid).type==='Founder';
@@ -224,11 +224,11 @@ function cardBackHTML(p,st){
    app: helps build the app: everything except managing admins
    cm: community manager for chosen sports: their sessions, courts, players and posts */
 const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins and the shop.'},cm:{k:'Community manager',d:'Runs their own sport: sessions, courts, players and posts.'}};
-const myRole=()=>S.canEdit?((window.BAD_USER&&window.BAD_USER.role)||'owner'):'';
+const myRole=()=>S.canEdit?((window.BAD_USER&&window.BAD_USER.role)||(window.BAD_WEB?'':'owner')):'';
 const mySports=()=>(window.BAD_USER&&window.BAD_USER.sports)||[];
 const shopAdmin=()=>['owner','founder'].includes(myRole());
 const fullAdmin=()=>['owner','founder','app'].includes(myRole());
 const canManageAdmins=()=>['owner','founder'].includes(myRole());
 const canSport=k=>fullAdmin()||(myRole()==='cm'&&mySports().includes(k||'badminton'));
-const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a?{role:a.role||'founder',sports:a.sports||[]}:null};
+const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a&&['founder','app','cm'].includes(a.role)?{role:a.role,sports:a.sports||[]}:null};
 const roleLabel=r=>!r?'':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';
