@@ -32,13 +32,15 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   const map=s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());return o};
   S.sessData={db,map};
   const mine=(path,fn)=>db.doc(path+'/'+S.uid).onSnapshot(d=>{fn(d.exists?{[S.uid]:d.data()}:{});done()},()=>done());
-  if(S.member)col('profiles',s=>S.profiles=map(s));else if(S.uid)mine('profiles',m=>S.profiles=m);else done();
+  /* if the full list is refused (an older card the admins haven't approved yet), fall back to your own card so nobody lands on registration */
+  const colOr=(path,fn,own)=>db.collection(path).onSnapshot(s=>{fn(s);done()},()=>{if(S.uid)db.doc(path+'/'+S.uid).onSnapshot(d=>{own(d.exists?{[S.uid]:d.data()}:{});render()},()=>{});done()});
+  if(S.member)colOr('profiles',s=>S.profiles=map(s),m=>S.profiles=m);else if(S.uid)mine('profiles',m=>S.profiles=m);else done();
   S.gallery={};if(S.member)db.collection('gallery').onSnapshot(s=>{S.gallery=map(s);if(S.view==='club'||S.view==='admin')render()},()=>{});
   S.numbers={};db.collection('numbers').onSnapshot(s=>{S.numbers=map(s);if(S.view==='create')render();backfillNumbers()},()=>{});
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
   col('sessions',s=>{S.sessions=map(s);courtSubs();if(typeof renameRallies==='function')setTimeout(renameRallies,1000)});
-  if(S.member)col('bookings',s=>{S.bookings=map(s);if(typeof autoLinkGuests==='function')setTimeout(autoLinkGuests,800)});else if(S.uid)mine('bookings',m=>S.bookings=m);else done();
+  if(S.member)colOr('bookings',s=>{S.bookings=map(s);if(typeof autoLinkGuests==='function')setTimeout(autoLinkGuests,800)},m=>S.bookings=m);else if(S.uid)mine('bookings',m=>S.bookings=m);else done();
   if(S.member)col('posts',s=>S.posts=map(s));else{S.posts={};done()}
   if(S.canEdit)db.collection('approved').onSnapshot(s=>{S.approvals=map(s);S.approvalsLoaded=true;if(typeof autoApproveExisting==='function')autoApproveExisting();if(S.view==='admin')render()},()=>{});
   /* Lean data: court data is loaded only for tonight's sessions, and paused while the app is in the background.

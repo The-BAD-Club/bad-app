@@ -58,6 +58,7 @@ function faqList(){const c=PS();return [
     ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
     ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
     ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
+    ['Is BAD a registered company?','Yes. The BAD Club LLC, License No. 2649469.01.'],
     ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
   ['Joining and booking',[
     ['How do I join?','Tap Join BAD and make your player card. It is free and takes a minute. Just want to try once? Take a guest pass instead.'],

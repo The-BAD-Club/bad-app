@@ -919,6 +919,7 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .nomember .tabs button[data-v=courts]{display:none}
 .homelinks.two{grid-template-columns:1fr 1fr}
 .addphotos{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:18px;border:1px dashed var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.addphotos small{display:block;color:var(--muted);font-size:.8rem}
+.sign .legal{flex-basis:100%;order:9;font-size:.54rem;letter-spacing:.14em;opacity:.55;margin-top:2px}@media (max-width:560px){.sign .legal{grid-column:1/-1}}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1024,7 +1025,7 @@ html.guest .jointop{margin-left:0}
   <section class="view" id="v-board" hidden></section>
   <section class="view" id="v-shop" hidden></section>
   <section class="view" id="v-admin" hidden></section>
-  <footer class="sign"><span>Bold. Agile. Defiant.</span><span>Community over competition · #MakeBadGoodAgain</span><button class="signout" onclick="badSignOut()">Sign out</button></footer>
+  <footer class="sign"><span>Bold. Agile. Defiant.</span><span>Community over competition · #MakeBadGoodAgain</span><button class="signout" onclick="badSignOut()">Sign out</button><span class="legal">The BAD Club LLC · License No. 2649469.01</span></footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="photo-in" accept="image/*" hidden>
@@ -1134,7 +1135,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
    and the same line to the SOP's App versions table. */
 const APP_VERSION='0.39';
 const CHANGES=[
-  ['0.39','2026-11-05','New cards need an admin to approve them (Admin, Players, New sign-ups to approve); until then people see Home, Play, the Shop and their own My BAD, and can book sessions as a guest (Spot requested). Cards made before approvals started are approved automatically. Home holds the Club news (What is on, All news, Gallery) and the Club tab is gone; Home shows community photos only, no merch. The Board sits in Play next to On Court and Off Court. Home only has buttons for things that are not tabs (no My BAD, Play or Shop buttons). Needs the new security rules'],
+  ['0.39','2026-11-05','New cards need an admin to approve them (Admin, Players, New sign-ups to approve); until then people see Home, Play, the Shop and their own My BAD, and can book sessions as a guest (Spot requested). Cards made before approvals started are approved automatically. Home holds the Club news (What is on, All news, Gallery) and the Club tab is gone; Home shows community photos only, no merch. The Board sits in Play next to On Court and Off Court. Home only has buttons for things that are not tabs (no My BAD, Play or Shop buttons). Footer shows The BAD Club LLC · License No. 2649469.01, also in the FAQs. Needs the new security rules'],
   ['0.38','2026-11-04','Players on a guest pass no longer see the make-your-full-card banner in My BAD; admins see them in Players under On a guest pass, with a WhatsApp invite'],
   ['0.37','2026-11-04','Home: a big FAQs button and FAQs page; Guide and WTH is BAD buttons (the story has its own page); a swipeable photo strip, a Watch section for videos (YouTube, Instagram reels, TikTok, mp4) and an Instagram card; admins add Home photos and video links in Admin, Club posts. Needs the new security rules (config/home is public). BADminton Courts is back to the 4-step process (Set up, Check in, Games, Scores); other departments keep Check-in and Pay and the manual board'],
   ['0.36','2026-11-04','UX review: Courts header says which tab you are on and only shows Save now when something did not save; players see Live today; On Court / Off Court and the Check-in and Pay / Courts switches are full width; names on phone court chips are no longer cut off; My BAD shows a pending payment at the top; Home links point to Off Court, Gallery, Guide and Shop; admin player list folds the BAD level picker; session payments are one compact row each with WhatsApp and Email icons; the session player list is folded'],
@@ -4161,6 +4162,7 @@ function faqList(){const c=PS();return [
     ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
     ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
     ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
+    ['Is BAD a registered company?','Yes. The BAD Club LLC, License No. 2649469.01.'],
     ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
   ['Joining and booking',[
     ['How do I join?','Tap Join BAD and make your player card. It is free and takes a minute. Just want to try once? Take a guest pass instead.'],
@@ -4272,13 +4274,15 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   const map=s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());return o};
   S.sessData={db,map};
   const mine=(path,fn)=>db.doc(path+'/'+S.uid).onSnapshot(d=>{fn(d.exists?{[S.uid]:d.data()}:{});done()},()=>done());
-  if(S.member)col('profiles',s=>S.profiles=map(s));else if(S.uid)mine('profiles',m=>S.profiles=m);else done();
+  /* if the full list is refused (an older card the admins haven't approved yet), fall back to your own card so nobody lands on registration */
+  const colOr=(path,fn,own)=>db.collection(path).onSnapshot(s=>{fn(s);done()},()=>{if(S.uid)db.doc(path+'/'+S.uid).onSnapshot(d=>{own(d.exists?{[S.uid]:d.data()}:{});render()},()=>{});done()});
+  if(S.member)colOr('profiles',s=>S.profiles=map(s),m=>S.profiles=m);else if(S.uid)mine('profiles',m=>S.profiles=m);else done();
   S.gallery={};if(S.member)db.collection('gallery').onSnapshot(s=>{S.gallery=map(s);if(S.view==='club'||S.view==='admin')render()},()=>{});
   S.numbers={};db.collection('numbers').onSnapshot(s=>{S.numbers=map(s);if(S.view==='create')render();backfillNumbers()},()=>{});
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
   col('sessions',s=>{S.sessions=map(s);courtSubs();if(typeof renameRallies==='function')setTimeout(renameRallies,1000)});
-  if(S.member)col('bookings',s=>{S.bookings=map(s);if(typeof autoLinkGuests==='function')setTimeout(autoLinkGuests,800)});else if(S.uid)mine('bookings',m=>S.bookings=m);else done();
+  if(S.member)colOr('bookings',s=>{S.bookings=map(s);if(typeof autoLinkGuests==='function')setTimeout(autoLinkGuests,800)},m=>S.bookings=m);else if(S.uid)mine('bookings',m=>S.bookings=m);else done();
   if(S.member)col('posts',s=>S.posts=map(s));else{S.posts={};done()}
   if(S.canEdit)db.collection('approved').onSnapshot(s=>{S.approvals=map(s);S.approvalsLoaded=true;if(typeof autoApproveExisting==='function')autoApproveExisting();if(S.view==='admin')render()},()=>{});
   /* Lean data: court data is loaded only for tonight's sessions, and paused while the app is in the background.

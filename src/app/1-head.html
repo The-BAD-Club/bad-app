@@ -913,6 +913,7 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .nomember .tabs button[data-v=courts]{display:none}
 .homelinks.two{grid-template-columns:1fr 1fr}
 .addphotos{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:18px;border:1px dashed var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.addphotos small{display:block;color:var(--muted);font-size:.8rem}
+.sign .legal{flex-basis:100%;order:9;font-size:.54rem;letter-spacing:.14em;opacity:.55;margin-top:2px}@media (max-width:560px){.sign .legal{grid-column:1/-1}}
 </style>
 
 <div class="wrap">
@@ -951,7 +952,7 @@ html.nocard .tabs button:not([data-v=home]){display:none}
   <section class="view" id="v-board" hidden></section>
   <section class="view" id="v-shop" hidden></section>
   <section class="view" id="v-admin" hidden></section>
-  <footer class="sign"><span>Bold. Agile. Defiant.</span><span>Community over competition · #MakeBadGoodAgain</span></footer>
+  <footer class="sign"><span>Bold. Agile. Defiant.</span><span>Community over competition · #MakeBadGoodAgain</span><span class="legal">The BAD Club LLC · License No. 2649469.01</span></footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="photo-in" accept="image/*" hidden>
