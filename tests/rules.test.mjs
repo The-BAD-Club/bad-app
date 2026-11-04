@@ -20,6 +20,7 @@ beforeEach(async () => {
     const db = c.firestore();
     await setDoc(doc(db, 'sessions', SID), { sport: 'badminton', title: 'Friday Rally', date: '2026-10-30', fee: 40, capacity: 20, gms: ['gm1'] });
     await setDoc(doc(db, 'sessions', VSID), { sport: 'volleyball', title: 'VolleyBAD', date: '2026-10-31', fee: 40, capacity: 18 });
+    for (const u of ['p1', 'p2', 'p3', 'p4', 'p9', 'gm1', 'r1', 'c', 'f', 'o', 'a', 'a1', 'a2', 'f1']) await setDoc(doc(db, 'approved', u), { ok: true });
     await setDoc(doc(db, 'admins', 'cm@x.com'), { role: 'cm', sports: ['badminton'] });
     await setDoc(doc(db, 'admins', 'founder@x.com'), { role: 'founder', sports: [] });
     await setDoc(doc(db, 'admins', 'app@x.com'), { role: 'app', sports: [] });
@@ -368,4 +369,29 @@ test('Home photos and videos: anyone can read config/home, only full admins writ
   await assertFails(getDoc(doc(anon(), 'config', 'members')));                                      // other config stays private
   await assertFails(setDoc(doc(ctx('cm1', 'cm@x.com'), 'config', 'home'), h));
   await assertFails(setDoc(doc(anon(), 'config', 'home'), h));
+});
+test('sign-ups under review and guest passes only see their own data', async () => {
+  const n = ctx('new1', 'new1@x.com');
+  await env.withSecurityRulesDisabled(async c => { await setDoc(doc(c.firestore(), 'profiles', 'new1'), { nickname: 'Newbie' }); await setDoc(doc(c.firestore(), 'bookings', 'new1'), { s: {} }); });
+  await assertSucceeds(getDoc(doc(n, 'profiles', 'new1')));                                          // own card
+  await assertFails(getDoc(doc(n, 'profiles', 'p2')));                                               // nobody else's
+  await assertFails(getDocs(collection(n, 'profiles')));
+  await assertFails(getDoc(doc(n, 'bookings', 'p2')));
+  await assertSucceeds(getDoc(doc(n, 'bookings', 'new1')));
+  await assertFails(getDoc(doc(n, 'live', SID)));
+  await assertSucceeds(getDoc(doc(n, 'sessions', SID)));                                              // sessions stay public
+  await assertSucceeds(getDoc(doc(n, 'approved', 'new1')));
+  await assertFails(setDoc(doc(n, 'approved', 'new1'), { ok: true }));                                // can't approve yourself
+  await assertSucceeds(getDoc(doc(ctx('p1', 'p1@x.com'), 'profiles', 'p2')));                        // approved members can
+  await assertSucceeds(setDoc(doc(ctx('cm1', 'cm@x.com'), 'approved', 'new1'), { ok: true, by: 'cm@x.com', at: 'x' }));
+  await assertSucceeds(getDoc(doc(n, 'profiles', 'p2')));                                            // and now they're in
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'approved', 'p3'), { ok: true }));
+});
+test('archive and delete players', async () => {
+  await assertSucceeds(setDoc(doc(ctx('cm1', 'cm@x.com'), 'approved', 'p2'), { ok: false, archived: true, by: 'cm@x.com', at: 'x' }));
+  await assertFails(getDoc(doc(ctx('p2', 'p2@x.com'), 'profiles', 'p1')));                          // archived: community closed
+  await assertFails(deleteDoc(doc(ctx('cm1', 'cm@x.com'), 'profiles', 'p2')));                      // only full admins delete
+  await assertSucceeds(deleteDoc(doc(ctx('f1', 'founder@x.com'), 'contacts', 'p2')));
+  await assertSucceeds(deleteDoc(doc(ctx('f1', 'founder@x.com'), 'profiles', 'p2')));
+  await assertFails(deleteDoc(doc(ctx('p1', 'p1@x.com'), 'contacts', 'p2')));
 });
