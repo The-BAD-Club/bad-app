@@ -264,7 +264,7 @@ function renderCard(){
           <div class="field wide"><label for="gp-mob">Mobile</label><input id="gp-mob" type="tel" maxlength="20" autocomplete="tel" placeholder="+971 5x xxx xxxx"></div>
           <div class="field wide"><label for="gp-mail">Email <span class="req">optional</span></label><input id="gp-mail" type="email" maxlength="80" autocomplete="email"></div></div>
           <button class="btn ghost wide" id="gp-go">${ic('guest')}Start my guest pass</button></details>
-        <p class="fine">We were all BAD players once. Every level is welcome.</p>${S.loaded?'':'<p class="fine">Loading…</p>'}</div></div>`;
+        <p class="fine">We were all BAD players once. Every level is welcome.</p></div></div>`;
     $('start').onclick=()=>startCreator();el.querySelector('.gpass').ontoggle=e=>{S.gpOpen=e.target.open};
     $('gp-go').onclick=async()=>{const n=$('gp-name').value.trim().slice(0,16),m=$('gp-mob').value.trim().slice(0,20),e=$('gp-mail').value.trim().slice(0,80);
       if(!n){toast('Please add your name.');return}if(!okMobile(m)){toast('Please add a mobile number we can reach you on.');return}if(e&&!okEmail(e)){toast('That email doesn’t look right.');return}
