@@ -245,7 +245,7 @@ function homeGameRow(gid,g){const sid=g.sid,t=typeof teamOf==='function'?teamOf(
   return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${teamNames(sid,g.a)} <span class="muted">vs</span> ${teamNames(sid,g.b)}</div><div class="sub">${esc(g.court||'')}${label?' · '+esc(label):''}</div>${st==='noscore'||st==='submitted'?`<button class="linkbtn" data-goscore="${esc(sid)}">Open in Courts${ic('arrow')}</button>`:''}</div><b class="num big" style="font-size:1.5rem">${sc?sc[0]+'–'+sc[1]:'—'}</b></div>`}
 function renderCard(){
   const el=$('v-card'),p=myProfile();
-  if(!p&&!S.loaded){el.innerHTML=`<div class="bootlogo"><img class="inline-logo logo-l" src="${LOGO.clubK}" alt="The BAD Club"><img class="inline-logo logo-d" src="${LOGO.clubW}" alt="The BAD Club"></div>`;return}
+  if(!p&&!S.loaded){el.innerHTML=`<div class="bootlogo"><img class="inline-logo logo-l" src="${LOGO.badK}" alt="BAD"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="BAD"></div>`;return}
   if(!p){
     el.innerHTML=`<div class="grid2"><div class="mini">${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{balance:0,badges:0,sessions:0})}</div>
       <div class="hero"><span class="label">One card for every BADDIE</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>

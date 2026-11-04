@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.24 | 2026-11-04 | Home and the loading screen use the BAD logo, with Bold. Agile. Defiant. small in the bottom-left corner while loading; visitors see the real upcoming sessions on Home; house rules now apply to every department, Side Quest and event |
 | 0.23 | 2026-11-04 | Public Home: anyone can see The BAD Club (who we are, every week, what we do, the departments, why join, house rules, Instagram) without signing in, and sign in from there; your own page is now called My BAD; while the app loads only The BAD Club logo shows, never the registration screen |
 | 0.22 | 2026-11-04 | Shop: every FRAGMENTS pre-order (THE RITUAL SET, BADASS shorts, REVERSE jersey) with pictures and prices; the full Volume II lineup with its product photos, Clubhouse Kit shown sold out, Rally Towel and Socks AED 55; sold-out products stay visible; edit a session from Admin → Sessions |
 | 0.21 | 2026-11-04 | House rules (Guide and Play): play with anyone, respect the rotation, check in, drop out early, pay, call it honestly, respect everyone, leave it better, photos; BOLD. AGILE. DEFIANT. on Home and the Guide; no promise of balanced games anywhere |

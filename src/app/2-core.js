@@ -111,17 +111,17 @@ const DEPT_DESC={
  retreat:'Trips away with the club: sport, food and time together. Limited spots, announced early.',
  vibe:'Here for the vibe. Socials and everything that brings BAD together off court.',
  taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. A Side Quest.'};
-/* house rules: shown in the Guide and in Play */
+/* house rules: one set for every department, Side Quest and event. Shown in the Guide, Play and on Home */
 const HOUSE_RULES=[
- ['users','Play with anyone','Every level, every partner, every opponent. Levels help us mix games, they don’t choose your teammates.'],
- ['clock','Respect the rotation','Games go in order of arrival. Admins and crew have the final call on courts.'],
- ['check','Check in and be on time','Check in when you arrive. Late arrivals join the rotation from when they check in.'],
+ ['users','Welcome everyone','Every level, every partner, every team. Levels help us mix games and groups, they don’t choose who you play or go with.'],
+ ['clock','Respect the order','Games, groups and turns go in order of arrival. Admins, crew and hosts have the final call.'],
+ ['check','Check in and be on time','Check in when you arrive at a session, Side Quest or event. If you’re late, you join from when you check in.'],
  ['ticket','Drop out early','Free up to 48 hours before. From 48 to 24 hours, half the fee. Under 24 hours, the full fee. No-shows lose points.'],
- ['wallet','Pay for your session','Cash, bank transfer, Ziina or Careem Pay, before or at the session.'],
- ['eye','Call it honestly','Call your lines fairly and replay the point if you’re not sure. Log scores truthfully: the other team confirms.'],
- ['star','Respect everyone','No harassment, hate or aggression, on or off court. Crew can ask anyone who crosses the line to leave.'],
- ['bag','Leave it better','Non-marking court shoes. Take your shuttles, bottles and towels with you.'],
- ['photo','Photos happen','We take photos at events for the Gallery and BAD socials. Tell an admin if you’d rather not be in them.']];
+ ['wallet','Pay for your spot','Sessions, Side Quests and events: cash, bank transfer, Ziina or Careem Pay, before or on the day.'],
+ ['eye','Play fair','Call it honestly and redo it if you’re not sure. Log scores, times and distances truthfully.'],
+ ['star','Respect everyone','No harassment, hate or aggression, at a session, at an event or online. Crew can ask anyone who crosses the line to leave.'],
+ ['bag','Leave it better','Respect our venues and partners. Wear the right shoes and kit, and take your things with you.'],
+ ['photo','Photos happen','We take photos at sessions and events for the Gallery and BAD socials. Tell an admin if you’d rather not be in them.']];
 const rulesHTML=()=>`<ol class="hrules">${HOUSE_RULES.map(([i,t,d],n)=>`<li><span class="ic-bub soft">${ic(i)}</span><div><b>${n+1}. ${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol>`;
 const MANIFESTO=`<div class="manifesto" aria-label="Bold. Agile. Defiant."><b>BOLD.</b><b>AGILE.</b><b>DEFIANT.</b></div>`;
 const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(DEPT_DESC[k]||SPORTS[k].sport)}</span></div></div>`:'';

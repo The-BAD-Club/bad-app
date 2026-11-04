@@ -11,7 +11,7 @@ h=h.replace('<span>Community over competition · #MakeBadGoodAgain</span></foote
 import json
 _l=open(SRC+'0-logo.js').read();_L=json.loads(_l[_l.index('{'):_l.rindex('}')+1])
 # logo splash: in the page itself so it shows before any script runs, until the app knows who you are (see unboot() in 4-views.js)
-h=h.replace('<div class="wrap">',f'<div id="splash" aria-label="The BAD Club" role="img"><img class="sp-d" src="{_L["clubW"]}" alt=""><img class="sp-l" src="{_L["clubK"]}" alt=""></div>\n<div class="wrap">',1)
+h=h.replace('<div class="wrap">',f'<div id="splash" aria-label="BAD" role="img"><img class="sp-d" src="{_L["badW"]}" alt=""><img class="sp-l" src="{_L["badK"]}" alt=""><span class="sp-line">Bold. Agile. Defiant.</span></div>\n<div class="wrap">',1)
 head=''.join(f'<script src="{FB}{m}"></script>\n' for m in ['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'])
 head+='<script src="config.js"></script>\n'
 js="".join(open(SRC+f).read()+"\n" for f in ['0-logo.js','0-placeholders.js'])

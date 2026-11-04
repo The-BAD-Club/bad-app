@@ -40,9 +40,10 @@ beforeEach(async () => {
 });
 
 // ---------- unauthorised reads ----------
-test('signed-out visitors read nothing', async () => {
+test('signed-out visitors read only sessions', async () => {
   await assertFails(getDoc(doc(anon(), 'profiles', 'p2')));
-  await assertFails(getDoc(doc(anon(), 'sessions', SID)));
+  await assertSucceeds(getDoc(doc(anon(), 'sessions', SID)));   // sessions are public for the Home page
+  await assertFails(setDoc(doc(anon(), 'sessions', 'x'), { sport: 'badminton', title: 'x', date: '2026-12-01' }));
 });
 test('players cannot read other players’ private records', async () => {
   const db = ctx('p1', 'p1@x.com');

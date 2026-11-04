@@ -16,7 +16,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
 .gate-h img{height:.74em;width:auto;transform:translateY(.02em)}
 /* ---------- logo splash while loading (no registration screen flashing) ---------- */
 #splash{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;transition:opacity .25s ease}
-#splash img{width:min(44vw,180px);height:auto;animation:badpulse 1.6s ease-in-out infinite}
+#splash img{width:min(36vw,140px);height:auto;animation:badpulse 1.6s ease-in-out infinite}
 #splash .sp-l{display:none}:root[data-theme="light"] #splash .sp-l{display:block}:root[data-theme="light"] #splash .sp-d{display:none}
 html.booted #splash{opacity:0;pointer-events:none;visibility:hidden;transition:opacity .25s ease,visibility 0s .25s}
 html:not(.booted) .wrap{visibility:hidden}
@@ -45,3 +45,5 @@ html.guest .gate-why:not([hidden]){display:block;margin:0}
 .tabs button span{white-space:nowrap}
 html.guest .jointop{margin-left:0}
 @media (max-width:760px){html.guest .jointop{margin-left:auto}}
+#splash .sp-line{position:absolute;left:max(20px,env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);opacity:.7}
+.phero-logo img{width:min(40vw,170px)}
