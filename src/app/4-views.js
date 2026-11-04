@@ -116,13 +116,13 @@ function renderPlay(){
   const el=$('v-play'),me=myProfile();
   const used=[...new Set(Object.values(S.sessions).map(s=>s.sport||'badminton'))].filter(k=>SPORTS[k]&&!isSide(k));if(isSide(S.sport))S.sport='all';
   const list=upcoming().filter(([,s])=>!isSide(s.sport)&&(S.sport==='all'||(s.sport||'badminton')===S.sport));
-  const head=`${courtSwitch('play')}<div class="hero"><span class="label">On Court</span><h2>Find your next game.</h2>
+  const head=`${courtSwitch('play')}<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
     ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from My BAD</small></span>${ic('arrow')}</button>`:''})()}
     ${sportBar(S.sport,'flt',used)}${S.sport!=='all'?deptCard(S.sport):''}`;
   const rules=`<details class="rules"><summary>${ic('clock')}How joining and dropping out works</summary><p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p></details>`;
   const hrules=`<details class="rules"><summary>${ic('users')}House rules</summary>${rulesHTML()}</details>`;
-  if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>No sessions posted for this department yet. Please check back soon.</span></div>`+rules+hrules;bindPlay(el);return}
+  if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>${S.sport!=="all"?'No sessions posted for this department yet.':'No sessions open right now.'} New ones are posted every week, so please check back soon.</span></div>`+rules+hrules;bindPlay(el);return}
   const wk=sx=>{const t=new Date();t.setHours(0,0,0,0);const d=(sessStart(sx)-t)/864e5;return d<7-((t.getDay()+6)%7)?'This week':d<14-((t.getDay()+6)%7)?'Next week':'Later'};let lastWk='';
   el.innerHTML=head+`<div class="slist">`+list.map(([sid,s])=>{const w=wk(s),hdr=w!==lastWk?`<h3 class="wkh">${w}</h3>`:'';lastWk=w;
     return hdr+sessCard(sid,s)}).join('')+`</div>`+rules+hrules;
@@ -288,11 +288,13 @@ function renderCard(){
   const mySess=upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out});
   let next;
   if(mySess.length)next=`<section class="hsec mysess"><div class="sec-h"><h3 class="ah">Your sessions</h3><button class="linkbtn" data-goview="play">Find more${ic('arrow')}</button></div><div class="slist">${mySess.map(([sid,x])=>sessCard(sid,x)).join('')}</div></section>`;
-  else next=`<button class="tile nexts cta" data-goview="play"><span class="label">No session booked</span><span class="ic-row"><span class="ic-bub">${ic('play')}</span><span><b>Find your next game</b><span class="fine" style="display:block">${upcoming().length} sessions coming up</span></span>${ic('arrow')}</span></button>`;
+  else next=`<button class="tile nexts cta" data-goview="play"><span class="label">No session booked</span><span class="ic-row"><span class="ic-bub">${ic('play')}</span><span><b>Find your next game</b><span class="fine" style="display:block">${upcoming().length?`${upcoming().length} session${upcoming().length===1?'':'s'} open to book`:'New sessions are posted every week'}</span></span>${ic('arrow')}</span></button>`;
+  const actH=activityHTML(),owes=actH.includes('tile owe');
   el.innerHTML=`<div class="home">
     <aside class="home-card"><div class="flip${S.flipped?' on':''}" id="my-card" role="button" tabindex="0" aria-label="Flip your card to see the invite QR code" aria-pressed="${!!S.flipped}"><div class="flip-in"><div class="face front">${cardHTML(p,st)}</div><div class="face back">${cardBackHTML(p,st)}</div></div></div><p class="fine fliphint">${S.flipped?'Tap to see the front':'Tap the card to flip it'}</p><div class="row" style="justify-content:center"><button class="btn sm" id="save-card">${ic('image')}${S.flipped?'Save back':'Save card'}</button><button class="btn ghost sm" id="edit">${ic('edit')}Edit my card</button></div></aside>
     <div class="home-main">
       <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>${gpBanner}${S.canEdit?`<div class="row"><button class="btn ghost sm" data-signupqr="1">${ic('card')}Sign-up QR</button></div>`:''}
+      ${owes?actH:''}
       ${next}
       ${ptsTilesHTML(pt,fd,req)}
       <section class="hsec"><div class="sec-h"><h3 class="ah">Your stats</h3><button class="linkbtn" data-goview="board">${ic('board')}Board${ic('arrow')}</button></div>
@@ -306,7 +308,7 @@ function renderCard(){
           ${memType(m.type)?.staff?'':`<details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memPick().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details>`}</section>`})()}
       <section class="hsec"><h3 class="ah">Your activities</h3>
         <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[k==='badminton'?gradeLabel(S.uid):(p.lv2&&p.lv2[k]!=null)?lvlName(k,p.lv2[k]):lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
-      ${activityHTML()}
+      ${owes?'':actH}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>g.v===2?homeGameRow(gid,g):gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       ${recentHTML(S.uid)}
       <section class="tile refer"><span class="label">Invite a friend</span>
