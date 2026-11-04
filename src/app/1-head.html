@@ -914,6 +914,13 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .homelinks.two{grid-template-columns:1fr 1fr}
 .addphotos{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:18px;border:1px dashed var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.addphotos small{display:block;color:var(--muted);font-size:.8rem}
 .sign .legal{flex-basis:100%;order:9;font-size:.54rem;letter-spacing:.14em;opacity:.55;margin-top:2px}@media (max-width:560px){.sign .legal{grid-column:1/-1}}
+.li.arr .rank{width:auto;min-width:36px;justify-content:flex-start}
+.ci-pay{grid-column:3/-1;min-width:0;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.ci-pay .paysel{max-width:240px}
+details.ci-lvl>summary{cursor:pointer;list-style:none;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 0}details.ci-lvl>summary::-webkit-details-marker{display:none}
+details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-spacing:0;font-weight:500;text-decoration:underline}details.ci-lvl[open]>summary::after{content:''}
+.paytiles{grid-template-columns:repeat(3,minmax(0,1fr))}.paytiles .tile{padding:12px;display:grid;gap:2px}.paytiles b{font-size:1.25rem}.paytiles small{font-size:.7rem;color:var(--muted);margin:0 2px}
+.fgrid input,.fgrid select{min-width:0;max-width:100%}
+@media (max-width:560px){#ci-list .li.ci{grid-template-columns:auto minmax(0,1fr)!important}#ci-list .li.ci>.row{grid-column:2/-1;justify-content:flex-start}}
 </style>
 
 <div class="wrap">
