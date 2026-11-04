@@ -31,7 +31,7 @@ S.contacts={};S.brand={};
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
   col('sessions',s=>{S.sessions=map(s);courtSubs()});
-  col('bookings',s=>S.bookings=map(s));
+  col('bookings',s=>{S.bookings=map(s);if(typeof autoLinkGuests==='function')setTimeout(autoLinkGuests,800)});
   col('posts',s=>S.posts=map(s));
   /* Lean data: court data is loaded only for tonight's sessions, and paused while the app is in the background.
      Older games load once, only when a screen needs them (your stats, the Rank board). */
