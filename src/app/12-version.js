@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.35';
+const APP_VERSION='0.36';
 const CHANGES=[
+  ['0.36','2026-11-04','UX review: Courts header says which tab you are on and only shows Save now when something did not save; players see Live today; On Court / Off Court and the Check-in and Pay / Courts switches are full width; names on phone court chips are no longer cut off; My BAD shows a pending payment at the top; Home links point to Off Court, Gallery, Guide and Shop; admin player list folds the BAD level picker; session payments are one compact row each with WhatsApp and Email icons; the session player list is folded'],
   ['0.35','2026-11-04','Courts has a manual board again (Check-in and Pay | Courts): drag players from the bench onto courts and Next up, tap-to-move, drop on someone to swap, one-tap Start and End game, the first Next up group walks onto a court that ends; on phones the bench stays pinned above the tabs and you press and hold to drag; the loading screen shows only the logo; Members.gs calls badminton BADminton'],
   ['0.34','2026-11-04','Badminton department is now BADminton; Wednesday Rally and Friday Rally are now BADminton Wednesday and BADminton Friday (existing sessions renamed on their own)'],
   ['0.33','2026-11-04','Courts is now Check-in and Pay: one list with who came, how each person paid, walk-ins, and End session (with optional no-shows); the court queue, games and rankings are paused while the queue is rebuilt; guests and walk-ins keep their names; fewer tabs: Home, My BAD, Play (On Court and Off Court), Courts, Club, Shop; the Guide opens from Home and the Board from My BAD'],

@@ -883,6 +883,16 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .pview .mcourt{gap:4px}
 .mchip.armed{outline:2px solid var(--ink);transform:scale(1.03)}
 @media (max-width:899px){.mbench{position:sticky;bottom:calc(68px + env(safe-area-inset-bottom,0px));z-index:5;max-height:36vh;overflow:auto;background:var(--bg);box-shadow:0 -10px 24px rgba(0,0,0,.35)}.mbench-l{grid-template-columns:repeat(2,minmax(0,1fr))}.mbench>p.fine{display:none}}
+/* v0.36 UX review */
+#v-admin .li.payrow{grid-template-columns:minmax(0,1fr) auto!important;align-items:center}
+#a-plist details.glevel>summary{cursor:pointer;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);list-style:none;padding:4px 0}
+#a-plist details.glevel>summary::after{content:' · change';text-transform:none;letter-spacing:0;font-weight:500;text-decoration:underline}
+#a-plist details.glevel[open]>summary::after{content:''}
+#a-plist details.glevel{display:block;min-width:0;max-width:100%;overflow:hidden}#a-plist details.glevel .gpick{margin-top:6px}
+#a-plist details.glevel>summary::-webkit-details-marker{display:none}
+.seg2{display:flex;width:100%}.seg2 button{flex:1}
+.mmain>.row{margin:12px 0 22px}
+@media(max-width:560px){.mcourt .mc-s,.mwait .mc-s{display:none}.mcourt .mchip,.mwait .mchip{grid-template-columns:auto minmax(0,1fr);padding-right:8px;gap:6px}.mcourt .mchip .av,.mwait .mchip .av,.mcourt .mchip .avatar,.mwait .mchip .avatar{width:26px;height:26px}}
 </style>
 
 <div class="wrap">
