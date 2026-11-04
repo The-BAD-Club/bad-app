@@ -396,7 +396,7 @@ function renderQuests(){
 }
 /* ---------- Gallery: an album per event, with photos and a link to the full set ---------- */
 function galleryHTML(f){const A=Object.entries(S.gallery||{}).filter(([,a])=>f==='all'||a.club===f||a.club==='all').sort((a,b)=>String(b[1].date||'').localeCompare(String(a[1].date||'')));
-  if(!A.length)return `<div class="empty">${ic('photo')}<span>No albums yet. Photos from the next event land here.</span></div>`;
+  if(!A.length)return `<section class="hsec"><h3 class="ah">BAD moments</h3><p class="fine">Event albums land here after each event. Until then, a few favourites.</p><div class="pgrid">${[...CLUB_PHOTOS.home,...CLUB_PHOTOS.wth].map((u,i)=>`<figure${WIDE_PHOTOS.has(u)?' class="wide"':''}><img src="${esc(u)}" alt="" loading="${i<4?'eager':'lazy'}" decoding="async"></figure>`).join('')}</div></section>`;
   const open=S.album&&S.gallery[S.album];
   return `<div class="galgrid">${A.map(([id,a])=>`<button class="album" data-album="${esc(id)}"><div class="acover" style="background-image:url('${esc((a.photos||[])[0]||'')}')">${(a.photos||[]).length?'':ic('photo')}<span class="acount num">${(a.photos||[]).length}</span></div><div class="ameta"><span class="fine">${esc(SPORTS[a.club]?.club||'All of BAD')}${a.date?' · '+esc(fmtD(a.date)):''}</span><b>${esc(a.title)}</b></div></button>`).join('')}</div>
   ${open?`<div class="sheet-ov" data-albclose="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(open.title)}"><button class="sheet-x" data-albclose="1" aria-label="Close">${ic('x')}</button><div class="sheet-in" style="padding:20px;display:grid;gap:12px">
