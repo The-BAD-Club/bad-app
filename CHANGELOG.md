@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.42 | 2026-11-05 | Design pass on every screen: the footer leads with The BAD Club LLC and its licence number (also on the sign-in screen); old footer taglines removed; list rows line up left; BADges and stats tiles tidied; bigger tap areas for Back and Sign out; shorter labels where text was cut off |
 | 0.35 | 2026-11-04 | Courts has a manual board again (Check-in and Pay | Courts): drag players from the bench onto courts and Next up, tap-to-move, drop on someone to swap, one-tap Start and End game, the first Next up group walks onto a court that ends; on phones the bench stays pinned above the tabs and you press and hold to drag; the loading screen shows only the logo; Members.gs calls badminton BADminton |
 | 0.34 | 2026-11-04 | Badminton department is now BADminton; Wednesday Rally and Friday Rally are now BADminton Wednesday and BADminton Friday (existing sessions renamed on their own) |
 | 0.33 | 2026-11-04 | Courts is now Check-in and Pay: one list with who came, how each person paid, walk-ins, and End session (with optional no-shows); the court queue, games and rankings are paused while the queue is rebuilt; guests and walk-ins keep their names; fewer tabs: Home, My BAD, Play (On Court and Off Court), Courts, Club, Shop; the Guide opens from Home and the Board from My BAD |

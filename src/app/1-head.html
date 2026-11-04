@@ -516,7 +516,7 @@ details.manage summary::-webkit-details-marker{display:none}
 /* footer */
 .sign{align-items:center}
 .sign .signout{margin:0 0 0 auto;letter-spacing:.04em;text-transform:none;font-size:.78rem}
-@media (max-width:560px){.sign{display:grid;grid-template-columns:1fr auto;row-gap:6px}.sign>span:nth-child(2){grid-column:1}.sign .signout{grid-row:1;grid-column:2}}
+@media (max-width:560px){.sign{display:grid;grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.sign .legal{grid-column:1;grid-row:1}.sign .sig-line{grid-column:1;grid-row:2}.sign .signout{grid-row:1;grid-column:2}}
 @media (max-width:760px){.mini{display:flex;justify-content:center}.mini .pc{max-width:220px;padding:12px 14px;border-radius:14px}.mini .pc .jn{font-size:5rem}.mini .pc .nick{font-size:1rem}.mini .pc .stats{display:none}}
 details.fold:not([open]){gap:0}
 .pc .inf{font-size:1.5em;line-height:.8;vertical-align:-.08em;letter-spacing:0}
@@ -823,7 +823,7 @@ body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt
 .manifesto{display:flex;flex-wrap:wrap;gap:4px 14px;font-weight:900;font-size:clamp(1.6rem,7vw,2.6rem);line-height:1;letter-spacing:-.01em;text-transform:uppercase;margin:2px 0 4px}.manifesto b:nth-child(2){color:var(--muted)}
 .hrules{list-style:none;margin:0;padding:0;display:grid;gap:8px}.hrules li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}.hrules li div{display:grid;gap:2px}
 details.rules .hrules{margin-top:10px}
-.sign span:first-child{font-weight:900;letter-spacing:.14em}
+.sign span.sig-line{font-weight:600}
 .preo{display:grid;gap:14px;padding:18px;border:1px solid var(--line);border-radius:var(--r-lg,18px)}.preo-h{display:grid;gap:4px}.preo-h h3{margin:0;font-size:1.6rem;letter-spacing:.02em}
 .preo-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.preo-item{display:grid;gap:8px;align-content:start;min-width:0}
 .preo-img{display:block;aspect-ratio:4/5;border-radius:var(--r-md,14px);background:#111 center/cover no-repeat}.preo-thumbs{display:flex;gap:6px}.pth{width:42px;height:42px;border-radius:8px;border:1px solid var(--line);background:#111 center/cover;padding:0;cursor:pointer;opacity:.6}.pth.on{opacity:1;border-color:var(--ink)}
@@ -913,7 +913,8 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .nomember .tabs button[data-v=courts]{display:none}
 .homelinks.two{grid-template-columns:1fr 1fr}
 .addphotos{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:18px;border:1px dashed var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.addphotos small{display:block;color:var(--muted);font-size:.8rem}
-.sign .legal{flex-basis:100%;order:9;font-size:.54rem;letter-spacing:.14em;opacity:.55;margin-top:2px}@media (max-width:560px){.sign .legal{grid-column:1/-1}}
+.sign .legal{font-size:.72rem;font-weight:700;letter-spacing:.12em;color:var(--ink);opacity:1}
+.sign .sig-line{font-size:.6rem;letter-spacing:.18em;font-weight:600}
 .li.arr .rank{width:auto;min-width:36px;justify-content:flex-start}
 .ci-pay{grid-column:3/-1;min-width:0;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.ci-pay .paysel{max-width:240px}
 details.ci-lvl>summary{cursor:pointer;list-style:none;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 0}details.ci-lvl>summary::-webkit-details-marker{display:none}
@@ -970,7 +971,7 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
   <section class="view" id="v-board" hidden></section>
   <section class="view" id="v-shop" hidden></section>
   <section class="view" id="v-admin" hidden></section>
-  <footer class="sign"><span>Bold. Agile. Defiant.</span><span>Community over competition · #MakeBadGoodAgain</span><span class="legal">The BAD Club LLC · License No. 2649469.01</span></footer>
+  <footer class="sign"><span class="legal"><b>The BAD Club LLC</b><span>License No. 2649469.01</span></span><span class="sig-line">Bold. Agile. Defiant.</span></footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="photo-in" accept="image/*" hidden>

@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.41';
+const APP_VERSION='0.42';
 const CHANGES=[
+  ['0.42','2026-11-05','Design pass on every screen: the footer leads with The BAD Club LLC and its licence number (also on the sign-in screen); old footer taglines removed; list rows line up left; BADges and stats tiles tidied; bigger tap areas for Back and Sign out; shorter labels where text was cut off'],
   ['0.41','2026-11-05','Points are open from 5 Nov. Home opens with the BAD DAY film (muted loop, tap for sound) and community stills from it. BADminton courts: press and hold to drag on phones, End game is one tap, a free court shows Bring Next up on. Payments only on the night in Courts; the admin session page shows what is still owed afterwards. Sign-up QR only in Admin'],
   ['0.40','2026-11-05','Operations review: BADminton Check in now has payments (Paid, Collected, To collect, and a payment picker on every arrival); the level picker folds into one line per player; arrival numbers no longer overlap; the plan says Aiming for about 5 games each instead of promising it; Payments rows use Paid, Free and an x; the Add a session date field fits on phones'],
   ['0.39','2026-11-05','New cards need an admin to approve them (Admin, Players, New sign-ups to approve); until then people see Home, Play, the Shop and their own My BAD, and can book sessions as a guest (Spot requested). Cards made before approvals started are approved automatically. Home holds the Club news (What is on, All news, Gallery) and the Club tab is gone; Home shows community photos only, no merch. The Board sits in Play next to On Court and Off Court. Home only has buttons for things that are not tabs (no My BAD, Play or Shop buttons). Footer shows The BAD Club LLC · License No. 2649469.01, also in the FAQs. Needs the new security rules'],

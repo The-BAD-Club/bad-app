@@ -29,6 +29,7 @@
     </form>
     <p class="fine" id="g-msg" role="status"></p>
     <p class="fine">We only use your email to run sessions and keep your points. We never share it.</p>
+    <p class="fine gate-llc"><b>The BAD Club LLC</b> · License No. 2649469.01</p>
   </div>`;
   document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(gate));
   if(document.body)document.body.appendChild(gate);

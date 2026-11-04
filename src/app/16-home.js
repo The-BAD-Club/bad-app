@@ -81,7 +81,7 @@ function renderFaq(){const el=$('v-faq');if(!el)return;
 function renderWth(){const el=$('v-wth');if(!el)return;
   el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">WTH is BAD</span><h2>We were all BAD players once.</h2></div>
   ${homePhotosHTML(true)}<section class="hsec story">${STORY_HTML}</section>
-  <section class="hsec"><h3 class="ah">What we stand for</h3><p class="manifesto wthm">Community over competition.</p><p class="fine">Every level plays with everyone. Show up, cheer loud, get better together.</p></section>
+  <section class="hsec"><h3 class="ah">What we stand for</h3><p class="manifesto wthm">Bold. Agile. Defiant.</p><p class="fine"><b>Bold</b> enough to put our ideas out there and try something different. <b>Agile</b> enough to change, adapt and figure things out as we go. <b>Defiant</b> enough to question the norm.</p></section>
   <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="faq">FAQs</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}

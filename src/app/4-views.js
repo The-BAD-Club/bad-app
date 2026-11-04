@@ -220,7 +220,7 @@ function ptsTilesHTML(pt,fd,req){const c=PS();
       <div class="bar"><i style="width:${Math.min(100,pt.balance/c.free*100)}%"></i></div>
       ${pt.playBy?`<span class="fine">Play by ${esc(fmtD(pt.playBy))} to keep them.</span>`:''}
       ${req?'<span class="tagl">Free session requested</span>':pt.canRedeem?(pt.unpaid?`<span class="fine">Please settle your AED ${pt.unpaid} first, then you can use your free session.</span>`:`<button class="btn sm" id="redeem">${ic('ticket')}Use ${c.free} for a free session</button>`):''}</div>`;
-  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="bstat"><span class="bimg">${badgeArt(pt.top?9:pt.levelIdx,{label:pt.level+' BADge'})}</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div></div>
+  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="bstat"><span class="bimg">${badgeArt(pt.top?9:pt.levelIdx,{label:pt.level+' BADge'})}</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?'Every perk':pt.next?`${pt.toNext} more to ${esc(pt.next.k)}`:'Top BADge level'}</span></div></div>
       ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.max(0,Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100))}%"></i></div>`:''}
       ${canGiveBadge()?`<button class="btn ghost sm" data-givebadge="">Give a BADge</button>`:''}</div>`;
   const pay=`<div class="paystat ${pt.unpaid?'owe':'ok'}">${pt.unpaid?`${ic('wallet')}<span>AED ${pt.unpaid} unpaid</span>`:`${ic('check')}<span>Paid up</span>`}</div>`;
@@ -304,7 +304,7 @@ function renderCard(){
         <div class="tiles hstats h3">
           ${statT('Sessions',attended,'Played with BAD')}
           ${queueOff('badminton')?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
-          ${queueOff('badminton')?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
+          ${queueOff('badminton')?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','',`<button class="linkbtn" data-rankgo="1">See the Board${ic('arrow')}</button>`)}
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
