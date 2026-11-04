@@ -2,7 +2,7 @@
 S.contacts={};S.brand={};
 (async function boot(){
   /* links straight to a tab: …/#shop, #quests, #play, #club, #board, #courts (used by short links like the Volume II one) */
-  {const v=(location.hash||'').match(/^#(shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['card','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
+  {const v=(location.hash||'').match(/^#(home|guide|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
   render();
   const C=window.claude;if(!C||!C.use){S.loaded=true;render();return}
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
@@ -12,7 +12,7 @@ S.contacts={};S.brand={};
   if(S.canEdit){C.use('mcp').then(m=>{S.mcp=m});C.use('assets').then(a=>{S.assets=a})}
   if(!db){S.loaded=true;render();return}
   let pending=10;
-  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;seedWeb();fixups();fixups2();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
+  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;unboot();seedWeb();fixups();fixups2();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
   /* hosted version: first admin sign-in on an empty database loads the starter sessions, posts and sample players */
   /* one-off content fixes, applied once by an admin's app */
   async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];

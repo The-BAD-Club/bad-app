@@ -1,20 +1,24 @@
 /* ---------- navigation ---------- */
-const NAV={card:['card','Home'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
-function setView(v){S.view=v;
-  for(const id of ['card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+/* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
+function setView(v){if(window.BAD_GUEST&&v!=='home'){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+  S.view=v;
+  for(const id of ['home','card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',(b.dataset.v===v||(v==='create'&&b.dataset.v==='card'))?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
-function render(){
+/* the logo splash stays up until we know who you are and your data has loaded, so nobody sees the registration screen by mistake */
+function unboot(){if(S.loaded||window.BAD_GUEST)document.documentElement.classList.add('booted')}
+function render(){unboot();
   const ae=document.activeElement,typing=ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)&&ae.type!=='range';
   if(S.view==='create'){if($('preview'))preview();return}
   if(typing&&$('v-'+S.view)&&$('v-'+S.view).contains(ae))return;
   if(S.view==='courts')return renderCourts();
   renderNow();
 }
-function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
-  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
+  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -108,7 +112,7 @@ function renderPlay(){
   const list=upcoming().filter(([,s])=>!isSide(s.sport)&&(S.sport==='all'||(s.sport||'badminton')===S.sport));
   const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
-    ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from Home</small></span>${ic('arrow')}</button>`:''})()}
+    ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from My BAD</small></span>${ic('arrow')}</button>`:''})()}
     ${sportBar(S.sport,'flt',used)}${S.sport!=='all'?deptCard(S.sport):''}`;
   const rules=`<details class="rules"><summary>${ic('clock')}How joining and dropping out works</summary><p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p></details>`;
   const hrules=`<details class="rules"><summary>${ic('users')}House rules</summary>${rulesHTML()}</details>`;
@@ -241,6 +245,7 @@ function homeGameRow(gid,g){const sid=g.sid,t=typeof teamOf==='function'?teamOf(
   return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${teamNames(sid,g.a)} <span class="muted">vs</span> ${teamNames(sid,g.b)}</div><div class="sub">${esc(g.court||'')}${label?' · '+esc(label):''}</div>${st==='noscore'||st==='submitted'?`<button class="linkbtn" data-goscore="${esc(sid)}">Open in Courts${ic('arrow')}</button>`:''}</div><b class="num big" style="font-size:1.5rem">${sc?sc[0]+'–'+sc[1]:'—'}</b></div>`}
 function renderCard(){
   const el=$('v-card'),p=myProfile();
+  if(!p&&!S.loaded){el.innerHTML=`<div class="bootlogo"><img class="inline-logo logo-l" src="${LOGO.clubK}" alt="The BAD Club"><img class="inline-logo logo-d" src="${LOGO.clubW}" alt="The BAD Club"></div>`;return}
   if(!p){
     el.innerHTML=`<div class="grid2"><div class="mini">${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{balance:0,badges:0,sessions:0})}</div>
       <div class="hero"><span class="label">One card for every BADDIE</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
@@ -378,7 +383,7 @@ function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclic
 
 /* ---------- Guide: what the app is for and how to use it ---------- */
 function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
-  const tabs=[['card','Home','Your player card, your sessions, points and BADges.'],['play','Play','Find a session and join it in one tap. Drop out or bring a friend from Home.'],['courts','Courts','On the day: check in, see your court and who’s next.'],['club','Club','News, events and the Gallery.'],['quests','Quests','Side Quests: collabs and everything Off Court.'],['board','Board','Points and rankings. Players first.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
+  const tabs=[['home','Home','About The BAD Club, every department and the weekly sessions. Open to everyone.'],['card','My BAD','Your player card, your sessions, payments, points and BADges.'],['play','Play','Find a session and join it in one tap. Drop out or bring a friend from My BAD.'],['courts','Courts','On the day: check in, see your court and who’s next.'],['club','Club','News, events and the Gallery.'],['quests','Quests','Side Quests: collabs and everything Off Court.'],['board','Board','Points and rankings. Players first.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
   const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. The rotation keeps everyone playing, and you play with anyone.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
   el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>${MANIFESTO}
   <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
@@ -388,9 +393,9 @@ function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid
     <div class="list lvls">${c.levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{label:l.k})}</span><div><div class="nm">${esc(l.k)} <span class="fine">· ${BADGE_COLOUR[i]||''}${+l.at?` · ${l.at} BADges`:''}</span></div><div class="sub">${esc(l.d||'')}</div></div></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{label:topName()})}</span><div><div class="nm">${esc(topName())} <span class="fine">· Vanta · Founders</span></div><div class="sub">${esc(c.top.d||'')}</div></div></div></div>
     <div class="gcard f100c"><b class="f100">FIRST 100</b><div><p>The first 100 people to make a card start <b>one level up</b>, get a First 100 mark on their card and wear a number from 0 to 99.${first100Left()?` <b class="num">${first100Left()}</b> spots left.`:' All 100 spots are taken: new numbers are 100 to 999.'}</p><p class="fine">Every jersey number belongs to one player, first come first served.</p></div></div></section>
   <section class="hsec"><h3 class="ah">BAD levels</h3><div class="gcard">${ic('badminton')}<div><p><b>${esc(LVL_NOTICE)}</b></p><p class="fine">Levels run from F to A+, with a W or M rating. They only help us mix games.</p></div></div></section>
-  <section class="hsec"><h3 class="ah">Joining and dropping out</h3><div class="gcard">${ic('clock')}<div><p>Drop out for free up to 48 hours before. From 48 to 24 hours, half the fee applies. Under 24 hours, the full fee.</p><p class="fine">Pay by cash, bank transfer, Ziina or Careem Pay. Your payment status is on Home.</p></div></div></section>
+  <section class="hsec"><h3 class="ah">Joining and dropping out</h3><div class="gcard">${ic('clock')}<div><p>Drop out for free up to 48 hours before. From 48 to 24 hours, half the fee applies. Under 24 hours, the full fee.</p><p class="fine">Pay by cash, bank transfer, Ziina or Careem Pay. Your payment status is on My BAD.</p></div></div></section>
   <section class="hsec"><h3 class="ah">The departments</h3><div class="depts">${Object.keys(SPORTS).map(deptCard).join('')}</div></section>
-  <section class="hsec"><h3 class="ah">The tabs</h3><div class="list">${tabs.map(([i,t,d])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="ic-bub soft">${ic(NAV[i==='card'?'card':i]?NAV[i][0]:i)}</span><div><div class="nm">${t}</div><div class="sub">${d}</div></div></div>`).join('')}</div></section>`;
+  <section class="hsec"><h3 class="ah">The tabs</h3><div class="list">${tabs.map(([i,t,d])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="ic-bub soft">${ic(NAV[i]?NAV[i][0]:i)}</span><div><div class="nm">${t}</div><div class="sub">${d}</div></div></div>`).join('')}</div></section>`;
 }
 function renderClub(){
   const el=$('v-club'),today=new Date().toISOString().slice(0,10),f=S.clubFilter;
