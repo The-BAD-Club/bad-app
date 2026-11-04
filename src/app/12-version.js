@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.32';
+const APP_VERSION='0.33';
 const CHANGES=[
+  ['0.33','2026-11-04','Courts is now Check-in and Pay: one list with who came, how each person paid, walk-ins, and End session (with optional no-shows); the court queue, games and rankings are paused while the queue is rebuilt; guests and walk-ins keep their names; fewer tabs: Home, My BAD, Play (On Court and Off Court), Courts, Club, Shop; the Guide opens from Home and the Board from My BAD'],
   ['0.32','2026-11-04','Payments name every guest (no more "Player"), with a Guest tag and who brought them; when a guest signs up with the same name they are linked to their new account on their own, bookings and payments included; admins can also link a guest to a player by hand'],
   ['0.31','2026-11-04','Join BAD on the public Home is now a big full-width button'],
   ['0.30','2026-11-04','While the app loads you only see the BAD logo; the app fades in once it\'s ready, with nothing showing through'],

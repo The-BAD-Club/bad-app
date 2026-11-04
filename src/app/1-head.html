@@ -855,6 +855,14 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .gpnote{margin:4px 0}
 .pimg{position:relative;overflow:hidden}.pimg img{position:absolute;inset:18px 0 0;width:100%;height:calc(100% - 18px);object-fit:contain}
 .pgrid,.preo-grid{min-width:0}.pcard,.preo-item{min-width:0}.pmeta,.preo-meta{min-width:0;overflow-wrap:anywhere}
+.ssheet .srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center}.srow-who{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;min-width:0}.srow-acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.srow.here .nm::after{content:" ✓";color:var(--muted)}.paysel{max-width:170px;font-size:.82rem;padding:6px 8px}.paysel.ok{border-color:var(--ink)}
+.sheettools{gap:8px;justify-content:flex-end}.endnote{margin-bottom:4px}
+@media (max-width:560px){.ssheet .srow{grid-template-columns:minmax(0,1fr)}.srow-acts{justify-content:flex-start}}
+.li.pl .nm{overflow-wrap:anywhere}.li.pl .nm .tagl{white-space:normal}
+.seg2{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}.seg2 button{border:0;background:none;color:var(--muted);font:inherit;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:8px 16px;border-radius:999px;cursor:pointer}.seg2 button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.backlink{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--muted);font:inherit;font-size:.82rem;cursor:pointer;padding:0;justify-self:start}.backlink svg.i{transform:rotate(180deg);width:14px;height:14px}
+.homelinks{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.homelinks button{display:flex;align-items:center;gap:10px;padding:14px;border:1px solid var(--line);border-radius:var(--r-md,14px);background:none;color:var(--ink);font:inherit;font-weight:600;cursor:pointer;text-align:left}
 </style>
 
 <div class="wrap">
@@ -864,12 +872,9 @@ html.nocard .tabs button:not([data-v=home]){display:none}
     <nav class="tabs" aria-label="Sections">
       <button data-v="home"></button>
       <button data-v="card"></button>
-      <button data-v="guide"></button>
       <button data-v="play"></button>
       <button data-v="courts"></button>
       <button data-v="club"></button>
-      <button data-v="quests" aria-label="Side Quests"></button>
-      <button data-v="board"></button>
       <button data-v="shop"></button>
       <button data-v="admin" id="nav-admin" hidden></button>
     </nav>
