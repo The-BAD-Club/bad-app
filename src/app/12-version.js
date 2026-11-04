@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.25';
+const APP_VERSION='0.26';
 const CHANGES=[
+  ['0.26','2026-11-04','Home for first-time visitors: why we made BAD in three short paragraphs, and Your first time in three steps'],
   ['0.25','2026-11-04','Simpler Home: Bold. Agile. Defiant., one line about BAD, Join BAD, the next 3 sessions, the departments and one line on points'],
   ['0.24','2026-11-04','Home and the loading screen use the BAD logo, with Bold. Agile. Defiant. small in the bottom-left corner while loading; visitors see the real upcoming sessions on Home; house rules now apply to every department, Side Quest and event'],
   ['0.23','2026-11-04','Public Home: anyone can see The BAD Club (who we are, every week, what we do, the departments, why join, house rules, Instagram) without signing in, and sign in from there; your own page is now called My BAD; while the app loads only The BAD Club logo shows, never the registration screen'],
