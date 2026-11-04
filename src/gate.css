@@ -86,3 +86,10 @@ footer.sign .signout{justify-self:end;text-align:right}
 .tile .linkbtn{white-space:nowrap;font-size:.78rem}
 .gate-llc{margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}.gate-llc b{color:var(--ink);letter-spacing:.06em;text-transform:uppercase}
 html.guest .gate-back{padding:8px 0}
+/* ---------- Home: one card style, every card edge and text column lines up ---------- */
+.phome .list{gap:8px}
+.phome .list .li,.phome .bigfaq,.phome .igcard{border:1px solid var(--line)!important;border-radius:18px;background:none;padding:12px 14px;gap:14px;min-height:0;grid-template-columns:44px minmax(0,1fr) auto!important;box-shadow:none}
+.phome .list .li:hover,.phome .bigfaq:hover{background:var(--soft,#111)}
+.phome .list .li>.ic-bub,.phome .bigfaq>.ic-bub,.phome .igcard>:first-child{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;justify-self:start}
+.phome .bigfaq b{font-size:1.05rem}
+.phome .homelinks button{border-radius:18px;padding:12px 14px}

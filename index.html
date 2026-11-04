@@ -1027,6 +1027,13 @@ footer.sign .signout{justify-self:end;text-align:right}
 .tile .linkbtn{white-space:nowrap;font-size:.78rem}
 .gate-llc{margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}.gate-llc b{color:var(--ink);letter-spacing:.06em;text-transform:uppercase}
 html.guest .gate-back{padding:8px 0}
+/* ---------- Home: one card style, every card edge and text column lines up ---------- */
+.phome .list{gap:8px}
+.phome .list .li,.phome .bigfaq,.phome .igcard{border:1px solid var(--line)!important;border-radius:18px;background:none;padding:12px 14px;gap:14px;min-height:0;grid-template-columns:44px minmax(0,1fr) auto!important;box-shadow:none}
+.phome .list .li:hover,.phome .bigfaq:hover{background:var(--soft,#111)}
+.phome .list .li>.ic-bub,.phome .bigfaq>.ic-bub,.phome .igcard>:first-child{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;justify-self:start}
+.phome .bigfaq b{font-size:1.05rem}
+.phome .homelinks button{border-radius:18px;padding:12px 14px}
 
 </style>
 
@@ -1176,8 +1183,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.42';
+const APP_VERSION='0.43';
 const CHANGES=[
+  ['0.43','2026-11-05','Home: no photo strip before the FAQs; every Home card shares one border, icon column and text alignment'],
   ['0.42','2026-11-05','Design pass on every screen: the footer leads with The BAD Club LLC and its licence number (also on the sign-in screen); old footer taglines removed; list rows line up left; BADges and stats tiles tidied; bigger tap areas for Back and Sign out; shorter labels where text was cut off'],
   ['0.41','2026-11-05','Points are open from 5 Nov. Home opens with the BAD DAY film (muted loop, tap for sound) and community stills from it. BADminton courts: press and hold to drag on phones, End game is one tap, a free court shows Bring Next up on. Payments only on the night in Courts; the admin session page shows what is still owed afterwards. Sign-up QR only in Admin'],
   ['0.40','2026-11-05','Operations review: BADminton Check in now has payments (Paid, Collected, To collect, and a payment picker on every arrival); the level picker folds into one line per player; arrival numbers no longer overlap; the plan says Aiming for about 5 games each instead of promising it; Payments rows use Paid, Free and an x; the Add a session date field fits on phones'],
@@ -4187,10 +4195,10 @@ function renderHome(){const el=$('v-home');if(!el)return;
     <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','WTH is BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
     ${heroHTML(cta)}
-    ${guest?`${homePhotosHTML()}${about}
+    ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
     ${sessions}`
-    :`${newsHTML()}${sessions}${homePhotosHTML()}${about}`}
+    :`${newsHTML()}${sessions}${about}`}
     ${homeVideosHTML()}
     ${igHTML()}
   </div>`;
