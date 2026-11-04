@@ -364,10 +364,10 @@ service cloud.firestore {
 
     // ---------- settings ----------
     match /config/{doc} {
-      allow read: if signedIn();
+      allow read: if signedIn() || doc == 'home';   // config/home: the photos and video links on the public Home page
       allow write: if (doc == 'payments' && isFinance() && request.resource.data.updatedBy == email() && request.resource.data.updatedAt == request.time
                          && existsAfter(/databases/$(database)/documents/payHistory/$(request.resource.data.rev)))
-                   || (doc in ['codes', 'members', 'membership', 'site', 'brand'] && isFull())
+                   || (doc in ['codes', 'members', 'membership', 'site', 'brand', 'home'] && isFull())
                    || (doc == 'contact' && isOwner());
       // config/points and config/sheetPoints are written by the Apps Script only
     }

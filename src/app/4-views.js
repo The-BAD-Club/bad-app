@@ -2,13 +2,13 @@
 const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 /* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
-function setView(v){if(window.BAD_GUEST&&v!=='home'&&v!=='guide'){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+function setView(v){if(window.BAD_GUEST&&!['home','guide','faq','wth'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
   /* signed in but no card or guest pass yet: Home and registration only */
-  if(noCard()&&!['home','card','create','guide'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
+  if(noCard()&&!['home','card','create','guide','faq','wth'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
   S.view=v;
-  for(const id of ['home','card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',quests:'play',board:'card'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',quests:'play',board:'card'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -22,7 +22,7 @@ function render(){unboot();
   renderNow();
 }
 function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
-  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -300,8 +300,8 @@ function renderCard(){
       <section class="hsec"><div class="sec-h"><h3 class="ah">Your stats</h3><button class="linkbtn" data-goview="board">${ic('board')}Board${ic('arrow')}</button></div>
         <div class="tiles hstats h3">
           ${statT('Sessions',attended,'Played with BAD')}
-          ${QUEUE_OFF?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
-          ${QUEUE_OFF?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
+          ${queueOff('badminton')?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
+          ${queueOff('badminton')?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>

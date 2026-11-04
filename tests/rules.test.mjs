@@ -361,3 +361,11 @@ test('gallery albums: full admins and the department community manager', async (
   await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'gallery', 'g3'), a));
   await assertSucceeds(getDoc(doc(ctx('p1', 'p1@x.com'), 'gallery', 'g1')));
 });
+test('Home photos and videos: anyone can read config/home, only full admins write it', async () => {
+  const h = { photos: [], videos: ['https://youtu.be/abcdefg'] };
+  await assertSucceeds(setDoc(doc(ctx('f1', 'founder@x.com'), 'config', 'home'), h));
+  await assertSucceeds(getDoc(doc(anon(), 'config', 'home')));
+  await assertFails(getDoc(doc(anon(), 'config', 'members')));                                      // other config stays private
+  await assertFails(setDoc(doc(ctx('cm1', 'cm@x.com'), 'config', 'home'), h));
+  await assertFails(setDoc(doc(anon(), 'config', 'home'), h));
+});

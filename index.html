@@ -899,6 +899,23 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .seg2{display:flex;width:100%}.seg2 button{flex:1}
 .mmain>.row{margin:12px 0 22px}
 @media(max-width:560px){.mcourt .mc-s,.mwait .mc-s{display:none}.mcourt .mchip,.mwait .mchip{grid-template-columns:auto minmax(0,1fr);padding-right:8px;gap:6px}.mcourt .mchip .av,.mwait .mchip .av,.mcourt .mchip .avatar,.mwait .mchip .avatar{width:26px;height:26px}}
+/* v0.37 Home: FAQs, photos, videos, Instagram */
+.bigfaq{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;width:100%;padding:18px 20px;border:1px solid var(--ink);border-radius:20px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-height:76px}
+.bigfaq b{display:block;font-size:1.35rem;font-weight:800;letter-spacing:.02em}.bigfaq small{display:block;color:var(--muted);font-size:.85rem;margin-top:2px}.bigfaq:hover{background:var(--soft,#111)}
+.hstrip{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:24px;margin:0 -24px;padding:2px 24px 6px;scrollbar-width:none}.hstrip::-webkit-scrollbar{display:none}
+.hstrip figure{flex:0 0 68%;max-width:320px;aspect-ratio:4/5;margin:0;border-radius:18px;overflow:hidden;background:#0d0d0d;scroll-snap-align:start}.hstrip.sm figure{flex-basis:46%;max-width:220px}
+.hstrip img{width:100%;height:100%;object-fit:cover;display:block}
+.hvids{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:24px;margin:0 -24px;padding:2px 24px 6px;scrollbar-width:none}.hvids::-webkit-scrollbar{display:none}
+.hvid{flex:0 0 88%;max-width:520px;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#0d0d0d;scroll-snap-align:start}.hvid.tall{flex-basis:72%;max-width:340px;aspect-ratio:9/16}
+.hvid iframe,.hvid video{width:100%;height:100%;border:0;display:block;object-fit:cover}
+.igcard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:20px;color:var(--ink);text-decoration:none}
+.igcard b{display:block;font-size:1.05rem}.igcard small{display:block;color:var(--muted);font-size:.82rem}
+.faq{display:grid}.faq details{border-bottom:.5px solid var(--line)}.faq summary{list-style:none;cursor:pointer;padding:16px 28px 16px 0;font-weight:600;position:relative}.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';position:absolute;right:4px;top:14px;color:var(--muted);font-size:1.2rem}.faq details[open] summary::after{content:'−'}.faq p{margin:0 0 16px;color:var(--muted);line-height:1.55}
+.wthm{font-size:1.6rem;margin:4px 0 6px}
+#v-faq,#v-wth{gap:20px}
+@media(min-width:900px){.hstrip,.hvids{margin:0;padding:2px 0 6px}.hstrip figure{flex-basis:30%}}
+.hmthumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.hmthumb{position:relative;width:72px;height:90px;border-radius:10px;overflow:hidden}.hmthumb img{width:100%;height:100%;object-fit:cover}.hmthumb .rmx{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6)}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -986,6 +1003,8 @@ html.guest .jointop{margin-left:0}
   <section class="view" id="v-home" hidden></section>
   <section class="view" id="v-card"></section>
   <section class="view" id="v-guide" hidden></section>
+  <section class="view" id="v-faq" hidden></section>
+  <section class="view" id="v-wth" hidden></section>
   <section class="view" id="v-play" hidden></section>
   <section class="view" id="v-create" hidden>
     <div class="grid2">
@@ -1111,8 +1130,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.36';
+const APP_VERSION='0.37';
 const CHANGES=[
+  ['0.37','2026-11-04','Home: a big FAQs button and FAQs page; Guide and WTH is BAD buttons (the story has its own page); a swipeable photo strip, a Watch section for videos (YouTube, Instagram reels, TikTok, mp4) and an Instagram card; admins add Home photos and video links in Admin, Club posts. Needs the new security rules (config/home is public). BADminton Courts is back to the 4-step process (Set up, Check in, Games, Scores); other departments keep Check-in and Pay and the manual board'],
   ['0.36','2026-11-04','UX review: Courts header says which tab you are on and only shows Save now when something did not save; players see Live today; On Court / Off Court and the Check-in and Pay / Courts switches are full width; names on phone court chips are no longer cut off; My BAD shows a pending payment at the top; Home links point to Off Court, Gallery, Guide and Shop; admin player list folds the BAD level picker; session payments are one compact row each with WhatsApp and Email icons; the session player list is folded'],
   ['0.35','2026-11-04','Courts has a manual board again (Check-in and Pay | Courts): drag players from the bench onto courts and Next up, tap-to-move, drop on someone to swap, one-tap Start and End game, the first Next up group walks onto a court that ends; on phones the bench stays pinned above the tabs and you press and hold to drag; the loading screen shows only the logo; Members.gs calls badminton BADminton'],
   ['0.34','2026-11-04','Badminton department is now BADminton; Wednesday Rally and Friday Rally are now BADminton Wednesday and BADminton Friday (existing sessions renamed on their own)'],
@@ -1196,6 +1216,7 @@ const P={
  guide:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7M8 11h5"/>',
  photo:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
  taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
+ spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
  quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
  truck:'<path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
@@ -1780,13 +1801,13 @@ function gradePickHTML(){
 const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 /* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
-function setView(v){if(window.BAD_GUEST&&v!=='home'&&v!=='guide'){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+function setView(v){if(window.BAD_GUEST&&!['home','guide','faq','wth'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
   /* signed in but no card or guest pass yet: Home and registration only */
-  if(noCard()&&!['home','card','create','guide'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
+  if(noCard()&&!['home','card','create','guide','faq','wth'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
   S.view=v;
-  for(const id of ['home','card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',quests:'play',board:'card'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',quests:'play',board:'card'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -1800,7 +1821,7 @@ function render(){unboot();
   renderNow();
 }
 function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
-  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -2078,8 +2099,8 @@ function renderCard(){
       <section class="hsec"><div class="sec-h"><h3 class="ah">Your stats</h3><button class="linkbtn" data-goview="board">${ic('board')}Board${ic('arrow')}</button></div>
         <div class="tiles hstats h3">
           ${statT('Sessions',attended,'Played with BAD')}
-          ${QUEUE_OFF?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
-          ${QUEUE_OFF?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
+          ${queueOff('badminton')?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
+          ${queueOff('badminton')?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
@@ -2337,10 +2358,11 @@ if(typeof module!=='undefined'&&module.exports)module.exports=BADMATH;
 const COURT_SPORTS=['badminton','volleyball','pickleball','basketball'];
 /* running (BAD PACE) and dance (BAD HABITS) get a check-in board without courts */
 const BOARD_SPORTS=[...COURT_SPORTS,'run','dance'];
-/* QUEUE_OFF: the court queue (rotation, matching, games and scores) is switched off while it is rebuilt from scratch.
+/* queueOff(sport): the court queue (rotation, matching, games and scores) is switched off while it is rebuilt from scratch.
    Every department uses the Check-in & Pay sheet: who came, who paid, and ending the session. Set to false to bring the queue back. */
-const QUEUE_OFF=true;
-const isAttend=sp=>QUEUE_OFF||!COURT_SPORTS.includes(sp||'badminton');
+/* badminton keeps the full 4-step process (Set up, Check in, Games, Scores); other departments use Check-in & Pay and the manual board */
+const queueOff=sp=>(sp||'badminton')!=='badminton';
+const isAttend=sp=>queueOff(sp)||!COURT_SPORTS.includes(sp||'badminton');
 const SIZES={badminton:[[4,'Doubles'],[2,'Singles']],pickleball:[[4,'Doubles'],[2,'Singles']],volleyball:[[12,'6 v 6'],[10,'5 v 5'],[8,'4 v 4']],basketball:[[10,'5 v 5'],[8,'4 v 4'],[6,'3 v 3']]};
 const DEF_COURTS={badminton:2,pickleball:2,volleyball:1,basketball:1};
 const MIDLINE={basketball:'HALF COURT'};
@@ -2667,7 +2689,7 @@ function renderCourts(){
   const ED=courtEd(sid),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const pick=list.length>1?`<div class="sports">${list.map(([id,x])=>{const d=dParts(x.date);return `<button class="sp" data-act="pick" data-sid="${id}" aria-pressed="${id===sid}">${ic(sportOf(x.sport).icon)}${esc(x.title)} · ${d.w} ${d.d}${S.live[id]?' ●':''}</button>`}).join('')}</div>`:'';
   const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button>${sid&&S.live[sid]&&!S.asPlayer?(()=>{const v=saveState(),h=H(sid);return `<span class="tagl savest ${v[0]}" role="status">${esc(v[1])}</span><span class="row hbtns" style="gap:4px"><button class="btn ghost sm icon" data-act="undo" ${h.u.length?'':'disabled'} aria-label="Undo" title="Undo">↶</button><button class="btn ghost sm icon" data-act="redo" ${h.r.length?'':'disabled'} aria-label="Redo" title="Redo">↷</button>${v[0]==='ok'?'':`<button class="btn ghost sm" data-act="savenow">${ic('check')}Save now</button>`}</span>`})():''}</div>`:'';
-  const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · ${!(ED&&!S.asPlayer)?'Live today':QUEUE_OFF?(S.cTab==='board'?'Courts':'Check-in & Pay'):isAttend(S.courtSport)?'Check-in':'Courts'}</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
+  const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · ${!(ED&&!S.asPlayer)?'Live today':queueOff(S.courtSport)?(S.cTab==='board'?'Courts':'Check-in & Pay'):isAttend(S.courtSport)?'Check-in':'Courts'}</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
     el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&canSport(S.courtSport)?quickStart(S.courtSport):''}</div>`;bindCourts(el);return}
   if(!lv0){el.innerHTML=head+`<div class="empty">${ic(sportOf(s.sport).icon)}<span>${org?`${Object.keys(people(sid)).length} players are signed up. Open the board when you're at the venue.`:'Courts appear here once the session starts.'}</span>${org?`<button class="btn" data-act="start">${ic('plus')}Open the court board</button>`:''}</div>`;bindCourts(el);return}
@@ -2698,7 +2720,7 @@ function renderCourts(){
   }
   /* ---------- admin view: step by step ---------- */
   let body='';
-  if(S.courtStep===1&&!QUEUE_OFF){
+  if(S.courtStep===1&&!queueOff(S.courtSport)){
     const sp=s.sport||'badminton';
     body=`${planTile(sid,lv,true)}<div class="tile"><div class="sec-h"><b>${ic('court')} Courts</b><button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add court</button></div>
       <div class="list">${lv.courts.map((c,i)=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(c.name)}</div><div class="chips" style="margin-top:6px">${SIZES[sp].map(([n,l])=>`<button class="chip sm" data-act="size" data-k="c" data-c="${i}" data-n="${n}" aria-pressed="${c.size===n}">${l}</button>`).join('')}</div></div>${lv.courts.length>1&&!c.on.some(Boolean)?`<button class="btn ghost sm" data-act="del" data-k="c" data-c="${i}">${ic('x')}</button>`:''}</div>`).join('')}</div></div>
@@ -2707,7 +2729,7 @@ function renderCourts(){
       <div class="tile"><b>${ic('users')} How the bench works</b>
         <p class="fine">First come, first served: players are called in the order they checked in, and go to the back after each game. Late arrivals join at the back. Players can sit out a game and keep their place. Use Catch-up during games to call the players with the fewest games first.</p></div>
       <button class="btn wide" data-act="step" data-n="2">Next: check players in ${ic('arrow')}</button>`;
-  }else if(QUEUE_OFF){body=`<div class="seg2 ctabs" role="group" aria-label="Session tools"><button data-ctab="sheet" aria-pressed="${S.cTab!=='board'}">Check-in &amp; Pay</button><button data-ctab="board" aria-pressed="${S.cTab==='board'}">Courts</button></div>`+(S.cTab==='board'?mboardHTML(sid,s,lv):sheetHTML(sid,s,lv,ppl));
+  }else if(queueOff(S.courtSport)){body=`<div class="seg2 ctabs" role="group" aria-label="Session tools"><button data-ctab="sheet" aria-pressed="${S.cTab!=='board'}">Check-in &amp; Pay</button><button data-ctab="board" aria-pressed="${S.cTab==='board'}">Courts</button></div>`+(S.cTab==='board'?mboardHTML(sid,s,lv):sheetHTML(sid,s,lv,ppl));
   }else if(S.courtStep===2){
     const arr=arrivals(lv),notYet=Object.keys(ppl).filter(p=>!lv.checkin[p]).sort((a,b)=>who(sid,a).name.localeCompare(who(sid,b).name));
     body=`<div class="split eq"><div class="tile"><div class="sec-h"><b>${ic('check')} Check in</b><span class="fine num">${arr.length} of ${Math.max(arr.length,Object.keys(ppl).length)} here</span></div>
@@ -2801,7 +2823,7 @@ function bindSheet(el){const q=el.querySelector('#sheet-q');if(q)q.oninput=()=>{
     try{if(pid.startsWith('w~')){const lv=norm(clone(S.live[sid]));lv.wpay={...(lv.wpay||{})};if(!v)delete lv.wpay[pid];else lv.wpay[pid]=v==='free'?{waived:true,at,by}:{method:v,at,by};await saveLive(sid,lv)}
       else await setPayment(pid,sid,!v?null:v==='free'?{ok:true,waived:true,at,by}:{ok:true,method:v,at,by});
       toast(v?(v==='free'?'Marked free.':'Marked paid.'):'Marked not paid.')}catch(e){toast("Sorry, that didn't save.")}})}
-function bindCourts(el){if(!(QUEUE_OFF&&S.cTab==='board'))enableDrag(el);arrDrag(el);bindSheet(el);if(typeof mbBind==='function')mbBind(el);el.querySelectorAll('[data-ctab]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();S.cTab=b.dataset.ctab;msel=null;renderCourts()});el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
+function bindCourts(el){if(!(queueOff(S.courtSport)&&S.cTab==='board'))enableDrag(el);arrDrag(el);bindSheet(el);if(typeof mbBind==='function')mbBind(el);el.querySelectorAll('[data-ctab]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();S.cTab=b.dataset.ctab;msel=null;renderCourts()});el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
   const b=ev.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,sid=S.courtSid;
   if(act==='sport'){S.courtSport=b.dataset.v;S.courtSid=null;sel=null;pendingDone=null;return renderCourts()}
   if(act==='goadmin'){aTab='sessions';showNew=true;newSport=S.courtSport;return setView('admin')}
@@ -2930,10 +2952,10 @@ function bindCourts(el){if(!(QUEUE_OFF&&S.cTab==='board'))enableDrag(el);arrDrag
 /* ---------- board: points or club rank ---------- */
 S.boardMode='points';
 function renderBoard(){
-  if(QUEUE_OFF&&S.boardMode==='rank')S.boardMode='points';
+  if(queueOff('badminton')&&S.boardMode==='rank')S.boardMode='points';
   const f=S.sport,mode=S.boardMode;
   if(mode==='rank'&&!S.gAll)allGamesLoad();
-  const toggle=`<div class="chips"><button class="chip" data-bm="points" aria-pressed="${mode==='points'}">${ic('coin')}Points</button>${QUEUE_OFF?'':`<button class="chip" data-bm="rank" aria-pressed="${mode==='rank'}">${ic('board')}Rank</button>`}</div>`;
+  const toggle=`<div class="chips"><button class="chip" data-bm="points" aria-pressed="${mode==='points'}">${ic('coin')}Points</button>${queueOff('badminton')?'':`<button class="chip" data-bm="rank" aria-pressed="${mode==='rank'}">${ic('board')}Rank</button>`}</div>`;
   let body;
   if(mode==='rank'){const rows=rankRows(f);
     body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
@@ -3479,6 +3501,11 @@ function aPosts(){
       <div class="field wide"><label for="g-files">Photos</label><input type="file" id="g-files" accept="image/*" multiple></div></div>
     <div class="row"><button class="btn" id="g-go">${ic('photo')}Add album</button></div>
     ${Object.keys(S.gallery||{}).length?`<div class="list">${Object.entries(S.gallery).filter(([,a])=>fullAdmin()||canSport(a.club)).sort((a,b)=>String(b[1].date).localeCompare(String(a[1].date))).map(([id,a])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(a.title)}</div><div class="sub">${esc(SPORTS[a.club]?.club||'All of BAD')} · ${esc(fmtD(a.date))} · ${(a.photos||[]).length} photos${a.link?' · album link':''}</div></div><button class="btn ghost sm" data-galrm="${esc(id)}">Remove</button></div>`).join('')}</div>`:''}`)}
+  ${fullAdmin()?box('Home photos and videos',`<p class="hint">What visitors see on Home. Photos show as a swipeable strip (up to 8, made smaller to fit). Videos can be YouTube, Instagram reel or post, TikTok, or a direct .mp4 link. Until you add photos, Home shows the latest Gallery photos, then the Volume II shots.</p>
+    ${((S.homeMedia||{}).photos||[]).length?`<div class="hmthumbs">${S.homeMedia.photos.map((u,i)=>`<div class="hmthumb"><img src="${esc(u)}" alt=""><button class="rmx" data-hmrm="${i}" aria-label="Remove photo ${i+1}">${ic('x')}</button></div>`).join('')}</div>`:''}
+    <div class="field"><label for="hm-files">Add photos</label><input type="file" id="hm-files" accept="image/*" multiple></div>
+    <div class="field"><label for="hm-vids">Video links <span class="muted">(one per line)</span></label><textarea id="hm-vids" rows="3" placeholder="https://www.instagram.com/reel/…">${esc(((S.homeMedia||{}).videos||[]).join('\n'))}</textarea></div>
+    <div class="row"><button class="btn" id="hm-go">${ic('check')}Save Home media</button></div>`):''}
   ${box('Posted',`<div class="list">${Object.entries(S.posts).filter(([,p])=>fullAdmin()||canSport(p.club)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'} · ${esc(p.club&&p.club!=='all'?SPORTS[p.club]?.club||'':'All of BAD')}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')||'<p class="hint">Nothing posted yet.</p>'}</div>`)}`;
 }
 
@@ -3618,6 +3645,12 @@ function bindAdmin(){
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
     try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+  const hmSave=async d=>{const cur=S.homeMedia||{},nx={photos:cur.photos||[],videos:cur.videos||[],...d,updatedAt:new Date().toISOString()};while(JSON.stringify(nx).length>950000&&nx.photos.length)nx.photos.shift();await S.db.doc('config/home').set(nx);return nx};
+  on('hm-go',async()=>{const b=$('hm-go'),files=[...($('hm-files').files||[])],lines=$('hm-vids').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),bad=lines.filter(x=>!vidEmbed(x));
+    if(bad.length){toast(`That link isn't a video we can show: ${bad[0].slice(0,40)}`);return}
+    b.disabled=true;b.textContent='Saving…';try{const add=[];for(const f of files.slice(0,8))add.push(await shrinkImg(f));const before=((S.homeMedia||{}).photos||[]).length;
+      const nx=await hmSave({videos:lines.slice(0,6),photos:[...((S.homeMedia||{}).photos||[]),...add].slice(-8)});toast(nx.photos.length<Math.min(8,before+add.length)?'Saved. A few older photos were dropped to fit.':'Home is updated.')}catch(e){toast(e&&e.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't save.")}finally{b.disabled=false}});
+  q('[data-hmrm]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.hmrm,ph=[...((S.homeMedia||{}).photos||[])];ph.splice(i,1);try{await hmSave({photos:ph});toast('Photo removed.')}catch(e){toast("Sorry, that didn't save.")}});
   on('g-go',async()=>{const title=$('g-title').value.trim(),link=$('g-link').value.trim(),files=[...($('g-files').files||[])].slice(0,8);if(!title){toast('Please name the event.');return}
     if(link&&!/^https:\/\//.test(link)){toast('Please use a full https:// link.');return}if(!files.length&&!link){toast('Add some photos or the album link.');return}
     const b=$('g-go');b.disabled=true;b.textContent='Adding…';
@@ -4041,9 +4074,6 @@ function renderHome(){const el=$('v-home');if(!el)return;
     ?`<button class="btn bigjoin" data-hjoin="1">${ic('card')}Join BAD</button>`
     :`<div class="row"><button class="btn" data-hgo="card">${ic('card')}${me?'Open My BAD':'Make my card'}</button><button class="btn ghost" data-hgo="play">${ic('play')}Find a session</button></div>`;
   const depts=Object.keys(SPORTS).filter(k=>k!=='vibe');
-  const story=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
-      <p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p>
-      <p>BAD is still a passion project, a community built like a brand. It started with badminton and now plays volleyball, pickleball, basketball, runs and dances too.</p>`;
   const first=[['card','Make your card','Free, and it takes a minute.'],['play','Pick a session','Book your spot in Play.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
   el.innerHTML=`<div class="phome">
     <section class="phero">
@@ -4051,23 +4081,83 @@ function renderHome(){const el=$('v-home');if(!el)return;
       <p class="muted">A Dubai sports community. Every level is welcome.</p>
       ${cta}
     </section>
-    <div class="homelinks">${(guest?[['guide','guide','How BAD works']]:[['quests','quest','Off Court'],['club','photo','Gallery'],['guide','guide','How BAD works'],['shop','bag','Shop']]).map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>
-    ${guest?`<section class="hsec story"><h3 class="ah">Why we made BAD</h3>${story}</section>`:''}
+    <button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
+    <div class="homelinks">${(guest?[['guide','guide','Guide'],['wth','spark','WTH is BAD']]:[['guide','guide','Guide'],['wth','spark','WTH is BAD'],['quests','quest','Off Court'],['shop','bag','Shop']]).map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>
+    ${homePhotosHTML()}
     ${guest?`<section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>`:''}
     ${next.length?`<section class="hsec"><div class="sec-h"><h3 class="ah">Coming up</h3><button class="linkbtn" data-hgo="play">See all${ic('arrow')}</button></div><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`}
+    ${homeVideosHTML()}
+    ${igHTML()}
     <section class="hsec"><h3 class="ah">Departments</h3><div class="dgrid">${depts.map(k=>`<div class="dchip">${ic(SPORTS[k].icon)}<span>${esc(k==='training'?'Training':SPORTS[k].club)}</span></div>`).join('')}</div></section>
-    <p class="fine phfoot">${ic('coin')}${c.per} points every session · ${c.free} points is a free session<br><a href="${IG_URL}" target="_blank" rel="noopener">@thebad.club</a></p>
+    <p class="fine phfoot">${ic('coin')}${c.per} points every session · ${c.free} points is a free session</p>
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
   el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>setView(b.dataset.hgo));
 }
 /* called by the sign-in bridge when nobody is signed in: show Home, and if they followed a link to another tab, ask them to sign in for it */
-window.badGuestMode=function(){
+window.badGuestMode=function(){loadHomeMediaPublic();
   /* visitors see the real upcoming sessions (sessions are public in the security rules); if that read isn't allowed yet, the weekly list shows instead */
   const db=window.badPublicDb;if(db&&!S.pubSessions){const today=new Date().toISOString().slice(0,10);
     db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome()}).catch(()=>{})}
 const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;setView('home');if(want&&window.badJoin)window.badJoin(want)};
+
+/* ---------- FAQs, WTH is BAD, and the photos, videos and Instagram on Home ---------- */
+const STORY_HTML=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
+      <p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p>
+      <p>BAD is still a passion project, a community built like a brand. It started with badminton and now plays volleyball, pickleball, basketball, runs and dances too.</p>`;
+function faqList(){const c=PS();return [
+  ['About BAD',[
+    ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
+    ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
+    ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
+    ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
+  ['Joining and booking',[
+    ['How do I join?','Tap Join BAD and make your player card. It is free and takes a minute. Just want to try once? Take a guest pass instead.'],
+    ['How do I book a session?','Open Play, pick a session and tap Count me in. You can cancel, change how you pay or bring a friend from My BAD.'],
+    ['What if the session is full?','You go on the waitlist. It is first come, first served and nobody skips it. Core members and up just get to sign up 48 hours earlier.'],
+    ['What if I can’t make it?','Drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies.']]],
+  ['Paying',[
+    ['How much is a session?','Each session shows its fee in Play before you book. You only pay for the sessions you join.'],
+    ['How do I pay?','Cash at the session, bank transfer or Ziina. Open the session in My BAD to see how and to tell us when you’ve paid.']]],
+  ['Points, BADges and your card',[
+    ['How do points work?',`You get ${c.per} points for every session you play. At ${c.free} points your next session is free. Points reset if you don’t play for 6 months.`],
+    ['What are BADges?','A thank you from the founders and crew for helping out, bringing friends and showing up. They never expire. More BADges means a higher level and better perks.'],
+    ['What is the OG 100?','The first 100 people to make a card. They start one BADge level up and get an OG 100 number on the back of their card.'],
+    ['Can I pick my jersey number?','Yes, when you make your card. Numbers are first come, first served. Once 0 to 99 are taken, numbers have three digits.']]],
+  ['Anything else?',[
+    ['How do I reach you?','Send us a message on Instagram at @thebad.club, or speak to any of the crew at a session.']]]]}
+function renderFaq(){const el=$('v-faq');if(!el)return;
+  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">FAQs</span><h2>Good questions.</h2><p class="muted">Everything people ask before their first BAD session.</p></div>
+  ${faqList().map(([h,qs])=>`<section class="hsec"><h3 class="ah">${esc(h)}</h3><div class="faq">${qs.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>`).join('')}
+  <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="guide">${ic('guide')}Read the Guide</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
+  el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
+function renderWth(){const el=$('v-wth');if(!el)return;
+  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">WTH is BAD</span><h2>We were all BAD players once.</h2></div>
+  ${homePhotosHTML(true)}<section class="hsec story">${STORY_HTML}</section>
+  <section class="hsec"><h3 class="ah">What we stand for</h3><p class="manifesto wthm">Community over competition.</p><p class="fine">Every level plays with everyone. Show up, cheer loud, get better together.</p></section>
+  <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="faq">FAQs</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
+  el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
+/* photos: the ones an admin picked for Home, then the latest Gallery albums, then the Volume II shots until real photos are added */
+const HOME_FALLBACK=['assets/v2/oncourt_front.webp','assets/v2/offcourt_front.webp','assets/v2/towel.webp','assets/v2/tote.webp','assets/v2/oncourt_back.webp'];
+function homePhotos(){const h=S.homeMedia||{},own=(h.photos||[]).filter(Boolean);
+  const gal=Object.values(S.gallery||{}).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).flatMap(a=>a.photos||[]).slice(0,8);
+  const all=[...own,...gal];return all.length?all.slice(0,10):HOME_FALLBACK}
+function homePhotosHTML(small){const ps=homePhotos();return `<div class="hstrip${small?' sm':''}" aria-label="Photos from BAD">${ps.map((u,i)=>`<figure><img src="${esc(u)}" alt="" loading="${i<2?'eager':'lazy'}" decoding="async"></figure>`).join('')}</div>`}
+/* video links: YouTube, Instagram reels or posts, TikTok, or a direct .mp4 */
+function vidEmbed(u){u=String(u||'').trim();let m;
+  if((m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{6,})/)))return {k:'yt',src:`https://www.youtube-nocookie.com/embed/${m[1]}`};
+  if((m=u.match(/instagram\.com\/(p|reel|reels|tv)\/([\w-]+)/)))return {k:'ig',src:`https://www.instagram.com/${m[1]==='reels'?'reel':m[1]}/${m[2]}/embed`};
+  if((m=u.match(/tiktok\.com\/@[\w.]+\/video\/(\d+)/)))return {k:'tt',src:`https://www.tiktok.com/embed/v2/${m[1]}`};
+  if(/^https:\/\/.+\.(mp4|webm|mov)(\?.*)?$/i.test(u))return {k:'mp4',src:u};return null}
+function homeVideosHTML(){const v=((S.homeMedia||{}).videos||[]).map(vidEmbed).filter(Boolean).slice(0,6);if(!v.length)return '';
+  return `<section class="hsec"><h3 class="ah">Watch</h3><div class="hvids">${v.map(x=>x.k==='mp4'?`<div class="hvid tall"><video src="${esc(x.src)}" controls playsinline preload="metadata"></video></div>`
+    :`<div class="hvid${x.k==='yt'?'':' tall'}"><iframe src="${esc(x.src)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="BAD video"></iframe></div>`).join('')}</div></section>`}
+function igHTML(){return `<a class="igcard" href="${IG_URL}" target="_blank" rel="noopener"><span class="ic-bub">${ic('ig')}</span><span><b>@thebad.club</b><small>Photos, reels and what’s next. Follow us on Instagram.</small></span><span class="btn sm">Follow</span></a>`}
+/* visitors read the Home photos and videos with the public connection (config/home is public in the security rules) */
+function loadHomeMediaPublic(){const db=window.badPublicDb;if(!db||S.homeMedia)return;db.doc('config/home').get().then(d=>{S.homeMedia=d.exists?d.data():{};if(S.view==='home'||S.view==='wth')renderNow()}).catch(()=>{})}
 
 /* ---------- brand: official BAD logos (BAD ASSETS folder, files 03 white / 04 black) built in; brand fonts by upload ---------- */
 function applyBrand(){
@@ -4103,7 +4193,7 @@ function bindBrand(){
 S.contacts={};S.brand={};
 (async function boot(){
   /* links straight to a tab: …/#shop, #quests, #play, #club, #board, #courts (used by short links like the Volume II one) */
-  {const v=(location.hash||'').match(/^#(home|guide|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
+  {const v=(location.hash||'').match(/^#(home|guide|faq|wth|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
   render();
   const C=window.claude;if(!C||!C.use){S.loaded=true;render();return}
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
@@ -4149,6 +4239,7 @@ S.contacts={};S.brand={};
   db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
+  db.doc('config/home').onSnapshot(d=>{S.homeMedia=d.exists?d.data():{};if(['home','wth'].includes(S.view))render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});
   if(S.canEdit)db.collection('payments').onSnapshot(s=>{S.payOld=map(s);rebuildPayments();render()},()=>{});

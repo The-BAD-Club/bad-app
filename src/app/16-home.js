@@ -14,9 +14,6 @@ function renderHome(){const el=$('v-home');if(!el)return;
     ?`<button class="btn bigjoin" data-hjoin="1">${ic('card')}Join BAD</button>`
     :`<div class="row"><button class="btn" data-hgo="card">${ic('card')}${me?'Open My BAD':'Make my card'}</button><button class="btn ghost" data-hgo="play">${ic('play')}Find a session</button></div>`;
   const depts=Object.keys(SPORTS).filter(k=>k!=='vibe');
-  const story=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
-      <p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p>
-      <p>BAD is still a passion project, a community built like a brand. It started with badminton and now plays volleyball, pickleball, basketball, runs and dances too.</p>`;
   const first=[['card','Make your card','Free, and it takes a minute.'],['play','Pick a session','Book your spot in Play.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
   el.innerHTML=`<div class="phome">
     <section class="phero">
@@ -24,20 +21,80 @@ function renderHome(){const el=$('v-home');if(!el)return;
       <p class="muted">A Dubai sports community. Every level is welcome.</p>
       ${cta}
     </section>
-    <div class="homelinks">${(guest?[['guide','guide','How BAD works']]:[['quests','quest','Off Court'],['club','photo','Gallery'],['guide','guide','How BAD works'],['shop','bag','Shop']]).map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>
-    ${guest?`<section class="hsec story"><h3 class="ah">Why we made BAD</h3>${story}</section>`:''}
+    <button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
+    <div class="homelinks">${(guest?[['guide','guide','Guide'],['wth','spark','WTH is BAD']]:[['guide','guide','Guide'],['wth','spark','WTH is BAD'],['quests','quest','Off Court'],['shop','bag','Shop']]).map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>
+    ${homePhotosHTML()}
     ${guest?`<section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>`:''}
     ${next.length?`<section class="hsec"><div class="sec-h"><h3 class="ah">Coming up</h3><button class="linkbtn" data-hgo="play">See all${ic('arrow')}</button></div><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`}
+    ${homeVideosHTML()}
+    ${igHTML()}
     <section class="hsec"><h3 class="ah">Departments</h3><div class="dgrid">${depts.map(k=>`<div class="dchip">${ic(SPORTS[k].icon)}<span>${esc(k==='training'?'Training':SPORTS[k].club)}</span></div>`).join('')}</div></section>
-    <p class="fine phfoot">${ic('coin')}${c.per} points every session · ${c.free} points is a free session<br><a href="${IG_URL}" target="_blank" rel="noopener">@thebad.club</a></p>
+    <p class="fine phfoot">${ic('coin')}${c.per} points every session · ${c.free} points is a free session</p>
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
   el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>setView(b.dataset.hgo));
 }
 /* called by the sign-in bridge when nobody is signed in: show Home, and if they followed a link to another tab, ask them to sign in for it */
-window.badGuestMode=function(){
+window.badGuestMode=function(){loadHomeMediaPublic();
   /* visitors see the real upcoming sessions (sessions are public in the security rules); if that read isn't allowed yet, the weekly list shows instead */
   const db=window.badPublicDb;if(db&&!S.pubSessions){const today=new Date().toISOString().slice(0,10);
     db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome()}).catch(()=>{})}
 const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;setView('home');if(want&&window.badJoin)window.badJoin(want)};
+
+/* ---------- FAQs, WTH is BAD, and the photos, videos and Instagram on Home ---------- */
+const STORY_HTML=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
+      <p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p>
+      <p>BAD is still a passion project, a community built like a brand. It started with badminton and now plays volleyball, pickleball, basketball, runs and dances too.</p>`;
+function faqList(){const c=PS();return [
+  ['About BAD',[
+    ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
+    ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
+    ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
+    ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
+  ['Joining and booking',[
+    ['How do I join?','Tap Join BAD and make your player card. It is free and takes a minute. Just want to try once? Take a guest pass instead.'],
+    ['How do I book a session?','Open Play, pick a session and tap Count me in. You can cancel, change how you pay or bring a friend from My BAD.'],
+    ['What if the session is full?','You go on the waitlist. It is first come, first served and nobody skips it. Core members and up just get to sign up 48 hours earlier.'],
+    ['What if I can’t make it?','Drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies.']]],
+  ['Paying',[
+    ['How much is a session?','Each session shows its fee in Play before you book. You only pay for the sessions you join.'],
+    ['How do I pay?','Cash at the session, bank transfer or Ziina. Open the session in My BAD to see how and to tell us when you’ve paid.']]],
+  ['Points, BADges and your card',[
+    ['How do points work?',`You get ${c.per} points for every session you play. At ${c.free} points your next session is free. Points reset if you don’t play for 6 months.`],
+    ['What are BADges?','A thank you from the founders and crew for helping out, bringing friends and showing up. They never expire. More BADges means a higher level and better perks.'],
+    ['What is the OG 100?','The first 100 people to make a card. They start one BADge level up and get an OG 100 number on the back of their card.'],
+    ['Can I pick my jersey number?','Yes, when you make your card. Numbers are first come, first served. Once 0 to 99 are taken, numbers have three digits.']]],
+  ['Anything else?',[
+    ['How do I reach you?','Send us a message on Instagram at @thebad.club, or speak to any of the crew at a session.']]]]}
+function renderFaq(){const el=$('v-faq');if(!el)return;
+  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">FAQs</span><h2>Good questions.</h2><p class="muted">Everything people ask before their first BAD session.</p></div>
+  ${faqList().map(([h,qs])=>`<section class="hsec"><h3 class="ah">${esc(h)}</h3><div class="faq">${qs.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>`).join('')}
+  <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="guide">${ic('guide')}Read the Guide</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
+  el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
+function renderWth(){const el=$('v-wth');if(!el)return;
+  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">WTH is BAD</span><h2>We were all BAD players once.</h2></div>
+  ${homePhotosHTML(true)}<section class="hsec story">${STORY_HTML}</section>
+  <section class="hsec"><h3 class="ah">What we stand for</h3><p class="manifesto wthm">Community over competition.</p><p class="fine">Every level plays with everyone. Show up, cheer loud, get better together.</p></section>
+  <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="faq">FAQs</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
+  el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
+  el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
+/* photos: the ones an admin picked for Home, then the latest Gallery albums, then the Volume II shots until real photos are added */
+const HOME_FALLBACK=['assets/v2/oncourt_front.webp','assets/v2/offcourt_front.webp','assets/v2/towel.webp','assets/v2/tote.webp','assets/v2/oncourt_back.webp'];
+function homePhotos(){const h=S.homeMedia||{},own=(h.photos||[]).filter(Boolean);
+  const gal=Object.values(S.gallery||{}).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).flatMap(a=>a.photos||[]).slice(0,8);
+  const all=[...own,...gal];return all.length?all.slice(0,10):HOME_FALLBACK}
+function homePhotosHTML(small){const ps=homePhotos();return `<div class="hstrip${small?' sm':''}" aria-label="Photos from BAD">${ps.map((u,i)=>`<figure><img src="${esc(u)}" alt="" loading="${i<2?'eager':'lazy'}" decoding="async"></figure>`).join('')}</div>`}
+/* video links: YouTube, Instagram reels or posts, TikTok, or a direct .mp4 */
+function vidEmbed(u){u=String(u||'').trim();let m;
+  if((m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{6,})/)))return {k:'yt',src:`https://www.youtube-nocookie.com/embed/${m[1]}`};
+  if((m=u.match(/instagram\.com\/(p|reel|reels|tv)\/([\w-]+)/)))return {k:'ig',src:`https://www.instagram.com/${m[1]==='reels'?'reel':m[1]}/${m[2]}/embed`};
+  if((m=u.match(/tiktok\.com\/@[\w.]+\/video\/(\d+)/)))return {k:'tt',src:`https://www.tiktok.com/embed/v2/${m[1]}`};
+  if(/^https:\/\/.+\.(mp4|webm|mov)(\?.*)?$/i.test(u))return {k:'mp4',src:u};return null}
+function homeVideosHTML(){const v=((S.homeMedia||{}).videos||[]).map(vidEmbed).filter(Boolean).slice(0,6);if(!v.length)return '';
+  return `<section class="hsec"><h3 class="ah">Watch</h3><div class="hvids">${v.map(x=>x.k==='mp4'?`<div class="hvid tall"><video src="${esc(x.src)}" controls playsinline preload="metadata"></video></div>`
+    :`<div class="hvid${x.k==='yt'?'':' tall'}"><iframe src="${esc(x.src)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="BAD video"></iframe></div>`).join('')}</div></section>`}
+function igHTML(){return `<a class="igcard" href="${IG_URL}" target="_blank" rel="noopener"><span class="ic-bub">${ic('ig')}</span><span><b>@thebad.club</b><small>Photos, reels and what’s next. Follow us on Instagram.</small></span><span class="btn sm">Follow</span></a>`}
+/* visitors read the Home photos and videos with the public connection (config/home is public in the security rules) */
+function loadHomeMediaPublic(){const db=window.badPublicDb;if(!db||S.homeMedia)return;db.doc('config/home').get().then(d=>{S.homeMedia=d.exists?d.data():{};if(S.view==='home'||S.view==='wth')renderNow()}).catch(()=>{})}

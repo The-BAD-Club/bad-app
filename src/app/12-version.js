@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.36';
+const APP_VERSION='0.37';
 const CHANGES=[
+  ['0.37','2026-11-04','Home: a big FAQs button and FAQs page; Guide and WTH is BAD buttons (the story has its own page); a swipeable photo strip, a Watch section for videos (YouTube, Instagram reels, TikTok, mp4) and an Instagram card; admins add Home photos and video links in Admin, Club posts. Needs the new security rules (config/home is public). BADminton Courts is back to the 4-step process (Set up, Check in, Games, Scores); other departments keep Check-in and Pay and the manual board'],
   ['0.36','2026-11-04','UX review: Courts header says which tab you are on and only shows Save now when something did not save; players see Live today; On Court / Off Court and the Check-in and Pay / Courts switches are full width; names on phone court chips are no longer cut off; My BAD shows a pending payment at the top; Home links point to Off Court, Gallery, Guide and Shop; admin player list folds the BAD level picker; session payments are one compact row each with WhatsApp and Email icons; the session player list is folded'],
   ['0.35','2026-11-04','Courts has a manual board again (Check-in and Pay | Courts): drag players from the bench onto courts and Next up, tap-to-move, drop on someone to swap, one-tap Start and End game, the first Next up group walks onto a court that ends; on phones the bench stays pinned above the tabs and you press and hold to drag; the loading screen shows only the logo; Members.gs calls badminton BADminton'],
   ['0.34','2026-11-04','Badminton department is now BADminton; Wednesday Rally and Friday Rally are now BADminton Wednesday and BADminton Friday (existing sessions renamed on their own)'],

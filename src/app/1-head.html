@@ -893,6 +893,23 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 .seg2{display:flex;width:100%}.seg2 button{flex:1}
 .mmain>.row{margin:12px 0 22px}
 @media(max-width:560px){.mcourt .mc-s,.mwait .mc-s{display:none}.mcourt .mchip,.mwait .mchip{grid-template-columns:auto minmax(0,1fr);padding-right:8px;gap:6px}.mcourt .mchip .av,.mwait .mchip .av,.mcourt .mchip .avatar,.mwait .mchip .avatar{width:26px;height:26px}}
+/* v0.37 Home: FAQs, photos, videos, Instagram */
+.bigfaq{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;width:100%;padding:18px 20px;border:1px solid var(--ink);border-radius:20px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-height:76px}
+.bigfaq b{display:block;font-size:1.35rem;font-weight:800;letter-spacing:.02em}.bigfaq small{display:block;color:var(--muted);font-size:.85rem;margin-top:2px}.bigfaq:hover{background:var(--soft,#111)}
+.hstrip{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:24px;margin:0 -24px;padding:2px 24px 6px;scrollbar-width:none}.hstrip::-webkit-scrollbar{display:none}
+.hstrip figure{flex:0 0 68%;max-width:320px;aspect-ratio:4/5;margin:0;border-radius:18px;overflow:hidden;background:#0d0d0d;scroll-snap-align:start}.hstrip.sm figure{flex-basis:46%;max-width:220px}
+.hstrip img{width:100%;height:100%;object-fit:cover;display:block}
+.hvids{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:24px;margin:0 -24px;padding:2px 24px 6px;scrollbar-width:none}.hvids::-webkit-scrollbar{display:none}
+.hvid{flex:0 0 88%;max-width:520px;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#0d0d0d;scroll-snap-align:start}.hvid.tall{flex-basis:72%;max-width:340px;aspect-ratio:9/16}
+.hvid iframe,.hvid video{width:100%;height:100%;border:0;display:block;object-fit:cover}
+.igcard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:20px;color:var(--ink);text-decoration:none}
+.igcard b{display:block;font-size:1.05rem}.igcard small{display:block;color:var(--muted);font-size:.82rem}
+.faq{display:grid}.faq details{border-bottom:.5px solid var(--line)}.faq summary{list-style:none;cursor:pointer;padding:16px 28px 16px 0;font-weight:600;position:relative}.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';position:absolute;right:4px;top:14px;color:var(--muted);font-size:1.2rem}.faq details[open] summary::after{content:'−'}.faq p{margin:0 0 16px;color:var(--muted);line-height:1.55}
+.wthm{font-size:1.6rem;margin:4px 0 6px}
+#v-faq,#v-wth{gap:20px}
+@media(min-width:900px){.hstrip,.hvids{margin:0;padding:2px 0 6px}.hstrip figure{flex-basis:30%}}
+.hmthumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.hmthumb{position:relative;width:72px;height:90px;border-radius:10px;overflow:hidden}.hmthumb img{width:100%;height:100%;object-fit:cover}.hmthumb .rmx{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6)}
 </style>
 
 <div class="wrap">
@@ -913,6 +930,8 @@ html.nocard .tabs button:not([data-v=home]){display:none}
   <section class="view" id="v-home" hidden></section>
   <section class="view" id="v-card"></section>
   <section class="view" id="v-guide" hidden></section>
+  <section class="view" id="v-faq" hidden></section>
+  <section class="view" id="v-wth" hidden></section>
   <section class="view" id="v-play" hidden></section>
   <section class="view" id="v-create" hidden>
     <div class="grid2">
