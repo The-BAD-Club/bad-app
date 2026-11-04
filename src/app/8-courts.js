@@ -124,7 +124,7 @@ function rankRows(sport){
 /* ---------- board state helpers ---------- */
 /* admins for their department, or the session's Game Master */
 const isGM=sid=>!!sid&&!!S.uid&&(S.sessions[sid]?.gms||[]).includes(S.uid);
-const courtEd=sid=>(S.canEdit&&canSport(S.courtSport))||isGM(sid);
+const courtEd=sid=>(S.canEdit&&canRun(S.courtSport))||isGM(sid);
 function courtSessions(){
   const now=Date.now();
   return Object.entries(S.sessions).filter(([sid,s])=>!s.cancelled&&(s.sport||'badminton')===S.courtSport&&(S.live[sid]?sessStart(s)>now-18*36e5:((S.canEdit||isGM(sid))?sessStart(s)>now-12*36e5&&sessStart(s)<now+7*864e5:Math.abs(sessStart(s)-now)<12*36e5)))
@@ -196,7 +196,7 @@ function startBoard(sid){const sp=S.sessions[sid].sport||'badminton';
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
-S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='',ciEdit=null,ciRm=false,ciShuf=false,finishAsk=null;
+S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='',ciEdit=null,ciRm=false,ciShuf=false,resetAsk=false,finishAsk=null;
 const CANCEL_REASONS=['Injury','Player had to leave','Wrong lineup','Court problem','Other'];
 /* timers on playing courts tick once a minute without redrawing the board */
 setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m-Number(t.dataset.pm||0))/60000))+' min'}),20000);
@@ -205,7 +205,7 @@ function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
   const tag=o.act?'button':'span',me=pid===S.uid;
   return `<${tag} class="pl${sel===pid?' sel':''}${me?' me':''}" ${o.act?`data-act="${o.act}" ${o.data||''}`:''}>${o.n!=null?`<span class="qn num">${o.n}</span>`:''}${pav(sid,pid)}<span class="pn">${esc(nm(sid,pid))}</span>${o.games?`<span class="fine num">${gamesFor(sid,pid)} played${S.canEdit&&!S.asPlayer&&lvlTag(pid,S.sessions[sid]?.sport||'badminton')?' · '+lvlTag(pid,S.sessions[sid]?.sport||'badminton'):''}</span>`:''}${o.lv&&isRest(o.lv,pid)?'<span class="flag">Resting</span>':o.lv&&(o.lv.more||{})[pid]?'<span class="flag">+ games</span>':''}</${tag}>`}
 function spot(o={}){return o.act?`<button class="pl" data-act="${o.act}" ${o.data||''} aria-label="Open spot"><span class="slot">${ic('plus')}</span></button>`:`<span class="pl"><span class="slot"></span></span>`}
-function sideHTML(sid,c,k,ci,from,to,edit){let h='';for(let i=from;i<to;i++){const pid=c.on[i],d=`data-k="${k}" data-c="${ci}" data-i="${i}"`;h+=pid?pl(sid,pid,{act:edit?'slot':null,data:d,games:edit,lv:S.live[sid]}):spot({act:edit?'slot':null,data:d})}return h}
+function sideHTML(sid,c,k,ci,from,to,edit){let h='';for(let i=from;i<to;i++){const pid=c.on[i],d=`data-k="${k}" data-c="${ci}" data-i="${i}"`;h+=pid?(edit?`<span class="plw">${pl(sid,pid,{act:'slot',data:d,games:true,lv:S.live[sid]})}<button class="plx" data-act="slotx" ${d} aria-label="Take ${esc(nm(sid,pid))} off, back to the bench">${ic('x')}</button></span>`:pl(sid,pid,{games:false,lv:S.live[sid]})):spot({act:edit?'slot':null,data:d})}return h}
 function courtCard(sid,c,ci,edit){
   const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,playing=inG(c),gno=liveGames(sid).filter(([,g])=>g.court===c.name).length+1;
   const fmt=c.fmt||(sp==='badminton'?suggestFmt(sid,S.live[sid]||{courts:[]}):null);
@@ -225,11 +225,11 @@ function courtCard(sid,c,ci,edit){
 }
 function waitRow(sid,w,wi,edit){
   const half=w.size/2,full=w.on.filter(Boolean).length;
-  return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span>${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</div>
+  return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span><span class="row" style="gap:6px">${edit&&full?`<button class="linkbtn" data-act="wclear" data-c="${wi}">Clear</button>`:''}${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</span></div>
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
 /* check-in list: rename a guest or walk-in, or take anyone off tonight's list */
-function ciEditor(sid,p){const x=who(sid,p),member=!!x.uid&&!!S.profiles[p],admin=S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton');
+function ciEditor(sid,p){const x=who(sid,p),member=!!x.uid&&!!S.profiles[p],admin=S.canEdit&&canRun((S.sessions[sid]||{}).sport||'badminton');
   return `<div class="cied">${member?`<p class="fine">${esc(x.name)} is a member, so their name comes from their card.</p>`:`<label class="fine" for="ci-nm">Name</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input type="text" id="ci-nm" maxlength="24" value="${esc(x.name)}" style="flex:1;min-width:0"><button class="btn sm" data-act="cirename" data-pid="${esc(p)}">Save</button></div>`}
     ${ciRm?(()=>{const f=admin&&!x.walk?dropFee(sid):{amount:0},fee=f.amount>0;return `<div class="confirm"><b>Take ${esc(x.name)} off tonight's list?</b><p class="fine">${admin&&!x.walk?(fee?`Cancelling inside 48 hours: ${esc(f.label.toLowerCase())}, AED ${f.amount}, goes on their payments. Choose “No charge” if there's a good reason.`:'They’re removed from the session list too. No charge this far ahead.'):x.walk?'The walk-in is removed.':'They’re hidden from tonight’s board. An admin can take them off the session list.'}</p><div class="row" style="gap:6px">${fee?`<button class="btn sm" data-act="cirmgo" data-charge="1" data-pid="${esc(p)}">Cancelled · AED ${f.amount}</button><button class="btn ghost sm" data-act="cirmgo" data-charge="0" data-pid="${esc(p)}">No charge</button>`:`<button class="btn sm" data-act="cirmgo" data-pid="${esc(p)}">Remove</button>`}<button class="btn ghost sm" data-act="cirmno">Keep</button></div></div>`})()
       :`<button class="linkbtn danger" data-act="cirm" data-pid="${esc(p)}">Remove from tonight</button>`}<button class="linkbtn" data-act="ciedit" data-pid="">Done</button></div>`}
@@ -270,6 +270,14 @@ function levelPick(uid,sp){const p=S.profiles[uid]||{},own=p.lv2?p.lv2[sp]:null,
 function stepper(){const n=S.courtSid?supportCount(S.courtSid):0,st=[['Set up','Courts and time'],['Check in','Who has arrived'],['Games','Courts and next up'],['Scores',n?`${n} to check`:'Standings']];
   return `<div class="stepper">${st.map(([t,d],i)=>`<button data-act="step" data-n="${i+1}" aria-current="${S.courtStep===i+1?'step':'false'}"><span class="qn num" style="position:static">${i+1}</span><span><b>${t}</b><span class="fine">${d}</span></span></button>`).join('')}</div>`}
 
+/* no session for this department yet: admins start today's one right here (sign-up sheet and board in one go) */
+function quickStart(sp){const att=isAttend(sp),def={basketball:['19:00','21:00',20],run:['06:30','07:30',40],dance:['19:00','20:30',30],pickleball:['19:00','21:00',16],volleyball:['19:00','22:30',18],badminton:['20:00','22:00',16]}[sp]||['19:00','21:00',20];
+  return `<div class="qstart"><span class="label">Start today's ${esc(SPORTS[sp].club)} session</span><p class="fine">${att?'Opens a sign-up and check-in sheet for today. Players can sign up in Play straight away.':'Opens today’s session and the court board. Players can sign up in Play straight away.'}</p>
+    <div class="fgrid"><div class="field wide"><label for="qs-title">Name</label><input id="qs-title" maxlength="80" placeholder="${esc(defaultTitle(sp))}"></div>
+    <div class="field"><label for="qs-start">Start</label><input type="time" id="qs-start" value="${def[0]}"></div><div class="field"><label for="qs-end">End</label><input type="time" id="qs-end" value="${def[1]}"></div>
+    <div class="field"><label for="qs-cap">Max players</label><input type="number" id="qs-cap" min="2" value="${def[2]}"></div><div class="field"><label for="qs-fee">Fee (AED)</label><input type="number" id="qs-fee" min="0" value="${sp==='run'?0:40}"></div>
+    ${att?'':`<div class="field"><label for="qs-courts">Courts</label><input type="number" id="qs-courts" min="1" max="8" value="${DEF_COURTS[sp]||1}"></div>`}<div class="field wide"><label for="qs-venue">Venue</label><input id="qs-venue" maxlength="80" placeholder="Where"></div></div>
+    <div class="row" style="gap:8px"><button class="btn" data-act="qsgo">${ic('play')}${att?'Open the sign-up sheet':'Open courts'}</button><button class="btn ghost sm" data-act="goadmin">Plan a later date</button></div></div>`}
 function renderCourts(){
   const el=$('v-courts');if(!el||S.view!=='courts')return;
   const fa=document.activeElement;if(fa&&el.contains(fa)&&fa.matches('input,textarea')){if(!el._wait){el._wait=1;fa.addEventListener('blur',()=>{el._wait=0;setTimeout(renderCourts,0)},{once:true})}return}
@@ -284,7 +292,7 @@ function renderCourts(){
   const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button>${sid&&S.live[sid]&&!S.asPlayer?(()=>{const v=saveState(),h=H(sid);return `<span class="tagl savest ${v[0]}" role="status">${esc(v[1])}</span><span class="row hbtns" style="gap:4px"><button class="btn ghost sm icon" data-act="undo" ${h.u.length?'':'disabled'} aria-label="Undo" title="Undo">↶</button><button class="btn ghost sm icon" data-act="redo" ${h.r.length?'':'disabled'} aria-label="Redo" title="Redo">↷</button><button class="btn ghost sm" data-act="savenow">${ic('check')}Save now</button></span>`})():''}</div>`:'';
   const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · ${isAttend(S.courtSport)?'Check-in':'Courts'}</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
-    el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&!nxt?`<button class="btn ghost sm" data-act="goadmin">${ic('plus')}Add a session</button>`:''}</div>`;bindCourts(el);return}
+    el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&canSport(S.courtSport)?quickStart(S.courtSport):''}</div>`;bindCourts(el);return}
   if(!lv0){el.innerHTML=head+`<div class="empty">${ic(sportOf(s.sport).icon)}<span>${org?`${Object.keys(people(sid)).length} players are signed up. Open the board when you're at the venue.`:'Courts appear here once the session starts.'}</span>${org?`<button class="btn" data-act="start">${ic('plus')}Open the court board</button>`:''}</div>`;bindCourts(el);return}
   const lv=norm(clone(lv0)),ppl=people(sid),bench=benchOf(sid,lv),meId=S.uid,loc=locate(lv,meId);
   const att=isAttend(s.sport);if(att&&org)S.courtStep=2;
@@ -337,7 +345,10 @@ function renderCourts(){
       <div class="tile"><div class="sec-h"><b>${ic('clock')} Arrived · in order</b>${arr.length>2?(ciShuf?`<span class="row" style="gap:6px"><button class="btn sm" data-act="cishufgo">Shuffle</button><button class="btn ghost sm" data-act="cishuf">Keep</button></span>`:`<button class="btn ghost sm" data-act="cishuf">⇅ Reshuffle</button>`):''}</div>${ciShuf?'<p class="fine">Mixes the arrival order of everyone who isn’t on a court. Games already played still count, so the fairness of turns stays the same.</p>':''}<div class="list">${arr.map((p,i)=>`<div class="li arr" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div></div><div class="row arrctl">${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}<button class="btn ghost sm icon" data-act="ciup" data-pid="${esc(p)}" ${i?'':'disabled'} aria-label="Move ${esc(who(sid,p).name)} up">↑</button><button class="btn ghost sm icon" data-act="cidown" data-pid="${esc(p)}" ${i<arr.length-1?'':'disabled'} aria-label="Move ${esc(who(sid,p).name)} down">↓</button><button class="btn ghost sm icon" data-act="cix" data-pid="${esc(p)}" aria-label="Remove ${esc(who(sid,p).name)}">${ic('x')}</button></div>${ciEdit===p?ciEditor(sid,p):''}<div class="ci-lvl">${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):((s.sport||'badminton')==='badminton'?guestPick(lv,p):'')}</div></div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       ${isAttend(s.sport)?'':`<button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`}`;
   }else if(S.courtStep===3){
-    body=`${planTile(sid,lv,false)}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
+    const anyW=lv.waiting.some(w=>w.on.some(Boolean)),anyC=lv.courts.some(c=>!inG(c)&&c.on.some(Boolean));
+    const tools=resetAsk?`<div class="confirm"><b>Reset the board?</b><p class="fine">Every court that isn't mid-game and the whole waiting area are emptied. Everyone goes back to the bench. Check-ins and games already played stay.</p><div class="row" style="gap:6px"><button class="btn sm" data-act="resetgo">Reset</button><button class="btn ghost sm" data-act="resetask">Keep</button></div></div>`
+      :`<div class="row boardtools" style="gap:8px;justify-content:flex-end">${anyW?`<button class="btn ghost sm" data-act="wclearall">${ic('x')}Clear waiting area</button>`:''}${anyW||anyC?`<button class="btn ghost sm" data-act="resetask">↺ Reset board</button>`:''}</div>`;
+    body=`${planTile(sid,lv,false)}${tools}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,true)).join('')}</div>
       <div class="sec"><span class="label">Waiting area</span><div class="waits">${lv.waiting.map((w,i)=>waitRow(sid,w,i,true)).join('')}</div></div></div>
       <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · fewest games first</span></div>
@@ -370,7 +381,7 @@ function renderCourts(){
 }
 function gameRow(sid,gid,g,i,mine,bare){
   const sc=scoreOf(gid,g),names=t=>t.map(p=>esc(nm(sid,p))).join(' & ');
-  const my=S.scores[S.uid]?.g?.[gid],edit=(mine&&!g.final)||(!mine&&S.canEdit&&canSport(g.sport)),v=my||sc?.s||[];
+  const my=S.scores[S.uid]?.g?.[gid],edit=(mine&&!g.final)||(!mine&&S.canEdit&&canRun(g.sport)),v=my||sc?.s||[];
   return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${names(g.a)} <span class="muted">vs</span> ${names(g.b)}</div><div class="sub">${esc(g.court)}${sc?(sc.st==='disputed'?' · Scores differ':sc.st==='confirmed'?' · Confirmed':''):''}</div>
       ${edit?`<div class="row" style="gap:6px;margin-top:6px"><input type="number" min="0" class="sc" id="ga-${gid}" value="${esc(v[0]??'')}" aria-label="Score for ${names(g.a)}"><span class="muted">–</span><input type="number" min="0" class="sc" id="gb-${gid}" value="${esc(v[1]??'')}" aria-label="Score for ${names(g.b)}"><button class="btn ghost sm" data-act="${mine?'myscore':'final'}" data-gid="${gid}">${ic('check')}${mine?'Save':'Confirm'}</button></div>`:''}</div>
     <b class="num big" style="font-size:1.6rem">${sc?sc.s.join('–'):'—'}</b></div>`;
@@ -397,7 +408,10 @@ function enableDrag(el){if(el._drag)return;el._drag=true;let d=null;
 function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
   const b=ev.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,sid=S.courtSid;
   if(act==='sport'){S.courtSport=b.dataset.v;S.courtSid=null;sel=null;pendingDone=null;return renderCourts()}
-  if(act==='goadmin'){return setView('admin')}
+  if(act==='goadmin'){aTab='sessions';showNew=true;newSport=S.courtSport;return setView('admin')}
+  if(act==='qsgo'){const sp=S.courtSport,date=todayIso(),title=($('qs-title').value||'').trim()||defaultTitle(sp),id=slug(title).slice(0,24)+'-'+date;
+    const d={sport:sp,date,start:$('qs-start').value||'19:00',end:$('qs-end').value||'21:00',timeTbc:false,title,fee:Number($('qs-fee').value)||0,capacity:Number($('qs-cap').value)||20,waitCap:null,courts:COURT_SPORTS.includes(sp)?Math.max(1,Number($('qs-courts')?.value)||1):null,venue:($('qs-venue').value||'').trim(),opens:''};
+    try{await S.db.doc('sessions/'+id).set(d);S.sessions[id]=d;S.courtSid=id;toast(`${title} is on. Players can sign up in Play, and you can check people in here.`);S.courtStep=1;return startBoard(id)}catch(e){toast("Sorry, that didn't save.")}return}
   if(act==='rest'||act==='more'){return setFlag(sid,act,b.dataset.v==='1')}
   if(act==='pick'){S.courtSid=b.dataset.sid;setTimeout(courtSubs,0);sel=null;pendingDone=null;return renderCourts()}
   if(act==='as'){S.asPlayer=b.dataset.v==='1';sel=null;return renderCourts()}
@@ -445,11 +459,18 @@ function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&e
   if(act==='out'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
   if(act==='restore'){lv.out=lv.out.filter(x=>x!==b.dataset.pid);return saveLive(sid,lv)}
   if(act==='memberin'){const u=b.dataset.pid,pp=S.profiles[u];if(!pp)return;
-    if(S.canEdit&&canSport(sp)&&!S.bookings[u]?.s?.[sid]){try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:pp.listKey||'',s:(S.bookings[u]||{}).s||{}})}catch(e){toast("Couldn't add them to the session list, but they're checked in.")}}
+    if(S.canEdit&&canRun(sp)&&!S.bookings[u]?.s?.[sid]){try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:pp.listKey||'',s:(S.bookings[u]||{}).s||{}})}catch(e){toast("Couldn't add them to the session list, but they're checked in.")}}
     setBase(sid,lv,u);lv.checkin[u]=new Date().toISOString();const wn=$('walk-name');if(wn){wn.value='';wn.blur()}
-    toast(`${pp.nickname} is checked in${S.canEdit&&canSport(sp)?' and on the session list':''}.`);return saveLive(sid,lv)}
+    toast(`${pp.nickname} is checked in${S.canEdit&&canRun(sp)?' and on the session list':''}.`);return saveLive(sid,lv)}
   if(act==='ciedit'){ciEdit=b.dataset.pid||null;ciRm=false;return renderCourts()}
   if(act==='cirm'){ciRm=true;return renderCourts()}
+  if(act==='slotx'){const c=arr(b.dataset.k)[+b.dataset.c],p=c.on[+b.dataset.i];if(!p)return;if(b.dataset.k==='c'&&inG(c)){toast('That court is mid-game. Finish or cancel the game first.');return}
+    c.on[+b.dataset.i]=null;if(sel===p)sel=null;toast(`${nm(sid,p)} is back on the bench.`);return saveLive(sid,lv)}
+  if(act==='wclear'){lv.waiting[+b.dataset.c].on=lv.waiting[+b.dataset.c].on.map(()=>null);toast('Cleared. They’re back on the bench.');return saveLive(sid,lv)}
+  if(act==='wclearall'){lv.waiting.forEach(w=>w.on=w.on.map(()=>null));toast('Waiting area cleared.');return saveLive(sid,lv)}
+  if(act==='resetask'){resetAsk=!resetAsk;return renderCourts()}
+  if(act==='resetgo'){resetAsk=false;let kept=0;lv.courts.forEach(c=>{if(inG(c)){kept++;return}c.on=c.on.map(()=>null)});lv.waiting.forEach(w=>w.on=w.on.map(()=>null));sel=null;
+    toast(kept?`Board reset. ${kept} game${kept>1?'s':''} still playing, left as is.`:'Board reset. Everyone is on the bench.');return saveLive(sid,lv)}
   if(act==='cix'){{const f=locate(lv,b.dataset.pid);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');return}}ciEdit=b.dataset.pid;ciRm=true;return renderCourts()}
   if(act==='cishuf'){ciShuf=!ciShuf;return renderCourts()}
   if(act==='ciup'||act==='cidown'){const a=arrivals(lv),i=a.indexOf(b.dataset.pid),j=act==='ciup'?i-1:i+1;if(i<0||j<0||j>=a.length)return;
@@ -460,7 +481,7 @@ function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&e
   if(act==='cirename'){const p=b.dataset.pid,n=($('ci-nm')||{}).value.trim().slice(0,24);if(!n){toast('Please type a name.');return}
     if(p.startsWith('w~')){const w=lv.walkins.find(x=>'w~'+x.id===p);if(w)w.name=n}else lv.names={...(lv.names||{}),[p]:n};
     ciEdit=null;toast(`Saved as ${n}.`);return saveLive(sid,lv)}
-  if(act==='cirmgo'){const p=b.dataset.pid,x=who(sid,p),admin=S.canEdit&&canSport(sp);ciEdit=null;ciRm=false;
+  if(act==='cirmgo'){const p=b.dataset.pid,x=who(sid,p),admin=S.canEdit&&canRun(sp);ciEdit=null;ciRm=false;
     if(p.startsWith('w~')){lv.walkins=lv.walkins.filter(w=>'w~'+w.id!==p);delete lv.checkin[p];detach(lv,p);toast(`${x.name} removed.`);return saveLive(sid,lv)}
     if(admin){const charge=b.dataset.charge==='1',f=dropFee(sid);try{if(p.startsWith('g~')){const [,host]=p.split('~'),gs=((S.bookings[host]||{}).s||{})[sid]?.guests||[],gi=gs.findIndex(g=>gpid(host,g.n)===p);if(gi>=0)await staffDrop(host,sid,gi,charge)}
         else await staffDrop(p,sid,'',charge);toast(charge&&f.amount?`${x.name} is off the list. AED ${f.amount} late cancellation added to their payments.`:`${x.name} is off the session list.`)}catch(e){toast("Sorry, that didn't save.")}}
@@ -516,8 +537,8 @@ function renderBoard(){
   let body;
   if(mode==='rank'){const rows=rankRows(f);
     body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
-  }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,uid,st:statsFor(p.listKey),fd:isFounder(uid)})).sort((a,b)=>(b.fd-a.fd)||b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));let rk=0;
-    body=rows.map((r,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${r.fd?'':++rk}</span>${avatar(r.p)}
+  }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,uid,st:statsFor(p.listKey),fd:isFounder(uid)})).sort((a,b)=>(a.fd-b.fd)||b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));let rk=0;/* players first, founders always at the bottom */
+    body=rows.map((r,i)=>`${r.fd&&(i===0||!rows[i-1].fd)?'<div class="sec-h fdiv"><span class="label">Founders</span></div>':''}<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${r.fd?'':++rk}</span>${avatar(r.p)}
       <div><div class="nm">${esc(r.p.nickname)} ${r.uid&&levelIdx(r.uid)>=1?`<span class="tagl">${esc(levelFor(r.uid,badgeCount(r.uid)).k)}</span>`:''}${r.p.sample?' <span class="tagl">Sample</span>':''}</div><div class="sub ic-row" style="gap:6px">${(r.p.sports||['badminton']).map(s=>ic(SPORTS[s]?.icon||'badminton')).join('')}<span>${esc(typeOf(r.p)||'Player')}${r.st.sessions?` · ${r.st.sessions} session${r.st.sessions===1?'':'s'}`:''}</span></div></div>
       <b class="num">${r.fd?'<span class="inf">∞</span>':r.st.earned}</b></div>`).join('')||`<div class="empty">${ic('board')}<span>No one on the board yet. You could be first.</span></div>`}
   $('v-board').innerHTML=`<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'} Community over competition, always.</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;

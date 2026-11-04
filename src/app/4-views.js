@@ -1,8 +1,8 @@
 /* ---------- navigation ---------- */
-const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={card:['card','Home'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 function setView(v){S.view=v;
-  for(const id of ['card','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',(b.dataset.v===v||(v==='create'&&b.dataset.v==='card'))?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -13,8 +13,8 @@ function render(){
   if(S.view==='courts')return renderCourts();
   renderNow();
 }
-function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canSport(S.courtSport)&&!S.asPlayer));
-  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
+  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -103,7 +103,7 @@ function renderPlay(){
   const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
     ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from Home</small></span>${ic('arrow')}</button>`:''})()}
-    ${sportBar(S.sport,'flt',used)}`;
+    ${sportBar(S.sport,'flt',used)}${S.sport!=='all'?deptCard(S.sport):''}`;
   const rules=`<details class="rules"><summary>${ic('clock')}How joining and dropping out works</summary><p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p></details>`;
   if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>No sessions posted for this department yet. Please check back soon.</span></div>`+rules;bindPlay(el);return}
   const wk=sx=>{const t=new Date();t.setHours(0,0,0,0);const d=(sessStart(sx)-t)/864e5;return d<7-((t.getDay()+6)%7)?'This week':d<14-((t.getDay()+6)%7)?'Next week':'Later'};let lastWk='';
@@ -201,7 +201,7 @@ function ptsTilesHTML(pt,fd,req){const c=PS();
       ${pt.playBy?`<span class="fine">Play by ${esc(fmtD(pt.playBy))} to keep them.</span>`:''}
       ${req?'<span class="tagl">Free session requested</span>':pt.canRedeem?(pt.unpaid?`<span class="fine">Please settle your AED ${pt.unpaid} first, then you can use your free session.</span>`:`<button class="btn sm" id="redeem">${ic('ticket')}Use ${c.free} for a free session</button>`):''}</div>`;
   const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="bstat"><span class="bimg">${badgeArt(pt.top?9:pt.levelIdx,{label:pt.level+' BADge'})}</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div></div>
-      ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100)}%"></i></div>`:''}
+      ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.max(0,Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100))}%"></i></div>`:''}
       ${canGiveBadge()?`<button class="btn ghost sm" data-givebadge="">Give a BADge</button>`:''}</div>`;
   const pay=`<div class="paystat ${pt.unpaid?'owe':'ok'}">${pt.unpaid?`${ic('wallet')}<span>AED ${pt.unpaid} unpaid</span>`:`${ic('check')}<span>Paid up</span>`}</div>`;
   return `<section class="hsec"><div class="sec-h"><h3 class="ah">Points and BADges</h3>${pay}</div><div class="tiles pbtiles">${pts}${bd}</div></section>`}
@@ -341,7 +341,7 @@ async function requestFree(){const p=myProfile();if(!p||!S.db)return;
   try{await S.db.doc('requests/'+S.uid).set({player:p.listKey,at:new Date().toISOString(),type:'free-session'});toast('Thank you. An admin will confirm shortly.')}catch(e){toast("Sorry, that didn't send. Please ask an admin at the session.")}}
 
 /* ---------- club feed ---------- */
-/* ---------- Side Quests: collaborations and everything off the court ----------
+/* ---------- Side Quests: collaborations and everything Off Court ----------
    Each quest is a session in a side department (Taste BADs for food and drink). People join, pay and drop out
    exactly like a session, and earn event points after it. Posts for those departments show here too. */
 function renderQuests(){
@@ -349,13 +349,40 @@ function renderQuests(){
   const list=upcoming().filter(([,s])=>isSide(s.sport)&&(f==='all'||s.sport===f));
   const past=Object.entries(S.sessions).filter(([,s])=>isSide(s.sport)&&sessStart(s)<Date.now()-2*36e5&&(f==='all'||s.sport===f)).sort((a,b)=>sessStart(b[1])-sessStart(a[1])).slice(0,6);
   const posts=Object.entries(S.posts).filter(([,p])=>isSide(p.club)&&(f==='all'||p.club===f)&&(p.type!=='event'||(p.date||'')>=today)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
-  el.innerHTML=`<div class="hero"><span class="label">Side Quests</span><h2>Off the court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
+  el.innerHTML=`<div class="hero"><span class="label">Side Quests</span><h2>Off Court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
     ${SIDE.length>1?sportBar(f,'qf',SIDE):`<div class="qdepts">${SIDE.map(k=>`<div class="qdept">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(SPORTS[k].sport)}</span></div></div>`).join('')}</div>`}
     ${list.length?`<div class="slist">${list.map(([sid,s])=>sessCard(sid,s)).join('')}</div>`:`<div class="empty">${ic('quest')}<span>No side quests posted yet. The next collab drops here first.</span></div>`}
     ${posts.length?`<section class="hsec"><h3 class="ah">News from the collabs</h3><div class="list">${posts.map(([,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${esc(SPORTS[p.club]?.club||'')}${p.date?' · '+esc(fmtD(p.date)):''}${p.place?' · '+esc(p.place):''}</div>${p.body?`<p class="fine" style="margin:4px 0 0">${esc(p.body)}</p>`:''}</div>${p.link?`<a class="btn ghost sm" href="${esc(p.link)}" target="_blank" rel="noopener">Open${ic('arrow')}</a>`:''}</div>`).join('')}</div></section>`:''}
     ${past.length?`<details class="hsec how"><summary class="ah">Past quests</summary><div class="list">${past.map(([,s])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(sportOf(s.sport).icon)}<div><div class="nm">${esc(s.title)}</div><div class="sub">${esc(fmtS(s))}${s.venue?' · '+esc(s.venue):''}</div></div></div>`).join('')}</div></details>`:''}`;
   el.querySelectorAll('[data-qf]').forEach(b=>b.onclick=()=>{S.questFilter=b.dataset.qf;renderQuests()});
   bindPlay(el);
+}
+/* ---------- Gallery: an album per event, with photos and a link to the full set ---------- */
+function galleryHTML(f){const A=Object.entries(S.gallery||{}).filter(([,a])=>f==='all'||a.club===f||a.club==='all').sort((a,b)=>String(b[1].date||'').localeCompare(String(a[1].date||'')));
+  if(!A.length)return `<div class="empty">${ic('photo')}<span>No albums yet. Photos from the next event land here.</span></div>`;
+  const open=S.album&&S.gallery[S.album];
+  return `<div class="galgrid">${A.map(([id,a])=>`<button class="album" data-album="${esc(id)}"><div class="acover" style="background-image:url('${esc((a.photos||[])[0]||'')}')">${(a.photos||[]).length?'':ic('photo')}<span class="acount num">${(a.photos||[]).length}</span></div><div class="ameta"><span class="fine">${esc(SPORTS[a.club]?.club||'All of BAD')}${a.date?' · '+esc(fmtD(a.date)):''}</span><b>${esc(a.title)}</b></div></button>`).join('')}</div>
+  ${open?`<div class="sheet-ov" data-albclose="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(open.title)}"><button class="sheet-x" data-albclose="1" aria-label="Close">${ic('x')}</button><div class="sheet-in" style="padding:20px;display:grid;gap:12px">
+    <div><span class="label">${esc(SPORTS[open.club]?.club||'All of BAD')}${open.date?' · '+esc(fmtD(open.date)):''}</span><h2 style="margin:4px 0 0">${esc(open.title)}</h2></div>
+    <div class="photos">${(open.photos||[]).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener" class="ph1" style="background-image:url('${esc(u)}')" aria-label="Photo ${i+1}"></a>`).join('')}</div>
+    ${open.link?`<a class="btn wide" href="${esc(open.link)}" target="_blank" rel="noopener">${ic('photo')}See all the photos${ic('arrow')}</a>`:''}</div></div></div>`:''}`}
+function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclick=()=>{S.album=b.dataset.album;renderClub()});
+  el.querySelectorAll('[data-albclose]').forEach(b=>b.onclick=ev=>{if(ev.target.closest('.sheet')&&!ev.target.closest('.sheet-x'))return;S.album=null;renderClub()})}
+
+/* ---------- Guide: what the app is for and how to use it ---------- */
+function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
+  const tabs=[['card','Home','Your player card, your sessions, points and BADges.'],['play','Play','Find a session and join it in one tap. Drop out or bring a friend from Home.'],['courts','Courts','On the day: check in, see your court and who’s next.'],['club','Club','News, events and the Gallery.'],['quests','Quests','Side Quests: collabs and everything Off Court.'],['board','Board','Points and rankings. Players first.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
+  const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. At least five games each.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
+  el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
+  <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
+  <section class="hsec"><h3 class="ah">Points</h3><div class="gcard">${ic('coin')}<div><p><b>${c.per} points</b> for every session you play, whatever the sport. At <b>${c.free} points</b> your next session is free.</p><p class="fine">Points reset if you go ${c.expire} days without playing. A no-show or late cancellation costs points.</p>${pt&&pt.started?`<p class="fine">You have <b class="num">${isFounder(me)?'∞':pt.balance}</b> points.</p>`:''}</div></div></section>
+  <section class="hsec"><h3 class="ah">BADges and levels</h3><p class="fine">BADges are a thank you from the founders and crew, for helping out, bringing friends and showing up. They never expire. More BADges, higher level, better perks.</p>
+    <div class="list lvls">${c.levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{label:l.k})}</span><div><div class="nm">${esc(l.k)}${+l.at?` <span class="fine">· ${l.at} BADges</span>`:''}</div><div class="sub">${esc(l.d||'')}</div></div></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{label:topName()})}</span><div><div class="nm">${esc(topName())} <span class="fine">· Founders</span></div><div class="sub">${esc(c.top.d||'')}</div></div></div></div>
+    <div class="gcard f100c"><b class="f100">FIRST 100</b><div><p>The first 100 people to make a card start <b>one level up</b>, get a First 100 mark on their card and wear a number from 0 to 99.${first100Left()?` <b class="num">${first100Left()}</b> spots left.`:' All 100 spots are taken: new numbers are 100 to 999.'}</p><p class="fine">Every jersey number belongs to one player, first come first served.</p></div></div></section>
+  <section class="hsec"><h3 class="ah">BAD levels</h3><div class="gcard">${ic('badminton')}<div><p><b>${esc(LVL_NOTICE)}</b></p><p class="fine">Levels run from F to A+, with a W or M rating. They only exist to make games fair.</p></div></div></section>
+  <section class="hsec"><h3 class="ah">Joining and dropping out</h3><div class="gcard">${ic('clock')}<div><p>Drop out for free up to 48 hours before. From 48 to 24 hours, half the fee applies. Under 24 hours, the full fee.</p><p class="fine">Pay by cash, bank transfer, Ziina or Careem Pay. Your payment status is on Home.</p></div></div></section>
+  <section class="hsec"><h3 class="ah">The departments</h3><div class="depts">${Object.keys(SPORTS).map(deptCard).join('')}</div></section>
+  <section class="hsec"><h3 class="ah">The tabs</h3><div class="list">${tabs.map(([i,t,d])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="ic-bub soft">${ic(NAV[i==='card'?'card':i]?NAV[i][0]:i)}</span><div><div class="nm">${t}</div><div class="sub">${d}</div></div></div>`).join('')}</div></section>`;
 }
 function renderClub(){
   const el=$('v-club'),today=new Date().toISOString().slice(0,10),f=S.clubFilter;
@@ -366,9 +393,12 @@ function renderClub(){
     <span class="ic-row label">${sp?ic(sp.icon)+esc(sp.club):ic('users')+'All of BAD'}</span><h3>${esc(p.title)}</h3>
     ${p.type==='event'?`<div class="meta">${p.time?`<span>${ic('clock')}${esc(p.time)}</span>`:''}${p.place?`<span>${ic('pin')}${esc(p.place)}</span>`:''}</div>`:''}<p>${esc(p.body||'')}</p>
     <div class="row" style="gap:8px">${(()=>{const u=p.link||S.site?.url;return u?`<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener">${esc(p.link?(p.linkLabel&&p.linkLabel!=='Directions'?p.linkLabel:'Find out more'):'Visit the BAD site')}${ic('arrow')}</a>`:''})()}${p.mapLink?`<a class="btn ghost sm" href="${esc(p.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}</div></div></article>`};
-  el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>What's on at BAD.</h2></div>${sportBar(f,'cf',Object.keys(SPORTS))}
+  const mode=S.clubMode==='gallery'?'gallery':'news',modes=`<div class="chips seg" role="group" aria-label="Club"><button class="chip" data-cm="news" aria-pressed="${mode==='news'}">${ic('club')}What's on</button><button class="chip" data-cm="gallery" aria-pressed="${mode==='gallery'}">${ic('photo')}Gallery</button></div>`;
+  if(mode==='gallery'){el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>Gallery.</h2><p class="muted">Photos from every BAD event.</p></div>${modes}${sportBar(f,'cf',Object.keys(SPORTS))}${galleryHTML(f)}`;
+    el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{S.clubMode=b.dataset.cm;renderClub()});bindGallery(el);return}
+  el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>What's on at BAD.</h2></div>${modes}${sportBar(f,'cf',Object.keys(SPORTS))}${f!=='all'?deptCard(f):''}
     <div class="view" style="gap:12px">${events.map(card).join('')}${news.map(card).join('')}${!events.length&&!news.length?`<div class="empty">${ic('club')}<span>Nothing posted here yet. Please check back soon.</span></div>`:''}</div>`;
-  el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});
+  el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{S.clubMode=b.dataset.cm;renderClub()});
 }
 
 

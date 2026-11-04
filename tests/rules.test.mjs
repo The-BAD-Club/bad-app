@@ -23,6 +23,7 @@ beforeEach(async () => {
     await setDoc(doc(db, 'admins', 'cm@x.com'), { role: 'cm', sports: ['badminton'] });
     await setDoc(doc(db, 'admins', 'founder@x.com'), { role: 'founder', sports: [] });
     await setDoc(doc(db, 'admins', 'app@x.com'), { role: 'app', sports: [] });
+    await setDoc(doc(db, 'admins', 'crewa@x.com'), { role: 'crew', sports: ['badminton'] });
     await setDoc(doc(db, 'config', 'members'), { crew1: { type: 'Crew' } });
     await setDoc(doc(db, 'profiles', 'p2'), { nickname: 'Fei', listName: 'Fei' });
     await setDoc(doc(db, 'contacts', 'p2'), { email: 'fei@x.com' });
@@ -326,4 +327,36 @@ test('admins for the sport queue emails; players cannot; nobody reads them but a
   await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'mail', 'm3'), mail('p1')));
   await assertFails(setDoc(doc(ctx('a1', 'cm@x.com'), 'mail', 'm4'), mail('a1', { status: 'sent' })));
   await assertFails(getDoc(doc(ctx('p1', 'p1@x.com'), 'mail', 'm1')));
+});
+
+// ---------- jersey numbers: first come, first served; first 100 order can't be changed ----------
+test('jersey numbers belong to one player', async () => {
+  const a = ctx('p1', 'p1@x.com'), b = ctx('p3', 'p3@x.com');
+  await assertFails(setDoc(doc(a, 'profiles', 'p1'), { nickname: 'Ann', number: '7' }));          // no claim yet
+  const w = writeBatch(a); w.set(doc(a, 'numbers', '7'), { uid: 'p1', at: 'x' }); w.set(doc(a, 'profiles', 'p1'), { nickname: 'Ann', number: '7', createdAt: '2026-11-01' });
+  await assertSucceeds(w.commit());
+  await assertFails(setDoc(doc(b, 'numbers', '7'), { uid: 'p3', at: 'x' }));                      // taken
+  await assertFails(setDoc(doc(b, 'profiles', 'p3'), { nickname: 'Bo', number: '7' }));
+  await assertFails(deleteDoc(doc(b, 'numbers', '7')));
+  await assertFails(updateDoc(doc(a, 'profiles', 'p1'), { createdAt: '2020-01-01' }));             // can't jump the queue
+  await assertSucceeds(updateDoc(doc(a, 'profiles', 'p1'), { nickname: 'Annie' }));                 // same number, no new claim needed
+  await assertSucceeds(setDoc(doc(ctx('a1', 'app@x.com'), 'numbers', '12'), { uid: 'p2', at: 'x' })); // full admin claims for someone
+});
+
+// ---------- crew (admin role): courts and check-in for their department only ----------
+test('crew run the board for their department, nothing more', async () => {
+  const c = ctx('cr1', 'crewa@x.com');
+  await assertSucceeds(setDoc(doc(c, 'live', SID), { rev: 4, courts: [] }));                       // badminton board
+  await assertFails(setDoc(doc(c, 'live', VSID), { rev: 1, courts: [] }));                          // not volleyball
+  await assertSucceeds(setDoc(doc(c, 'noshows', 'ns-fei'), { player: 'fei', name: 'Fei', dates: [SID] }));
+  await assertFails(updateDoc(doc(c, 'sessions', SID), { capacity: 30 }));                          // no session changes
+  await assertFails(getDoc(doc(c, 'contacts', 'p2')));                                               // no contact details
+  await assertFails(setDoc(doc(c, 'posts', 'x'), { club: 'badminton', title: 'x' }));
+});
+test('gallery albums: full admins and the department community manager', async () => {
+  const a = { title: 'Rally night', club: 'badminton', date: '2026-11-04', photos: [] };
+  await assertSucceeds(setDoc(doc(ctx('cm1', 'cm@x.com'), 'gallery', 'g1'), a));
+  await assertFails(setDoc(doc(ctx('cm1', 'cm@x.com'), 'gallery', 'g2'), { ...a, club: 'volleyball' }));
+  await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'gallery', 'g3'), a));
+  await assertSucceeds(getDoc(doc(ctx('p1', 'p1@x.com'), 'gallery', 'g1')));
 });
