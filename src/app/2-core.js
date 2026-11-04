@@ -172,7 +172,7 @@ function refCode(uid,p){const n=String(p?.nickname||'BAD').toUpperCase().replace
   while(taken(c)&&i<25)c=base+String.fromCharCode(65+i++);return c}
 /* ---------- the first 100 ----------
    The first 100 people to make a card (by the time their card was first saved, which nobody can change afterwards)
-   get a First 100 mark on their card, start one BADge level up, and wear a number from 0 to 99.
+   get an OG 100 mark on their card, start one BADge level up, and wear a number from 0 to 99.
    After that, new numbers have three digits (100 to 999). Every number belongs to one player: first come, first served. */
 const FIRST_N=100;
 function signupOrder(){if(S._so&&S._so.ref===S.profiles)return S._so.o;
@@ -205,7 +205,7 @@ function cardHTML(p,st,opt){
   const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
   /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
   return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${isFirst100(cu)?`<b class="f100">FIRST 100</b> · `:''}${esc(mem)}</span></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     ${ty?`<div class="style">${esc(ty)}</div>`:''}
@@ -257,9 +257,9 @@ function cardBackHTML(p,st){
   const ed=cardEdition(p,uidOfProfile(p)),logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
   const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'';
   const since=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
-  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
+  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span>${isFirst100(uidOfProfile(p))?`<span class="og100" aria-label="One of the first 100 members, number ${first100No(uidOfProfile(p))}"><b>OG 100</b> · No. ${first100No(uidOfProfile(p))}</span>`:''}</div>
     <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
-      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}${isFirst100(uidOfProfile(p))?`<div class="cb-sub f100">First 100 · No. ${first100No(uidOfProfile(p))}</div>`:''}</div>
+      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
     <div class="stats lv2"><span><b class="num">${isFounder(uidOfProfile(p))?'<span class="inf">∞</span>':(st.badges||0)}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
