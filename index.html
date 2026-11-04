@@ -881,8 +881,12 @@ html.gated .app,html.gated .tabs{visibility:hidden}
 #splash{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;transition:opacity .25s ease}
 #splash img{width:min(36vw,140px);height:auto;animation:badpulse 1.6s ease-in-out infinite}
 #splash .sp-l{display:none}:root[data-theme="light"] #splash .sp-l{display:block}:root[data-theme="light"] #splash .sp-d{display:none}
-html.booted #splash{opacity:0;pointer-events:none;visibility:hidden;transition:opacity .25s ease,visibility 0s .25s}
-html:not(.booted) .wrap{visibility:hidden}
+/* while loading, only the logo shows. Once ready the logo goes at once and the app fades in underneath, so the two never mix. */
+html.booted #splash{display:none}
+html:not(.booted) .wrap,html:not(.booted) #gate,html:not(.booted) .toast{visibility:hidden}
+html.booted .wrap{animation:appin .3s ease both}
+@keyframes appin{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){html.booted .wrap{animation:none}}
 @keyframes badpulse{0%,100%{opacity:1}50%{opacity:.55}}
 @media (prefers-reduced-motion:reduce){#splash img{animation:none}}
 .bootlogo{min-height:50vh;display:grid;place-items:center}.bootlogo img{width:min(40vw,160px);height:auto!important;animation:badpulse 1.6s ease-in-out infinite}
@@ -1068,8 +1072,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.29';
+const APP_VERSION='0.30';
 const CHANGES=[
+  ['0.30','2026-11-04','While the app loads you only see the BAD logo; the app fades in once it\'s ready, with nothing showing through'],
   ['0.29','2026-11-04','Volume II prices: Tote Bag AED 55, Socks AED 55, Rally Towel AED 55 and live; items already in the Shop update on their own'],
   ['0.28','2026-11-04','Card: pick your colour (black, white or grey), the BADge icon on the front, no LVL; cleaner Shop with no frames and smaller pictures; check-in QR on every session (Admin list and session cards); sign-up QR on My BAD for admins; people without a card only see Home; quick guest pass for trials (name and mobile); BOLD. AGILE. DEFIANT. only small, bottom left'],
   ['0.27','2026-11-04','Home opens with THE BAD CLUB'],
@@ -1992,7 +1997,7 @@ function renderCard(){
           <div class="field wide"><label for="gp-mob">Mobile</label><input id="gp-mob" type="tel" maxlength="20" autocomplete="tel" placeholder="+971 5x xxx xxxx"></div>
           <div class="field wide"><label for="gp-mail">Email <span class="req">optional</span></label><input id="gp-mail" type="email" maxlength="80" autocomplete="email"></div></div>
           <button class="btn ghost wide" id="gp-go">${ic('guest')}Start my guest pass</button></details>
-        <p class="fine">We were all BAD players once. Every level is welcome.</p>${S.loaded?'':'<p class="fine">Loading…</p>'}</div></div>`;
+        <p class="fine">We were all BAD players once. Every level is welcome.</p></div></div>`;
     $('start').onclick=()=>startCreator();el.querySelector('.gpass').ontoggle=e=>{S.gpOpen=e.target.open};
     $('gp-go').onclick=async()=>{const n=$('gp-name').value.trim().slice(0,16),m=$('gp-mob').value.trim().slice(0,20),e=$('gp-mail').value.trim().slice(0,80);
       if(!n){toast('Please add your name.');return}if(!okMobile(m)){toast('Please add a mobile number we can reach you on.');return}if(e&&!okEmail(e)){toast('That email doesn’t look right.');return}
