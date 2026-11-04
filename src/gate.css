@@ -14,3 +14,34 @@ html.gated .app,html.gated .tabs{visibility:hidden}
 .signout{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:6px}
 .gate-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:.28em}
 .gate-h img{height:.74em;width:auto;transform:translateY(.02em)}
+/* ---------- logo splash while loading (no registration screen flashing) ---------- */
+#splash{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;transition:opacity .25s ease}
+#splash img{width:min(44vw,180px);height:auto;animation:badpulse 1.6s ease-in-out infinite}
+#splash .sp-l{display:none}:root[data-theme="light"] #splash .sp-l{display:block}:root[data-theme="light"] #splash .sp-d{display:none}
+html.booted #splash{opacity:0;pointer-events:none;visibility:hidden;transition:opacity .25s ease,visibility 0s .25s}
+html:not(.booted) .wrap{visibility:hidden}
+@keyframes badpulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){#splash img{animation:none}}
+.bootlogo{min-height:50vh;display:grid;place-items:center}.bootlogo img{width:min(40vw,160px);height:auto!important;animation:badpulse 1.6s ease-in-out infinite}
+/* ---------- visitors (not signed in) ---------- */
+.jointop{display:none}
+html.guest .jointop{display:inline-flex;margin-left:auto}
+html.guest .signout{display:none}
+.gate-back,.gate-why{display:none}
+html.guest .gate-back{display:inline;justify-self:start}
+html.guest .gate-why:not([hidden]){display:block;margin:0}
+/* ---------- public Home ---------- */
+.phome{display:grid;gap:28px}
+.phero{display:grid;gap:12px;justify-items:start}
+.phero h2{font-size:clamp(2.4rem,7vw,3.6rem);margin:0}
+.phero p.muted{max-width:56ch;margin:0}
+.phero-logo img{height:auto!important;width:min(52vw,220px)}
+.week{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.wk{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}
+.wk>div{display:grid;gap:2px}.wk-d{font-weight:800;text-transform:uppercase;letter-spacing:.06em;min-width:2.4em}
+.whatwe{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}.whatwe .gcard div{display:grid;gap:4px}
+.hsess{width:100%;text-align:left;font:inherit;color:inherit;background:none;cursor:pointer}
+.phfollow{display:grid;gap:8px}
+.tabs button span{white-space:nowrap}
+html.guest .jointop{margin-left:0}
+@media (max-width:760px){html.guest .jointop{margin-left:auto}}

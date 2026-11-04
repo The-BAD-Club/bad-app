@@ -14,6 +14,8 @@
   /* ---------- sign-in screen ---------- */
   const gate=document.createElement('div');gate.id='gate';gate.hidden=true;
   gate.innerHTML=`<div class="gate-card">
+    <button class="linkbtn gate-back" type="button" id="g-close">← Back to Home</button>
+    <p class="fine gate-why" id="g-why" hidden></p>
     <h2 class="gate-h">Welcome to <img class="inline-logo logo-l" src="${typeof LOGO!=="undefined"?LOGO.badK:""}" alt="BAD"><img class="inline-logo logo-d" src="${typeof LOGO!=="undefined"?LOGO.badW:""}" alt="BAD"></h2>
     <p class="muted">Sign in to get your player card, join sessions and earn points.</p>
     <button class="btn wide" id="g-google"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5a4.3 4.3 0 0 1-1.9 2.8v2.3h3c1.8-1.6 2.9-4 2.9-6.8z" fill="none"/><circle cx="12" cy="12" r="8.5"/><path d="M12 12h8.4"/></svg>Continue with Google</button>
@@ -33,6 +35,7 @@
   const nice=e=>({'auth/invalid-credential':'That email and password don’t match. Please try again.','auth/user-not-found':'No account with that email yet. Tap Create account.','auth/wrong-password':'That password isn’t right. Please try again.','auth/email-already-in-use':'You already have an account. Tap Sign in.','auth/weak-password':'Please use at least 6 characters.','auth/invalid-email':'Please check the email address.','auth/popup-closed-by-user':'Sign-in was closed. Please try again.','auth/unauthorized-domain':'This web address isn’t allowed yet. An admin needs to add it in Firebase.'}[e&&e.code]||'Sorry, that didn’t work. Please try again.');
   gate.addEventListener('click',async ev=>{
     const id=ev.target.closest('button')?.id;if(!id)return;
+    if(id==='g-close'){gate.hidden=true;document.documentElement.classList.remove('gated');if(typeof S!=='undefined')S.deepView=null;return}
     const email=document.getElementById('g-email').value.trim(),pass=document.getElementById('g-pass').value;
     try{
       if(id==='g-google'){const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
@@ -46,15 +49,27 @@
 
   /* ---------- auth state ---------- */
   let resolveUser;const userReady=new Promise(r=>resolveUser=r);
+  /* Visitors who aren't signed in get the public Home. The sign-in screen only opens when they tap Sign in or Join,
+     or try a members' tab. While we're still finding out who you are, only the logo shows. */
+  const H=document.documentElement;
+  setTimeout(()=>H.classList.add('booted'),12000); /* never leave the logo up forever if the network is slow */
+  const TAB_NAMES={card:'My BAD',guide:'the Guide',play:'Play',courts:'Courts',club:'Club',quests:'Side Quests',board:'the Board',shop:'the Shop',admin:'Admin'};
+  window.badJoin=v=>{if(!window.BAD_GUEST)return;const w=document.getElementById('g-why');
+    if(w){w.hidden=!TAB_NAMES[v];w.textContent=TAB_NAMES[v]?`Please sign in or create an account to open ${TAB_NAMES[v]}.`:''}
+    gate.hidden=false;H.classList.add('gated');const e=document.getElementById('g-email');if(e&&innerWidth>=760)e.focus()};
   auth.onAuthStateChanged(async u=>{
-    if(!u){gate.hidden=false;document.documentElement.classList.add('gated');return}
-    gate.hidden=true;document.documentElement.classList.remove('gated');
+    if(!u){window.BAD_GUEST=true;H.classList.add('guest');gate.hidden=true;H.classList.remove('gated');
+      if(window.badGuestMode)window.badGuestMode();H.classList.add('booted');return}
+    if(window.BAD_GUEST){window.BAD_GUEST=false;H.classList.remove('guest');H.classList.remove('booted');
+      /* signing in from Home takes you to your own page, or to the tab you were trying to open */
+      if(typeof S!=='undefined'&&!S.deepView)S.deepView='card'}
+    gate.hidden=true;H.classList.remove('gated');
     const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email),role=admin?'owner':'',sports=[];
     if(!admin&&email){try{const d=await fs.doc('admins/'+email).get();if(d.exists){const x=d.data()||{};/* same as the security rules: only a named role gives admin access */if(['founder','app','cm','crew'].includes(x.role)){admin=true;role=x.role;sports=x.sports||[]}}}catch(_){}}
     window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin,role,sports};
     resolveUser(window.BAD_USER);
   });
-  window.badSignOut=()=>auth.signOut().then(()=>location.reload());
+  window.badSignOut=()=>auth.signOut().then(()=>{location.hash='';location.reload()});
 
   /* ---------- the API the app calls ---------- */
   const userApi={
