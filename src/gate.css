@@ -54,3 +54,4 @@ html.guest .jointop{margin-left:0}
 .phfoot{display:block;line-height:1.8}.phfoot svg.i{width:14px;height:14px;vertical-align:-2px;margin-right:6px}.phfoot a{color:inherit}
 .phome .hsess{border:1px solid var(--line)!important;box-shadow:none!important;outline:0}.phome .list{gap:8px}
 .story p{margin:0 0 10px;max-width:60ch;line-height:1.55;color:var(--muted)}.story p b{color:var(--ink);font-weight:600}.story p:last-child{margin-bottom:0}details.story p:first-of-type{margin-top:10px}
+.phero h2.phtitle{font-family:inherit;font-size:clamp(1.6rem,7vw,2.6rem);margin:0}
