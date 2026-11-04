@@ -293,7 +293,7 @@ function renderCard(){
   el.innerHTML=`<div class="home">
     <aside class="home-card"><div class="flip${S.flipped?' on':''}" id="my-card" role="button" tabindex="0" aria-label="Flip your card to see the invite QR code" aria-pressed="${!!S.flipped}"><div class="flip-in"><div class="face front">${cardHTML(p,st)}</div><div class="face back">${cardBackHTML(p,st)}</div></div></div><p class="fine fliphint">${S.flipped?'Tap to see the front':'Tap the card to flip it'}</p><div class="row" style="justify-content:center"><button class="btn sm" id="save-card">${ic('image')}${S.flipped?'Save back':'Save card'}</button><button class="btn ghost sm" id="edit">${ic('edit')}Edit my card</button></div></aside>
     <div class="home-main">
-      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>${gpBanner}${S.canEdit?`<div class="row"><button class="btn ghost sm" data-signupqr="1">${ic('card')}Sign-up QR</button></div>`:''}
+      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>${S.canEdit?`<div class="row"><button class="btn ghost sm" data-signupqr="1">${ic('card')}Sign-up QR</button></div>`:''}
       ${owes?actH:''}
       ${next}
       ${ptsTilesHTML(pt,fd,req)}
