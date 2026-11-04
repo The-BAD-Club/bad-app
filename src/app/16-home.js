@@ -9,13 +9,13 @@ const WEEK=[
   ['Fri','volleyball','VolleyBAD','Volleyball, 7pm to 10:30pm.']];
 function renderHome(){const el=$('v-home');if(!el)return;
   const guest=!!window.BAD_GUEST,me=!guest&&S.uid&&typeof myProfile==='function'?myProfile():null,c=PS();
-  const next=!guest&&S.loaded?upcoming().filter(([,s])=>!s.cancelled&&!isSide(s.sport)).slice(0,4):[];
+  const next=(S.loaded||S.pubSessions)?upcoming().filter(([,s])=>!s.cancelled&&!isSide(s.sport)).slice(0,4):[];
   const cta=guest
     ?`<div class="row"><button class="btn" data-hjoin="1">${ic('card')}Join BAD</button><button class="btn ghost" data-hjoin="1">Sign in</button></div><p class="fine">Free to join. Make your player card and book your first session in a minute.</p>`
     :`<div class="row"><button class="btn" data-hgo="card">${ic('card')}${me?'Open My BAD':'Make my card'}</button><button class="btn ghost" data-hgo="play">${ic('play')}Find a session</button></div>`;
   el.innerHTML=`<div class="phome">
     <section class="phero">
-      <div class="phero-logo"><img class="inline-logo logo-l" src="${LOGO.clubK}" alt="The BAD Club"><img class="inline-logo logo-d" src="${LOGO.clubW}" alt="The BAD Club"></div>
+      <div class="phero-logo"><img class="inline-logo logo-l" src="${LOGO.badK}" alt="BAD"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="BAD"></div>
       <span class="label">Dubai, UAE · Community over competition</span>
       <h2>A community built like a brand.</h2>
       <p class="muted">The BAD Club is a Dubai sports community. We started with badminton and now play volleyball, pickleball and basketball, run and dance together. Every level is welcome, and everyone plays with everyone.</p>
@@ -23,7 +23,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
       ${cta}
     </section>
     ${next.length?`<section class="hsec"><div class="sec-h"><h3 class="ah">Coming up</h3><button class="linkbtn" data-hgo="play">See all${ic('arrow')}</button></div><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
-    :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t,x])=>`<div class="wk"><span class="wk-d num">${d}</span><span class="ic-bub soft">${ic(SPORTS[k].icon)}</span><div><b>${esc(t)}</b><span class="fine">${esc(x)}</span></div></div>`).join('')}</div><p class="fine">Places are limited and go first come, first served. ${guest?'Join BAD to see dates, venues and book your spot.':'Book your spot in Play.'}</p></section>`}
+    :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t,x])=>`<div class="wk"><span class="wk-d num">${d}</span><span class="ic-bub soft">${ic(SPORTS[k].icon)}</span><div><b>${esc(t)}</b><span class="fine">${esc(x)}</span></div></div>`).join('')}</div><p class="fine">Places are limited and go first come, first served. ${guest?'Join BAD to book your spot.':'Book your spot in Play.'}</p></section>`}
     <section class="hsec"><h3 class="ah">What we do</h3><div class="whatwe">
       <div class="gcard">${ic('play')}<div><b>Weekly sessions</b><span class="fine">Recreational sessions at partner venues around Dubai. We book the courts and run the rotation, you just show up and play.</span></div></div>
       <div class="gcard">${ic('users')}<div><b>Community experiences</b><span class="fine">Socials, friendly competitions, retreats and events that bring every department together.</span></div></div>
@@ -43,4 +43,8 @@ function renderHome(){const el=$('v-home');if(!el)return;
   el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>setView(b.dataset.hgo));
 }
 /* called by the sign-in bridge when nobody is signed in: show Home, and if they followed a link to another tab, ask them to sign in for it */
-window.badGuestMode=function(){const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;setView('home');if(want&&window.badJoin)window.badJoin(want)};
+window.badGuestMode=function(){
+  /* visitors see the real upcoming sessions (sessions are public in the security rules); if that read isn't allowed yet, the weekly list shows instead */
+  const db=window.badPublicDb;if(db&&!S.pubSessions){const today=new Date().toISOString().slice(0,10);
+    db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome()}).catch(()=>{})}
+const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;setView('home');if(want&&window.badJoin)window.badJoin(want)};

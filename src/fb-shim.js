@@ -9,6 +9,7 @@
   const auth=firebase.auth(),fs=firebase.firestore();
   try{fs.settings({ignoreUndefinedProperties:true})}catch(e){console.warn(e)}
   try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(_){}
+  window.badPublicDb=fs; /* only for what the rules make public: upcoming sessions on Home */
   const OWNER_EMAILS=(window.BAD_ADMINS||[]).map(e=>e.toLowerCase());
 
   /* ---------- sign-in screen ---------- */

@@ -50,9 +50,9 @@ service cloud.firestore {
     function str(v, max) { return v is string && v.size() <= max; }
     function optStr(m, k, max) { return !(k in m) || m[k] == null || str(m[k], max); }
 
-    // ---------- community data (signed-in players can read) ----------
+    // ---------- community data (signed-in players can read; sessions are public) ----------
     match /sessions/{sid} {
-      allow read: if signedIn();
+      allow read: if true;   // public: visitors see upcoming sessions on Home (no names or bookings live here)
       allow create: if canDept(request.resource.data.get('sport', '')) && validSession(request.resource.data);
       allow update: if canDept(resource.data.get('sport', '')) && canDept(request.resource.data.get('sport', '')) && validSession(request.resource.data);
       allow delete: if canDept(resource.data.get('sport', ''));
