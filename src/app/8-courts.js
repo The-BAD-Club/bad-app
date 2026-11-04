@@ -340,7 +340,8 @@ function renderCourts(){
   const lv=norm(clone(lv0)),ppl=people(sid),bench=benchOf(sid,lv),meId=S.uid,loc=locate(lv,meId);
   const att=isAttend(s.sport);if(att&&org)S.courtStep=2;
   if(att&&!org){const inn=lv.checkin[meId];
-    el.innerHTML=head+`<div class="tile you"><span class="label">You</span><b class="big">${inn?'Checked in':'Not checked in yet'}</b><span class="fine">${inn?'Checked in at '+hhmm(inn)+'.':'Scan the check-in QR code when you arrive.'}</span></div>
+    el.innerHTML=head+`<div class="tile you"><span class="label">You</span><b class="big">${(()=>{const L=locate(lv,meId);return !inn?'Not checked in yet':L&&L[0]==='c'?`On ${esc(lv.courts[L[1]].name)}`:L?(L[1]===0?'You’re next up':`Up in ${L[1]+1}`):'Checked in'})()}</b><span class="fine">${inn?'Checked in at '+hhmm(inn)+(lv.played&&lv.played[meId]?` · ${lv.played[meId]} game${lv.played[meId]>1?'s':''} played`:'')+'.':'Scan the check-in QR code when you arrive.'}</span></div>
+      ${lv.courts.length?`<div class="mcourts pview">${lv.courts.map(c=>`<div class="mcourt${c.st==='playing'?' on':''}"><div class="mc-h"><b>${esc(c.name)}</b><span class="tagl${c.st==='playing'?' solid':''}">${c.st==='playing'?'Playing':c.on.some(Boolean)?'Ready':'Free'}</span></div><p class="fine">${c.on.filter(Boolean).map(p=>esc(nm(sid,p))).join(' · ')||'—'}</p></div>`).join('')}</div>`:''}
       ${(S.awards[sid]&&S.awards[sid].winners||[]).length?baddestCard(sid):''}${s.sport==='run'?runHTML(sid,lv,false):''}<p class="fine">${Object.keys(lv.checkin).length} checked in.</p>`;
     bindCourts(el);bindRuns(el);return}
   /* ---------- public view: straight to the point ---------- */
@@ -372,7 +373,7 @@ function renderCourts(){
       <div class="tile"><b>${ic('users')} How the bench works</b>
         <p class="fine">First come, first served: players are called in the order they checked in, and go to the back after each game. Late arrivals join at the back. Players can sit out a game and keep their place. Use Catch-up during games to call the players with the fewest games first.</p></div>
       <button class="btn wide" data-act="step" data-n="2">Next: check players in ${ic('arrow')}</button>`;
-  }else if(QUEUE_OFF){body=sheetHTML(sid,s,lv,ppl);
+  }else if(QUEUE_OFF){body=`<div class="seg2 ctabs" role="group" aria-label="Session tools"><button data-ctab="sheet" aria-pressed="${S.cTab!=='board'}">Check-in &amp; Pay</button><button data-ctab="board" aria-pressed="${S.cTab==='board'}">Courts</button></div>`+(S.cTab==='board'?mboardHTML(sid,s,lv):sheetHTML(sid,s,lv,ppl));
   }else if(S.courtStep===2){
     const arr=arrivals(lv),notYet=Object.keys(ppl).filter(p=>!lv.checkin[p]).sort((a,b)=>who(sid,a).name.localeCompare(who(sid,b).name));
     body=`<div class="split eq"><div class="tile"><div class="sec-h"><b>${ic('check')} Check in</b><span class="fine num">${arr.length} of ${Math.max(arr.length,Object.keys(ppl).length)} here</span></div>
@@ -466,7 +467,7 @@ function bindSheet(el){const q=el.querySelector('#sheet-q');if(q)q.oninput=()=>{
     try{if(pid.startsWith('w~')){const lv=norm(clone(S.live[sid]));lv.wpay={...(lv.wpay||{})};if(!v)delete lv.wpay[pid];else lv.wpay[pid]=v==='free'?{waived:true,at,by}:{method:v,at,by};await saveLive(sid,lv)}
       else await setPayment(pid,sid,!v?null:v==='free'?{ok:true,waived:true,at,by}:{ok:true,method:v,at,by});
       toast(v?(v==='free'?'Marked free.':'Marked paid.'):'Marked not paid.')}catch(e){toast("Sorry, that didn't save.")}})}
-function bindCourts(el){enableDrag(el);arrDrag(el);bindSheet(el);el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
+function bindCourts(el){if(!(QUEUE_OFF&&S.cTab==='board'))enableDrag(el);arrDrag(el);bindSheet(el);if(typeof mbBind==='function')mbBind(el);el.querySelectorAll('[data-ctab]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();S.cTab=b.dataset.ctab;msel=null;renderCourts()});el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
   const b=ev.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,sid=S.courtSid;
   if(act==='sport'){S.courtSport=b.dataset.v;S.courtSid=null;sel=null;pendingDone=null;return renderCourts()}
   if(act==='goadmin'){aTab='sessions';showNew=true;newSport=S.courtSport;return setView('admin')}
