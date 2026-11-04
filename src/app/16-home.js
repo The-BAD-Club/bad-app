@@ -19,11 +19,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
     <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','WTH is BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
-    <section class="phero">
-      <h2 class="manifesto phtitle">THE BAD CLUB</h2>
-      <p class="muted">A Dubai sports community. Every level is welcome.</p>
-      ${cta}
-    </section>
+    ${heroHTML(cta)}
     ${guest?`${homePhotosHTML()}${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
     ${sessions}`
@@ -32,6 +28,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
     ${igHTML()}
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
+  bindHero(el);
   el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>{if(b.dataset.cm)S.clubMode=b.dataset.cm;setView(b.dataset.hgo)});
 }
 /* Club news on Home: upcoming events first, then the latest news. The full list and the Gallery are one tap away. */
@@ -89,9 +86,21 @@ function renderWth(){const el=$('v-wth');if(!el)return;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
 /* photos: community photos an admin picked for Home, then the latest Gallery albums (members only). No merch here. */
+/* the BAD DAY film opens Home: muted, looping, full width. Tap for sound. Calm-motion settings get the still frame and a play button. */
+const HERO={src:'assets/home/bad-day.mp4',poster:'assets/home/bad-day-poster.jpg'};
+const calmMotion=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(_){return false}};
+function heroHTML(cta){const calm=calmMotion();
+  return `<section class="vhero"><video class="vh-v" src="${HERO.src}" poster="${HERO.poster}" ${calm?'':'autoplay'} muted loop playsinline preload="${calm?'none':'auto'}" aria-label="POV: BAD DAY, a short film from a BADminton session"></video><div class="vh-shade" aria-hidden="true"></div>
+    <button class="vh-snd" data-vsnd="1" aria-label="${calm?'Play the film':'Turn sound on'}">${calm?ic('play'):ic('snd')}</button>
+    <div class="vh-in"><h2 class="manifesto phtitle">THE BAD CLUB</h2><p>A Dubai sports community. Every level is welcome.</p>${cta}</div></section>`}
+function bindHero(el){const v=el.querySelector('.vh-v'),b=el.querySelector('[data-vsnd]');if(!v||!b)return;
+  b.onclick=()=>{if(v.paused){v.play().catch(()=>{});v.muted=false}else v.muted=!v.muted;b.innerHTML=v.muted?ic('snd'):ic('sndon');b.setAttribute('aria-label',v.muted?'Turn sound on':'Turn sound off')};
+  /* pause when it scrolls away or the tab is hidden, so it doesn't use battery for nothing */
+  if('IntersectionObserver' in window&&!calmMotion()){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)v.play().catch(()=>{});else v.pause()}),{threshold:.2});io.observe(v)}}
+const HOME_STILLS=['assets/home/community-1.jpg','assets/home/community-2.jpg','assets/home/community-3.jpg','assets/home/community-4.jpg','assets/home/community-5.jpg'];
 function homePhotos(){const h=S.homeMedia||{},own=(h.photos||[]).filter(Boolean);
   const gal=Object.values(S.gallery||{}).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).flatMap(a=>a.photos||[]).slice(0,8);
-  return [...own,...gal].slice(0,10)}
+  const all=[...own,...gal];return (all.length?all:HOME_STILLS).slice(0,10)}
 function homePhotosHTML(small){const ps=homePhotos();if(!ps.length)return S.canEdit&&!small?`<button class="addphotos" data-hgo="admin">${ic('photo')}<span><b>Add community photos</b><small>Admin, Club posts, Home photos and videos</small></span></button>`:'';return `<div class="hstrip${small?' sm':''}" aria-label="Photos from BAD">${ps.map((u,i)=>`<figure><img src="${esc(u)}" alt="" loading="${i<2?'eager':'lazy'}" decoding="async"></figure>`).join('')}</div>`}
 /* video links: YouTube, Instagram reels or posts, TikTok, or a direct .mp4 */
 function vidEmbed(u){u=String(u||'').trim();let m;

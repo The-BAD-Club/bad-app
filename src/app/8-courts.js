@@ -225,8 +225,9 @@ function courtCard(sid,c,ci,edit){
         <div class="chips" role="group" aria-label="Reason">${CANCEL_REASONS.map(r=>`<button class="chip sm" data-act="cancelwhy" data-v="${esc(r)}" aria-pressed="${cancelWhy===r}">${esc(r)}</button>`).join('')}</div>`:''}
         <div class="row" style="gap:6px"><button class="btn sm" data-act="cancelgo" data-c="${ci}" ${playing&&!cancelWhy?'disabled':''}>${playing?'Cancel game':'Clear court'}</button><button class="btn ghost sm" data-act="cancelno">Back</button></div></div>`;
     else if(finishAsk===ci)foot=`<div class="confirm"><b>Finish this game?</b><p class="fine">The players go back to the bench${S.live[sid]&&S.live[sid].waiting&&S.live[sid].waiting[0]&&S.live[sid].waiting[0].on.some(Boolean)?' and Next up comes on':''}. Scores come next.</p><div class="row" style="gap:6px"><button class="btn sm" data-act="finish" data-c="${ci}">${ic('check')}Finish game</button><button class="btn ghost sm" data-act="finishno">Keep playing</button></div></div>`;
-    else if(playing||c.st==='paused')foot=`<div class="row cfoot"><button class="linkbtn" data-act="cancelask" data-c="${ci}">Cancel</button><button class="btn ghost sm" data-act="${c.st==='paused'?'resume':'pause'}" data-c="${ci}">${c.st==='paused'?ic('play')+'Resume':ic('clock')+'Pause'}</button><button class="btn wide" data-act="finishask" data-c="${ci}">${ic('check')}Finish</button></div>`;
+    else if(playing||c.st==='paused')foot=`<div class="row cfoot"><button class="linkbtn" data-act="cancelask" data-c="${ci}">Cancel</button><button class="btn ghost sm" data-act="${c.st==='paused'?'resume':'pause'}" data-c="${ci}">${c.st==='paused'?ic('play')+'Resume':ic('clock')+'Pause'}</button><button class="btn wide" data-act="finish" data-c="${ci}">${ic('check')}End game</button></div>`;
     else if(c.closed)foot=`<div class="row cfoot"><span class="fine" style="margin-right:auto">Closed: no games go on this court.</span><button class="btn ghost sm" data-act="close" data-c="${ci}">Reopen court</button></div>`;
+    else if(!full&&S.live[sid]&&S.live[sid].waiting&&S.live[sid].waiting[0]&&S.live[sid].waiting[0].on.some(Boolean))foot=`<div class="row cfoot"><button class="linkbtn" data-act="close" data-c="${ci}">Close court</button><button class="btn wide" data-act="nextin" data-c="${ci}">${ic('arrow')}Bring Next up on</button></div>`;
     else foot=`${full===4&&c.size===4&&(teamStr(sid,S.live[sid],c)||beginnerWarn(sid,S.live[sid],c))?`<p class="fine tstr">${esc([teamStr(sid,S.live[sid],c),beginnerWarn(sid,S.live[sid],c)].filter(Boolean).join(' · '))}</p>`:''}<div class="row cfoot">${full?`<button class="linkbtn" data-act="cancelask" data-c="${ci}">Clear</button>`:`<button class="linkbtn" data-act="close" data-c="${ci}">Close court</button>`}${full===4&&c.size===4?`<button class="btn ghost sm" data-act="repair" data-c="${ci}" title="Try the next way of pairing these four">⇄ Re-pair</button>`:''}${full<c.size?`<button class="btn ghost sm" data-act="fill" data-k="c" data-c="${ci}">${ic('users')}Fill from rotation</button>`:''}${full>=2?`<button class="btn wide" data-act="begin" data-c="${ci}" ${full<c.size&&sp==='badminton'?'disabled':''}>${ic('play')}Start</button>`:''}</div>`}
   const fchip=fmt?(edit&&!playing?`<button class="chip sm fmt" data-act="fmt" data-c="${ci}" aria-label="Game format, tap to change">To ${fmt}</button>`:`<span class="tagl">To ${fmt}</span>`):'';
   const tag=c.st==='paused'?`<span class="tagl warn">Paused · ${elapsed(c)} min</span>`:playing?`<span class="tagl solid timer" data-t0="${esc(c.t0dev||'')}" data-pm="${c.pausedMs||0}">${elapsed(c)} min</span>`:c.closed?`<span class="tagl">Closed</span>`:`<span class="tagl">${full?'Game '+gno+' · ready':'Free'}</span>`;
@@ -402,7 +403,7 @@ function renderCourts(){
     const anyW=lv.waiting.some(w=>w.on.some(Boolean)),anyC=lv.courts.some(c=>!inG(c)&&c.on.some(Boolean));
     const tools=resetAsk?`<div class="confirm"><b>Reset the board?</b><p class="fine">Every court that isn't mid-game and the whole waiting area are emptied. Everyone goes back to the bench. Check-ins and games already played stay.</p><div class="row" style="gap:6px"><button class="btn sm" data-act="resetgo">Reset</button><button class="btn ghost sm" data-act="resetask">Keep</button></div></div>`
       :`<div class="row boardtools" style="gap:8px;justify-content:flex-end">${anyW?`<button class="btn ghost sm" data-act="wclearall">${ic('x')}Clear waiting area</button>`:''}${anyW||anyC?`<button class="btn ghost sm" data-act="resetask">↺ Reset board</button>`:''}</div>`;
-    body=`${planTile(sid,lv,false)}${tools}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
+    body=`${planTile(sid,lv,false)}${tools}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go. Or drag them there (on a phone, press and hold first).'}</p>
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,true)).join('')}</div>
       <div class="sec"><span class="label">Waiting area</span><div class="waits">${lv.waiting.map((w,i)=>waitRow(sid,w,i,true)).join('')}</div></div></div>
       <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · fewest games first</span></div>
@@ -443,22 +444,27 @@ function gameRow(sid,gid,g,i,mine,bare){
 
 /* ---------- actions (placing players is admin-only) ---------- */
 /* drag and drop: drag a player's icon onto a court spot, a waiting spot or the bench. It does exactly what tap-and-tap does. */
-function enableDrag(el){if(el._drag)return;el._drag=true;let d=null;
+function enableDrag(el){if(el._drag)return;el._drag=true;let d=null,hold=null;
+  /* phones: press and hold a player for a moment, then drag. A quick swipe still scrolls the page. Mouse: drag straight away. */
+  const arm=()=>{if(!d)return;d.armed=true;d.t.classList.add('armed');try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}};
   el.addEventListener('pointerdown',ev=>{const t=ev.target.closest('.pl[data-act="slot"],.pl[data-act="bench"]');if(!t||ev.button>0)return;
     const pid=t.dataset.act==='bench'?t.dataset.pid:(()=>{const lv=S.live[S.courtSid],arr=t.dataset.k==='w'?lv.waiting:lv.courts;return (arr[+t.dataset.c]||{on:[]}).on[+t.dataset.i]})();
-    if(!pid)return;d={pid,t,x:ev.clientX,y:ev.clientY,on:false,id:ev.pointerId}});
+    if(!pid)return;d={pid,t,x:ev.clientX,y:ev.clientY,on:false,id:ev.pointerId,armed:ev.pointerType==='mouse'};clearTimeout(hold);if(!d.armed)hold=setTimeout(arm,180)});
+  el.addEventListener('touchmove',ev=>{if(d&&d.armed)ev.preventDefault()},{passive:false});
   el.addEventListener('pointermove',ev=>{if(!d||ev.pointerId!==d.id)return;
-    if(!d.on){if(Math.hypot(ev.clientX-d.x,ev.clientY-d.y)<8)return;d.on=true;d.g=d.t.cloneNode(true);d.g.className+=' ghost';document.body.appendChild(d.g);document.body.classList.add('dragging');try{d.t.setPointerCapture(ev.pointerId)}catch(_){}}
+    if(!d.armed){if(Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>8){clearTimeout(hold);d=null}return}
+    if(!d.on){if(Math.hypot(ev.clientX-d.x,ev.clientY-d.y)<6)return;d.on=true;d.g=d.t.cloneNode(true);d.g.className+=' ghost';document.body.appendChild(d.g);document.body.classList.add('dragging')}
     d.g.style.left=ev.clientX+'px';d.g.style.top=ev.clientY+'px';ev.preventDefault();
+    if(ev.clientY<80)scrollBy(0,-14);else if(ev.clientY>innerHeight-110)scrollBy(0,14);
     document.querySelectorAll('.droptgt').forEach(x=>x.classList.remove('droptgt'));const u=document.elementFromPoint(ev.clientX,ev.clientY);const tg=u&&u.closest('.pl[data-act="slot"],.bench,.pl[data-act="bench"]');if(tg)tg.classList.add('droptgt')},{passive:false});
-  const end=ev=>{if(!d)return;const was=d;d=null;document.querySelectorAll('.droptgt').forEach(x=>x.classList.remove('droptgt'));document.body.classList.remove('dragging');if(!was.on)return;was.g.remove();
-    el._skipClick=true;setTimeout(()=>el._skipClick=false,50);
+  const end=ev=>{clearTimeout(hold);if(!d)return;const was=d;d=null;was.t.classList.remove('armed');document.querySelectorAll('.droptgt').forEach(x=>x.classList.remove('droptgt'));document.body.classList.remove('dragging');if(!was.on)return;was.g.remove();
+    el._skipClick=true;setTimeout(()=>el._skipClick=false,250);
     const u=document.elementFromPoint(ev.clientX,ev.clientY),slot=u&&u.closest('.pl[data-act="slot"]'),bench=u&&u.closest('.bench,.pl[data-act="bench"]');
     sel=was.pid;
     if(slot&&slot!==was.t)el.onclick({target:slot});
     else if(bench&&was.t.dataset.act==='slot')el.onclick({target:{closest:()=>({dataset:{act:'tobench'}})}});
     else{sel=null;renderCourts()}};
-  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',ev=>{if(d&&d.g)d.g.remove();d=null;document.body.classList.remove('dragging')})}
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',ev=>{clearTimeout(hold);if(d){d.t.classList.remove('armed');if(d.g)d.g.remove()}d=null;document.body.classList.remove('dragging')})}
 /* drag a player up or down the arrival order: grab the number, drop on the new spot. The check-in times are swapped
    around so the order sticks for everyone, and Undo brings the old order back. */
 function arrDrag(el){const list=el.querySelector('.li.arr')?.parentElement;if(!list)return;
@@ -576,6 +582,8 @@ function bindCourts(el){if(!(queueOff(S.courtSport)&&S.cTab==='board'))enableDra
     if(!c.on.slice(0,half).some(Boolean)||!c.on.slice(half).some(Boolean)){toast('Please put players on both sides first.');return}
     c.st='playing';c.t0=SVT();c.t0dev=new Date().toISOString();if(sp==='badminton')c.fmt=c.fmt||suggestFmt(sid,lv);
     toast(`${c.name} has started${c.fmt?' · to '+c.fmt:''}.`);return saveLive(sid,lv)}
+  if(act==='nextin'){const c=lv.courts[+b.dataset.c],nx=lv.waiting[0];if(!c||!nx||!nx.on.some(Boolean))return;c.on=blank(c.size);nx.on.filter(Boolean).slice(0,c.size).forEach((p,i)=>c.on[i]=p);
+    lv.waiting.shift();lv.waiting.push({id:'w'+Date.now().toString(36),size:nx.size,on:blank(nx.size)});if(lv.waiting[0]&&!lv.waiting[0].on.some(Boolean))generateInto(sid,lv,lv.waiting[0]);toast(`Next up is on ${c.name}. Tap Start when they're ready.`);return saveLive(sid,lv)}
   if(act==='finish'||act==='cancelgo'){const ci=+b.dataset.c,c=lv.courts[ci],half=c.size/2,a=c.on.slice(0,half).filter(Boolean),bb=c.on.slice(half).filter(Boolean),now=new Date().toISOString();
     cancelAsk=null;
     finishAsk=null;

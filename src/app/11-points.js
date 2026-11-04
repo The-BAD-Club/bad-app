@@ -2,7 +2,7 @@
    The numbers live on the "Points Settings" tab of BAD APP – Master. The Apps Script copies them into
    config/points every 15 minutes, together with each player's row from "Points Balance" (config/sheetPoints).
    New BADges and points entries given in the app show straight away and are added to the sheet on the next sync. */
-const PTS_FALLBACK={per:5,free:100,expire:180,launch:'',other:{'Event or tournament':10,'BAD Retreat':20,'No-show':-4,'Free session redeemed':-100,'Adjustment':0},
+const PTS_FALLBACK={per:5,free:100,expire:180,launch:'2026-11-05',other:{'Event or tournament':10,'BAD Retreat':20,'No-show':-4,'Free session redeemed':-100,'Adjustment':0},
   levels:[{k:'Rookie',at:0,d:'Player card, earn points, join any session'},{k:'Member',at:3,d:'Sign-ups open to you 24 hours early'},{k:'Core',at:10,d:'Sign-ups open to you 48 hours early, 5% off merch, a vote on new sessions and events'},{k:'Legend',at:25,d:'10% off merch, first pick of limited merch drops, invites to members-only events, first spots for BAD Retreat'}],
   top:{k:'',d:'Reserved for the founders of BAD. Every perk, always.'},
   reasons:[{k:'Crew help',n:'1',eg:'Set up courts, ran the queue, took photos, packed up'},{k:'Brought a new player',n:'1',eg:'Their friend joined and played a paid session'},{k:'4 weeks in a row',n:'1',eg:'Never missed their session for a month'},{k:'Completed their player card',n:'1',eg:'Photo, number and sports all filled in'},{k:'Tried a new department',n:'1',eg:'First time at VolleyBAD, BAD DINK, BAD PACE or another department'},{k:'Above and beyond',n:'1 to 5',eg:'Anything that shows the BAD spirit'}]};
