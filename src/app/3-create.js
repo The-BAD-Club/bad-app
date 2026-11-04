@@ -87,7 +87,7 @@ function renderStep(){
       $('q-skip').onclick=()=>{quiz=null;renderStep()};
     }else{
       const acts=D.sports.filter(k=>!LEVEL_FREE.includes(k));
-      el.innerHTML=head(3)+`<p class="muted" style="margin-bottom:14px">Your level for each activity helps us balance games. Be honest, there's no wrong answer.</p>`+acts.map(sp=>{const T=TYPES[sp]||{},cur=D.types[sp]||'';return `<div class="act-card"><div class="ic-row"><span class="ic-bub">${ic(SPORTS[sp].icon)}</span><b>${SPORTS[sp].club}</b></div>
+      el.innerHTML=head(3)+`<p class="muted" style="margin-bottom:14px">Your level for each activity helps us mix games. Be honest, there's no wrong answer.</p>`+acts.map(sp=>{const T=TYPES[sp]||{},cur=D.types[sp]||'';return `<div class="act-card"><div class="ic-row"><span class="ic-bub">${ic(SPORTS[sp].icon)}</span><b>${SPORTS[sp].club}</b></div>
         ${sp==='badminton'?gradePickHTML():`<div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${(LEVELS_BY[sp]||[]).map(([l,dsc],i)=>`<button type="button" data-lv2="${sp}" data-i="${i}" aria-pressed="${(D.lv2||{})[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4,5].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${esc(l)}</b><small>${esc(dsc)}</small></span></button>`).join('')}</div></div>`}
         ${Object.keys(T).length?`<div class="field" style="margin:0"><span class="lbl">Play style</span>
           ${sp==='badminton'?(quiz&&quiz.done&&cur?`<div class="result"><span class="label">You're a</span><b class="big">${esc(cur)}</b><p>${esc(T[cur]||'')}</p></div>`:`<div class="row"><button type="button" class="btn sm" id="q-start">${ic('star')}Take the 30-second test</button><span class="fine">Five questions. No wrong answers.</span></div>`):''}
@@ -203,4 +203,4 @@ function gradePickHTML(){
     <details class="rules"><summary>${ic('users')}Read the level guide</summary><div class="fine">${COMMUNITY_COPY}</div></details></div>
   <div class="field" style="margin:0"><span class="lbl">Balancing category</span>
     <div class="chips" role="group" aria-label="Balancing category">${Object.entries(CATS).map(([k,l])=>`<button type="button" class="chip" data-cat="${k}" aria-pressed="${D.cat===k}">${l}</button>`).join('')}</div>
-    <p class="fine">Used only to balance games, and shown on your card as W or M. Crew confirm it.</p></div>`}
+    <p class="fine">Used only to help mix games, and shown on your card as W or M. Crew confirm it.</p></div>`}

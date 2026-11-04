@@ -17,8 +17,8 @@ const catOf=uid=>{const r=(S.grades||{})[uid];if(r&&CATS[r.cat])return r.cat;con
 const gradeLabel=uid=>{const g=gradeOf(uid),c=catOf(uid);return 'LVL '+(g||'UNRATED')+(g&&c?' - '+c:'')};
 /* balancing rating: crew override replaces the table value (never add anything on top) */
 function badRating(uid){const r=(S.grades||{})[uid];if(r&&typeof r.ovr==='number')return r.ovr;const g=gradeRow(gradeOf(uid)),c=catOf(uid);return g&&c?(c==='W'?g[2]:g[3]):null}
-const LVL_NOTICE='BAD LEVELS. NOT BWF. Our club scale helps balance games. Crew has the final call.';
-const COMMUNITY_COPY=`<p><b>ALL LEVELS. A LITTLE CHAOS. GOOD SPORTSMANSHIP.</b></p><p>First timer or court regular, you’re welcome here. We’re about fun, friendly competition. Take the game seriously, not yourself.</p><p>It’s okay to be BAD. Support each other, respect your opponents and call your lines honestly.</p><p><b>BAD LEVELS. NOT BWF.</b><br>Our ratings help balance games. They’re our own club scale, not official BWF rankings. Crew may adjust your level based on how you play.</p><p>Questionable footwork? Welcome. Questionable attitude? Let’s talk. If someone crosses the line, tell crew. We’ll take it seriously.</p><p><b>PLAY HARD. BE KIND. BE BAD.</b></p>`;
+const LVL_NOTICE='BAD LEVELS. NOT BWF. Our club scale helps us mix games. Crew has the final call.';
+const COMMUNITY_COPY=`<p><b>ALL LEVELS. A LITTLE CHAOS. GOOD SPORTSMANSHIP.</b></p><p>First timer or court regular, you’re welcome here. We’re about fun, friendly competition. Take the game seriously, not yourself.</p><p>It’s okay to be BAD. Support each other, respect your opponents and call your lines honestly.</p><p><b>BAD LEVELS. NOT BWF.</b><br>Our ratings help us mix games. They’re our own club scale, not official BWF rankings. Crew may adjust your level based on how you play.</p><p>Questionable footwork? Welcome. Questionable attitude? Let’s talk. If someone crosses the line, tell crew. We’ll take it seriously.</p><p><b>PLAY HARD. BE KIND. BE BAD.</b></p>`;
 /* levels for the other sports, in each sport's own words (scale v2). Index 0 to 5; the rating is index + 1. */
 const LEVELS_BY={
  volleyball:[['Beginner','Learning to pass, set and serve'],['Recreational','Keeps a rally going, plays for fun'],['Intermediate','Reliable passing, knows rotations'],['Advanced','Attacks and blocks with purpose'],['Competitive','Plays leagues or tournaments'],['Elite','Club or national level']],
@@ -100,16 +100,29 @@ const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPOR
 const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 /* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
 const DEPT_DESC={
- badminton:'Where BAD started. Rally nights with doubles on every court and a fair rotation, so everyone gets plenty of games. All levels welcome: BAD levels keep the games balanced.',
- volleyball:'Volleyball nights. Teams are mixed and balanced by level every game. Come on your own and leave with a team.',
+ badminton:'Where BAD started. Rally nights with doubles on every court and a rotation that keeps everyone playing. All levels welcome, and everyone plays with everyone.',
+ volleyball:'Volleyball nights. Teams are mixed every game. Come on your own and leave with a team.',
  pickleball:'Pickleball, BAD style. Easy to pick up and hard to put down. Doubles with a rotation, paddles to borrow if you’re new.',
- basketball:'Pickup basketball. 5 v 5 or 3 v 3, with teams balanced by level so every game stays close.',
+ basketball:'Pickup basketball. 5 v 5 or 3 v 3, with teams mixed every game.',
  run:'The BAD running crew. Group runs at a pace that suits you. Check in, run together, then log your distance and time.',
  dance:'The BAD dance crew. Sessions for every level, no experience needed. Just show up and move.',
  training:'Coaching and drills to level up your game, run by BAD coaches.',
  retreat:'Trips away with the club: sport, food and time together. Limited spots, announced early.',
  vibe:'Here for the vibe. Socials and everything that brings BAD together off court.',
  taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. A Side Quest.'};
+/* house rules: shown in the Guide and in Play */
+const HOUSE_RULES=[
+ ['users','Play with anyone','Every level, every partner, every opponent. Levels help us mix games, they don’t choose your teammates.'],
+ ['clock','Respect the rotation','Games go in order of arrival. Admins and crew have the final call on courts.'],
+ ['check','Check in and be on time','Check in when you arrive. Late arrivals join the rotation from when they check in.'],
+ ['ticket','Drop out early','Free up to 48 hours before. From 48 to 24 hours, half the fee. Under 24 hours, the full fee. No-shows lose points.'],
+ ['wallet','Pay for your session','Cash, bank transfer, Ziina or Careem Pay, before or at the session.'],
+ ['eye','Call it honestly','Call your lines fairly and replay the point if you’re not sure. Log scores truthfully: the other team confirms.'],
+ ['star','Respect everyone','No harassment, hate or aggression, on or off court. Crew can ask anyone who crosses the line to leave.'],
+ ['bag','Leave it better','Non-marking court shoes. Take your shuttles, bottles and towels with you.'],
+ ['photo','Photos happen','We take photos at events for the Gallery and BAD socials. Tell an admin if you’d rather not be in them.']];
+const rulesHTML=()=>`<ol class="hrules">${HOUSE_RULES.map(([i,t,d],n)=>`<li><span class="ic-bub soft">${ic(i)}</span><div><b>${n+1}. ${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol>`;
+const MANIFESTO=`<div class="manifesto" aria-label="Bold. Agile. Defiant."><b>BOLD.</b><b>AGILE.</b><b>DEFIANT.</b></div>`;
 const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(DEPT_DESC[k]||SPORTS[k].sport)}</span></div></div>`:'';
 const LEVEL_FREE=['retreat','vibe','taste'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
