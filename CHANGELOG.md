@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.47 | 2026-11-05 | Home: A COMMUNITY BUILT LIKE A BRAND in regular capitals |
 | 0.46 | 2026-11-05 | Home: A COMMUNITY BUILT LIKE A BRAND in thin capitals |
 | 0.45 | 2026-11-05 | Bold. Agile. Defiant. now lives only in the FAQs under About BAD (removed from the footer and the WTH is BAD page) |
 | 0.44 | 2026-11-05 | Home: THE BAD CLUB, a community built like a brand. |
