@@ -814,6 +814,17 @@ body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt
 .bgleft{margin:8px 0 0;font-size:.82rem}
 .v2{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:var(--r-lg,18px);background:linear-gradient(135deg,color-mix(in srgb,var(--ink) 6%,transparent),transparent)}.v2-h{display:grid;gap:4px}.v2-h h3{margin:0}
 @media (max-width:700px){.li.arr .arrctl{grid-column:2/-1;justify-content:flex-start;flex-wrap:wrap;min-width:0}.li.arr .arrctl>.fine,.li.arr .arrctl>.btn:not(.icon){margin-right:auto}}
+.plw{position:relative;display:grid;min-width:0}.plx{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);display:grid;place-items:center;padding:0;z-index:2;cursor:pointer}.plx svg.i{width:11px;height:11px}.plx:hover{background:var(--ink);color:var(--bg)}
+.qstart{display:grid;gap:10px;width:100%;max-width:560px;text-align:left;margin-top:8px}.boardtools{margin:-4px 0 4px}
+.deptc{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}.deptc>svg.i{flex:none;width:22px;height:22px;margin-top:2px}.deptc div{display:grid;gap:4px;min-width:0}
+.depts{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.gsteps{list-style:none;margin:0;padding:0;display:grid;gap:10px}.gsteps li{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}.gsteps li div{display:grid;gap:2px}.gn{font-size:1.4rem;opacity:.5;min-width:1.2em}
+.gcard{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}.gcard>svg.i{flex:none;width:22px;height:22px;margin-top:2px}.gcard p{margin:0 0 6px}.gcard p:last-child{margin:0}
+.f100{display:inline-block;font-size:.66rem;letter-spacing:.12em;font-weight:800;padding:2px 6px;border:1px solid currentColor;border-radius:4px;line-height:1.3;white-space:nowrap}.f100c{margin-top:10px;flex-direction:column;align-items:flex-start}.f100c .f100{font-size:.75rem;padding:6px 8px}
+.cb-sub.f100{margin-top:6px}
+#v-guide{gap:20px}.seg{margin-bottom:-4px}.fdiv{margin:14px 0 4px}
+.galgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.album{all:unset;cursor:pointer;display:grid;gap:8px}.acover{position:relative;aspect-ratio:4/3;border-radius:var(--r-md,14px);background:var(--line) center/cover;display:grid;place-items:center}.acover svg.i{width:28px;height:28px;opacity:.5}.acount{position:absolute;right:8px;bottom:8px;background:var(--bg);color:var(--ink);font-size:.72rem;padding:2px 8px;border-radius:999px}.ameta{display:grid;gap:2px}
+.photos{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.ph1{aspect-ratio:1;border-radius:10px;background:var(--line) center/cover}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -839,6 +850,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
     <button class="themebtn" id="theme" type="button" aria-label="Switch to light theme" title="Light or dark"><svg class="sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <nav class="tabs" aria-label="Sections">
       <button data-v="card"></button>
+      <button data-v="guide"></button>
       <button data-v="play"></button>
       <button data-v="courts"></button>
       <button data-v="club"></button>
@@ -849,6 +861,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
     </nav>
   </header>
   <section class="view" id="v-card"></section>
+  <section class="view" id="v-guide" hidden></section>
   <section class="view" id="v-play" hidden></section>
   <section class="view" id="v-create" hidden>
     <div class="grid2">
@@ -932,7 +945,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
     if(!u){gate.hidden=false;document.documentElement.classList.add('gated');return}
     gate.hidden=true;document.documentElement.classList.remove('gated');
     const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email),role=admin?'owner':'',sports=[];
-    if(!admin&&email){try{const d=await fs.doc('admins/'+email).get();if(d.exists){const x=d.data()||{};/* same as the security rules: only a named role gives admin access */if(['founder','app','cm'].includes(x.role)){admin=true;role=x.role;sports=x.sports||[]}}}catch(_){}}
+    if(!admin&&email){try{const d=await fs.doc('admins/'+email).get();if(d.exists){const x=d.data()||{};/* same as the security rules: only a named role gives admin access */if(['founder','app','cm','crew'].includes(x.role)){admin=true;role=x.role;sports=x.sports||[]}}}catch(_){}}
     window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin,role,sports};
     resolveUser(window.BAD_USER);
   });
@@ -958,8 +971,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.16';
+const APP_VERSION='0.17';
 const CHANGES=[
+  ['0.17','2026-11-04','Guide tab after Home (how the app works, points, BADges, levels, departments); a description for every department; Gallery in Club; First 100: mark on the card, one BADge level up, numbers 0 to 99, then 100 to 999; every jersey number belongs to one player; Crew admin role to support community managers; Courts: start today\'s session right there (BADSHOTS courts, BAD PACE and BAD HABITS sign-up sheets), Add a session goes to Sessions; badminton board: clear waiting area, reset board, × on court players; founders at the bottom of the points board; Volume II goes live from the Shop; Off Court and Essentials wording'],
   ['0.16','2026-11-04','Side Quests tab with Taste BADs (food and drink collabs: join like a session, earn event points); community managers get a tick box per department, many per department, owners run all; BADge designs for each level; community managers and crew give up to 5 BADges a month, founders unlimited; Volume II last pieces in the Shop; check-in: reorder or reshuffle arrivals, × to remove, cancellations inside 48 hours charged (half or full fee, or no charge); links straight to a tab (#shop, #quests)'],
   ['0.15','2026-11-04','Edit a player with a Save button (Admin → Players → Edit); no-show list: × per date, − and +, remove a player, add a player by hand; community managers now only manage their own club (an admin entry without a role gives no access)'],
   ['0.14','2026-11-04','Design review: phone tab bar back at the bottom (it sat over the logo), no overlapping buttons on any screen; ∞ BADges for Founders; FRAGMENTS RELEASE pre-order in the Shop; Home shows checked games\' results'],
@@ -1019,6 +1033,8 @@ const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 /* ---------- icons (stroke, currentColor) ---------- */
 const P={
+ guide:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7M8 11h5"/>',
+ photo:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
  taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
  quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
@@ -1076,9 +1092,22 @@ const SPORTS={
  vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true},
  taste:{club:'Taste BADs',sport:'Food & drink collabs',icon:'taste',noType:true,side:true}
 };
-/* side quests: collaborations and everything off the court. They book like sessions but live on their own tab. */
+/* side quests: collaborations and everything Off Court. They book like sessions but live on their own tab. */
 const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
 const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+/* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
+const DEPT_DESC={
+ badminton:'Where BAD started. Rally nights with doubles on every court and a fair rotation, so everyone gets at least five games. All levels welcome: BAD levels keep the games balanced.',
+ volleyball:'Volleyball nights. Teams are mixed and balanced by level every game. Come on your own and leave with a team.',
+ pickleball:'Pickleball, BAD style. Easy to pick up and hard to put down. Doubles with a rotation, paddles to borrow if you’re new.',
+ basketball:'Pickup basketball. 5 v 5 or 3 v 3, with teams balanced by level so every game stays close.',
+ run:'The BAD running crew. Group runs at a pace that suits you. Check in, run together, then log your distance and time.',
+ dance:'The BAD dance crew. Sessions for every level, no experience needed. Just show up and move.',
+ training:'Coaching and drills to level up your game, run by BAD coaches.',
+ retreat:'Trips away with the club: sport, food and time together. Limited spots, announced early.',
+ vibe:'Here for the vibe. Socials and everything that brings BAD together off court.',
+ taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. A Side Quest.'};
+const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(DEPT_DESC[k]||SPORTS[k].sport)}</span></div></div>`:'';
 const LEVEL_FREE=['retreat','vibe','taste'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
 const PLAYABLE=['badminton','volleyball','pickleball','run','basketball','dance'];
@@ -1124,6 +1153,17 @@ function refCode(uid,p){const n=String(p?.nickname||'BAD').toUpperCase().replace
   const base=`${n}#${num===''?String(hash(uid)%90+10):num.padStart(2,'0')}`;let c=base,i=0;
   const taken=x=>Object.entries(S.profiles||{}).some(([id,q])=>id!==uid&&refsOf(q).some(r=>normCode(r)===normCode(x)))||((S.codes||{})[normCode(x)]);
   while(taken(c)&&i<25)c=base+String.fromCharCode(65+i++);return c}
+/* ---------- the first 100 ----------
+   The first 100 people to make a card (by the time their card was first saved, which nobody can change afterwards)
+   get a First 100 mark on their card, start one BADge level up, and wear a number from 0 to 99.
+   After that, new numbers have three digits (100 to 999). Every number belongs to one player: first come, first served. */
+const FIRST_N=100;
+function signupOrder(){if(S._so&&S._so.ref===S.profiles)return S._so.o;
+  const o=Object.entries(S.profiles||{}).filter(([,p])=>!p.sample&&p.nickname).sort((a,b)=>String(a[1].createdAt||'9').localeCompare(String(b[1].createdAt||'9'))||a[0].localeCompare(b[0])).map(([u])=>u);
+  S._so={ref:S.profiles,o};return o}
+const first100No=uid=>{if(!uid)return 0;const i=signupOrder().indexOf(uid);return i>=0&&i<FIRST_N?i+1:0};
+const isFirst100=uid=>first100No(uid)>0;
+const first100Left=()=>Math.max(0,FIRST_N-signupOrder().length);
 const jersey=p=>(p.number===''||p.number==null)?'00':String(p.number).padStart(2,'0');
 const at=(date,time)=>new Date(`${date}T${time||'20:00'}:00+04:00`);
 const dParts=iso=>{const d=new Date(iso+'T12:00:00+04:00');return{d:d.getUTCDate(),m:MON[d.getUTCMonth()],w:DOW[d.getUTCDay()]}};
@@ -1148,7 +1188,7 @@ function cardHTML(p,st,opt){
   const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
   /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
   return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${isFirst100(cu)?`<b class="f100">FIRST 100</b> · `:''}${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     ${ty?`<div class="style">${esc(ty)}</div>`:''}
@@ -1190,7 +1230,7 @@ function memStatus(uid){const p=S.profiles[uid]||{},v=(S.members||{})[uid]||{},w
 const uidOfProfile=p=>Object.keys(S.profiles||{}).find(k=>S.profiles[k]===p);
 
 /* admin access: owner emails from config, plus anyone in admins/{email} */
-const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||['founder','app','cm'].includes(((S.admins||{})[e]||{}).role))};
+const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||['founder','app','cm','crew'].includes(((S.admins||{})[e]||{}).role))};
 const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_DEFAULT.find(d=>d.k===k)||{}).admin};
 const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
 const isFounder=uid=>!!uid&&memStatus(uid).state==='verified'&&memStatus(uid).type==='Founder';
@@ -1202,7 +1242,7 @@ function cardBackHTML(p,st){
   const since=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
   return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
     <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
-      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
+      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}${isFirst100(uidOfProfile(p))?`<div class="cb-sub f100">First 100 · No. ${first100No(uidOfProfile(p))}</div>`:''}</div>
     <div class="stats lv2"><span><b class="num">${isFounder(uidOfProfile(p))?'<span class="inf">∞</span>':(st.badges||0)}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
@@ -1211,15 +1251,18 @@ function cardBackHTML(p,st){
    founder: everything, can add and remove admins (not owners)
    app: helps build the app: everything except managing admins
    cm: community manager for chosen sports: their sessions, courts, players and posts */
-const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins and the shop.'},cm:{k:'Community manager',d:'Runs their own sport: sessions, courts, players and posts.'}};
+const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins and the shop.'},cm:{k:'Community manager',d:'Runs their own departments: sessions, courts, players, payments and posts.'},crew:{k:'Crew',d:'Supports the community manager on the day: courts, check-in, scores, levels and no-shows for their departments. No sessions, payments or posts.'}};
 const myRole=()=>S.canEdit?((window.BAD_USER&&window.BAD_USER.role)||(window.BAD_WEB?'':'owner')):'';
 const mySports=()=>(window.BAD_USER&&window.BAD_USER.sports)||[];
 const shopAdmin=()=>['owner','founder'].includes(myRole());
 const fullAdmin=()=>['owner','founder','app'].includes(myRole());
 const canManageAdmins=()=>['owner','founder'].includes(myRole());
 const canSport=k=>fullAdmin()||(myRole()==='cm'&&mySports().includes(k||'badminton'));
-const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a&&['founder','app','cm'].includes(a.role)?{role:a.role,sports:a.sports||[]}:null};
-const roleLabel=r=>!r?'':r.role==='owner'?'Owner · every department':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';
+/* crew support the community manager on the day: courts, check-in, scores and levels for their departments, nothing else */
+const isCrewRole=()=>myRole()==='crew';
+const canRun=k=>canSport(k)||(isCrewRole()&&mySports().includes(k||'badminton'));
+const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a&&['founder','app','cm','crew'].includes(a.role)?{role:a.role,sports:a.sports||[]}:null};
+const roleLabel=r=>!r?'':r.role==='owner'?'Owner · every department':['cm','crew'].includes(r.role)?`${r.role==='cm'?'Community manager':'Crew'} · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no department yet'}`:(ROLES[r.role]||{}).k||'Admin';
 
 /* ---------- Points and BADges ----------
    The numbers live on the "Points Settings" tab of BAD APP – Master. The Apps Script copies them into
@@ -1261,7 +1304,7 @@ function pointsFor(uid){const c=PS(),row=sheetRow(uid)||{},launch=c.launch||'',s
   const lv=levelFor(uid,bdg),appUnpaid=typeof pendingFor==='function'?pendingFor(uid).filter(r=>sessStart(S.sessions[r.sid])<Date.now()).reduce((t,r)=>t+r.amount,0):0,sheetUnpaid=Number(row.unpaid)||0;
   return{balance,started,launch,last,playBy,free:c.free,per:c.per,canRedeem:started&&balance>=c.free,sessions:Number(row.sessions)||0,
     badges:bdg,level:lv.k,levelIdx:lv.i,next:lv.next,toNext:lv.next?lv.next.at-bdg:0,top:lv.top,unpaid:appUnpaid+sheetUnpaid,appUnpaid,sheetUnpaid}}
-function levelFor(uid,n){const L=PS().levels;if(uid&&isFounder(uid))return{k:topName(),i:L.length,top:true,next:null};let i=0;L.forEach((l,j)=>{if(n>=(Number(l.at)||0))i=j});return{k:L[i].k,i,top:false,next:L[i+1]||null}}
+function levelFor(uid,n){const L=PS().levels;if(uid&&isFounder(uid))return{k:topName(),i:L.length,top:true,next:null};let i=0;L.forEach((l,j)=>{if(n>=(Number(l.at)||0))i=j});/* the first 100 start one level up */if(isFirst100(uid))i=Math.min(i+1,L.length-1);return{k:L[i].k,i,top:false,next:L[i+1]||null}}
 function badgeCount(uid){const row=sheetRow(uid)||{};return (Number(row.badges)||0)+myBadges(uid).filter(b=>!b.synced).reduce((t,b)=>t+(Number(b.n)||1),0)}
 /* BADge art by level: 0 Rookie, 1 Member, 2 Core, 3 Legend, 4 Founder (∞). Brand colours only: black, white, silver. */
 let BA_N=0;
@@ -1337,14 +1380,29 @@ async function autoPoints(){if(!S.canEdit||!S.db||S._autoPts)return;const c=PS()
       for(const d of (n.dates||[])){if(d.includes('#'))continue;const s=S.sessions[d];if(!s||!s.date||s.date<c.launch)continue;await put(`ns-${d}-${pr[0]}`,{uid:pr[0],type:'No-show',dept:sportOf(s.sport).club,date:s.date,sid:d,reason:`No-show: ${s.title||sportOf(s.sport).club} · ${fmtD(s.date)}`})}}
   }finally{S._autoPts=false}}
 
+/* numbers worn before numbers were claimed: a full admin's app claims them once, oldest card first, so nobody new can take them */
+async function backfillNumbers(){if(S._bfn||!S.db||!S.canEdit||typeof fullAdmin!=='function'||!fullAdmin()||!Object.keys(S.profiles||{}).length)return;S._bfn=true;
+  for(const uid of signupOrder()){const n=numNorm(S.profiles[uid].number);if(n===''||!/^\d{1,3}$/.test(n)||(S.numbers||{})[n])continue;
+    try{await S.db.doc('numbers/'+n).set({uid,at:new Date().toISOString()});S.numbers[n]={uid}}catch(_){}}}
+
 /* ---------- register / edit card ---------- */
 let D={},step=0,quiz=null;
 const STEPS=['About you','Your look','Your activities','Your levels','Your signature'];
 const okEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim());
 const okMobile=v=>String(v||'').replace(/\D/g,'').length>=8;
-const numTaken=n=>{if(n==='')return null;for(const [uid,p] of Object.entries(S.profiles||{}))if(uid!==S.uid&&!p.sample&&String(p.number)===String(+n))return p.nickname||'another player';return null};
-function numHint(n){if(n==='')return 'Pick your jersey number, 0 to 99.';const t=numTaken(n);return t?`${t} also wears ${+n}. You can still use it, or pick another.`:`${+n} is yours. You can change it any time.`}
-function freeNumber(){for(let i=0;i<40;i++){const n=String(Math.floor(Math.random()*99)+1);if(!numTaken(n))return n}return String(Math.floor(Math.random()*99)+1)}
+/* jersey numbers: one per player, first come first served. The first 100 wear 0 to 99, everyone after wears 100 to 999. */
+const numNorm=n=>n===''||n==null?'':String(+n);
+const numRange=()=>{const m=S.profiles[S.uid];return (m&&!m.sample&&m.nickname?isFirst100(S.uid):first100Left()>0)?[0,99]:[100,999]};
+const numOwn=n=>{const m=S.profiles[S.uid];return !!m&&String(m.number)===numNorm(n)};
+const numTaken=n=>{const k=numNorm(n);if(k==='')return null;const c=(S.numbers||{})[k];if(c&&c.uid!==S.uid)return (S.profiles[c.uid]||{}).nickname||'another player';
+  for(const [uid,p] of Object.entries(S.profiles||{}))if(uid!==S.uid&&!p.sample&&String(p.number)===k)return p.nickname||'another player';return null};
+function numProblem(n){if(n==='')return 'Pick your jersey number.';if(numOwn(n))return '';const [lo,hi]=numRange(),v=+n;
+  if(v<lo||v>hi)return lo===0?'Pick a number from 0 to 99.':'Numbers 0 to 99 belong to the first 100. Please pick one from 100 to 999.';
+  const t=numTaken(n);return t?`${t} already wears ${v}. Numbers are first come, first served, so please pick another.`:''}
+function numHint(n){const [lo,hi]=numRange(),pr=numProblem(n);if(pr)return pr;return numOwn(n)?`${+n} is yours.`:`${+n} is free. It's yours once you save${lo===0?`, and you're one of the first 100`:''}.`}
+function freeNumber(){const [lo,hi]=numRange();for(let i=0;i<200;i++){const n=String(lo+Math.floor(Math.random()*(hi-lo+1)));if(!numTaken(n))return n}for(let v=lo;v<=hi;v++)if(!numTaken(String(v)))return String(v);return ''}
+async function claimNumber(uid,n,old){if(!S.db||n===''||n===old)return;const c=(S.numbers||{})[n];if(c&&c.uid===uid)return;
+  const b=S.db.batch();b.set(S.db.doc('numbers/'+n),{uid,at:new Date().toISOString()});const oc=old&&(S.numbers||{})[old];if(oc&&oc.uid===uid)b.delete(S.db.doc('numbers/'+old));await b.commit()}
 function memHint(k){const t=memType(k);return !t||!t.verify?'No check needed.':'An admin will verify this. Your card shows it once it’s confirmed.'}
 function startCreator(existing){
   D=existing?{...existing,lv2:{...(existing.lv2||{})},types:{...(existing.types||{})},sports:[...(existing.sports||['badminton'])]}:{nickname:'',listName:'',number:freeNumber(),edition:'oncourt',photo:'',sports:[],primary:'',types:{},levels:{},level:1,hand:'Right',shot:'',lv2:{},email:'',mobile:'',instagram:'',referredBy:''};
@@ -1358,7 +1416,7 @@ function startCreator(existing){
 function preview(){const k=keyOf(D.listName||D.nickname);const st=statsFor(k);$('preview').innerHTML=cardHTML(D,st)}
 function chips(name,opts,cur,attr='f'){return `<div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-${attr}="${name}" data-val="${esc(o)}" aria-pressed="${o===cur}">${esc(o)}</button>`).join('')}</div>`}
 function stepValid(){
-  if(step===0)return D.nickname.trim()&&okEmail(D.email)&&okMobile(D.mobile);
+  if(step===0)return D.nickname.trim()&&okEmail(D.email)&&okMobile(D.mobile)&&!numProblem(D.number);
   return true;
 }
 function renderStep(){
@@ -1369,7 +1427,7 @@ function renderStep(){
     const taken=new Set(Object.entries(S.profiles).filter(([u])=>u!==S.uid).map(([u])=>normName(trackerName(u))).filter(Boolean)),seen=new Set(),free=[...Object.values((S.sheetPts&&S.sheetPts.players)||{}).map(r=>r.name),...Object.values(allKeys())].filter(n=>{const k=normName(n);if(!k||taken.has(k)||seen.has(k))return false;seen.add(k);return true}).map(n=>[keyOf(n),n]).sort((a,b)=>a[1].localeCompare(b[1]));
     el.innerHTML=head(0)+`
       <div class="namerow"><div class="field"><label for="c-nick">Player name</label>${inp('c-nick','card','text',D.nickname,'What everyone calls you','maxlength="16"')}</div>
-        <div class="field"><label for="c-num">Number</label><input type="text" inputmode="numeric" id="c-num" maxlength="2" value="${esc(D.number)}" placeholder="00" class="jnum"></div></div>
+        <div class="field"><label for="c-num">Number</label><input type="text" inputmode="numeric" id="c-num" maxlength="3" value="${esc(D.number)}" placeholder="${numRange()[0]?'100':'00'}" class="jnum"></div></div>
       <p class="fine" id="c-num-hint" role="status" style="margin:6px 0 18px">${numHint(D.number)}</p>
       ${D._acctEmail&&!D._editing?`<div class="acct">${ic('mail')}<div><span class="label">Signed in as</span><div class="nm">${esc(D.email)}</div></div></div>`:`<div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>`}
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
@@ -1378,7 +1436,7 @@ function renderStep(){
       ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'e.g. KENNY#08','maxlength="16" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?`<div class="field"><label for="c-list">Played with us before?</label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the tracker</option>`).join('')}</select><p class="fine">Points and payments are matched by your name on the session tracker. First time? We'll use your nickname.</p></div>`:''}
       <p class="fine">Your email and mobile number are only seen by BAD admins. We use them for session updates and nothing else.</p>`;
-    $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,2);e.target.value=D.number;$('c-num-hint').textContent=numHint(D.number);preview()};
+    $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,3);e.target.value=D.number;const h=$('c-num-hint');h.textContent=numHint(D.number);h.classList.toggle('warn-t',!!numProblem(D.number));$('next').disabled=!stepValid();if($('skip'))$('skip').disabled=!stepValid();preview()};
     $('c-mem').onchange=e=>{D.memType=e.target.value;$('c-mem-hint').textContent=memHint(D.memType)};
     const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();if(step===0)$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
     on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
@@ -1497,12 +1555,14 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 
 async function saveProfile(){
   const now=new Date().toISOString();
-  const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
+  const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:numNorm(D.number),edition:D.edition,photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),grade:gradeRow(D.grade)&&D.sports.includes('badminton')?D.grade:'',lv2:Object.fromEntries(Object.entries(D.lv2||{}).filter(([k,v])=>D.sports.includes(k)&&LEVELS_BY[k]&&Number.isInteger(v))),cat:CATS[D.cat]?D.cat:'',
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
-    try{data.ref=await claimRef(S.uid,data.ref);await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
+    try{if(numProblem(D.number)){toast(numProblem(D.number));step=0;renderStep();return}
+      try{await claimNumber(S.uid,data.number,numNorm((S.profiles[S.uid]||{}).number))}catch(e){toast(`Number ${data.number} was just taken. Please pick another.`);step=0;renderStep();return}
+      data.ref=await claimRef(S.uid,data.ref);await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
       try{localStorage.removeItem('badRef')}catch(_){}S.pendingRef='';toast(D._editing?'Your card is updated.':'Welcome to BAD. Thank you for registering.');setView('card');setTimeout(processCheckin,800);return}catch(e){console.error('BAD save failed',e);S.saveErr=(e&&(e.code||e.message))||''}
   }
   if(window.BAD_WEB){
@@ -1533,10 +1593,10 @@ function gradePickHTML(){
     <p class="fine">Used only to balance games, and shown on your card as W or M. Crew confirm it.</p></div>`}
 
 /* ---------- navigation ---------- */
-const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={card:['card','Home'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 function setView(v){S.view=v;
-  for(const id of ['card','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',(b.dataset.v===v||(v==='create'&&b.dataset.v==='card'))?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -1547,8 +1607,8 @@ function render(){
   if(S.view==='courts')return renderCourts();
   renderNow();
 }
-function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canSport(S.courtSport)&&!S.asPlayer));
-  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
+  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -1637,7 +1697,7 @@ function renderPlay(){
   const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
     ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from Home</small></span>${ic('arrow')}</button>`:''})()}
-    ${sportBar(S.sport,'flt',used)}`;
+    ${sportBar(S.sport,'flt',used)}${S.sport!=='all'?deptCard(S.sport):''}`;
   const rules=`<details class="rules"><summary>${ic('clock')}How joining and dropping out works</summary><p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p></details>`;
   if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>No sessions posted for this department yet. Please check back soon.</span></div>`+rules;bindPlay(el);return}
   const wk=sx=>{const t=new Date();t.setHours(0,0,0,0);const d=(sessStart(sx)-t)/864e5;return d<7-((t.getDay()+6)%7)?'This week':d<14-((t.getDay()+6)%7)?'Next week':'Later'};let lastWk='';
@@ -1735,7 +1795,7 @@ function ptsTilesHTML(pt,fd,req){const c=PS();
       ${pt.playBy?`<span class="fine">Play by ${esc(fmtD(pt.playBy))} to keep them.</span>`:''}
       ${req?'<span class="tagl">Free session requested</span>':pt.canRedeem?(pt.unpaid?`<span class="fine">Please settle your AED ${pt.unpaid} first, then you can use your free session.</span>`:`<button class="btn sm" id="redeem">${ic('ticket')}Use ${c.free} for a free session</button>`):''}</div>`;
   const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="bstat"><span class="bimg">${badgeArt(pt.top?9:pt.levelIdx,{label:pt.level+' BADge'})}</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div></div>
-      ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100)}%"></i></div>`:''}
+      ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.max(0,Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100))}%"></i></div>`:''}
       ${canGiveBadge()?`<button class="btn ghost sm" data-givebadge="">Give a BADge</button>`:''}</div>`;
   const pay=`<div class="paystat ${pt.unpaid?'owe':'ok'}">${pt.unpaid?`${ic('wallet')}<span>AED ${pt.unpaid} unpaid</span>`:`${ic('check')}<span>Paid up</span>`}</div>`;
   return `<section class="hsec"><div class="sec-h"><h3 class="ah">Points and BADges</h3>${pay}</div><div class="tiles pbtiles">${pts}${bd}</div></section>`}
@@ -1875,7 +1935,7 @@ async function requestFree(){const p=myProfile();if(!p||!S.db)return;
   try{await S.db.doc('requests/'+S.uid).set({player:p.listKey,at:new Date().toISOString(),type:'free-session'});toast('Thank you. An admin will confirm shortly.')}catch(e){toast("Sorry, that didn't send. Please ask an admin at the session.")}}
 
 /* ---------- club feed ---------- */
-/* ---------- Side Quests: collaborations and everything off the court ----------
+/* ---------- Side Quests: collaborations and everything Off Court ----------
    Each quest is a session in a side department (Taste BADs for food and drink). People join, pay and drop out
    exactly like a session, and earn event points after it. Posts for those departments show here too. */
 function renderQuests(){
@@ -1883,13 +1943,40 @@ function renderQuests(){
   const list=upcoming().filter(([,s])=>isSide(s.sport)&&(f==='all'||s.sport===f));
   const past=Object.entries(S.sessions).filter(([,s])=>isSide(s.sport)&&sessStart(s)<Date.now()-2*36e5&&(f==='all'||s.sport===f)).sort((a,b)=>sessStart(b[1])-sessStart(a[1])).slice(0,6);
   const posts=Object.entries(S.posts).filter(([,p])=>isSide(p.club)&&(f==='all'||p.club===f)&&(p.type!=='event'||(p.date||'')>=today)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
-  el.innerHTML=`<div class="hero"><span class="label">Side Quests</span><h2>Off the court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
+  el.innerHTML=`<div class="hero"><span class="label">Side Quests</span><h2>Off Court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
     ${SIDE.length>1?sportBar(f,'qf',SIDE):`<div class="qdepts">${SIDE.map(k=>`<div class="qdept">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(SPORTS[k].sport)}</span></div></div>`).join('')}</div>`}
     ${list.length?`<div class="slist">${list.map(([sid,s])=>sessCard(sid,s)).join('')}</div>`:`<div class="empty">${ic('quest')}<span>No side quests posted yet. The next collab drops here first.</span></div>`}
     ${posts.length?`<section class="hsec"><h3 class="ah">News from the collabs</h3><div class="list">${posts.map(([,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${esc(SPORTS[p.club]?.club||'')}${p.date?' · '+esc(fmtD(p.date)):''}${p.place?' · '+esc(p.place):''}</div>${p.body?`<p class="fine" style="margin:4px 0 0">${esc(p.body)}</p>`:''}</div>${p.link?`<a class="btn ghost sm" href="${esc(p.link)}" target="_blank" rel="noopener">Open${ic('arrow')}</a>`:''}</div>`).join('')}</div></section>`:''}
     ${past.length?`<details class="hsec how"><summary class="ah">Past quests</summary><div class="list">${past.map(([,s])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(sportOf(s.sport).icon)}<div><div class="nm">${esc(s.title)}</div><div class="sub">${esc(fmtS(s))}${s.venue?' · '+esc(s.venue):''}</div></div></div>`).join('')}</div></details>`:''}`;
   el.querySelectorAll('[data-qf]').forEach(b=>b.onclick=()=>{S.questFilter=b.dataset.qf;renderQuests()});
   bindPlay(el);
+}
+/* ---------- Gallery: an album per event, with photos and a link to the full set ---------- */
+function galleryHTML(f){const A=Object.entries(S.gallery||{}).filter(([,a])=>f==='all'||a.club===f||a.club==='all').sort((a,b)=>String(b[1].date||'').localeCompare(String(a[1].date||'')));
+  if(!A.length)return `<div class="empty">${ic('photo')}<span>No albums yet. Photos from the next event land here.</span></div>`;
+  const open=S.album&&S.gallery[S.album];
+  return `<div class="galgrid">${A.map(([id,a])=>`<button class="album" data-album="${esc(id)}"><div class="acover" style="background-image:url('${esc((a.photos||[])[0]||'')}')">${(a.photos||[]).length?'':ic('photo')}<span class="acount num">${(a.photos||[]).length}</span></div><div class="ameta"><span class="fine">${esc(SPORTS[a.club]?.club||'All of BAD')}${a.date?' · '+esc(fmtD(a.date)):''}</span><b>${esc(a.title)}</b></div></button>`).join('')}</div>
+  ${open?`<div class="sheet-ov" data-albclose="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(open.title)}"><button class="sheet-x" data-albclose="1" aria-label="Close">${ic('x')}</button><div class="sheet-in" style="padding:20px;display:grid;gap:12px">
+    <div><span class="label">${esc(SPORTS[open.club]?.club||'All of BAD')}${open.date?' · '+esc(fmtD(open.date)):''}</span><h2 style="margin:4px 0 0">${esc(open.title)}</h2></div>
+    <div class="photos">${(open.photos||[]).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener" class="ph1" style="background-image:url('${esc(u)}')" aria-label="Photo ${i+1}"></a>`).join('')}</div>
+    ${open.link?`<a class="btn wide" href="${esc(open.link)}" target="_blank" rel="noopener">${ic('photo')}See all the photos${ic('arrow')}</a>`:''}</div></div></div>`:''}`}
+function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclick=()=>{S.album=b.dataset.album;renderClub()});
+  el.querySelectorAll('[data-albclose]').forEach(b=>b.onclick=ev=>{if(ev.target.closest('.sheet')&&!ev.target.closest('.sheet-x'))return;S.album=null;renderClub()})}
+
+/* ---------- Guide: what the app is for and how to use it ---------- */
+function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
+  const tabs=[['card','Home','Your player card, your sessions, points and BADges.'],['play','Play','Find a session and join it in one tap. Drop out or bring a friend from Home.'],['courts','Courts','On the day: check in, see your court and who’s next.'],['club','Club','News, events and the Gallery.'],['quests','Quests','Side Quests: collabs and everything Off Court.'],['board','Board','Points and rankings. Players first.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
+  const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. At least five games each.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
+  el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
+  <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
+  <section class="hsec"><h3 class="ah">Points</h3><div class="gcard">${ic('coin')}<div><p><b>${c.per} points</b> for every session you play, whatever the sport. At <b>${c.free} points</b> your next session is free.</p><p class="fine">Points reset if you go ${c.expire} days without playing. A no-show or late cancellation costs points.</p>${pt&&pt.started?`<p class="fine">You have <b class="num">${isFounder(me)?'∞':pt.balance}</b> points.</p>`:''}</div></div></section>
+  <section class="hsec"><h3 class="ah">BADges and levels</h3><p class="fine">BADges are a thank you from the founders and crew, for helping out, bringing friends and showing up. They never expire. More BADges, higher level, better perks.</p>
+    <div class="list lvls">${c.levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{label:l.k})}</span><div><div class="nm">${esc(l.k)}${+l.at?` <span class="fine">· ${l.at} BADges</span>`:''}</div><div class="sub">${esc(l.d||'')}</div></div></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{label:topName()})}</span><div><div class="nm">${esc(topName())} <span class="fine">· Founders</span></div><div class="sub">${esc(c.top.d||'')}</div></div></div></div>
+    <div class="gcard f100c"><b class="f100">FIRST 100</b><div><p>The first 100 people to make a card start <b>one level up</b>, get a First 100 mark on their card and wear a number from 0 to 99.${first100Left()?` <b class="num">${first100Left()}</b> spots left.`:' All 100 spots are taken: new numbers are 100 to 999.'}</p><p class="fine">Every jersey number belongs to one player, first come first served.</p></div></div></section>
+  <section class="hsec"><h3 class="ah">BAD levels</h3><div class="gcard">${ic('badminton')}<div><p><b>${esc(LVL_NOTICE)}</b></p><p class="fine">Levels run from F to A+, with a W or M rating. They only exist to make games fair.</p></div></div></section>
+  <section class="hsec"><h3 class="ah">Joining and dropping out</h3><div class="gcard">${ic('clock')}<div><p>Drop out for free up to 48 hours before. From 48 to 24 hours, half the fee applies. Under 24 hours, the full fee.</p><p class="fine">Pay by cash, bank transfer, Ziina or Careem Pay. Your payment status is on Home.</p></div></div></section>
+  <section class="hsec"><h3 class="ah">The departments</h3><div class="depts">${Object.keys(SPORTS).map(deptCard).join('')}</div></section>
+  <section class="hsec"><h3 class="ah">The tabs</h3><div class="list">${tabs.map(([i,t,d])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="ic-bub soft">${ic(NAV[i==='card'?'card':i]?NAV[i][0]:i)}</span><div><div class="nm">${t}</div><div class="sub">${d}</div></div></div>`).join('')}</div></section>`;
 }
 function renderClub(){
   const el=$('v-club'),today=new Date().toISOString().slice(0,10),f=S.clubFilter;
@@ -1900,9 +1987,12 @@ function renderClub(){
     <span class="ic-row label">${sp?ic(sp.icon)+esc(sp.club):ic('users')+'All of BAD'}</span><h3>${esc(p.title)}</h3>
     ${p.type==='event'?`<div class="meta">${p.time?`<span>${ic('clock')}${esc(p.time)}</span>`:''}${p.place?`<span>${ic('pin')}${esc(p.place)}</span>`:''}</div>`:''}<p>${esc(p.body||'')}</p>
     <div class="row" style="gap:8px">${(()=>{const u=p.link||S.site?.url;return u?`<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener">${esc(p.link?(p.linkLabel&&p.linkLabel!=='Directions'?p.linkLabel:'Find out more'):'Visit the BAD site')}${ic('arrow')}</a>`:''})()}${p.mapLink?`<a class="btn ghost sm" href="${esc(p.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}</div></div></article>`};
-  el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>What's on at BAD.</h2></div>${sportBar(f,'cf',Object.keys(SPORTS))}
+  const mode=S.clubMode==='gallery'?'gallery':'news',modes=`<div class="chips seg" role="group" aria-label="Club"><button class="chip" data-cm="news" aria-pressed="${mode==='news'}">${ic('club')}What's on</button><button class="chip" data-cm="gallery" aria-pressed="${mode==='gallery'}">${ic('photo')}Gallery</button></div>`;
+  if(mode==='gallery'){el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>Gallery.</h2><p class="muted">Photos from every BAD event.</p></div>${modes}${sportBar(f,'cf',Object.keys(SPORTS))}${galleryHTML(f)}`;
+    el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{S.clubMode=b.dataset.cm;renderClub()});bindGallery(el);return}
+  el.innerHTML=`<div class="hero"><span class="label">Club</span><h2>What's on at BAD.</h2></div>${modes}${sportBar(f,'cf',Object.keys(SPORTS))}${f!=='all'?deptCard(f):''}
     <div class="view" style="gap:12px">${events.map(card).join('')}${news.map(card).join('')}${!events.length&&!news.length?`<div class="empty">${ic('club')}<span>Nothing posted here yet. Please check back soon.</span></div>`:''}</div>`;
-  el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});
+  el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{S.clubFilter=b.dataset.cf;renderClub()});el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{S.clubMode=b.dataset.cm;renderClub()});
 }
 
 
@@ -2146,7 +2236,7 @@ function rankRows(sport){
 /* ---------- board state helpers ---------- */
 /* admins for their department, or the session's Game Master */
 const isGM=sid=>!!sid&&!!S.uid&&(S.sessions[sid]?.gms||[]).includes(S.uid);
-const courtEd=sid=>(S.canEdit&&canSport(S.courtSport))||isGM(sid);
+const courtEd=sid=>(S.canEdit&&canRun(S.courtSport))||isGM(sid);
 function courtSessions(){
   const now=Date.now();
   return Object.entries(S.sessions).filter(([sid,s])=>!s.cancelled&&(s.sport||'badminton')===S.courtSport&&(S.live[sid]?sessStart(s)>now-18*36e5:((S.canEdit||isGM(sid))?sessStart(s)>now-12*36e5&&sessStart(s)<now+7*864e5:Math.abs(sessStart(s)-now)<12*36e5)))
@@ -2218,7 +2308,7 @@ function startBoard(sid){const sp=S.sessions[sid].sport||'badminton';
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
-S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='',ciEdit=null,ciRm=false,ciShuf=false,finishAsk=null;
+S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='',ciEdit=null,ciRm=false,ciShuf=false,resetAsk=false,finishAsk=null;
 const CANCEL_REASONS=['Injury','Player had to leave','Wrong lineup','Court problem','Other'];
 /* timers on playing courts tick once a minute without redrawing the board */
 setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m-Number(t.dataset.pm||0))/60000))+' min'}),20000);
@@ -2227,7 +2317,7 @@ function pl(sid,pid,o={}){ /* one player token: photo + name (+ games) */
   const tag=o.act?'button':'span',me=pid===S.uid;
   return `<${tag} class="pl${sel===pid?' sel':''}${me?' me':''}" ${o.act?`data-act="${o.act}" ${o.data||''}`:''}>${o.n!=null?`<span class="qn num">${o.n}</span>`:''}${pav(sid,pid)}<span class="pn">${esc(nm(sid,pid))}</span>${o.games?`<span class="fine num">${gamesFor(sid,pid)} played${S.canEdit&&!S.asPlayer&&lvlTag(pid,S.sessions[sid]?.sport||'badminton')?' · '+lvlTag(pid,S.sessions[sid]?.sport||'badminton'):''}</span>`:''}${o.lv&&isRest(o.lv,pid)?'<span class="flag">Resting</span>':o.lv&&(o.lv.more||{})[pid]?'<span class="flag">+ games</span>':''}</${tag}>`}
 function spot(o={}){return o.act?`<button class="pl" data-act="${o.act}" ${o.data||''} aria-label="Open spot"><span class="slot">${ic('plus')}</span></button>`:`<span class="pl"><span class="slot"></span></span>`}
-function sideHTML(sid,c,k,ci,from,to,edit){let h='';for(let i=from;i<to;i++){const pid=c.on[i],d=`data-k="${k}" data-c="${ci}" data-i="${i}"`;h+=pid?pl(sid,pid,{act:edit?'slot':null,data:d,games:edit,lv:S.live[sid]}):spot({act:edit?'slot':null,data:d})}return h}
+function sideHTML(sid,c,k,ci,from,to,edit){let h='';for(let i=from;i<to;i++){const pid=c.on[i],d=`data-k="${k}" data-c="${ci}" data-i="${i}"`;h+=pid?(edit?`<span class="plw">${pl(sid,pid,{act:'slot',data:d,games:true,lv:S.live[sid]})}<button class="plx" data-act="slotx" ${d} aria-label="Take ${esc(nm(sid,pid))} off, back to the bench">${ic('x')}</button></span>`:pl(sid,pid,{games:false,lv:S.live[sid]})):spot({act:edit?'slot':null,data:d})}return h}
 function courtCard(sid,c,ci,edit){
   const sp=S.sessions[sid].sport||'badminton',half=c.size/2,full=c.on.filter(Boolean).length,playing=inG(c),gno=liveGames(sid).filter(([,g])=>g.court===c.name).length+1;
   const fmt=c.fmt||(sp==='badminton'?suggestFmt(sid,S.live[sid]||{courts:[]}):null);
@@ -2247,11 +2337,11 @@ function courtCard(sid,c,ci,edit){
 }
 function waitRow(sid,w,wi,edit){
   const half=w.size/2,full=w.on.filter(Boolean).length;
-  return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span>${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</div>
+  return `<article class="wait"><div class="court-h"><span class="ic-row"><span class="qn num" style="position:static">${wi+1}</span><b>${wi===0?'Next up':'Then'}</b></span><span class="row" style="gap:6px">${edit&&full?`<button class="linkbtn" data-act="wclear" data-c="${wi}">Clear</button>`:''}${edit&&full<w.size?`<button class="btn ghost sm" data-act="fill" data-k="w" data-c="${wi}">Auto-fill</button>`:''}</span></div>
     <div class="mini"><div class="half">${sideHTML(sid,w,'w',wi,0,half,edit)}</div><span class="vs">vs</span><div class="half">${sideHTML(sid,w,'w',wi,half,w.size,edit)}</div></div></article>`;
 }
 /* check-in list: rename a guest or walk-in, or take anyone off tonight's list */
-function ciEditor(sid,p){const x=who(sid,p),member=!!x.uid&&!!S.profiles[p],admin=S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton');
+function ciEditor(sid,p){const x=who(sid,p),member=!!x.uid&&!!S.profiles[p],admin=S.canEdit&&canRun((S.sessions[sid]||{}).sport||'badminton');
   return `<div class="cied">${member?`<p class="fine">${esc(x.name)} is a member, so their name comes from their card.</p>`:`<label class="fine" for="ci-nm">Name</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input type="text" id="ci-nm" maxlength="24" value="${esc(x.name)}" style="flex:1;min-width:0"><button class="btn sm" data-act="cirename" data-pid="${esc(p)}">Save</button></div>`}
     ${ciRm?(()=>{const f=admin&&!x.walk?dropFee(sid):{amount:0},fee=f.amount>0;return `<div class="confirm"><b>Take ${esc(x.name)} off tonight's list?</b><p class="fine">${admin&&!x.walk?(fee?`Cancelling inside 48 hours: ${esc(f.label.toLowerCase())}, AED ${f.amount}, goes on their payments. Choose “No charge” if there's a good reason.`:'They’re removed from the session list too. No charge this far ahead.'):x.walk?'The walk-in is removed.':'They’re hidden from tonight’s board. An admin can take them off the session list.'}</p><div class="row" style="gap:6px">${fee?`<button class="btn sm" data-act="cirmgo" data-charge="1" data-pid="${esc(p)}">Cancelled · AED ${f.amount}</button><button class="btn ghost sm" data-act="cirmgo" data-charge="0" data-pid="${esc(p)}">No charge</button>`:`<button class="btn sm" data-act="cirmgo" data-pid="${esc(p)}">Remove</button>`}<button class="btn ghost sm" data-act="cirmno">Keep</button></div></div>`})()
       :`<button class="linkbtn danger" data-act="cirm" data-pid="${esc(p)}">Remove from tonight</button>`}<button class="linkbtn" data-act="ciedit" data-pid="">Done</button></div>`}
@@ -2292,6 +2382,14 @@ function levelPick(uid,sp){const p=S.profiles[uid]||{},own=p.lv2?p.lv2[sp]:null,
 function stepper(){const n=S.courtSid?supportCount(S.courtSid):0,st=[['Set up','Courts and time'],['Check in','Who has arrived'],['Games','Courts and next up'],['Scores',n?`${n} to check`:'Standings']];
   return `<div class="stepper">${st.map(([t,d],i)=>`<button data-act="step" data-n="${i+1}" aria-current="${S.courtStep===i+1?'step':'false'}"><span class="qn num" style="position:static">${i+1}</span><span><b>${t}</b><span class="fine">${d}</span></span></button>`).join('')}</div>`}
 
+/* no session for this department yet: admins start today's one right here (sign-up sheet and board in one go) */
+function quickStart(sp){const att=isAttend(sp),def={basketball:['19:00','21:00',20],run:['06:30','07:30',40],dance:['19:00','20:30',30],pickleball:['19:00','21:00',16],volleyball:['19:00','22:30',18],badminton:['20:00','22:00',16]}[sp]||['19:00','21:00',20];
+  return `<div class="qstart"><span class="label">Start today's ${esc(SPORTS[sp].club)} session</span><p class="fine">${att?'Opens a sign-up and check-in sheet for today. Players can sign up in Play straight away.':'Opens today’s session and the court board. Players can sign up in Play straight away.'}</p>
+    <div class="fgrid"><div class="field wide"><label for="qs-title">Name</label><input id="qs-title" maxlength="80" placeholder="${esc(defaultTitle(sp))}"></div>
+    <div class="field"><label for="qs-start">Start</label><input type="time" id="qs-start" value="${def[0]}"></div><div class="field"><label for="qs-end">End</label><input type="time" id="qs-end" value="${def[1]}"></div>
+    <div class="field"><label for="qs-cap">Max players</label><input type="number" id="qs-cap" min="2" value="${def[2]}"></div><div class="field"><label for="qs-fee">Fee (AED)</label><input type="number" id="qs-fee" min="0" value="${sp==='run'?0:40}"></div>
+    ${att?'':`<div class="field"><label for="qs-courts">Courts</label><input type="number" id="qs-courts" min="1" max="8" value="${DEF_COURTS[sp]||1}"></div>`}<div class="field wide"><label for="qs-venue">Venue</label><input id="qs-venue" maxlength="80" placeholder="Where"></div></div>
+    <div class="row" style="gap:8px"><button class="btn" data-act="qsgo">${ic('play')}${att?'Open the sign-up sheet':'Open courts'}</button><button class="btn ghost sm" data-act="goadmin">Plan a later date</button></div></div>`}
 function renderCourts(){
   const el=$('v-courts');if(!el||S.view!=='courts')return;
   const fa=document.activeElement;if(fa&&el.contains(fa)&&fa.matches('input,textarea')){if(!el._wait){el._wait=1;fa.addEventListener('blur',()=>{el._wait=0;setTimeout(renderCourts,0)},{once:true})}return}
@@ -2306,7 +2404,7 @@ function renderCourts(){
   const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button>${sid&&S.live[sid]&&!S.asPlayer?(()=>{const v=saveState(),h=H(sid);return `<span class="tagl savest ${v[0]}" role="status">${esc(v[1])}</span><span class="row hbtns" style="gap:4px"><button class="btn ghost sm icon" data-act="undo" ${h.u.length?'':'disabled'} aria-label="Undo" title="Undo">↶</button><button class="btn ghost sm icon" data-act="redo" ${h.r.length?'':'disabled'} aria-label="Redo" title="Redo">↷</button><button class="btn ghost sm" data-act="savenow">${ic('check')}Save now</button></span>`})():''}</div>`:'';
   const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · ${isAttend(S.courtSport)?'Check-in':'Courts'}</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
-    el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&!nxt?`<button class="btn ghost sm" data-act="goadmin">${ic('plus')}Add a session</button>`:''}</div>`;bindCourts(el);return}
+    el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&canSport(S.courtSport)?quickStart(S.courtSport):''}</div>`;bindCourts(el);return}
   if(!lv0){el.innerHTML=head+`<div class="empty">${ic(sportOf(s.sport).icon)}<span>${org?`${Object.keys(people(sid)).length} players are signed up. Open the board when you're at the venue.`:'Courts appear here once the session starts.'}</span>${org?`<button class="btn" data-act="start">${ic('plus')}Open the court board</button>`:''}</div>`;bindCourts(el);return}
   const lv=norm(clone(lv0)),ppl=people(sid),bench=benchOf(sid,lv),meId=S.uid,loc=locate(lv,meId);
   const att=isAttend(s.sport);if(att&&org)S.courtStep=2;
@@ -2359,7 +2457,10 @@ function renderCourts(){
       <div class="tile"><div class="sec-h"><b>${ic('clock')} Arrived · in order</b>${arr.length>2?(ciShuf?`<span class="row" style="gap:6px"><button class="btn sm" data-act="cishufgo">Shuffle</button><button class="btn ghost sm" data-act="cishuf">Keep</button></span>`:`<button class="btn ghost sm" data-act="cishuf">⇅ Reshuffle</button>`):''}</div>${ciShuf?'<p class="fine">Mixes the arrival order of everyone who isn’t on a court. Games already played still count, so the fairness of turns stays the same.</p>':''}<div class="list">${arr.map((p,i)=>`<div class="li arr" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div></div><div class="row arrctl">${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}<button class="btn ghost sm icon" data-act="ciup" data-pid="${esc(p)}" ${i?'':'disabled'} aria-label="Move ${esc(who(sid,p).name)} up">↑</button><button class="btn ghost sm icon" data-act="cidown" data-pid="${esc(p)}" ${i<arr.length-1?'':'disabled'} aria-label="Move ${esc(who(sid,p).name)} down">↓</button><button class="btn ghost sm icon" data-act="cix" data-pid="${esc(p)}" aria-label="Remove ${esc(who(sid,p).name)}">${ic('x')}</button></div>${ciEdit===p?ciEditor(sid,p):''}<div class="ci-lvl">${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):((s.sport||'badminton')==='badminton'?guestPick(lv,p):'')}</div></div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       ${isAttend(s.sport)?'':`<button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`}`;
   }else if(S.courtStep===3){
-    body=`${planTile(sid,lv,false)}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
+    const anyW=lv.waiting.some(w=>w.on.some(Boolean)),anyC=lv.courts.some(c=>!inG(c)&&c.on.some(Boolean));
+    const tools=resetAsk?`<div class="confirm"><b>Reset the board?</b><p class="fine">Every court that isn't mid-game and the whole waiting area are emptied. Everyone goes back to the bench. Check-ins and games already played stay.</p><div class="row" style="gap:6px"><button class="btn sm" data-act="resetgo">Reset</button><button class="btn ghost sm" data-act="resetask">Keep</button></div></div>`
+      :`<div class="row boardtools" style="gap:8px;justify-content:flex-end">${anyW?`<button class="btn ghost sm" data-act="wclearall">${ic('x')}Clear waiting area</button>`:''}${anyW||anyC?`<button class="btn ghost sm" data-act="resetask">↺ Reset board</button>`:''}</div>`;
+    body=`${planTile(sid,lv,false)}${tools}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
       <div class="split"><div class="main"><div class="courts">${lv.courts.map((c,i)=>courtCard(sid,c,i,true)).join('')}</div>
       <div class="sec"><span class="label">Waiting area</span><div class="waits">${lv.waiting.map((w,i)=>waitRow(sid,w,i,true)).join('')}</div></div></div>
       <aside class="side"><div class="sec"><div class="sec-h"><span class="label">Bench · fewest games first</span></div>
@@ -2392,7 +2493,7 @@ function renderCourts(){
 }
 function gameRow(sid,gid,g,i,mine,bare){
   const sc=scoreOf(gid,g),names=t=>t.map(p=>esc(nm(sid,p))).join(' & ');
-  const my=S.scores[S.uid]?.g?.[gid],edit=(mine&&!g.final)||(!mine&&S.canEdit&&canSport(g.sport)),v=my||sc?.s||[];
+  const my=S.scores[S.uid]?.g?.[gid],edit=(mine&&!g.final)||(!mine&&S.canEdit&&canRun(g.sport)),v=my||sc?.s||[];
   return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${names(g.a)} <span class="muted">vs</span> ${names(g.b)}</div><div class="sub">${esc(g.court)}${sc?(sc.st==='disputed'?' · Scores differ':sc.st==='confirmed'?' · Confirmed':''):''}</div>
       ${edit?`<div class="row" style="gap:6px;margin-top:6px"><input type="number" min="0" class="sc" id="ga-${gid}" value="${esc(v[0]??'')}" aria-label="Score for ${names(g.a)}"><span class="muted">–</span><input type="number" min="0" class="sc" id="gb-${gid}" value="${esc(v[1]??'')}" aria-label="Score for ${names(g.b)}"><button class="btn ghost sm" data-act="${mine?'myscore':'final'}" data-gid="${gid}">${ic('check')}${mine?'Save':'Confirm'}</button></div>`:''}</div>
     <b class="num big" style="font-size:1.6rem">${sc?sc.s.join('–'):'—'}</b></div>`;
@@ -2419,7 +2520,10 @@ function enableDrag(el){if(el._drag)return;el._drag=true;let d=null;
 function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
   const b=ev.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,sid=S.courtSid;
   if(act==='sport'){S.courtSport=b.dataset.v;S.courtSid=null;sel=null;pendingDone=null;return renderCourts()}
-  if(act==='goadmin'){return setView('admin')}
+  if(act==='goadmin'){aTab='sessions';showNew=true;newSport=S.courtSport;return setView('admin')}
+  if(act==='qsgo'){const sp=S.courtSport,date=todayIso(),title=($('qs-title').value||'').trim()||defaultTitle(sp),id=slug(title).slice(0,24)+'-'+date;
+    const d={sport:sp,date,start:$('qs-start').value||'19:00',end:$('qs-end').value||'21:00',timeTbc:false,title,fee:Number($('qs-fee').value)||0,capacity:Number($('qs-cap').value)||20,waitCap:null,courts:COURT_SPORTS.includes(sp)?Math.max(1,Number($('qs-courts')?.value)||1):null,venue:($('qs-venue').value||'').trim(),opens:''};
+    try{await S.db.doc('sessions/'+id).set(d);S.sessions[id]=d;S.courtSid=id;toast(`${title} is on. Players can sign up in Play, and you can check people in here.`);S.courtStep=1;return startBoard(id)}catch(e){toast("Sorry, that didn't save.")}return}
   if(act==='rest'||act==='more'){return setFlag(sid,act,b.dataset.v==='1')}
   if(act==='pick'){S.courtSid=b.dataset.sid;setTimeout(courtSubs,0);sel=null;pendingDone=null;return renderCourts()}
   if(act==='as'){S.asPlayer=b.dataset.v==='1';sel=null;return renderCourts()}
@@ -2467,11 +2571,18 @@ function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&e
   if(act==='out'){{const f=locate(lv,sel);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');return}}detach(lv,sel);lv.out.push(sel);toast(`${who(sid,sel).name} is marked as left.`);sel=null;return saveLive(sid,lv)}
   if(act==='restore'){lv.out=lv.out.filter(x=>x!==b.dataset.pid);return saveLive(sid,lv)}
   if(act==='memberin'){const u=b.dataset.pid,pp=S.profiles[u];if(!pp)return;
-    if(S.canEdit&&canSport(sp)&&!S.bookings[u]?.s?.[sid]){try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:pp.listKey||'',s:(S.bookings[u]||{}).s||{}})}catch(e){toast("Couldn't add them to the session list, but they're checked in.")}}
+    if(S.canEdit&&canRun(sp)&&!S.bookings[u]?.s?.[sid]){try{await staffBooking(u,sid,()=>freshEntry('cash'),{key:pp.listKey||'',s:(S.bookings[u]||{}).s||{}})}catch(e){toast("Couldn't add them to the session list, but they're checked in.")}}
     setBase(sid,lv,u);lv.checkin[u]=new Date().toISOString();const wn=$('walk-name');if(wn){wn.value='';wn.blur()}
-    toast(`${pp.nickname} is checked in${S.canEdit&&canSport(sp)?' and on the session list':''}.`);return saveLive(sid,lv)}
+    toast(`${pp.nickname} is checked in${S.canEdit&&canRun(sp)?' and on the session list':''}.`);return saveLive(sid,lv)}
   if(act==='ciedit'){ciEdit=b.dataset.pid||null;ciRm=false;return renderCourts()}
   if(act==='cirm'){ciRm=true;return renderCourts()}
+  if(act==='slotx'){const c=arr(b.dataset.k)[+b.dataset.c],p=c.on[+b.dataset.i];if(!p)return;if(b.dataset.k==='c'&&inG(c)){toast('That court is mid-game. Finish or cancel the game first.');return}
+    c.on[+b.dataset.i]=null;if(sel===p)sel=null;toast(`${nm(sid,p)} is back on the bench.`);return saveLive(sid,lv)}
+  if(act==='wclear'){lv.waiting[+b.dataset.c].on=lv.waiting[+b.dataset.c].on.map(()=>null);toast('Cleared. They’re back on the bench.');return saveLive(sid,lv)}
+  if(act==='wclearall'){lv.waiting.forEach(w=>w.on=w.on.map(()=>null));toast('Waiting area cleared.');return saveLive(sid,lv)}
+  if(act==='resetask'){resetAsk=!resetAsk;return renderCourts()}
+  if(act==='resetgo'){resetAsk=false;let kept=0;lv.courts.forEach(c=>{if(inG(c)){kept++;return}c.on=c.on.map(()=>null)});lv.waiting.forEach(w=>w.on=w.on.map(()=>null));sel=null;
+    toast(kept?`Board reset. ${kept} game${kept>1?'s':''} still playing, left as is.`:'Board reset. Everyone is on the bench.');return saveLive(sid,lv)}
   if(act==='cix'){{const f=locate(lv,b.dataset.pid);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');return}}ciEdit=b.dataset.pid;ciRm=true;return renderCourts()}
   if(act==='cishuf'){ciShuf=!ciShuf;return renderCourts()}
   if(act==='ciup'||act==='cidown'){const a=arrivals(lv),i=a.indexOf(b.dataset.pid),j=act==='ciup'?i-1:i+1;if(i<0||j<0||j>=a.length)return;
@@ -2482,7 +2593,7 @@ function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&e
   if(act==='cirename'){const p=b.dataset.pid,n=($('ci-nm')||{}).value.trim().slice(0,24);if(!n){toast('Please type a name.');return}
     if(p.startsWith('w~')){const w=lv.walkins.find(x=>'w~'+x.id===p);if(w)w.name=n}else lv.names={...(lv.names||{}),[p]:n};
     ciEdit=null;toast(`Saved as ${n}.`);return saveLive(sid,lv)}
-  if(act==='cirmgo'){const p=b.dataset.pid,x=who(sid,p),admin=S.canEdit&&canSport(sp);ciEdit=null;ciRm=false;
+  if(act==='cirmgo'){const p=b.dataset.pid,x=who(sid,p),admin=S.canEdit&&canRun(sp);ciEdit=null;ciRm=false;
     if(p.startsWith('w~')){lv.walkins=lv.walkins.filter(w=>'w~'+w.id!==p);delete lv.checkin[p];detach(lv,p);toast(`${x.name} removed.`);return saveLive(sid,lv)}
     if(admin){const charge=b.dataset.charge==='1',f=dropFee(sid);try{if(p.startsWith('g~')){const [,host]=p.split('~'),gs=((S.bookings[host]||{}).s||{})[sid]?.guests||[],gi=gs.findIndex(g=>gpid(host,g.n)===p);if(gi>=0)await staffDrop(host,sid,gi,charge)}
         else await staffDrop(p,sid,'',charge);toast(charge&&f.amount?`${x.name} is off the list. AED ${f.amount} late cancellation added to their payments.`:`${x.name} is off the session list.`)}catch(e){toast("Sorry, that didn't save.")}}
@@ -2538,8 +2649,8 @@ function renderBoard(){
   let body;
   if(mode==='rank'){const rows=rankRows(f);
     body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
-  }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,uid,st:statsFor(p.listKey),fd:isFounder(uid)})).sort((a,b)=>(b.fd-a.fd)||b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));let rk=0;
-    body=rows.map((r,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${r.fd?'':++rk}</span>${avatar(r.p)}
+  }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,uid,st:statsFor(p.listKey),fd:isFounder(uid)})).sort((a,b)=>(a.fd-b.fd)||b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));let rk=0;/* players first, founders always at the bottom */
+    body=rows.map((r,i)=>`${r.fd&&(i===0||!rows[i-1].fd)?'<div class="sec-h fdiv"><span class="label">Founders</span></div>':''}<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${r.fd?'':++rk}</span>${avatar(r.p)}
       <div><div class="nm">${esc(r.p.nickname)} ${r.uid&&levelIdx(r.uid)>=1?`<span class="tagl">${esc(levelFor(r.uid,badgeCount(r.uid)).k)}</span>`:''}${r.p.sample?' <span class="tagl">Sample</span>':''}</div><div class="sub ic-row" style="gap:6px">${(r.p.sports||['badminton']).map(s=>ic(SPORTS[s]?.icon||'badminton')).join('')}<span>${esc(typeOf(r.p)||'Player')}${r.st.sessions?` · ${r.st.sessions} session${r.st.sessions===1?'':'s'}`:''}</span></div></div>
       <b class="num">${r.fd?'<span class="inf">∞</span>':r.st.earned}</b></div>`).join('')||`<div class="empty">${ic('board')}<span>No one on the board yet. You could be first.</span></div>`}
   $('v-board').innerHTML=`<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'} Community over competition, always.</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;
@@ -2566,7 +2677,7 @@ const scoreTxt=(sa,sb)=>`${sa}–${sb}`;
 /* a score from one team's side: "21–17" with their own score first */
 const mySide=(t,sa,sb)=>t==='b'?[sb,sa]:[sa,sb];
 const fmtOf=g=>g.fmt||21;
-const isSupport=sid=>(S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton'))||isGM(sid);
+const isSupport=sid=>(S.canEdit&&canRun((S.sessions[sid]||{}).sport||'badminton'))||isGM(sid);
 
 /* ---------- player side ---------- */
 function scoreInputs(gid,g,labels,opts={}){const d=scoreDraft[gid]||{},hint=d.x!==undefined&&d.y!==undefined&&d.x!==''&&d.y!==''?BADMATH.scoreHint(fmtOf(g),d.x,d.y):'';
@@ -2616,7 +2727,7 @@ function supportRow(sid,gid,g,st){const r=resOf(gid),f=fmtOf(g),A=teamNames(sid,
   return `<div class="li qrow"><div><div class="nm">${A} <span class="muted">v</span> ${B}</div><div class="sub">${esc(g.court)} · to ${f} · ${hhmm(new Date(msOf(g.endDev)||Date.now()).toISOString())}${isFinite(gameMins(g))?` · ${Math.round(gameMins(g))} min`:''}</div>${claim}<div class="qact">${act}</div></div></div>`}
 /* fix a mistake: put the game back on its court, void it (kept, counts for nothing) or delete it (admins) */
 let toolFor=null,toolAsk=null;
-function gameTools(sid,gid,g){const admin=S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton');
+function gameTools(sid,gid,g){const admin=S.canEdit&&canRun((S.sessions[sid]||{}).sport||'badminton');
   if(toolFor!==gid)return `<button class="linkbtn" data-sc="tools" data-gid="${esc(gid)}">More</button>`;
   if(toolAsk)return `<div class="confirm"><b>${toolAsk==='void'?'Void this game?':toolAsk==='del'?'Delete this game?':'Put this game back on court?'}</b><p class="fine">${toolAsk==='void'?'It stays in the record as void and counts for nothing.':toolAsk==='del'?'It’s removed completely, with no record left.':`The players go back on ${esc(g.court)} and the timer carries on.`}</p>
     <div class="row" style="gap:6px"><button class="btn sm" data-sc="${toolAsk}go" data-gid="${esc(gid)}">${toolAsk==='void'?'Void':toolAsk==='del'?'Delete':'Back on court'}</button><button class="btn ghost sm" data-sc="toolno">Keep</button></div></div>`;
@@ -2695,7 +2806,7 @@ const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
 function standingsHTML(sid,crew){const rows=sessStandings(sid),aw=S.awards[sid],pend=supportCount(sid),s=S.sessions[sid];
   if(!rows.length)return crew?`<div class="tile"><b>${ic('board')} Standings</b><p class="fine">They appear as soon as the first score is final.</p></div>`:'';
   const win=BADMATH.winners(rows),changed=aw&&!sameSet(aw.winners||[],win);
-  const admin=S.canEdit&&canSport((s||{}).sport||'badminton');
+  const admin=S.canEdit&&canRun((s||{}).sport||'badminton');
   const badd=aw?`<div class="baddest"><span class="label">BADDEST PLAYER${(aw.winners||[]).length>1?'S':''}</span><b>${(aw.winners||[]).map(p=>esc(nm(sid,p))).join(' & ')}</b><span class="fine">+5 points${(aw.winners||[]).some(p=>!S.profiles[p])?' · guests need a card to collect points':''}</span></div>`:'';
   const fin=!crew||!admin?'':pend?`<p class="fine">Finalise the ${pend} score${pend===1?'':'s'} above, then finalise the session to award BADDEST PLAYER.</p>`
     :aw&&!changed?`<p class="fine">${ic('check')} Session finalised. A score correction here will let you update the award.</p>`
@@ -2750,7 +2861,7 @@ function bindRuns(el){el.querySelectorAll('[data-run]').forEach(b=>b.onclick=asy
 /* ---------- BADDEST PLAYER picked by crew ---------- */
 function baddestCard(sid){const aw=S.awards[sid]||{},w=aw.winners||[];
   return `<div class="baddest"><span class="label">BADDEST PLAYER${w.length>1?'S':''}</span><b>${w.map(p=>esc(p===S.uid?'You':who(sid,p).name)).join(' & ')}</b><span class="fine">+5 points${w.some(p=>!S.profiles[p])?' · guests need a card to collect points':''}</span></div>`}
-function baddestPickHTML(sid,lv){const s=S.sessions[sid],admin=S.canEdit&&canSport((s||{}).sport||'badminton'),aw=S.awards[sid];
+function baddestPickHTML(sid,lv){const s=S.sessions[sid],admin=S.canEdit&&canRun((s||{}).sport||'badminton'),aw=S.awards[sid];
   const pool=presentIds(lv).length?presentIds(lv):Object.keys(people(sid));
   if(!admin)return aw?`<div class="tile">${baddestCard(sid)}</div>`:'';
   if(!pickWin.length&&aw)pickWin=[...(aw.winners||[])];
@@ -2852,11 +2963,11 @@ const boxD=(title,inner)=>`<details class="panel fold"><summary class="ah">${tit
 const box=(title,inner,extra='')=>`<div class="panel ${extra}">${title?`<h3 class="ah">${title}</h3>`:''}${inner}</div>`;
 const tile=(n,l)=>`<div class="tile"><div class="stat"><b class="num">${n}</b><span class="label">${l}</span></div></div>`;
 
-const TABS_CM=['today','sessions','players','payments','posts'];
+const TABS_CM=['today','sessions','players','payments','posts'],TABS_CREW=['today','players'];
 function renderAdmin(){
-  if(!fullAdmin()&&!TABS_CM.includes(aTab))aTab='today';if(aTab==='shop'&&!shopAdmin())aTab='today';const TABS=(fullAdmin()?ATABS:ATABS.filter(t=>TABS_CM.includes(t[0]))).filter(t=>t[0]!=='shop'||shopAdmin());
-  const el=$('v-admin'),list=Object.entries(S.sessions).filter(([,x])=>canSport(x.sport)).sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
-  const up=upcoming().filter(([,x])=>canSport(x.sport));if(!adminPicked&&up[0])adminSid=up[0][0];if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
+  const TL=isCrewRole()?TABS_CREW:TABS_CM;if(!fullAdmin()&&!TL.includes(aTab))aTab='today';if(aTab==='shop'&&!shopAdmin())aTab='today';const TABS=(fullAdmin()?ATABS:ATABS.filter(t=>TL.includes(t[0]))).filter(t=>t[0]!=='shop'||shopAdmin());
+  const el=$('v-admin'),list=Object.entries(S.sessions).filter(([,x])=>canRun(x.sport)).sort((a,b)=>sessStart(a[1])-sessStart(b[1]));
+  const up=upcoming().filter(([,x])=>canRun(x.sport));if(!adminPicked&&up[0])adminSid=up[0][0];if(!adminSid||!S.sessions[adminSid])adminSid=(up[0]||list[list.length-1]||[null])[0];
   const badge=Object.assign({payments:payChecks().length},fullAdmin()?{points:Object.keys(S.requests).length,players:memPending().length}:{});
   const T=ATABS.find(t=>t[0]===aTab)||ATABS[0];
   const nav=`<nav class="anav" aria-label="Admin sections">${TABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
@@ -2887,7 +2998,7 @@ function aToday(list,up){
   return `${next}
   ${box('Needs attention',alerts.length?`<div class="list">${alerts.map(([i,t,go,sid])=>`<button type="button" class="alert" data-go="${go}" ${sid?`data-sid="${esc(sid)}"`:''}>${ic(i)}<span>${t}</span>${ic('arrow')}</button>`).join('')}</div>`:'<p class="hint">All clear. Nice one.</p>')}
   <div class="tiles">${tile(players,'Players')}${tile(up.length,'Upcoming sessions')}${tile(nsN,'On no-show list')}</div>
-  ${box('Quick actions',`<div class="qa"><button class="btn ghost" data-go="sessions" data-new="1">${ic('plus')}Add a session</button><button class="btn ghost" data-go="posts">${ic('club')}Post to Club</button>${fullAdmin()?`<button class="btn ghost" data-go="points">${ic('star')}Give bonus points</button><button class="btn ghost" data-go="points">${ic('gift')}Club codes</button>`:''}</div>`)}`;
+  ${isCrewRole()?'':box('Quick actions',`<div class="qa"><button class="btn ghost" data-go="sessions" data-new="1">${ic('plus')}Add a session</button><button class="btn ghost" data-go="posts">${ic('club')}Post to Club</button>${fullAdmin()?`<button class="btn ghost" data-go="points">${ic('star')}Give bonus points</button><button class="btn ghost" data-go="points">${ic('gift')}Club codes</button>`:''}</div>`)}`;
 }
 
 /* Game Master: runs the courts for one session, even without admin access */
@@ -2948,13 +3059,13 @@ const editForm=(uid,p,c)=>{const id=esc(uid),f=(k,l,v,m,t='text',ph='')=>`<div c
   ${fullAdmin()?`<fieldset class="pesports"><legend class="label">Clubs</legend><div class="chips">${Object.keys(SPORTS).map(k=>`<label class="chip sm"><input type="checkbox" data-pesport="${k}" ${(p.sports||['badminton']).includes(k)?'checked':''}> ${esc(SPORTS[k].club)}</label>`).join('')}</div></fieldset>`:''}
   <div class="row" style="gap:8px;margin-top:10px;justify-content:flex-end"><button type="reset" class="btn ghost sm">Undo changes</button><button type="submit" class="btn sm">${ic('check')}Save</button></div></form>`};
 function aPlayers(){
-  const ps=Object.entries(S.profiles).filter(([,p])=>fullAdmin()||(p.sports||['badminton']).some(canSport)).sort((a,b)=>(!!a[1].sample-!!b[1].sample)||(a[1].nickname||'').localeCompare(b[1].nickname||''));
+  const ps=Object.entries(S.profiles).filter(([,p])=>fullAdmin()||(p.sports||['badminton']).some(canRun)).sort((a,b)=>(!!a[1].sample-!!b[1].sample)||(a[1].nickname||'').localeCompare(b[1].nickname||''));
   const nsBy={};for(const n of Object.values(S.noshows))nsBy[n.player]=(n.dates||[]).length;
   const nsKeys=Object.values(S.noshows).filter(n=>(n.dates||[]).length).sort((a,b)=>b.dates.length-a.dates.length);
   const mp=memPending();
-  return `<p class="note lvl-note">${ic('badminton')}<span><b>${esc(LVL_NOTICE)}</b></span></p>${fullAdmin()?'':`<p class="hint">Players in ${esc(mySports().map(k=>SPORTS[k]?.club).join(', '))}.</p>`}${!fullAdmin()?'':box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
+  return `<p class="note lvl-note">${ic('badminton')}<span><b>${esc(LVL_NOTICE)}</b></span></p>${fullAdmin()?'':`<p class="hint">${isCrewRole()?'Crew view: set levels and mark no-shows. ':''}Players in ${esc(mySports().map(k=>SPORTS[k]?.club).join(', '))}.</p>`}${!fullAdmin()?'':box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
   <div class="field" style="margin:0"><label for="a-q" class="sr">Search players</label><input type="search" id="a-q" placeholder="Search name, email, mobile or level (e.g. unrated, C+)"></div>
-  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')+' '+gradeLabel(uid)).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}${!(p.listName||'').trim()?' <span class="tagl warn">No tracker name</span>':''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div><div class="sub">${esc(st.level||'Rookie')} · ${isFounder(uid)?'∞ BADges':`${st.badges||0} BADge${st.badges===1?'':'s'}`} · ${st.unpaid?`<span class="warn-t">AED ${st.unpaid} unpaid</span>`:'Paid up'}</div></div><div class="pts"><b class="num">${isFounder(uid)?'∞':st.balance}</b><span class="label">pts</span></div>${(p.sports||['badminton']).includes('badminton')&&canSport('badminton')?`<div class="glevel"><span class="label">BAD level · ${esc(gradeLabel(uid))}</span>${gradePick(uid,'')}</div>`:''}${`<details class="manage mrow"><summary>${fullAdmin()?'Edit':'Edit tracker name'}${fullAdmin()&&pendingFor(uid).length?` · AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending`:''}</summary>${editForm(uid,p,c)}${fullAdmin()&&canGiveBadge()&&uid!==S.uid?`<div class="row" style="gap:8px;margin-top:8px"><button class="btn ghost sm" data-givebadge="${esc(uid)}">${ic('star')}Give a BADge</button></div>`:''}${fullAdmin()?`<div class="row" style="gap:8px;margin-top:8px">${pendingFor(uid).length?`<button class="btn ghost" data-freeall="${esc(uid)}">Clear AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending</button>`:''}${window.BAD_WEB&&!p.sample&&canManageAdmins()?(()=>{const em=((S.contacts[uid]||{}).email||'').toLowerCase(),r=adminRec(em);if(!em)return '<span class="fine">Add their email above to give admin access.</span>';if((window.BAD_ADMINS||[]).includes(em))return `<span class="tagl solid">${ic('check')}Owner · every department</span>`;return accessEditor(em,r)})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div>`:''}</details>`}</div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
+  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')+' '+gradeLabel(uid)).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}${!(p.listName||'').trim()?' <span class="tagl warn">No tracker name</span>':''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div><div class="sub">${esc(st.level||'Rookie')} · ${isFounder(uid)?'∞ BADges':`${st.badges||0} BADge${st.badges===1?'':'s'}`} · ${st.unpaid?`<span class="warn-t">AED ${st.unpaid} unpaid</span>`:'Paid up'}</div></div><div class="pts"><b class="num">${isFounder(uid)?'∞':st.balance}</b><span class="label">pts</span></div>${(p.sports||['badminton']).includes('badminton')&&canRun('badminton')?`<div class="glevel"><span class="label">BAD level · ${esc(gradeLabel(uid))}</span>${gradePick(uid,'')}</div>`:''}${isCrewRole()?'':`<details class="manage mrow"><summary>${fullAdmin()?'Edit':'Edit tracker name'}${fullAdmin()&&pendingFor(uid).length?` · AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending`:''}</summary>${editForm(uid,p,c)}${fullAdmin()&&canGiveBadge()&&uid!==S.uid?`<div class="row" style="gap:8px;margin-top:8px"><button class="btn ghost sm" data-givebadge="${esc(uid)}">${ic('star')}Give a BADge</button></div>`:''}${fullAdmin()?`<div class="row" style="gap:8px;margin-top:8px">${pendingFor(uid).length?`<button class="btn ghost" data-freeall="${esc(uid)}">Clear AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending</button>`:''}${window.BAD_WEB&&!p.sample&&canManageAdmins()?(()=>{const em=((S.contacts[uid]||{}).email||'').toLowerCase(),r=adminRec(em);if(!em)return '<span class="fine">Add their email above to give admin access.</span>';if((window.BAD_ADMINS||[]).includes(em))return `<span class="tagl solid">${ic('check')}Owner · every department</span>`;return accessEditor(em,r)})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div>`:''}</details>`}</div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
   ${box('No-show list <span class="tagl">Admins only</span>',`<p class="hint">Players never see this. Mark no-shows from a session’s player list.</p><div class="list">${nsKeys.map(n=>{const id='ns-'+slug(n.player);return `<div class="li nsrow"><div class="row" style="justify-content:space-between;gap:10px;flex-wrap:nowrap"><div class="nm">${esc(n.name||n.player)}</div>
       <div class="row nsctl" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost sm icon" data-nsminus="${esc(id)}" aria-label="One fewer no-show for ${esc(n.name||n.player)}">−</button><b class="num">${n.dates.length}</b><button class="btn ghost sm icon" data-nsplus="${esc(id)}" aria-label="Add a no-show for ${esc(n.name||n.player)}">+</button><button class="btn ghost sm icon" data-nsclear="${esc(id)}" aria-label="Remove ${esc(n.name||n.player)} from the list" title="Remove from the list">${ic('x')}</button></div></div>
       <div class="chips nsdates">${n.dates.map(d=>{const [sd,g]=d.split('#'),lbl=sd.startsWith('manual-')?'Added by hand '+fmtD(sd.slice(7,17)):(S.sessions[sd]?fmtS(S.sessions[sd]):sd)+(g?' (guest)':'');return `<span class="chip sm">${esc(lbl)}<button class="xbtn" data-nsdel="${esc(id)}" data-d="${esc(d)}" aria-label="Remove ${esc(lbl)}">${ic('x')}</button></span>`}).join('')}</div></div>`}).join('')||'<div class="empty">Clean sheet so far.</div>'}</div>
@@ -2995,6 +3106,14 @@ function aPosts(){
       <div class="field"><label for="p-map">Map link <span class="muted">(optional)</span></label><input type="url" id="p-map" placeholder="https://maps.app.goo.gl/…"></div></div>
     <div class="field" style="margin:0"><label for="p-body">Text</label><textarea id="p-body"></textarea></div>
     <div class="row"><button class="btn" id="p-go">Post</button></div>`)}
+  ${box('Gallery',`<p class="hint">One album per event. Add up to 8 photos here (they're made smaller to fit), plus a link to the full album on Google Photos or Drive.</p>
+    <div class="fgrid"><div class="field wide"><label for="g-title">Event</label><input id="g-title" maxlength="80" placeholder="e.g. BAD-O-WEEN 2026"></div>
+      <div class="field wide"><label for="g-date">Date</label><input type="date" id="g-date" value="${todayIso()}"></div>
+      <div class="field wide"><label for="g-club">Department</label><select id="g-club">${fullAdmin()?'<option value="all">All of BAD</option>':''}${Object.keys(SPORTS).filter(canSport).map(k=>`<option value="${k}">${SPORTS[k].club}</option>`).join('')}</select></div>
+      <div class="field wide"><label for="g-link">Full album link</label><input type="url" id="g-link" placeholder="https://photos.app.goo.gl/…"></div>
+      <div class="field wide"><label for="g-files">Photos</label><input type="file" id="g-files" accept="image/*" multiple></div></div>
+    <div class="row"><button class="btn" id="g-go">${ic('photo')}Add album</button></div>
+    ${Object.keys(S.gallery||{}).length?`<div class="list">${Object.entries(S.gallery).filter(([,a])=>fullAdmin()||canSport(a.club)).sort((a,b)=>String(b[1].date).localeCompare(String(a[1].date))).map(([id,a])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(a.title)}</div><div class="sub">${esc(SPORTS[a.club]?.club||'All of BAD')} · ${esc(fmtD(a.date))} · ${(a.photos||[]).length} photos${a.link?' · album link':''}</div></div><button class="btn ghost sm" data-galrm="${esc(id)}">Remove</button></div>`).join('')}</div>`:''}`)}
   ${box('Posted',`<div class="list">${Object.entries(S.posts).filter(([,p])=>fullAdmin()||canSport(p.club)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'} · ${esc(p.club&&p.club!=='all'?SPORTS[p.club]?.club||'':'All of BAD')}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')||'<p class="hint">Nothing posted yet.</p>'}</div>`)}`;
 }
 
@@ -3002,12 +3121,13 @@ function aPosts(){
    department and one person can run many. Owners run every department automatically. */
 function accessEditor(em,r){const role=r?r.role:'',sp=(r&&r.sports)||[];
   return `<div class="acced" data-acc="${esc(em||'')}"><div class="field" style="margin:0"><label>Admin access</label><select data-accrole aria-label="Admin role">
-    <option value="" ${!role?'selected':''}>No admin access</option><option value="cm" ${role==='cm'?'selected':''}>Community manager</option><option value="app" ${role==='app'?'selected':''}>App admin</option><option value="founder" ${role==='founder'?'selected':''}>Founder admin</option></select></div>
-    <fieldset class="pesports accdepts" ${role==='cm'?'':'hidden'}><legend class="label">Departments they manage</legend><div class="chips">${Object.keys(SPORTS).map(k=>`<label class="chip sm"><input type="checkbox" data-accdept="${k}" ${sp.includes(k)?'checked':''}> ${esc(SPORTS[k].club)}</label>`).join('')}</div></fieldset>
+    <option value="" ${!role?'selected':''}>No admin access</option><option value="cm" ${role==='cm'?'selected':''}>Community manager</option><option value="crew" ${role==='crew'?'selected':''}>Crew (supports the community manager)</option><option value="app" ${role==='app'?'selected':''}>App admin</option><option value="founder" ${role==='founder'?'selected':''}>Founder admin</option></select></div>
+    <fieldset class="pesports accdepts" ${role==='cm'||role==='crew'?'':'hidden'}><legend class="label">Departments they manage</legend><div class="chips">${Object.keys(SPORTS).map(k=>`<label class="chip sm"><input type="checkbox" data-accdept="${k}" ${sp.includes(k)?'checked':''}> ${esc(SPORTS[k].club)}</label>`).join('')}</div></fieldset>
     <div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn sm" data-accsave>${ic('check')}Save access</button></div></div>`}
 function deptManagers(){const own=window.BAD_ADMINS||[],A=S.admins||{};
   return `<p class="hint">Owners run every department. Tick departments for each community manager from Players → Edit, or below in Admins.</p><div class="list">${Object.keys(SPORTS).map(k=>{const cms=Object.entries(A).filter(([e,a])=>!own.includes(e)&&a&&a.role==='cm'&&(a.sports||[]).includes(k)).map(([e])=>{const u=Object.keys(S.contacts||{}).find(u=>(S.contacts[u].email||'').toLowerCase()===e);return u&&S.profiles[u]?S.profiles[u].nickname:e});
-    return `<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(SPORTS[k].icon)}<div><div class="nm">${esc(SPORTS[k].club)}</div><div class="sub">${cms.length?esc(cms.join(', ')):'<span class="warn-t">No community manager yet</span>'} · owners</div></div></div>`}).join('')}</div>`}
+    const crew=Object.entries(A).filter(([e,a])=>!own.includes(e)&&a&&a.role==='crew'&&(a.sports||[]).includes(k)).map(([e])=>{const u=Object.keys(S.contacts||{}).find(u=>(S.contacts[u].email||'').toLowerCase()===e);return u&&S.profiles[u]?S.profiles[u].nickname:e});
+    return `<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(SPORTS[k].icon)}<div><div class="nm">${esc(SPORTS[k].club)}</div><div class="sub">${cms.length?'Community managers: '+esc(cms.join(', ')):'<span class="warn-t">No community manager yet</span>'} · owners</div>${crew.length?`<div class="sub">Crew: ${esc(crew.join(', '))}</div>`:''}</div></div>`}).join('')}</div>`}
 function aSettings(){
   const own=(window.BAD_ADMINS||[]),extra=Object.keys(S.admins||{});
   const gs=id=>`https://docs.google.com/spreadsheets/d/${id}/edit`;
@@ -3071,7 +3191,7 @@ function payPanel(){const c=S.payCfg||{};
       <div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-cno">Careem Pay number</label><input type="tel" id="pc-cno" value="${esc(c.careemNo||'')}" placeholder="+971 5x xxx xxxx"></div></div>
     <div class="field" style="margin:0"><label for="pc-clink">Careem Pay link <span class="muted">(optional)</span></label><input type="text" id="pc-clink" value="${esc(c.careemLink||'')}" placeholder="https://"></div>
     <div class="row"><button class="btn" id="pc-save">Save payment details</button></div></div>`}
-const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BADDINK Pickleball',run:'BAD PACE Run',dance:'BAD HABITS Dance',basketball:'BADSHOTS Run',training:'Training',retreat:'BAD Retreat'}[k]||'Session');
+const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BADDINK Pickleball',run:'BAD PACE Run',dance:'BAD HABITS Dance',basketball:'BADSHOTS Run',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
 function bindAdmin(){
   const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on('s-cancelask',()=>{cancelOpen=true;renderNow()});
@@ -3114,6 +3234,14 @@ function bindAdmin(){
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
     try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+  on('g-go',async()=>{const title=$('g-title').value.trim(),link=$('g-link').value.trim(),files=[...($('g-files').files||[])].slice(0,8);if(!title){toast('Please name the event.');return}
+    if(link&&!/^https:\/\//.test(link)){toast('Please use a full https:// link.');return}if(!files.length&&!link){toast('Add some photos or the album link.');return}
+    const b=$('g-go');b.disabled=true;b.textContent='Adding…';
+    try{const photos=[];for(const f of files)photos.push(await shrinkImg(f));
+      const d={title,date:$('g-date').value||todayIso(),club:$('g-club').value,link,photos,at:new Date().toISOString(),by:window.BAD_USER?.email||''};
+      while(JSON.stringify(d).length>950000&&d.photos.length)d.photos.pop();
+      await S.db.collection('gallery').add(d);toast(d.photos.length<photos.length?`Album added with ${d.photos.length} photos (the rest were too big together).`:'Album added to the Gallery.')}catch(e){toast("Sorry, that didn't save.")}finally{b.disabled=false}});
+  q('[data-galrm]').forEach(b=>b.onclick=async()=>{if(S.galArm!==b.dataset.galrm){S.galArm=b.dataset.galrm;b.textContent='Remove?';return}try{await S.db.doc('gallery/'+b.dataset.galrm).delete();toast('Album removed.')}catch(e){toast("Sorry, that didn't save.")}});
   on('p-go',async()=>{const title=$('p-title').value.trim();if(!title){toast('Add a title.');return}
     const lk=$('p-link').value.trim()||S.site?.url||'';if(!/^https:\/\//.test(lk)){toast(S.site?.url?'Please use a full https:// link.':'Please add a link, or set the BAD site link in Settings.');return}$('p-link').value=lk;
     const d={type:postType,club:$('p-club').value,title,body:$('p-body').value.trim(),link:$('p-link').value.trim(),postedAt:new Date().toISOString()};
@@ -3160,7 +3288,8 @@ function bindAdmin(){
     try{if(!fullAdmin()){if(ln!==(p.listName||''))await S.db.doc('profiles/'+uid).update({listName:ln,updatedAt:now});toast('Saved.');return}
       const nick=g('nickname').slice(0,16),num=g('number').replace(/\D/g,'').slice(0,3);if(!nick){toast('Nickname can\'t be empty.');return}
       const sp=[...fm.querySelectorAll('[data-pesport]:checked')].map(x=>x.dataset.pesport);if(!sp.length){toast('Pick at least one club.');return}
-      const upd={nickname:nick,listName:ln,sports:sp,updatedAt:now};if(num||'number' in p)upd.number=num;
+      const oldN=numNorm(p.number),newN=numNorm(num);if(newN!==oldN&&newN!==''){const c=(S.numbers||{})[newN],o=Object.entries(S.profiles).find(([u,x])=>u!==uid&&!x.sample&&String(x.number)===newN);if((c&&c.uid!==uid)||o){toast(`${(S.profiles[(c&&c.uid)||o[0]]||{}).nickname||'Someone'} already wears ${newN}.`);return}await claimNumber(uid,newN,oldN)}
+      const upd={nickname:nick,listName:ln,sports:sp,updatedAt:now};if(num||'number' in p)upd.number=newN;
       if(sp.length&&p.primary&&!sp.includes(p.primary))upd.primary=sp[0];
       await S.db.doc('profiles/'+uid).update(upd);
       const em=g('email').toLowerCase(),mo=g('mobile'),ig=g('instagram').replace(/^@/,'');
@@ -3195,13 +3324,13 @@ function bindAdmin(){
   q('[data-mverify]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mverify].verify=x.checked;saveTypes(L)});
   q('[data-mstaff]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mstaff].staff=x.checked;saveTypes(L)});
   q('[data-memset]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.memset,k=x.value;try{const em=((S.contacts[uid]||{}).email||'').toLowerCase();if(window.BAD_WEB&&canManageAdmins()&&lvAdmin(k)&&em&&!isAdminEmail(em)){const pr=S.profiles[uid]||{},r=k==='Community Manager'?{role:'cm',sports:[pr.primary||(pr.sports||['badminton'])[0]]}:k==='Founder'?{role:'founder',sports:[]}:{role:'app',sports:[]};await S.db.doc('admins/'+em).set({...r,addedBy:window.BAD_USER?.email||'',at:new Date().toISOString(),via:k});toast(`${S.profiles[uid]?.nickname||'Player'} can now use the Admin tab.`)}await S.db.doc('profiles/'+uid).update({memReq:{type:k,at:new Date().toISOString()}});await setMem(uid,{type:k,at:new Date().toISOString(),by:window.BAD_USER?.email||''});toast(`${S.profiles[uid]?.nickname||'Player'} is now ${k}.`)}catch(e){toast("Sorry, that didn't save.")}});
-  q('.acced [data-accrole]').forEach(x=>x.onchange=()=>{const f=x.closest('.acced').querySelector('.accdepts');if(f)f.hidden=x.value!=='cm'});
+  q('.acced [data-accrole]').forEach(x=>x.onchange=()=>{const f=x.closest('.acced').querySelector('.accdepts');if(f)f.hidden=!['cm','crew'].includes(x.value)});
   q('[data-accsave]').forEach(b=>b.onclick=async()=>{const box=b.closest('.acced'),em=(box.dataset.acc||($('ad-email')||{}).value||'').trim().toLowerCase(),role=box.querySelector('[data-accrole]').value,sp=[...box.querySelectorAll('[data-accdept]:checked')].map(x=>x.dataset.accdept);
     if(!/^\S+@\S+\.\S+$/.test(em)){toast('Please enter a full email address.');return}if((window.BAD_ADMINS||[]).includes(em)){toast('Owners already run every department.');return}
-    if(role==='cm'&&!sp.length){toast('Tick at least one department they manage.');return}
+    if((role==='cm'||role==='crew')&&!sp.length){toast(`Tick at least one department they ${role==='cm'?'manage':'help with'}.`);return}
     const u=Object.keys(S.contacts||{}).find(u=>(S.contacts[u].email||'').toLowerCase()===em),nm=(u&&S.profiles[u]?.nickname)||em;
     try{if(!role){await S.db.doc('admins/'+em).delete();toast(`${nm} no longer has admin access.`)}
-      else{const r={role,sports:role==='cm'?sp:[]},old=(S.admins||{})[em]||{};await S.db.doc('admins/'+em).set({...old,...r,addedBy:old.addedBy||window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} is now ${roleLabel(r)}. They may need to reopen the app.`);if(!box.dataset.acc&&$('ad-email'))$('ad-email').value=''}}
+      else{const r={role,sports:role==='cm'||role==='crew'?sp:[]},old=(S.admins||{})[em]||{};await S.db.doc('admins/'+em).set({...old,...r,addedBy:old.addedBy||window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} is now ${roleLabel(r)}. They may need to reopen the app.`);if(!box.dataset.acc&&$('ad-email'))$('ad-email').value=''}}
     catch(e){toast("Sorry, that didn't save.")}});
   q('[data-adm]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.adm,em=((S.contacts[uid]||{}).email||'').toLowerCase(),nm=S.profiles[uid]?.nickname||'Player';if(!em)return;
     try{if(isAdminEmail(em)){await S.db.doc('admins/'+em).delete();toast(`${nm} no longer has admin access.`)}else{const pr=S.profiles[uid]||{},sp=pr.primary||(pr.sports||['badminton'])[0]||'badminton';await S.db.doc('admins/'+em).set({role:'cm',sports:[sp],addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} is now community manager for ${SPORTS[sp]?.club||sp}. They may need to reopen the app.`)}}catch(e){toast("Sorry, that didn't save.")}});
@@ -3307,13 +3436,20 @@ function dropHTML(){const d=FEATURED_DROP;
     <div class="drop-body"><span class="label">${esc(d.status)}</span><h3>${esc(d.title)}</h3><p><b>${esc(d.set)}</b> · ${esc(d.sub)}</p>
       <div class="drop-designs">${d.designs.map(([n,f,t])=>`<figure><div style="background-image:url('${d.base}${f}')"></div><figcaption><b>${n}</b><span>${esc(t)}</span></figcaption></figure>`).join('')}</div>
       <span class="btn wide">${ic('bag')}Pre-order the set${ic('arrow')}</span><span class="fine">${esc(d.note)}</span></div></a>`}
+/* Volume II leftovers, from the "Final" table on BAD Volume II Preorders. Priced pieces go live straight away;
+   the Rally Towel waits as a draft until it has a price. Stock and photos can be changed in Admin → Shop. */
+async function seedV2(){const now=new Date().toISOString(),base={drop:'limited',dropName:'Volume II',maxPer:0,releaseAt:null,images:[],createdAt:now,updatedAt:now};
+  const L=[['On Court Jersey',120,{S:7,M:8,L:1},'The Volume II on-court jersey. Last pieces, no restock.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'The Volume II off-court tee. Last pieces, no restock.'],['Rally Towel',0,{OS:12},'The Volume II rally towel.'],['Tote Bag',45,{OS:24},'The Volume II tote.'],['Socks',50,{OS:16},'Volume II socks.']];
+  try{for(const [i,[name,price,sizes,desc]] of L.entries())await S.db.doc('products/v2-'+slug(name)).set({...base,name,price,sizes,desc,order:100+i,status:price>0?'live':'draft'});
+    toast('Volume II is in the Shop. Add photos and the Rally Towel price in Admin → Shop.');render()}catch(e){toast("Sorry, that didn't save.")}}
+const v2State=()=>{const v=Object.values(S.products).filter(p=>/volume ii/i.test(p.dropName||''));return !v.length?'none':v.some(p=>p.status==='live')?'live':'draft'};
 function renderShop(){
   const el=$('v-shop');if(!el)return;
   const all=liveProducts(),f=S.shopFilter,isV2=([,p])=>/volume ii/i.test(p.dropName||''),v2=all.filter(isV2).filter(([pid,p])=>leftAll(p,pid)>0),list=all.filter(x=>!isV2(x)&&(f==='all'||x[1].drop===f));
   const next=all.filter(([,p])=>p.drop==='limited'&&!released(p)).sort((a,b)=>new Date(a[1].releaseAt)-new Date(b[1].releaseAt))[0];
   const bagN=S.bag.reduce((t,i)=>t+i.qty,0),bagT=S.bag.reduce((t,i)=>t+i.qty*i.price,0);
   const mine=Object.entries(S.myOrders).sort((a,b)=>String(b[1].createdAt).localeCompare(String(a[1].createdAt)));
-  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, essentials stay.</p></div>${dropHTML()}
+  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; Essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, Essentials stay.</p></div>${shopAdmin()&&v2State()!=='live'?`<div class="note adminnote">${ic('bag')}<div style="display:grid;gap:8px"><span><b>Volume II isn't showing yet.</b> ${v2State()==='none'?'Add the last pieces (jersey, tee, tote, socks, towel) with the stock left over from the drop.':'The pieces are saved as drafts. Set them live in Admin → Shop.'} Only shop admins see this.</span>${v2State()==='none'?`<button class="btn sm" data-v2seed="1" style="justify-self:start">${ic('plus')}Add Volume II to the Shop</button>`:''}</div></div>`:''}${dropHTML()}
     ${next?(()=>{const [pid,p]=next;return `<button class="dropban" data-pid="${esc(pid)}">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="">`:''}<div class="db-t"><span class="label">Next limited drop${p.dropName?' · '+esc(p.dropName):''}</span><b>${esc(p.name)}</b><span class="fine">${esc(dropWhen(p.releaseAt))}</span></div><span class="db-c num">${countdown(p.releaseAt)}</span></button>`})():''}
     ${v2.length?`<section class="v2"><div class="v2-h"><span class="label">Volume II · Last pieces</span><h3>The Volume II kit is back, in small numbers.</h3><p class="fine">What's left from the Volume II drop. No restock once they're gone.</p></div>
       <div class="pgrid">${v2.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">Volume II</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div></section>`:''}
@@ -3360,7 +3496,7 @@ function bagSheet(){const c=S.payCfg||{},items=S.bag,sub=items.reduce((t,i)=>t+i
     :`<div class="empty">${ic('bag')}<span>Your bag is empty.</span></div>`}
   </div></div></div>`}
 
-function bindShop(el){
+function bindShop(el){el.querySelectorAll("[data-v2seed]").forEach(b=>b.onclick=()=>{b.disabled=true;seedV2()});
   const q=s=>el.querySelectorAll(s);
   q('[data-sf]').forEach(b=>b.onclick=()=>{S.shopFilter=b.dataset.sf;renderShop()});
   q('[data-pid]').forEach(b=>b.onclick=()=>{S.shopPid=b.dataset.pid;S.shopSize=null;S.shopQty=1;renderShop()});
@@ -3441,9 +3577,7 @@ function bindShopAdmin(){
   const on=(id,f)=>{const x=$(id);if(x)x.onclick=f},q=s=>document.querySelectorAll('#v-admin '+s);
   const keep=()=>{if(!$('pf-name'))return;S.pDraft={name:$('pf-name').value,price:$('pf-price').value,maxPer:$('pf-max').value,dropName:$('pf-drop').value,sizesRaw:$('pf-sizes').value,relRaw:$('pf-rel').value,status:$('pf-status').value,desc:$('pf-desc').value}};
   /* Volume II leftovers, from the "Final" table on BAD Volume II Preorders. Saved as drafts: check stock, add photos, then set them live. */
-  on('pf-v2',async()=>{const now=new Date().toISOString(),base={drop:'limited',dropName:'Volume II',maxPer:0,status:'draft',releaseAt:null,images:[],createdAt:now,updatedAt:now};
-    const L=[['On Court Jersey',120,{S:7,M:8,L:1},'The Volume II on-court jersey.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'The Volume II off-court tee.'],['Rally Towel',0,{OS:12},'Set the price before going live.'],['Tote Bag',45,{OS:24},'The Volume II tote.'],['Socks',50,{OS:16},'Volume II socks.']];
-    try{for(const [i,[name,price,sizes,desc]] of L.entries())await S.db.doc('products/v2-'+slug(name)).set({...base,name,price,sizes,desc,order:100+i});toast('Volume II added as drafts. Check the stock, add photos and set the Rally Towel price, then show them in the shop.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+  on('pf-v2',seedV2);
   on('pf-new',()=>{shopEdit='new';S.pImgs=[];S.pDrop='limited';S.pDraft=null;renderAdmin()});
   q('[data-pedit]').forEach(b=>b.onclick=()=>{shopEdit=b.dataset.pedit;S.pImgs=null;S.pDrop=null;S.pDraft=null;renderAdmin();scrollTo({top:0})});
   on('pf-cancel',()=>{shopEdit=null;S.pImgs=null;S.pDraft=null;renderAdmin()});
@@ -3526,6 +3660,8 @@ S.contacts={};S.brand={};
   const map=s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());return o};
   S.sessData={db,map};
   col('profiles',s=>S.profiles=map(s));
+  S.gallery={};db.collection('gallery').onSnapshot(s=>{S.gallery=map(s);if(S.view==='club'||S.view==='admin')render()},()=>{});
+  S.numbers={};db.collection('numbers').onSnapshot(s=>{S.numbers=map(s);if(S.view==='create')render();backfillNumbers()},()=>{});
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
   col('sessions',s=>{S.sessions=map(s);courtSubs()});

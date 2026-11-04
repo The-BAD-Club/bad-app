@@ -38,7 +38,7 @@ function pointsFor(uid){const c=PS(),row=sheetRow(uid)||{},launch=c.launch||'',s
   const lv=levelFor(uid,bdg),appUnpaid=typeof pendingFor==='function'?pendingFor(uid).filter(r=>sessStart(S.sessions[r.sid])<Date.now()).reduce((t,r)=>t+r.amount,0):0,sheetUnpaid=Number(row.unpaid)||0;
   return{balance,started,launch,last,playBy,free:c.free,per:c.per,canRedeem:started&&balance>=c.free,sessions:Number(row.sessions)||0,
     badges:bdg,level:lv.k,levelIdx:lv.i,next:lv.next,toNext:lv.next?lv.next.at-bdg:0,top:lv.top,unpaid:appUnpaid+sheetUnpaid,appUnpaid,sheetUnpaid}}
-function levelFor(uid,n){const L=PS().levels;if(uid&&isFounder(uid))return{k:topName(),i:L.length,top:true,next:null};let i=0;L.forEach((l,j)=>{if(n>=(Number(l.at)||0))i=j});return{k:L[i].k,i,top:false,next:L[i+1]||null}}
+function levelFor(uid,n){const L=PS().levels;if(uid&&isFounder(uid))return{k:topName(),i:L.length,top:true,next:null};let i=0;L.forEach((l,j)=>{if(n>=(Number(l.at)||0))i=j});/* the first 100 start one level up */if(isFirst100(uid))i=Math.min(i+1,L.length-1);return{k:L[i].k,i,top:false,next:L[i+1]||null}}
 function badgeCount(uid){const row=sheetRow(uid)||{};return (Number(row.badges)||0)+myBadges(uid).filter(b=>!b.synced).reduce((t,b)=>t+(Number(b.n)||1),0)}
 /* BADge art by level: 0 Rookie, 1 Member, 2 Core, 3 Legend, 4 Founder (∞). Brand colours only: black, white, silver. */
 let BA_N=0;
@@ -113,3 +113,8 @@ async function autoPoints(){if(!S.canEdit||!S.db||S._autoPts)return;const c=PS()
     for(const n of Object.values(S.noshows||{})){const pr=profileByKey(n.player);if(!pr)continue;
       for(const d of (n.dates||[])){if(d.includes('#'))continue;const s=S.sessions[d];if(!s||!s.date||s.date<c.launch)continue;await put(`ns-${d}-${pr[0]}`,{uid:pr[0],type:'No-show',dept:sportOf(s.sport).club,date:s.date,sid:d,reason:`No-show: ${s.title||sportOf(s.sport).club} · ${fmtD(s.date)}`})}}
   }finally{S._autoPts=false}}
+
+/* numbers worn before numbers were claimed: a full admin's app claims them once, oldest card first, so nobody new can take them */
+async function backfillNumbers(){if(S._bfn||!S.db||!S.canEdit||typeof fullAdmin!=='function'||!fullAdmin()||!Object.keys(S.profiles||{}).length)return;S._bfn=true;
+  for(const uid of signupOrder()){const n=numNorm(S.profiles[uid].number);if(n===''||!/^\d{1,3}$/.test(n)||(S.numbers||{})[n])continue;
+    try{await S.db.doc('numbers/'+n).set({uid,at:new Date().toISOString()});S.numbers[n]={uid}}catch(_){}}}

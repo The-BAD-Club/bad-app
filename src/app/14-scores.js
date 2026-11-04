@@ -17,7 +17,7 @@ const scoreTxt=(sa,sb)=>`${sa}–${sb}`;
 /* a score from one team's side: "21–17" with their own score first */
 const mySide=(t,sa,sb)=>t==='b'?[sb,sa]:[sa,sb];
 const fmtOf=g=>g.fmt||21;
-const isSupport=sid=>(S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton'))||isGM(sid);
+const isSupport=sid=>(S.canEdit&&canRun((S.sessions[sid]||{}).sport||'badminton'))||isGM(sid);
 
 /* ---------- player side ---------- */
 function scoreInputs(gid,g,labels,opts={}){const d=scoreDraft[gid]||{},hint=d.x!==undefined&&d.y!==undefined&&d.x!==''&&d.y!==''?BADMATH.scoreHint(fmtOf(g),d.x,d.y):'';
@@ -67,7 +67,7 @@ function supportRow(sid,gid,g,st){const r=resOf(gid),f=fmtOf(g),A=teamNames(sid,
   return `<div class="li qrow"><div><div class="nm">${A} <span class="muted">v</span> ${B}</div><div class="sub">${esc(g.court)} · to ${f} · ${hhmm(new Date(msOf(g.endDev)||Date.now()).toISOString())}${isFinite(gameMins(g))?` · ${Math.round(gameMins(g))} min`:''}</div>${claim}<div class="qact">${act}</div></div></div>`}
 /* fix a mistake: put the game back on its court, void it (kept, counts for nothing) or delete it (admins) */
 let toolFor=null,toolAsk=null;
-function gameTools(sid,gid,g){const admin=S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton');
+function gameTools(sid,gid,g){const admin=S.canEdit&&canRun((S.sessions[sid]||{}).sport||'badminton');
   if(toolFor!==gid)return `<button class="linkbtn" data-sc="tools" data-gid="${esc(gid)}">More</button>`;
   if(toolAsk)return `<div class="confirm"><b>${toolAsk==='void'?'Void this game?':toolAsk==='del'?'Delete this game?':'Put this game back on court?'}</b><p class="fine">${toolAsk==='void'?'It stays in the record as void and counts for nothing.':toolAsk==='del'?'It’s removed completely, with no record left.':`The players go back on ${esc(g.court)} and the timer carries on.`}</p>
     <div class="row" style="gap:6px"><button class="btn sm" data-sc="${toolAsk}go" data-gid="${esc(gid)}">${toolAsk==='void'?'Void':toolAsk==='del'?'Delete':'Back on court'}</button><button class="btn ghost sm" data-sc="toolno">Keep</button></div></div>`;
@@ -146,7 +146,7 @@ const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
 function standingsHTML(sid,crew){const rows=sessStandings(sid),aw=S.awards[sid],pend=supportCount(sid),s=S.sessions[sid];
   if(!rows.length)return crew?`<div class="tile"><b>${ic('board')} Standings</b><p class="fine">They appear as soon as the first score is final.</p></div>`:'';
   const win=BADMATH.winners(rows),changed=aw&&!sameSet(aw.winners||[],win);
-  const admin=S.canEdit&&canSport((s||{}).sport||'badminton');
+  const admin=S.canEdit&&canRun((s||{}).sport||'badminton');
   const badd=aw?`<div class="baddest"><span class="label">BADDEST PLAYER${(aw.winners||[]).length>1?'S':''}</span><b>${(aw.winners||[]).map(p=>esc(nm(sid,p))).join(' & ')}</b><span class="fine">+5 points${(aw.winners||[]).some(p=>!S.profiles[p])?' · guests need a card to collect points':''}</span></div>`:'';
   const fin=!crew||!admin?'':pend?`<p class="fine">Finalise the ${pend} score${pend===1?'':'s'} above, then finalise the session to award BADDEST PLAYER.</p>`
     :aw&&!changed?`<p class="fine">${ic('check')} Session finalised. A score correction here will let you update the award.</p>`

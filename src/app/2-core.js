@@ -36,6 +36,8 @@ const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 /* ---------- icons (stroke, currentColor) ---------- */
 const P={
+ guide:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7M8 11h5"/>',
+ photo:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
  taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
  quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
@@ -93,9 +95,22 @@ const SPORTS={
  vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true},
  taste:{club:'Taste BADs',sport:'Food & drink collabs',icon:'taste',noType:true,side:true}
 };
-/* side quests: collaborations and everything off the court. They book like sessions but live on their own tab. */
+/* side quests: collaborations and everything Off Court. They book like sessions but live on their own tab. */
 const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
 const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+/* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
+const DEPT_DESC={
+ badminton:'Where BAD started. Rally nights with doubles on every court and a fair rotation, so everyone gets at least five games. All levels welcome: BAD levels keep the games balanced.',
+ volleyball:'Volleyball nights. Teams are mixed and balanced by level every game. Come on your own and leave with a team.',
+ pickleball:'Pickleball, BAD style. Easy to pick up and hard to put down. Doubles with a rotation, paddles to borrow if you’re new.',
+ basketball:'Pickup basketball. 5 v 5 or 3 v 3, with teams balanced by level so every game stays close.',
+ run:'The BAD running crew. Group runs at a pace that suits you. Check in, run together, then log your distance and time.',
+ dance:'The BAD dance crew. Sessions for every level, no experience needed. Just show up and move.',
+ training:'Coaching and drills to level up your game, run by BAD coaches.',
+ retreat:'Trips away with the club: sport, food and time together. Limited spots, announced early.',
+ vibe:'Here for the vibe. Socials and everything that brings BAD together off court.',
+ taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. A Side Quest.'};
+const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(DEPT_DESC[k]||SPORTS[k].sport)}</span></div></div>`:'';
 const LEVEL_FREE=['retreat','vibe','taste'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
 const PLAYABLE=['badminton','volleyball','pickleball','run','basketball','dance'];
@@ -141,6 +156,17 @@ function refCode(uid,p){const n=String(p?.nickname||'BAD').toUpperCase().replace
   const base=`${n}#${num===''?String(hash(uid)%90+10):num.padStart(2,'0')}`;let c=base,i=0;
   const taken=x=>Object.entries(S.profiles||{}).some(([id,q])=>id!==uid&&refsOf(q).some(r=>normCode(r)===normCode(x)))||((S.codes||{})[normCode(x)]);
   while(taken(c)&&i<25)c=base+String.fromCharCode(65+i++);return c}
+/* ---------- the first 100 ----------
+   The first 100 people to make a card (by the time their card was first saved, which nobody can change afterwards)
+   get a First 100 mark on their card, start one BADge level up, and wear a number from 0 to 99.
+   After that, new numbers have three digits (100 to 999). Every number belongs to one player: first come, first served. */
+const FIRST_N=100;
+function signupOrder(){if(S._so&&S._so.ref===S.profiles)return S._so.o;
+  const o=Object.entries(S.profiles||{}).filter(([,p])=>!p.sample&&p.nickname).sort((a,b)=>String(a[1].createdAt||'9').localeCompare(String(b[1].createdAt||'9'))||a[0].localeCompare(b[0])).map(([u])=>u);
+  S._so={ref:S.profiles,o};return o}
+const first100No=uid=>{if(!uid)return 0;const i=signupOrder().indexOf(uid);return i>=0&&i<FIRST_N?i+1:0};
+const isFirst100=uid=>first100No(uid)>0;
+const first100Left=()=>Math.max(0,FIRST_N-signupOrder().length);
 const jersey=p=>(p.number===''||p.number==null)?'00':String(p.number).padStart(2,'0');
 const at=(date,time)=>new Date(`${date}T${time||'20:00'}:00+04:00`);
 const dParts=iso=>{const d=new Date(iso+'T12:00:00+04:00');return{d:d.getUTCDate(),m:MON[d.getUTCMonth()],w:DOW[d.getUTCDay()]}};
@@ -165,7 +191,7 @@ function cardHTML(p,st,opt){
   const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
   /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
   return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${isFirst100(cu)?`<b class="f100">FIRST 100</b> · `:''}${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     ${ty?`<div class="style">${esc(ty)}</div>`:''}
@@ -207,7 +233,7 @@ function memStatus(uid){const p=S.profiles[uid]||{},v=(S.members||{})[uid]||{},w
 const uidOfProfile=p=>Object.keys(S.profiles||{}).find(k=>S.profiles[k]===p);
 
 /* admin access: owner emails from config, plus anyone in admins/{email} */
-const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||['founder','app','cm'].includes(((S.admins||{})[e]||{}).role))};
+const isAdminEmail=e=>{e=String(e||'').toLowerCase();return !!e&&((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e)||['founder','app','cm','crew'].includes(((S.admins||{})[e]||{}).role))};
 const lvAdmin=k=>{const t=memType(k);return t&&('admin' in t)?!!t.admin:!!(MEM_DEFAULT.find(d=>d.k===k)||{}).admin};
 const fmtD=x=>{if(!x)return'';const d=new Date(String(x).length===10?x+'T12:00:00':x);return isNaN(d)?String(x):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'})};
 const isFounder=uid=>!!uid&&memStatus(uid).state==='verified'&&memStatus(uid).type==='Founder';
@@ -219,7 +245,7 @@ function cardBackHTML(p,st){
   const since=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
   return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
     <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
-      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
+      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}${isFirst100(uidOfProfile(p))?`<div class="cb-sub f100">First 100 · No. ${first100No(uidOfProfile(p))}</div>`:''}</div>
     <div class="stats lv2"><span><b class="num">${isFounder(uidOfProfile(p))?'<span class="inf">∞</span>':(st.badges||0)}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
@@ -228,12 +254,15 @@ function cardBackHTML(p,st){
    founder: everything, can add and remove admins (not owners)
    app: helps build the app: everything except managing admins
    cm: community manager for chosen sports: their sessions, courts, players and posts */
-const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins and the shop.'},cm:{k:'Community manager',d:'Runs their own sport: sessions, courts, players and posts.'}};
+const ROLES={owner:{k:'Owner',d:'Full access. Set in the app settings file.'},founder:{k:'Founder admin',d:'Full access. Can add and remove admins.'},app:{k:'App admin',d:'Helps build the app. Everything except managing admins and the shop.'},cm:{k:'Community manager',d:'Runs their own departments: sessions, courts, players, payments and posts.'},crew:{k:'Crew',d:'Supports the community manager on the day: courts, check-in, scores, levels and no-shows for their departments. No sessions, payments or posts.'}};
 const myRole=()=>S.canEdit?((window.BAD_USER&&window.BAD_USER.role)||(window.BAD_WEB?'':'owner')):'';
 const mySports=()=>(window.BAD_USER&&window.BAD_USER.sports)||[];
 const shopAdmin=()=>['owner','founder'].includes(myRole());
 const fullAdmin=()=>['owner','founder','app'].includes(myRole());
 const canManageAdmins=()=>['owner','founder'].includes(myRole());
 const canSport=k=>fullAdmin()||(myRole()==='cm'&&mySports().includes(k||'badminton'));
-const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a&&['founder','app','cm'].includes(a.role)?{role:a.role,sports:a.sports||[]}:null};
-const roleLabel=r=>!r?'':r.role==='owner'?'Owner · every department':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';
+/* crew support the community manager on the day: courts, check-in, scores and levels for their departments, nothing else */
+const isCrewRole=()=>myRole()==='crew';
+const canRun=k=>canSport(k)||(isCrewRole()&&mySports().includes(k||'badminton'));
+const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a&&['founder','app','cm','crew'].includes(a.role)?{role:a.role,sports:a.sports||[]}:null};
+const roleLabel=r=>!r?'':r.role==='owner'?'Owner · every department':['cm','crew'].includes(r.role)?`${r.role==='cm'?'Community manager':'Crew'} · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no department yet'}`:(ROLES[r.role]||{}).k||'Admin';

@@ -30,7 +30,7 @@ function bindRuns(el){el.querySelectorAll('[data-run]').forEach(b=>b.onclick=asy
 /* ---------- BADDEST PLAYER picked by crew ---------- */
 function baddestCard(sid){const aw=S.awards[sid]||{},w=aw.winners||[];
   return `<div class="baddest"><span class="label">BADDEST PLAYER${w.length>1?'S':''}</span><b>${w.map(p=>esc(p===S.uid?'You':who(sid,p).name)).join(' & ')}</b><span class="fine">+5 points${w.some(p=>!S.profiles[p])?' · guests need a card to collect points':''}</span></div>`}
-function baddestPickHTML(sid,lv){const s=S.sessions[sid],admin=S.canEdit&&canSport((s||{}).sport||'badminton'),aw=S.awards[sid];
+function baddestPickHTML(sid,lv){const s=S.sessions[sid],admin=S.canEdit&&canRun((s||{}).sport||'badminton'),aw=S.awards[sid];
   const pool=presentIds(lv).length?presentIds(lv):Object.keys(people(sid));
   if(!admin)return aw?`<div class="tile">${baddestCard(sid)}</div>`:'';
   if(!pickWin.length&&aw)pickWin=[...(aw.winners||[])];

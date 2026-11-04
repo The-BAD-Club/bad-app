@@ -29,13 +29,20 @@ function dropHTML(){const d=FEATURED_DROP;
     <div class="drop-body"><span class="label">${esc(d.status)}</span><h3>${esc(d.title)}</h3><p><b>${esc(d.set)}</b> · ${esc(d.sub)}</p>
       <div class="drop-designs">${d.designs.map(([n,f,t])=>`<figure><div style="background-image:url('${d.base}${f}')"></div><figcaption><b>${n}</b><span>${esc(t)}</span></figcaption></figure>`).join('')}</div>
       <span class="btn wide">${ic('bag')}Pre-order the set${ic('arrow')}</span><span class="fine">${esc(d.note)}</span></div></a>`}
+/* Volume II leftovers, from the "Final" table on BAD Volume II Preorders. Priced pieces go live straight away;
+   the Rally Towel waits as a draft until it has a price. Stock and photos can be changed in Admin → Shop. */
+async function seedV2(){const now=new Date().toISOString(),base={drop:'limited',dropName:'Volume II',maxPer:0,releaseAt:null,images:[],createdAt:now,updatedAt:now};
+  const L=[['On Court Jersey',120,{S:7,M:8,L:1},'The Volume II on-court jersey. Last pieces, no restock.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'The Volume II off-court tee. Last pieces, no restock.'],['Rally Towel',0,{OS:12},'The Volume II rally towel.'],['Tote Bag',45,{OS:24},'The Volume II tote.'],['Socks',50,{OS:16},'Volume II socks.']];
+  try{for(const [i,[name,price,sizes,desc]] of L.entries())await S.db.doc('products/v2-'+slug(name)).set({...base,name,price,sizes,desc,order:100+i,status:price>0?'live':'draft'});
+    toast('Volume II is in the Shop. Add photos and the Rally Towel price in Admin → Shop.');render()}catch(e){toast("Sorry, that didn't save.")}}
+const v2State=()=>{const v=Object.values(S.products).filter(p=>/volume ii/i.test(p.dropName||''));return !v.length?'none':v.some(p=>p.status==='live')?'live':'draft'};
 function renderShop(){
   const el=$('v-shop');if(!el)return;
   const all=liveProducts(),f=S.shopFilter,isV2=([,p])=>/volume ii/i.test(p.dropName||''),v2=all.filter(isV2).filter(([pid,p])=>leftAll(p,pid)>0),list=all.filter(x=>!isV2(x)&&(f==='all'||x[1].drop===f));
   const next=all.filter(([,p])=>p.drop==='limited'&&!released(p)).sort((a,b)=>new Date(a[1].releaseAt)-new Date(b[1].releaseAt))[0];
   const bagN=S.bag.reduce((t,i)=>t+i.qty,0),bagT=S.bag.reduce((t,i)=>t+i.qty*i.price,0);
   const mine=Object.entries(S.myOrders).sort((a,b)=>String(b[1].createdAt).localeCompare(String(a[1].createdAt)));
-  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, essentials stay.</p></div>${dropHTML()}
+  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; Essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, Essentials stay.</p></div>${shopAdmin()&&v2State()!=='live'?`<div class="note adminnote">${ic('bag')}<div style="display:grid;gap:8px"><span><b>Volume II isn't showing yet.</b> ${v2State()==='none'?'Add the last pieces (jersey, tee, tote, socks, towel) with the stock left over from the drop.':'The pieces are saved as drafts. Set them live in Admin → Shop.'} Only shop admins see this.</span>${v2State()==='none'?`<button class="btn sm" data-v2seed="1" style="justify-self:start">${ic('plus')}Add Volume II to the Shop</button>`:''}</div></div>`:''}${dropHTML()}
     ${next?(()=>{const [pid,p]=next;return `<button class="dropban" data-pid="${esc(pid)}">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="">`:''}<div class="db-t"><span class="label">Next limited drop${p.dropName?' · '+esc(p.dropName):''}</span><b>${esc(p.name)}</b><span class="fine">${esc(dropWhen(p.releaseAt))}</span></div><span class="db-c num">${countdown(p.releaseAt)}</span></button>`})():''}
     ${v2.length?`<section class="v2"><div class="v2-h"><span class="label">Volume II · Last pieces</span><h3>The Volume II kit is back, in small numbers.</h3><p class="fine">What's left from the Volume II drop. No restock once they're gone.</p></div>
       <div class="pgrid">${v2.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">Volume II</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div></section>`:''}
@@ -82,7 +89,7 @@ function bagSheet(){const c=S.payCfg||{},items=S.bag,sub=items.reduce((t,i)=>t+i
     :`<div class="empty">${ic('bag')}<span>Your bag is empty.</span></div>`}
   </div></div></div>`}
 
-function bindShop(el){
+function bindShop(el){el.querySelectorAll("[data-v2seed]").forEach(b=>b.onclick=()=>{b.disabled=true;seedV2()});
   const q=s=>el.querySelectorAll(s);
   q('[data-sf]').forEach(b=>b.onclick=()=>{S.shopFilter=b.dataset.sf;renderShop()});
   q('[data-pid]').forEach(b=>b.onclick=()=>{S.shopPid=b.dataset.pid;S.shopSize=null;S.shopQty=1;renderShop()});
@@ -163,9 +170,7 @@ function bindShopAdmin(){
   const on=(id,f)=>{const x=$(id);if(x)x.onclick=f},q=s=>document.querySelectorAll('#v-admin '+s);
   const keep=()=>{if(!$('pf-name'))return;S.pDraft={name:$('pf-name').value,price:$('pf-price').value,maxPer:$('pf-max').value,dropName:$('pf-drop').value,sizesRaw:$('pf-sizes').value,relRaw:$('pf-rel').value,status:$('pf-status').value,desc:$('pf-desc').value}};
   /* Volume II leftovers, from the "Final" table on BAD Volume II Preorders. Saved as drafts: check stock, add photos, then set them live. */
-  on('pf-v2',async()=>{const now=new Date().toISOString(),base={drop:'limited',dropName:'Volume II',maxPer:0,status:'draft',releaseAt:null,images:[],createdAt:now,updatedAt:now};
-    const L=[['On Court Jersey',120,{S:7,M:8,L:1},'The Volume II on-court jersey.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'The Volume II off-court tee.'],['Rally Towel',0,{OS:12},'Set the price before going live.'],['Tote Bag',45,{OS:24},'The Volume II tote.'],['Socks',50,{OS:16},'Volume II socks.']];
-    try{for(const [i,[name,price,sizes,desc]] of L.entries())await S.db.doc('products/v2-'+slug(name)).set({...base,name,price,sizes,desc,order:100+i});toast('Volume II added as drafts. Check the stock, add photos and set the Rally Towel price, then show them in the shop.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+  on('pf-v2',seedV2);
   on('pf-new',()=>{shopEdit='new';S.pImgs=[];S.pDrop='limited';S.pDraft=null;renderAdmin()});
   q('[data-pedit]').forEach(b=>b.onclick=()=>{shopEdit=b.dataset.pedit;S.pImgs=null;S.pDrop=null;S.pDraft=null;renderAdmin();scrollTo({top:0})});
   on('pf-cancel',()=>{shopEdit=null;S.pImgs=null;S.pDraft=null;renderAdmin()});

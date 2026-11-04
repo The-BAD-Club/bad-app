@@ -50,7 +50,7 @@
     if(!u){gate.hidden=false;document.documentElement.classList.add('gated');return}
     gate.hidden=true;document.documentElement.classList.remove('gated');
     const email=(u.email||'').toLowerCase();let admin=OWNER_EMAILS.includes(email),role=admin?'owner':'',sports=[];
-    if(!admin&&email){try{const d=await fs.doc('admins/'+email).get();if(d.exists){const x=d.data()||{};/* same as the security rules: only a named role gives admin access */if(['founder','app','cm'].includes(x.role)){admin=true;role=x.role;sports=x.sports||[]}}}catch(_){}}
+    if(!admin&&email){try{const d=await fs.doc('admins/'+email).get();if(d.exists){const x=d.data()||{};/* same as the security rules: only a named role gives admin access */if(['founder','app','cm','crew'].includes(x.role)){admin=true;role=x.role;sports=x.sports||[]}}}catch(_){}}
     window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin,role,sports};
     resolveUser(window.BAD_USER);
   });

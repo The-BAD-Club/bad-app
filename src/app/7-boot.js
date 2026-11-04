@@ -26,6 +26,8 @@ S.contacts={};S.brand={};
   const map=s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());return o};
   S.sessData={db,map};
   col('profiles',s=>S.profiles=map(s));
+  S.gallery={};db.collection('gallery').onSnapshot(s=>{S.gallery=map(s);if(S.view==='club'||S.view==='admin')render()},()=>{});
+  S.numbers={};db.collection('numbers').onSnapshot(s=>{S.numbers=map(s);if(S.view==='create')render();backfillNumbers()},()=>{});
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
   col('sessions',s=>{S.sessions=map(s);courtSubs()});

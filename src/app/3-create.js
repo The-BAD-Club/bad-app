@@ -3,9 +3,19 @@ let D={},step=0,quiz=null;
 const STEPS=['About you','Your look','Your activities','Your levels','Your signature'];
 const okEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim());
 const okMobile=v=>String(v||'').replace(/\D/g,'').length>=8;
-const numTaken=n=>{if(n==='')return null;for(const [uid,p] of Object.entries(S.profiles||{}))if(uid!==S.uid&&!p.sample&&String(p.number)===String(+n))return p.nickname||'another player';return null};
-function numHint(n){if(n==='')return 'Pick your jersey number, 0 to 99.';const t=numTaken(n);return t?`${t} also wears ${+n}. You can still use it, or pick another.`:`${+n} is yours. You can change it any time.`}
-function freeNumber(){for(let i=0;i<40;i++){const n=String(Math.floor(Math.random()*99)+1);if(!numTaken(n))return n}return String(Math.floor(Math.random()*99)+1)}
+/* jersey numbers: one per player, first come first served. The first 100 wear 0 to 99, everyone after wears 100 to 999. */
+const numNorm=n=>n===''||n==null?'':String(+n);
+const numRange=()=>{const m=S.profiles[S.uid];return (m&&!m.sample&&m.nickname?isFirst100(S.uid):first100Left()>0)?[0,99]:[100,999]};
+const numOwn=n=>{const m=S.profiles[S.uid];return !!m&&String(m.number)===numNorm(n)};
+const numTaken=n=>{const k=numNorm(n);if(k==='')return null;const c=(S.numbers||{})[k];if(c&&c.uid!==S.uid)return (S.profiles[c.uid]||{}).nickname||'another player';
+  for(const [uid,p] of Object.entries(S.profiles||{}))if(uid!==S.uid&&!p.sample&&String(p.number)===k)return p.nickname||'another player';return null};
+function numProblem(n){if(n==='')return 'Pick your jersey number.';if(numOwn(n))return '';const [lo,hi]=numRange(),v=+n;
+  if(v<lo||v>hi)return lo===0?'Pick a number from 0 to 99.':'Numbers 0 to 99 belong to the first 100. Please pick one from 100 to 999.';
+  const t=numTaken(n);return t?`${t} already wears ${v}. Numbers are first come, first served, so please pick another.`:''}
+function numHint(n){const [lo,hi]=numRange(),pr=numProblem(n);if(pr)return pr;return numOwn(n)?`${+n} is yours.`:`${+n} is free. It's yours once you save${lo===0?`, and you're one of the first 100`:''}.`}
+function freeNumber(){const [lo,hi]=numRange();for(let i=0;i<200;i++){const n=String(lo+Math.floor(Math.random()*(hi-lo+1)));if(!numTaken(n))return n}for(let v=lo;v<=hi;v++)if(!numTaken(String(v)))return String(v);return ''}
+async function claimNumber(uid,n,old){if(!S.db||n===''||n===old)return;const c=(S.numbers||{})[n];if(c&&c.uid===uid)return;
+  const b=S.db.batch();b.set(S.db.doc('numbers/'+n),{uid,at:new Date().toISOString()});const oc=old&&(S.numbers||{})[old];if(oc&&oc.uid===uid)b.delete(S.db.doc('numbers/'+old));await b.commit()}
 function memHint(k){const t=memType(k);return !t||!t.verify?'No check needed.':'An admin will verify this. Your card shows it once it’s confirmed.'}
 function startCreator(existing){
   D=existing?{...existing,lv2:{...(existing.lv2||{})},types:{...(existing.types||{})},sports:[...(existing.sports||['badminton'])]}:{nickname:'',listName:'',number:freeNumber(),edition:'oncourt',photo:'',sports:[],primary:'',types:{},levels:{},level:1,hand:'Right',shot:'',lv2:{},email:'',mobile:'',instagram:'',referredBy:''};
@@ -19,7 +29,7 @@ function startCreator(existing){
 function preview(){const k=keyOf(D.listName||D.nickname);const st=statsFor(k);$('preview').innerHTML=cardHTML(D,st)}
 function chips(name,opts,cur,attr='f'){return `<div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-${attr}="${name}" data-val="${esc(o)}" aria-pressed="${o===cur}">${esc(o)}</button>`).join('')}</div>`}
 function stepValid(){
-  if(step===0)return D.nickname.trim()&&okEmail(D.email)&&okMobile(D.mobile);
+  if(step===0)return D.nickname.trim()&&okEmail(D.email)&&okMobile(D.mobile)&&!numProblem(D.number);
   return true;
 }
 function renderStep(){
@@ -30,7 +40,7 @@ function renderStep(){
     const taken=new Set(Object.entries(S.profiles).filter(([u])=>u!==S.uid).map(([u])=>normName(trackerName(u))).filter(Boolean)),seen=new Set(),free=[...Object.values((S.sheetPts&&S.sheetPts.players)||{}).map(r=>r.name),...Object.values(allKeys())].filter(n=>{const k=normName(n);if(!k||taken.has(k)||seen.has(k))return false;seen.add(k);return true}).map(n=>[keyOf(n),n]).sort((a,b)=>a[1].localeCompare(b[1]));
     el.innerHTML=head(0)+`
       <div class="namerow"><div class="field"><label for="c-nick">Player name</label>${inp('c-nick','card','text',D.nickname,'What everyone calls you','maxlength="16"')}</div>
-        <div class="field"><label for="c-num">Number</label><input type="text" inputmode="numeric" id="c-num" maxlength="2" value="${esc(D.number)}" placeholder="00" class="jnum"></div></div>
+        <div class="field"><label for="c-num">Number</label><input type="text" inputmode="numeric" id="c-num" maxlength="3" value="${esc(D.number)}" placeholder="${numRange()[0]?'100':'00'}" class="jnum"></div></div>
       <p class="fine" id="c-num-hint" role="status" style="margin:6px 0 18px">${numHint(D.number)}</p>
       ${D._acctEmail&&!D._editing?`<div class="acct">${ic('mail')}<div><span class="label">Signed in as</span><div class="nm">${esc(D.email)}</div></div></div>`:`<div class="field"><label for="c-email">Email</label>${inp('c-email','mail','email',D.email,'you@email.com','autocomplete="email"')}</div>`}
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
@@ -39,7 +49,7 @@ function renderStep(){
       ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'e.g. KENNY#08','maxlength="16" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?`<div class="field"><label for="c-list">Played with us before?</label><select id="c-list"><option value="">This is my first time</option>${free.map(([k,n])=>`<option value="${esc(n)}" ${keyOf(D.listName)===k?'selected':''}>I'm ${esc(n)} on the tracker</option>`).join('')}</select><p class="fine">Points and payments are matched by your name on the session tracker. First time? We'll use your nickname.</p></div>`:''}
       <p class="fine">Your email and mobile number are only seen by BAD admins. We use them for session updates and nothing else.</p>`;
-    $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,2);e.target.value=D.number;$('c-num-hint').textContent=numHint(D.number);preview()};
+    $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,3);e.target.value=D.number;const h=$('c-num-hint');h.textContent=numHint(D.number);h.classList.toggle('warn-t',!!numProblem(D.number));$('next').disabled=!stepValid();if($('skip'))$('skip').disabled=!stepValid();preview()};
     $('c-mem').onchange=e=>{D.memType=e.target.value;$('c-mem-hint').textContent=memHint(D.memType)};
     const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();if(step===0)$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
     on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
@@ -158,12 +168,14 @@ function openCropper(src){if(!src)return;const c={...(D._src===src&&D._crop?D._c
 
 async function saveProfile(){
   const now=new Date().toISOString();
-  const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:String(D.number===''?'0':+D.number),edition:D.edition,photo:D.photo||'',
+  const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:numNorm(D.number),edition:D.edition,photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),grade:gradeRow(D.grade)&&D.sports.includes('badminton')?D.grade:'',lv2:Object.fromEntries(Object.entries(D.lv2||{}).filter(([k,v])=>D.sports.includes(k)&&LEVELS_BY[k]&&Number.isInteger(v))),cat:CATS[D.cat]?D.cat:'',
     listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
-    try{data.ref=await claimRef(S.uid,data.ref);await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
+    try{if(numProblem(D.number)){toast(numProblem(D.number));step=0;renderStep();return}
+      try{await claimNumber(S.uid,data.number,numNorm((S.profiles[S.uid]||{}).number))}catch(e){toast(`Number ${data.number} was just taken. Please pick another.`);step=0;renderStep();return}
+      data.ref=await claimRef(S.uid,data.ref);await S.db.doc('profiles/'+S.uid).set(data);try{await S.db.doc('contacts/'+S.uid).set(contact);S.myContact=contact}catch(_){}
       try{localStorage.removeItem('badRef')}catch(_){}S.pendingRef='';toast(D._editing?'Your card is updated.':'Welcome to BAD. Thank you for registering.');setView('card');setTimeout(processCheckin,800);return}catch(e){console.error('BAD save failed',e);S.saveErr=(e&&(e.code||e.message))||''}
   }
   if(window.BAD_WEB){
