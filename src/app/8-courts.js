@@ -3,10 +3,11 @@
 const COURT_SPORTS=['badminton','volleyball','pickleball','basketball'];
 /* running (BAD PACE) and dance (BAD HABITS) get a check-in board without courts */
 const BOARD_SPORTS=[...COURT_SPORTS,'run','dance'];
-/* QUEUE_OFF: the court queue (rotation, matching, games and scores) is switched off while it is rebuilt from scratch.
+/* queueOff(sport): the court queue (rotation, matching, games and scores) is switched off while it is rebuilt from scratch.
    Every department uses the Check-in & Pay sheet: who came, who paid, and ending the session. Set to false to bring the queue back. */
-const QUEUE_OFF=true;
-const isAttend=sp=>QUEUE_OFF||!COURT_SPORTS.includes(sp||'badminton');
+/* badminton keeps the full 4-step process (Set up, Check in, Games, Scores); other departments use Check-in & Pay and the manual board */
+const queueOff=sp=>(sp||'badminton')!=='badminton';
+const isAttend=sp=>queueOff(sp)||!COURT_SPORTS.includes(sp||'badminton');
 const SIZES={badminton:[[4,'Doubles'],[2,'Singles']],pickleball:[[4,'Doubles'],[2,'Singles']],volleyball:[[12,'6 v 6'],[10,'5 v 5'],[8,'4 v 4']],basketball:[[10,'5 v 5'],[8,'4 v 4'],[6,'3 v 3']]};
 const DEF_COURTS={badminton:2,pickleball:2,volleyball:1,basketball:1};
 const MIDLINE={basketball:'HALF COURT'};
@@ -333,7 +334,7 @@ function renderCourts(){
   const ED=courtEd(sid),org=ED&&!S.asPlayer;document.body.classList.toggle('wide',org);
   const pick=list.length>1?`<div class="sports">${list.map(([id,x])=>{const d=dParts(x.date);return `<button class="sp" data-act="pick" data-sid="${id}" aria-pressed="${id===sid}">${ic(sportOf(x.sport).icon)}${esc(x.title)} · ${d.w} ${d.d}${S.live[id]?' ●':''}</button>`}).join('')}</div>`:'';
   const viewToggle=ED?`<div class="chips"><button class="chip sm" data-act="as" data-v="0" aria-pressed="${!S.asPlayer}">${ic('admin')}Admin</button><button class="chip sm" data-act="as" data-v="1" aria-pressed="${S.asPlayer}">${ic('eye')}Player view</button>${sid&&S.live[sid]&&!S.asPlayer?(()=>{const v=saveState(),h=H(sid);return `<span class="tagl savest ${v[0]}" role="status">${esc(v[1])}</span><span class="row hbtns" style="gap:4px"><button class="btn ghost sm icon" data-act="undo" ${h.u.length?'':'disabled'} aria-label="Undo" title="Undo">↶</button><button class="btn ghost sm icon" data-act="redo" ${h.r.length?'':'disabled'} aria-label="Redo" title="Redo">↷</button>${v[0]==='ok'?'':`<button class="btn ghost sm" data-act="savenow">${ic('check')}Save now</button>`}</span>`})():''}</div>`:'';
-  const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · ${!(ED&&!S.asPlayer)?'Live today':QUEUE_OFF?(S.cTab==='board'?'Courts':'Check-in & Pay'):isAttend(S.courtSport)?'Check-in':'Courts'}</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
+  const head=`${sportChips}<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="hero" style="gap:4px"><span class="label">${esc(SPORTS[S.courtSport].club)} · ${!(ED&&!S.asPlayer)?'Live today':queueOff(S.courtSport)?(S.cTab==='board'?'Courts':'Check-in & Pay'):isAttend(S.courtSport)?'Check-in':'Courts'}</span><h2>${s?esc(s.title):esc(SPORTS[S.courtSport].sport)}</h2></div>${viewToggle}</div>${pick}`;
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
     el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&canSport(S.courtSport)?quickStart(S.courtSport):''}</div>`;bindCourts(el);return}
   if(!lv0){el.innerHTML=head+`<div class="empty">${ic(sportOf(s.sport).icon)}<span>${org?`${Object.keys(people(sid)).length} players are signed up. Open the board when you're at the venue.`:'Courts appear here once the session starts.'}</span>${org?`<button class="btn" data-act="start">${ic('plus')}Open the court board</button>`:''}</div>`;bindCourts(el);return}
@@ -364,7 +365,7 @@ function renderCourts(){
   }
   /* ---------- admin view: step by step ---------- */
   let body='';
-  if(S.courtStep===1&&!QUEUE_OFF){
+  if(S.courtStep===1&&!queueOff(S.courtSport)){
     const sp=s.sport||'badminton';
     body=`${planTile(sid,lv,true)}<div class="tile"><div class="sec-h"><b>${ic('court')} Courts</b><button class="btn ghost sm" data-act="add" data-k="c">${ic('plus')}Add court</button></div>
       <div class="list">${lv.courts.map((c,i)=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(c.name)}</div><div class="chips" style="margin-top:6px">${SIZES[sp].map(([n,l])=>`<button class="chip sm" data-act="size" data-k="c" data-c="${i}" data-n="${n}" aria-pressed="${c.size===n}">${l}</button>`).join('')}</div></div>${lv.courts.length>1&&!c.on.some(Boolean)?`<button class="btn ghost sm" data-act="del" data-k="c" data-c="${i}">${ic('x')}</button>`:''}</div>`).join('')}</div></div>
@@ -373,7 +374,7 @@ function renderCourts(){
       <div class="tile"><b>${ic('users')} How the bench works</b>
         <p class="fine">First come, first served: players are called in the order they checked in, and go to the back after each game. Late arrivals join at the back. Players can sit out a game and keep their place. Use Catch-up during games to call the players with the fewest games first.</p></div>
       <button class="btn wide" data-act="step" data-n="2">Next: check players in ${ic('arrow')}</button>`;
-  }else if(QUEUE_OFF){body=`<div class="seg2 ctabs" role="group" aria-label="Session tools"><button data-ctab="sheet" aria-pressed="${S.cTab!=='board'}">Check-in &amp; Pay</button><button data-ctab="board" aria-pressed="${S.cTab==='board'}">Courts</button></div>`+(S.cTab==='board'?mboardHTML(sid,s,lv):sheetHTML(sid,s,lv,ppl));
+  }else if(queueOff(S.courtSport)){body=`<div class="seg2 ctabs" role="group" aria-label="Session tools"><button data-ctab="sheet" aria-pressed="${S.cTab!=='board'}">Check-in &amp; Pay</button><button data-ctab="board" aria-pressed="${S.cTab==='board'}">Courts</button></div>`+(S.cTab==='board'?mboardHTML(sid,s,lv):sheetHTML(sid,s,lv,ppl));
   }else if(S.courtStep===2){
     const arr=arrivals(lv),notYet=Object.keys(ppl).filter(p=>!lv.checkin[p]).sort((a,b)=>who(sid,a).name.localeCompare(who(sid,b).name));
     body=`<div class="split eq"><div class="tile"><div class="sec-h"><b>${ic('check')} Check in</b><span class="fine num">${arr.length} of ${Math.max(arr.length,Object.keys(ppl).length)} here</span></div>
@@ -467,7 +468,7 @@ function bindSheet(el){const q=el.querySelector('#sheet-q');if(q)q.oninput=()=>{
     try{if(pid.startsWith('w~')){const lv=norm(clone(S.live[sid]));lv.wpay={...(lv.wpay||{})};if(!v)delete lv.wpay[pid];else lv.wpay[pid]=v==='free'?{waived:true,at,by}:{method:v,at,by};await saveLive(sid,lv)}
       else await setPayment(pid,sid,!v?null:v==='free'?{ok:true,waived:true,at,by}:{ok:true,method:v,at,by});
       toast(v?(v==='free'?'Marked free.':'Marked paid.'):'Marked not paid.')}catch(e){toast("Sorry, that didn't save.")}})}
-function bindCourts(el){if(!(QUEUE_OFF&&S.cTab==='board'))enableDrag(el);arrDrag(el);bindSheet(el);if(typeof mbBind==='function')mbBind(el);el.querySelectorAll('[data-ctab]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();S.cTab=b.dataset.ctab;msel=null;renderCourts()});el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
+function bindCourts(el){if(!(queueOff(S.courtSport)&&S.cTab==='board'))enableDrag(el);arrDrag(el);bindSheet(el);if(typeof mbBind==='function')mbBind(el);el.querySelectorAll('[data-ctab]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();S.cTab=b.dataset.ctab;msel=null;renderCourts()});el.onclick=async ev=>{if(el._skipClick&&ev.isTrusted!==false&&ev.type==='click'){el._skipClick=false;return}
   const b=ev.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,sid=S.courtSid;
   if(act==='sport'){S.courtSport=b.dataset.v;S.courtSid=null;sel=null;pendingDone=null;return renderCourts()}
   if(act==='goadmin'){aTab='sessions';showNew=true;newSport=S.courtSport;return setView('admin')}
@@ -596,10 +597,10 @@ function bindCourts(el){if(!(QUEUE_OFF&&S.cTab==='board'))enableDrag(el);arrDrag
 /* ---------- board: points or club rank ---------- */
 S.boardMode='points';
 function renderBoard(){
-  if(QUEUE_OFF&&S.boardMode==='rank')S.boardMode='points';
+  if(queueOff('badminton')&&S.boardMode==='rank')S.boardMode='points';
   const f=S.sport,mode=S.boardMode;
   if(mode==='rank'&&!S.gAll)allGamesLoad();
-  const toggle=`<div class="chips"><button class="chip" data-bm="points" aria-pressed="${mode==='points'}">${ic('coin')}Points</button>${QUEUE_OFF?'':`<button class="chip" data-bm="rank" aria-pressed="${mode==='rank'}">${ic('board')}Rank</button>`}</div>`;
+  const toggle=`<div class="chips"><button class="chip" data-bm="points" aria-pressed="${mode==='points'}">${ic('coin')}Points</button>${queueOff('badminton')?'':`<button class="chip" data-bm="rank" aria-pressed="${mode==='rank'}">${ic('board')}Rank</button>`}</div>`;
   let body;
   if(mode==='rank'){const rows=rankRows(f);
     body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
