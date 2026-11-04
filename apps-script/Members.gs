@@ -152,7 +152,7 @@ function readSettings_(sh) {
   if (other['No-show'] != null) other['No-show or late cancellation'] = other['No-show'];
   const levels = []; for (let r = 27; r <= 30; r++) if (txt(v[r][0])) levels.push({ k: txt(v[r][0]), at: num(v[r][1]), d: txt(v[r][2]) });
   const reasons = []; for (let r = 34; r <= 44; r++) if (txt(v[r][0]) && !/^(reason|when to give)/i.test(txt(v[r][0]))) reasons.push({ k: txt(v[r][0]), n: txt(v[r][1]), eg: txt(v[r][2]) });
-  return { per: num(v[4][1]) || 5, free: num(v[5][1]) || 100, expire: num(v[6][1]) || 90, launch: launch,
+  return { per: num(v[4][1]) || 5, free: num(v[5][1]) || 100, expire: num(v[6][1]) || 180, launch: launch,
     other: other, levels: levels, top: { k: txt(v[31][0]), d: txt(v[31][2]) }, reasons: reasons, at: new Date() };
 }
 

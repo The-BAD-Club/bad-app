@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.18';
+const APP_VERSION='0.19';
 const CHANGES=[
+  ['0.19','2026-11-04','Drag players up or down the Arrived list (grab the number); points now reset after 6 months without playing; the Guide and Home show how many sessions or Side Quests make a free session'],
   ['0.18','2026-11-04','Department names: BAD SHOTS (basketball), BAD DINK (pickleball), BAD PACE (running); badminton copy no longer promises a set number of games'],
   ['0.17','2026-11-04','Guide tab after Home (how the app works, points, BADges, levels, departments); a description for every department; Gallery in Club; First 100: mark on the card, one BADge level up, numbers 0 to 99, then 100 to 999; every jersey number belongs to one player; Crew admin role to support community managers; Courts: start today\'s session right there (BADSHOTS courts, BAD PACE and BAD HABITS sign-up sheets), Add a session goes to Sessions; badminton board: clear waiting area, reset board, × on court players; founders at the bottom of the points board; Volume II goes live from the Shop; Off Court and Essentials wording'],
   ['0.16','2026-11-04','Side Quests tab with Taste BADs (food and drink collabs: join like a session, earn event points); community managers get a tick box per department, many per department, owners run all; BADge designs for each level; community managers and crew give up to 5 BADges a month, founders unlimited; Volume II last pieces in the Shop; check-in: reorder or reshuffle arrivals, × to remove, cancellations inside 48 hours charged (half or full fee, or no charge); links straight to a tab (#shop, #quests)'],
