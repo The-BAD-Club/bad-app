@@ -97,3 +97,4 @@ footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
 .vh-in p.vh-tag{text-transform:uppercase;font-weight:300;letter-spacing:.22em;font-size:clamp(.72rem,2.6vw,.9rem);margin-top:2px}
 .vh-in p.vh-tag{max-width:none;white-space:nowrap;letter-spacing:.16em;font-size:clamp(.66rem,3.1vw,.9rem)}
 .vh-in p.vh-tag{font-weight:400;letter-spacing:.04em;font-size:clamp(.8rem,3.6vw,1rem)}
+.joinrow{display:grid;justify-items:center}.joinrow .bigjoin{margin:0;max-width:none}@media(min-width:761px){.joinrow .bigjoin{max-width:520px}}

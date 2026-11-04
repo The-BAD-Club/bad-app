@@ -1038,6 +1038,7 @@ footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
 .vh-in p.vh-tag{text-transform:uppercase;font-weight:300;letter-spacing:.22em;font-size:clamp(.72rem,2.6vw,.9rem);margin-top:2px}
 .vh-in p.vh-tag{max-width:none;white-space:nowrap;letter-spacing:.16em;font-size:clamp(.66rem,3.1vw,.9rem)}
 .vh-in p.vh-tag{font-weight:400;letter-spacing:.04em;font-size:clamp(.8rem,3.6vw,1rem)}
+.joinrow{display:grid;justify-items:center}.joinrow .bigjoin{margin:0;max-width:none}@media(min-width:761px){.joinrow .bigjoin{max-width:520px}}
 
 </style>
 
@@ -1187,8 +1188,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.47';
+const APP_VERSION='0.48';
 const CHANGES=[
+  ['0.48','2026-11-05','Home: Join BAD sits right after the video'],
   ['0.47','2026-11-05','Home: A COMMUNITY BUILT LIKE A BRAND in regular capitals'],
   ['0.46','2026-11-05','Home: A COMMUNITY BUILT LIKE A BRAND in thin capitals'],
   ['0.45','2026-11-05','Bold. Agile. Defiant. now lives only in the FAQs under About BAD (removed from the footer and the WTH is BAD page)'],
@@ -4202,7 +4204,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
     <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','WTH is BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
-    ${heroHTML(cta)}
+    ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
     ${sessions}`

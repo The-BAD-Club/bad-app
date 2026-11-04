@@ -19,7 +19,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
     <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','WTH is BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
-    ${heroHTML(cta)}
+    ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
     ${sessions}`

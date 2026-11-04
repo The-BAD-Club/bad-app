@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.47';
+const APP_VERSION='0.48';
 const CHANGES=[
+  ['0.48','2026-11-05','Home: Join BAD sits right after the video'],
   ['0.47','2026-11-05','Home: A COMMUNITY BUILT LIKE A BRAND in regular capitals'],
   ['0.46','2026-11-05','Home: A COMMUNITY BUILT LIKE A BRAND in thin capitals'],
   ['0.45','2026-11-05','Bold. Agile. Defiant. now lives only in the FAQs under About BAD (removed from the footer and the WTH is BAD page)'],
