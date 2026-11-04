@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.39';
+const APP_VERSION='0.40';
 const CHANGES=[
+  ['0.40','2026-11-05','Operations review: BADminton Check in now has payments (Paid, Collected, To collect, and a payment picker on every arrival); the level picker folds into one line per player; arrival numbers no longer overlap; the plan says Aiming for about 5 games each instead of promising it; Payments rows use Paid, Free and an x; the Add a session date field fits on phones'],
   ['0.39','2026-11-05','New cards need an admin to approve them (Admin, Players, New sign-ups to approve); until then people see Home, Play, the Shop and their own My BAD, and can book sessions as a guest (Spot requested). Cards made before approvals started are approved automatically. Home holds the Club news (What is on, All news, Gallery) and the Club tab is gone; Home shows community photos only, no merch. The Board sits in Play next to On Court and Off Court. Home only has buttons for things that are not tabs (no My BAD, Play or Shop buttons). Footer shows The BAD Club LLC · License No. 2649469.01, also in the FAQs. Needs the new security rules'],
   ['0.38','2026-11-04','Players on a guest pass no longer see the make-your-full-card banner in My BAD; admins see them in Players under On a guest pass, with a WhatsApp invite'],
   ['0.37','2026-11-04','Home: a big FAQs button and FAQs page; Guide and WTH is BAD buttons (the story has its own page); a swipeable photo strip, a Watch section for videos (YouTube, Instagram reels, TikTok, mp4) and an Instagram card; admins add Home photos and video links in Admin, Club posts. Needs the new security rules (config/home is public). BADminton Courts is back to the 4-step process (Set up, Check in, Games, Scores); other departments keep Check-in and Pay and the manual board'],
