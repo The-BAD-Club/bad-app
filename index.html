@@ -1183,8 +1183,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.43';
+const APP_VERSION='0.44';
 const CHANGES=[
+  ['0.44','2026-11-05','Home: THE BAD CLUB, a community built like a brand.'],
   ['0.43','2026-11-05','Home: no photo strip before the FAQs; every Home card shares one border, icon column and text alignment'],
   ['0.42','2026-11-05','Design pass on every screen: the footer leads with The BAD Club LLC and its licence number (also on the sign-in screen); old footer taglines removed; list rows line up left; BADges and stats tiles tidied; bigger tap areas for Back and Sign out; shorter labels where text was cut off'],
   ['0.41','2026-11-05','Points are open from 5 Nov. Home opens with the BAD DAY film (muted loop, tap for sound) and community stills from it. BADminton courts: press and hold to drag on phones, End game is one tap, a free court shows Bring Next up on. Payments only on the night in Courts; the admin session page shows what is still owed afterwards. Sign-up QR only in Admin'],
@@ -4267,7 +4268,7 @@ const calmMotion=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').
 function heroHTML(cta){const calm=calmMotion();
   return `<section class="vhero"><video class="vh-v" src="${HERO.src}" poster="${HERO.poster}" ${calm?'':'autoplay'} muted loop playsinline preload="${calm?'none':'auto'}" aria-label="POV: BAD DAY, a short film from a BADminton session"></video><div class="vh-shade" aria-hidden="true"></div>
     <button class="vh-snd" data-vsnd="1" aria-label="${calm?'Play the film':'Turn sound on'}">${calm?ic('play'):ic('snd')}</button>
-    <div class="vh-in"><h2 class="manifesto phtitle">THE BAD CLUB</h2><p>A Dubai sports community. Every level is welcome.</p>${cta}</div></section>`}
+    <div class="vh-in"><h2 class="manifesto phtitle">THE BAD CLUB</h2><p class="vh-tag">a community built like a brand.</p>${cta}</div></section>`}
 function bindHero(el){const v=el.querySelector('.vh-v'),b=el.querySelector('[data-vsnd]');if(!v||!b)return;
   b.onclick=()=>{if(v.paused){v.play().catch(()=>{});v.muted=false}else v.muted=!v.muted;b.innerHTML=v.muted?ic('snd'):ic('sndon');b.setAttribute('aria-label',v.muted?'Turn sound on':'Turn sound off')};
   /* pause when it scrolls away or the tab is hidden, so it doesn't use battery for nothing */
