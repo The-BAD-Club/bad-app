@@ -245,7 +245,13 @@ function payPanel(){const c=S.payCfg||{};
       <div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-cno">Careem Pay number</label><input type="tel" id="pc-cno" value="${esc(c.careemNo||'')}" placeholder="+971 5x xxx xxxx"></div></div>
     <div class="field" style="margin:0"><label for="pc-clink">Careem Pay link <span class="muted">(optional)</span></label><input type="text" id="pc-clink" value="${esc(c.careemLink||'')}" placeholder="https://"></div>
     <div class="row"><button class="btn" id="pc-save">Save payment details</button></div></div>`}
-const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BAD DINK',run:'BAD PACE',dance:'BAD HABITS Dance',basketball:'BAD SHOTS',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
+/* sessions were renamed: Wednesday Rally -> BADminton Wednesday, Friday Rally -> BADminton Friday.
+   A badminton admin's app renames existing sessions once, so lists, emails and the sheet all match. */
+const RALLY_RENAME=[[/^wednesday rally$/i,'BADminton Wednesday'],[/^friday rally$/i,'BADminton Friday']];
+async function renameRallies(){if(S._rr||!S.db||!S.canEdit||typeof canSport!=='function'||!canSport('badminton'))return;S._rr=true;
+  for(const [sid,x] of Object.entries(S.sessions||{})){const t=String(x.title||'').trim(),m=RALLY_RENAME.find(([r])=>r.test(t));if(!m||(x.sport||'badminton')!=='badminton')continue;
+    try{await S.db.doc('sessions/'+sid).update({title:m[1]})}catch(_){}}}
+const defaultTitle=k=>({vibe:'BAD Social',badminton:'BADminton Wednesday',volleyball:'VolleyBAD',pickleball:'BAD DINK',run:'BAD PACE',dance:'BAD HABITS Dance',basketball:'BAD SHOTS',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
 function bindAdmin(){
   const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on('s-cancelask',()=>{cancelOpen=true;renderNow()});

@@ -4,8 +4,8 @@
 const IG_URL='https://www.instagram.com/thebad.club/';
 const WEEK=[
   ['Tue','pickleball','BAD DINK','Pickleball. Time changes week to week, check Play.'],
-  ['Wed','badminton','Wednesday Rally','Badminton with The BAD Club.'],
-  ['Fri','badminton','Friday Rally','Badminton with The BAD Club.'],
+  ['Wed','badminton','BADminton Wednesday','Badminton.'],
+  ['Fri','badminton','BADminton Friday','Badminton.'],
   ['Fri','volleyball','VolleyBAD','Volleyball, 7pm to 10:30pm.']];
 function renderHome(){const el=$('v-home');if(!el)return;
   const guest=!!window.BAD_GUEST,me=!guest&&S.uid&&typeof myProfile==='function'?myProfile():null,c=PS();
