@@ -12,7 +12,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap">
 <style>
 /* BAD brand: black, grey #969696, white; silver only for Member cards. Aktiv Grotesk + IvyPresto Display (stand-ins: Inter Tight, Instrument Serif).
    Layout: app shell. Phone: content + fixed bottom tab bar. Desktop: top bar with the same tabs. Icons lead, words support. */
@@ -1035,6 +1035,8 @@ html.guest .gate-back{padding:8px 0}
 .phome .bigfaq b{font-size:1.05rem}
 .phome .homelinks button{border-radius:18px;padding:12px 14px}
 footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
+.vh-in p.vh-tag{text-transform:uppercase;font-weight:300;letter-spacing:.22em;font-size:clamp(.72rem,2.6vw,.9rem);margin-top:2px}
+.vh-in p.vh-tag{max-width:none;white-space:nowrap;letter-spacing:.16em;font-size:clamp(.66rem,3.1vw,.9rem)}
 
 </style>
 
@@ -1184,8 +1186,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.45';
+const APP_VERSION='0.46';
 const CHANGES=[
+  ['0.46','2026-11-05','Home: A COMMUNITY BUILT LIKE A BRAND in thin capitals'],
   ['0.45','2026-11-05','Bold. Agile. Defiant. now lives only in the FAQs under About BAD (removed from the footer and the WTH is BAD page)'],
   ['0.44','2026-11-05','Home: THE BAD CLUB, a community built like a brand.'],
   ['0.43','2026-11-05','Home: no photo strip before the FAQs; every Home card shares one border, icon column and text alignment'],
@@ -4270,7 +4273,7 @@ const calmMotion=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').
 function heroHTML(cta){const calm=calmMotion();
   return `<section class="vhero"><video class="vh-v" src="${HERO.src}" poster="${HERO.poster}" ${calm?'':'autoplay'} muted loop playsinline preload="${calm?'none':'auto'}" aria-label="POV: BAD DAY, a short film from a BADminton session"></video><div class="vh-shade" aria-hidden="true"></div>
     <button class="vh-snd" data-vsnd="1" aria-label="${calm?'Play the film':'Turn sound on'}">${calm?ic('play'):ic('snd')}</button>
-    <div class="vh-in"><h2 class="manifesto phtitle">THE BAD CLUB</h2><p class="vh-tag">a community built like a brand.</p>${cta}</div></section>`}
+    <div class="vh-in"><h2 class="manifesto phtitle">THE BAD CLUB</h2><p class="vh-tag">A community built like a brand</p>${cta}</div></section>`}
 function bindHero(el){const v=el.querySelector('.vh-v'),b=el.querySelector('[data-vsnd]');if(!v||!b)return;
   b.onclick=()=>{if(v.paused){v.play().catch(()=>{});v.muted=false}else v.muted=!v.muted;b.innerHTML=v.muted?ic('snd'):ic('sndon');b.setAttribute('aria-label',v.muted?'Turn sound on':'Turn sound off')};
   /* pause when it scrolls away or the tab is hidden, so it doesn't use battery for nothing */
