@@ -86,10 +86,10 @@ const ic=(n,cls='')=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="tru
 const SPORTS={
  badminton:{club:'The BAD Club',sport:'Badminton',icon:'badminton'},
  volleyball:{club:'VolleyBAD',sport:'Volleyball',icon:'volleyball'},
- pickleball:{club:'BADDINK',sport:'Pickleball',icon:'pickleball'},
+ pickleball:{club:'BAD DINK',sport:'Pickleball',icon:'pickleball'},
  run:{club:'BAD PACE',sport:'Running',icon:'run'},
  dance:{club:'BAD HABITS',sport:'Dance',icon:'dance'},
- basketball:{club:'BADSHOTS',sport:'Basketball',icon:'basketball'},
+ basketball:{club:'BAD SHOTS',sport:'Basketball',icon:'basketball'},
  training:{club:'Training Department',sport:'Training',icon:'training',noType:true},
  retreat:{club:'BAD Retreat',sport:'Retreats',icon:'retreat',noType:true},
  vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true},
@@ -100,7 +100,7 @@ const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPOR
 const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 /* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
 const DEPT_DESC={
- badminton:'Where BAD started. Rally nights with doubles on every court and a fair rotation, so everyone gets at least five games. All levels welcome: BAD levels keep the games balanced.',
+ badminton:'Where BAD started. Rally nights with doubles on every court and a fair rotation, so everyone gets plenty of games. All levels welcome: BAD levels keep the games balanced.',
  volleyball:'Volleyball nights. Teams are mixed and balanced by level every game. Come on your own and leave with a team.',
  pickleball:'Pickleball, BAD style. Easy to pick up and hard to put down. Doubles with a rotation, paddles to borrow if you’re new.',
  basketball:'Pickup basketball. 5 v 5 or 3 v 3, with teams balanced by level so every game stays close.',

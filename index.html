@@ -971,8 +971,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.17';
+const APP_VERSION='0.18';
 const CHANGES=[
+  ['0.18','2026-11-04','Department names: BAD SHOTS (basketball), BAD DINK (pickleball), BAD PACE (running); badminton copy no longer promises a set number of games'],
   ['0.17','2026-11-04','Guide tab after Home (how the app works, points, BADges, levels, departments); a description for every department; Gallery in Club; First 100: mark on the card, one BADge level up, numbers 0 to 99, then 100 to 999; every jersey number belongs to one player; Crew admin role to support community managers; Courts: start today\'s session right there (BADSHOTS courts, BAD PACE and BAD HABITS sign-up sheets), Add a session goes to Sessions; badminton board: clear waiting area, reset board, × on court players; founders at the bottom of the points board; Volume II goes live from the Shop; Off Court and Essentials wording'],
   ['0.16','2026-11-04','Side Quests tab with Taste BADs (food and drink collabs: join like a session, earn event points); community managers get a tick box per department, many per department, owners run all; BADge designs for each level; community managers and crew give up to 5 BADges a month, founders unlimited; Volume II last pieces in the Shop; check-in: reorder or reshuffle arrivals, × to remove, cancellations inside 48 hours charged (half or full fee, or no charge); links straight to a tab (#shop, #quests)'],
   ['0.15','2026-11-04','Edit a player with a Save button (Admin → Players → Edit); no-show list: × per date, − and +, remove a player, add a player by hand; community managers now only manage their own club (an admin entry without a role gives no access)'],
@@ -1083,10 +1084,10 @@ const ic=(n,cls='')=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="tru
 const SPORTS={
  badminton:{club:'The BAD Club',sport:'Badminton',icon:'badminton'},
  volleyball:{club:'VolleyBAD',sport:'Volleyball',icon:'volleyball'},
- pickleball:{club:'BADDINK',sport:'Pickleball',icon:'pickleball'},
+ pickleball:{club:'BAD DINK',sport:'Pickleball',icon:'pickleball'},
  run:{club:'BAD PACE',sport:'Running',icon:'run'},
  dance:{club:'BAD HABITS',sport:'Dance',icon:'dance'},
- basketball:{club:'BADSHOTS',sport:'Basketball',icon:'basketball'},
+ basketball:{club:'BAD SHOTS',sport:'Basketball',icon:'basketball'},
  training:{club:'Training Department',sport:'Training',icon:'training',noType:true},
  retreat:{club:'BAD Retreat',sport:'Retreats',icon:'retreat',noType:true},
  vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true},
@@ -1097,7 +1098,7 @@ const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPOR
 const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 /* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
 const DEPT_DESC={
- badminton:'Where BAD started. Rally nights with doubles on every court and a fair rotation, so everyone gets at least five games. All levels welcome: BAD levels keep the games balanced.',
+ badminton:'Where BAD started. Rally nights with doubles on every court and a fair rotation, so everyone gets plenty of games. All levels welcome: BAD levels keep the games balanced.',
  volleyball:'Volleyball nights. Teams are mixed and balanced by level every game. Come on your own and leave with a team.',
  pickleball:'Pickleball, BAD style. Easy to pick up and hard to put down. Doubles with a rotation, paddles to borrow if you’re new.',
  basketball:'Pickup basketball. 5 v 5 or 3 v 3, with teams balanced by level so every game stays close.',
@@ -1271,7 +1272,7 @@ const roleLabel=r=>!r?'':r.role==='owner'?'Owner · every department':['cm','cre
 const PTS_FALLBACK={per:5,free:100,expire:90,launch:'',other:{'Event or tournament':10,'BAD Retreat':20,'No-show':-4,'Free session redeemed':-100,'Adjustment':0},
   levels:[{k:'Rookie',at:0,d:'Player card, earn points, join any session'},{k:'Member',at:3,d:'Silver Member card, sign-ups open to you 24 hours early'},{k:'Core',at:10,d:'Skip the waitlist when a session is full, 5% off merch, a vote on new sessions and events'},{k:'Legend',at:25,d:'Black Legend card, 10% off merch, first pick of limited merch drops, invites to members-only events, first spots for BAD Retreat'}],
   top:{k:'',d:'Reserved for the founders of BAD. Every perk, always.'},
-  reasons:[{k:'Crew help',n:'1',eg:'Set up courts, ran the queue, took photos, packed up'},{k:'Brought a new player',n:'1',eg:'Their friend joined and played a paid session'},{k:'4 weeks in a row',n:'1',eg:'Never missed their session for a month'},{k:'Completed their player card',n:'1',eg:'Photo, number and sports all filled in'},{k:'Tried a new department',n:'1',eg:'First time at VolleyBAD, BADDINK, Runaways or another department'},{k:'Above and beyond',n:'1 to 5',eg:'Anything that shows the BAD spirit'}]};
+  reasons:[{k:'Crew help',n:'1',eg:'Set up courts, ran the queue, took photos, packed up'},{k:'Brought a new player',n:'1',eg:'Their friend joined and played a paid session'},{k:'4 weeks in a row',n:'1',eg:'Never missed their session for a month'},{k:'Completed their player card',n:'1',eg:'Photo, number and sports all filled in'},{k:'Tried a new department',n:'1',eg:'First time at VolleyBAD, BAD DINK, BAD PACE or another department'},{k:'Above and beyond',n:'1 to 5',eg:'Anything that shows the BAD spirit'}]};
 const LEDGER_TYPES=['Event or tournament','BAD Retreat','No-show','Free session redeemed','Adjustment'];
 function PS(){const c=S.ptsCfg||{};return{...PTS_FALLBACK,...c,other:{...PTS_FALLBACK.other,...(c.other||{})},levels:(c.levels&&c.levels.length?c.levels:PTS_FALLBACK.levels),top:{...PTS_FALLBACK.top,...(c.top||{})},reasons:(c.reasons&&c.reasons.length?c.reasons:PTS_FALLBACK.reasons)}}
 /* the top level's name is still being chosen; never show it as "Founder" (that's a membership role) */
@@ -1966,7 +1967,7 @@ function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclic
 /* ---------- Guide: what the app is for and how to use it ---------- */
 function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
   const tabs=[['card','Home','Your player card, your sessions, points and BADges.'],['play','Play','Find a session and join it in one tap. Drop out or bring a friend from Home.'],['courts','Courts','On the day: check in, see your court and who’s next.'],['club','Club','News, events and the Gallery.'],['quests','Quests','Side Quests: collabs and everything Off Court.'],['board','Board','Points and rankings. Players first.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
-  const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. At least five games each.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
+  const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. The rotation keeps games fair for everyone.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
   el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
   <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
   <section class="hsec"><h3 class="ah">Points</h3><div class="gcard">${ic('coin')}<div><p><b>${c.per} points</b> for every session you play, whatever the sport. At <b>${c.free} points</b> your next session is free.</p><p class="fine">Points reset if you go ${c.expire} days without playing. A no-show or late cancellation costs points.</p>${pt&&pt.started?`<p class="fine">You have <b class="num">${isFounder(me)?'∞':pt.balance}</b> points.</p>`:''}</div></div></section>
@@ -3191,7 +3192,7 @@ function payPanel(){const c=S.payCfg||{};
       <div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-cno">Careem Pay number</label><input type="tel" id="pc-cno" value="${esc(c.careemNo||'')}" placeholder="+971 5x xxx xxxx"></div></div>
     <div class="field" style="margin:0"><label for="pc-clink">Careem Pay link <span class="muted">(optional)</span></label><input type="text" id="pc-clink" value="${esc(c.careemLink||'')}" placeholder="https://"></div>
     <div class="row"><button class="btn" id="pc-save">Save payment details</button></div></div>`}
-const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BADDINK Pickleball',run:'BAD PACE Run',dance:'BAD HABITS Dance',basketball:'BADSHOTS Run',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
+const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BAD DINK',run:'BAD PACE',dance:'BAD HABITS Dance',basketball:'BAD SHOTS',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
 function bindAdmin(){
   const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on('s-cancelask',()=>{cancelOpen=true;renderNow()});
