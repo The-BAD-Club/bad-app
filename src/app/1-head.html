@@ -799,6 +799,15 @@ body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt
 .xbtn{border:0;background:none;color:inherit;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;padding:0;cursor:pointer}.xbtn svg.i{width:12px;height:12px}.xbtn:hover{background:var(--chip)}
 .pedit{margin-top:10px}.pedit,.pedit input{min-width:0;max-width:100%}.pedit input{width:100%;box-sizing:border-box}.pegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:4px 10px}.pegrid .field{margin:0 0 6px}.pesports{border:0;padding:0;margin:6px 0 0;min-width:0}.pesports .chips{flex-wrap:wrap}.pesports .chips{gap:6px;margin-top:4px}.pesports .chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;width:auto;min-height:32px;padding:4px 12px}.pesports .chip input{margin:0;width:auto}
 .manage{min-width:0}.manage summary{max-width:100%;flex-wrap:wrap}
+.qdepts{display:grid;gap:8px}.qdept{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}.qdept svg.i{width:22px;height:22px}.qdept div{display:grid}
+#v-quests{gap:16px}
+.li.arr .arrctl{gap:6px;flex-wrap:nowrap;justify-content:flex-end;align-items:center}.li.arr .arrctl>.fine{margin-right:4px}.li.arr .arrctl .btn.icon{min-width:34px}
+.acced{display:grid;gap:8px;margin-top:10px;min-width:0}.acced select{width:100%}.addadm{display:grid;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.bart{display:block;width:100%;height:100%}.bart.locked{opacity:.28;filter:grayscale(1)}
+.bstat{display:flex;align-items:center;gap:12px;min-width:0}.bimg{flex:none;width:52px;height:52px}.lvimg{display:block;width:34px;height:34px}
+.bgleft{margin:8px 0 0;font-size:.82rem}
+.v2{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:var(--r-lg,18px);background:linear-gradient(135deg,color-mix(in srgb,var(--ink) 6%,transparent),transparent)}.v2-h{display:grid;gap:4px}.v2-h h3{margin:0}
+@media (max-width:700px){.li.arr .arrctl{grid-column:2/-1;justify-content:flex-start;flex-wrap:wrap;min-width:0}.li.arr .arrctl>.fine,.li.arr .arrctl>.btn:not(.icon){margin-right:auto}}
 </style>
 
 <div class="wrap">
@@ -810,6 +819,7 @@ body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt
       <button data-v="play"></button>
       <button data-v="courts"></button>
       <button data-v="club"></button>
+      <button data-v="quests" aria-label="Side Quests"></button>
       <button data-v="board"></button>
       <button data-v="shop"></button>
       <button data-v="admin" id="nav-admin" hidden></button>
@@ -829,6 +839,7 @@ body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt
   </section>
   <section class="view" id="v-courts" hidden></section>
   <section class="view" id="v-club" hidden></section>
+  <section class="view" id="v-quests" hidden></section>
   <section class="view" id="v-board" hidden></section>
   <section class="view" id="v-shop" hidden></section>
   <section class="view" id="v-admin" hidden></section>

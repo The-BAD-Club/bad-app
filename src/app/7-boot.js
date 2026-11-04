@@ -1,12 +1,14 @@
 /* ---------- boot ---------- */
 S.contacts={};S.brand={};
 (async function boot(){
+  /* links straight to a tab: …/#shop, #quests, #play, #club, #board, #courts (used by short links like the Volume II one) */
+  {const v=(location.hash||'').match(/^#(shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['card','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
   render();
   const C=window.claude;if(!C||!C.use){S.loaded=true;render();return}
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
   S.db=db;if(user){S.uid=await user.id();S.canEdit=await user.canEdit()}
   if(S.uid&&db)db.doc('contacts/'+S.uid).get().then(d=>{if(d.exists)S.myContact=d.data()}).catch(()=>{});
-  if(S.canEdit&&innerWidth>=1000&&S.view==='card'&&!S.pendingCI)setView('admin');
+  if(S.deepView)setView(S.deepView);else if(S.canEdit&&innerWidth>=1000&&S.view==='card'&&!S.pendingCI)setView('admin');
   if(S.canEdit){C.use('mcp').then(m=>{S.mcp=m});C.use('assets').then(a=>{S.assets=a})}
   if(!db){S.loaded=true;render();return}
   let pending=10;

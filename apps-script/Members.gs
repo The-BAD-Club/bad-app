@@ -15,7 +15,7 @@ const SHEET_ID = '1ATPRh9Z-voVhE_8a5PNQUZnrLoEHBhM9iZAIR-1FeRA'; // BAD APP – 
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Pro', 'National'];
 const CLUBS = {
   badminton: 'The BAD Club', volleyball: 'VolleyBAD', pickleball: 'BADDINK', run: 'BAD PACE', dance: 'BAD HABITS',
-  basketball: 'BADSHOTS', training: 'Training Department', retreat: 'BAD Retreat', vibe: 'BAD Community'
+  basketball: 'BADSHOTS', training: 'Training Department', retreat: 'BAD Retreat', vibe: 'BAD Community', taste: 'Taste BADs'
 };
 const EDITIONS = { oncourt: 'On-Court', courtside: 'Courtside', offcourt: 'Off-Court', member: 'Member' };
 const STAFF = ['Crew', 'Community Manager', 'Founder'];

@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.15';
+const APP_VERSION='0.16';
 const CHANGES=[
+  ['0.16','2026-11-04','Side Quests tab with Taste BADs (food and drink collabs: join like a session, earn event points); community managers get a tick box per department, many per department, owners run all; BADge designs for each level; community managers and crew give up to 5 BADges a month, founders unlimited; Volume II last pieces in the Shop; check-in: reorder or reshuffle arrivals, × to remove, cancellations inside 48 hours charged (half or full fee, or no charge); links straight to a tab (#shop, #quests)'],
   ['0.15','2026-11-04','Edit a player with a Save button (Admin → Players → Edit); no-show list: × per date, − and +, remove a player, add a player by hand; community managers now only manage their own club (an admin entry without a role gives no access)'],
   ['0.14','2026-11-04','Design review: phone tab bar back at the bottom (it sat over the logo), no overlapping buttons on any screen; ∞ BADges for Founders; FRAGMENTS RELEASE pre-order in the Shop; Home shows checked games\' results'],
   ['0.13','2026-11-04','Cancel a session and email everyone who signed up; payment dashboard per session with reminders by email or WhatsApp; payments saved in each player\'s own record so players see their own status'],

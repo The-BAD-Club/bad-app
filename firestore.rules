@@ -186,12 +186,28 @@ service cloud.firestore {
       allow read: if signedIn();
       allow write: if isSelf(id) && request.resource.data.keys().hasOnly(['g']) && request.resource.data.g is map && request.resource.data.g.size() <= 500;
     }
+    // BADges: founders give freely. Everyone else has 5 a month, counted in badgeq/{uid}_{YYYY-MM} (UTC month),
+    // which goes up in the same write as the BADge. The BADge id carries the new count, so each step of the count is used once.
+    function monthKey() { let m = request.time.month(); return string(request.time.year()) + (m < 10 ? '-0' : '-') + string(m); }
+    function qId() { return uid() + '_' + monthKey(); }
+    function qPath() { return /databases/$(database)/documents/badgeq/$(qId()); }
+    function qBefore() { return exists(qPath()) ? get(qPath()).data.n : 0; }
+    function badgeFree() { return isFounder() || memberType() == 'Founder'; }
     match /badges/{id} {
       allow read: if signedIn();
       allow create: if (isAdminAny() || isCrew()) && request.resource.data.byUid == uid()
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 5
-        && str(request.resource.data.reason, 80) && request.resource.data.synced == false;
+        && str(request.resource.data.reason, 80) && request.resource.data.synced == false
+        && (badgeFree() || (existsAfter(qPath()) && getAfter(qPath()).data.n == qBefore() + request.resource.data.n
+                            && getAfter(qPath()).data.n <= 5 && id == qId() + '_' + string(getAfter(qPath()).data.n)));
       allow update, delete: if isFull();
+    }
+    match /badgeq/{id} {
+      allow read: if signedIn() && (id.matches(uid() + '_.*') || isAdminAny());
+      allow create, update: if (isAdminAny() || isCrew()) && id == qId()
+        && request.resource.data.keys().hasOnly(['n', 'u']) && request.resource.data.n is int
+        && request.resource.data.n > qBefore() && request.resource.data.n <= 5
+        && existsAfter(/databases/$(database)/documents/badges/$(id + '_' + string(request.resource.data.n)));
     }
     // BAD grades (badminton): everyone can read the grade and category shown on cards. Crew, admins and the session's
     // Game Master set them; every change also writes a log entry that can't be edited, with who and when.
