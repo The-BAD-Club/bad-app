@@ -11,12 +11,12 @@ h=h.replace('<span>Community over competition · #MakeBadGoodAgain</span></foote
 import json
 _l=open(SRC+'0-logo.js').read();_L=json.loads(_l[_l.index('{'):_l.rindex('}')+1])
 # logo splash: in the page itself so it shows before any script runs, until the app knows who you are (see unboot() in 4-views.js)
-h=h.replace('<div class="wrap">',f'<div id="splash" aria-label="BAD" role="img"><img class="sp-d" src="{_L["badW"]}" alt=""><img class="sp-l" src="{_L["badK"]}" alt=""><span class="sp-line">Bold. Agile. Defiant.</span></div>\n<div class="wrap">',1)
+h=h.replace('<div class="wrap">',f'<div id="splash" aria-label="BAD" role="img"><img class="sp-d" src="{_L["badW"]}" alt=""><img class="sp-l" src="{_L["badK"]}" alt=""></div>\n<div class="wrap">',1)
 head=''.join(f'<script src="{FB}{m}"></script>\n' for m in ['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'])
 head+='<script src="config.js"></script>\n'
 js="".join(open(SRC+f).read()+"\n" for f in ['0-logo.js','0-placeholders.js'])
 js+=open('src/fb-shim.js').read()+"\n"
-js+="".join(open(SRC+f).read()+"\n" for f in ['12-version.js','2-core.js','11-points.js','3-create.js','4-views.js','13-badmath.js','8-courts.js','14-scores.js','15-sports.js','9-checkin.js','5-admin.js','10-shop.js','16-home.js','6-brand.js','7-boot.js'])
+js+="".join(open(SRC+f).read()+"\n" for f in ['12-version.js','2-core.js','11-points.js','3-create.js','4-views.js','13-badmath.js','8-courts.js','14-scores.js','15-sports.js','17-board.js','9-checkin.js','5-admin.js','10-shop.js','16-home.js','6-brand.js','7-boot.js'])
 doc=h if h.lstrip().lower().startswith('<!doctype') else '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#000000">\n'+h
 out=doc+"\n"+head+"<script>\n"+js+"</script>\n"
 open('index.html','w').write(out)
