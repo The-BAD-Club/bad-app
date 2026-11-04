@@ -92,7 +92,7 @@ const calmMotion=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').
 function heroHTML(cta){const calm=calmMotion();
   return `<section class="vhero"><video class="vh-v" src="${HERO.src}" poster="${HERO.poster}" ${calm?'':'autoplay'} muted loop playsinline preload="${calm?'none':'auto'}" aria-label="POV: BAD DAY, a short film from a BADminton session"></video><div class="vh-shade" aria-hidden="true"></div>
     <button class="vh-snd" data-vsnd="1" aria-label="${calm?'Play the film':'Turn sound on'}">${calm?ic('play'):ic('snd')}</button>
-    <div class="vh-in"><h2 class="manifesto phtitle">THE BAD CLUB</h2><p>A Dubai sports community. Every level is welcome.</p>${cta}</div></section>`}
+    <div class="vh-in"><h2 class="manifesto phtitle">THE BAD CLUB</h2><p class="vh-tag">a community built like a brand.</p>${cta}</div></section>`}
 function bindHero(el){const v=el.querySelector('.vh-v'),b=el.querySelector('[data-vsnd]');if(!v||!b)return;
   b.onclick=()=>{if(v.paused){v.play().catch(()=>{});v.muted=false}else v.muted=!v.muted;b.innerHTML=v.muted?ic('snd'):ic('sndon');b.setAttribute('aria-label',v.muted?'Turn sound on':'Turn sound off')};
   /* pause when it scrolls away or the tab is hidden, so it doesn't use battery for nothing */
