@@ -39,7 +39,7 @@ S.contacts={};S.brand={};
   if(S.uid)myGamesLoad();
   if(S.uid)db.doc('checkins/'+S.uid).onSnapshot(d=>{S.myCI=d.exists?d.data():{};render()},()=>{});
   db.doc('config/codes').onSnapshot(d=>{S.codes=d.exists?(d.data().list||{}):{};render()},()=>{});
-  db.collection('products').onSnapshot(s=>{S.products=map(s);if(S.view==='shop'||S.view==='admin')render()},()=>{});
+  db.collection('products').onSnapshot(s=>{S.products=map(s);if(typeof syncV2Prices==='function')syncV2Prices();if(S.view==='shop'||S.view==='admin')render()},()=>{});
   db.collection('shopstock').onSnapshot(s=>{S.stock=map(s);if(S.view==='shop'||S.view==='admin')render()},()=>{});
   if(S.uid)(db.collection('orders').where?db.collection('orders').where('uid','==',S.uid):db.collection('orders')).onSnapshot(s=>{const m=map(s);S.myOrders=Object.fromEntries(Object.entries(m).filter(([,o])=>o.uid===S.uid));if(S.view==='shop')render()},()=>{});
   db.doc('config/points').onSnapshot(d=>{S.ptsCfg=d.exists?d.data():null;render()},()=>{});
