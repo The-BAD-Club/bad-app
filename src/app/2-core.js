@@ -123,6 +123,10 @@ const HOUSE_RULES=[
  ['bag','Leave it better','Respect our venues and partners. Wear the right shoes and kit, and take your things with you.'],
  ['photo','Photos happen','We take photos at sessions and events for the Gallery and BAD socials. Tell an admin if you’d rather not be in them.']];
 const rulesHTML=()=>`<ol class="hrules">${HOUSE_RULES.map(([i,t,d],n)=>`<li><span class="ic-bub soft">${ic(i)}</span><div><b>${n+1}. ${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol>`;
+/* guest pass: a quick trial sign-up with just a name and mobile number */
+const GUEST_PASS='Guest pass';
+const isGuestPass=uid=>{const p=uid&&S.profiles[uid];return !!p&&!!p.memReq&&p.memReq.type===GUEST_PASS};
+const noCard=()=>!window.BAD_GUEST&&!!S.loaded&&!!S.uid&&!S.canEdit&&!(S.profiles||{})[S.uid];
 const MANIFESTO=`<div class="manifesto" aria-label="Bold. Agile. Defiant."><b>BOLD.</b><b>AGILE.</b><b>DEFIANT.</b></div>`;
 const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(DEPT_DESC[k]||SPORTS[k].sport)}</span></div></div>`:'';
 const LEVEL_FREE=['retreat','vibe','taste'];
@@ -176,7 +180,7 @@ function refCode(uid,p){const n=String(p?.nickname||'BAD').toUpperCase().replace
    After that, new numbers have three digits (100 to 999). Every number belongs to one player: first come, first served. */
 const FIRST_N=100;
 function signupOrder(){if(S._so&&S._so.ref===S.profiles)return S._so.o;
-  const o=Object.entries(S.profiles||{}).filter(([,p])=>!p.sample&&p.nickname).sort((a,b)=>String(a[1].createdAt||'9').localeCompare(String(b[1].createdAt||'9'))||a[0].localeCompare(b[0])).map(([u])=>u);
+  const o=Object.entries(S.profiles||{}).filter(([,p])=>!p.sample&&p.nickname&&!(p.memReq&&p.memReq.type===GUEST_PASS)).sort((a,b)=>String(a[1].createdAt||'9').localeCompare(String(b[1].createdAt||'9'))||a[0].localeCompare(b[0])).map(([u])=>u);
   S._so={ref:S.profiles,o};return o}
 const first100No=uid=>{if(!uid)return 0;const i=signupOrder().indexOf(uid);return i>=0&&i<FIRST_N?i+1:0};
 const isFirst100=uid=>first100No(uid)>0;
@@ -201,15 +205,14 @@ function cardHTML(p,st,opt){
   const logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
   const img=p.photo||PH[hash(p.listKey||p.nickname||'BAD')%PH.length];
   const m=cu?memStatus(cu):null,mem=m&&m.state==='verified'?m.type:'Guest';
-  const plays=(p.sports&&p.sports.length?p.sports:['badminton']).includes('badminton');
-  const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
-  /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
+  const lv=cu&&typeof levelFor==='function'?levelFor(cu,badgeCount(cu)):{k:'Rookie',i:0,top:false};
+  /* minimal front: who you are, your BADge and your points. Sport levels live in the app, not on the card. */
   return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
     <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     ${ty?`<div class="style">${esc(ty)}</div>`:''}
-    <div class="stats lv2"><b class="lvl">${esc(lvl)}</b><span><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b><small>pts</small></span></div>
+    <div class="stats lv2 cbadge"><span class="cb-lv"><span class="cb-art">${typeof badgeArt==='function'?badgeArt(lv.top?9:lv.i,{label:lv.k+' BADge'}):''}</span><b>${esc(lv.k)}</b></span><span><b class="num">${isFounder(cu)?'<span class="inf">∞</span>':(st.balance||0)}</b><small>pts</small></span></div>
   </div>`;
 }
 

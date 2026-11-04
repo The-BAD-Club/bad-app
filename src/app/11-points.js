@@ -3,7 +3,7 @@
    config/points every 15 minutes, together with each player's row from "Points Balance" (config/sheetPoints).
    New BADges and points entries given in the app show straight away and are added to the sheet on the next sync. */
 const PTS_FALLBACK={per:5,free:100,expire:180,launch:'',other:{'Event or tournament':10,'BAD Retreat':20,'No-show':-4,'Free session redeemed':-100,'Adjustment':0},
-  levels:[{k:'Rookie',at:0,d:'Player card, earn points, join any session'},{k:'Member',at:3,d:'Silver Member card, sign-ups open to you 24 hours early'},{k:'Core',at:10,d:'Listed first on the waiting list when a session is full, 5% off merch, a vote on new sessions and events'},{k:'Legend',at:25,d:'Black Legend card, 10% off merch, first pick of limited merch drops, invites to members-only events, first spots for BAD Retreat'}],
+  levels:[{k:'Rookie',at:0,d:'Player card, earn points, join any session'},{k:'Member',at:3,d:'Sign-ups open to you 24 hours early'},{k:'Core',at:10,d:'Sign-ups open to you 48 hours early, 5% off merch, a vote on new sessions and events'},{k:'Legend',at:25,d:'10% off merch, first pick of limited merch drops, invites to members-only events, first spots for BAD Retreat'}],
   top:{k:'',d:'Reserved for the founders of BAD. Every perk, always.'},
   reasons:[{k:'Crew help',n:'1',eg:'Set up courts, ran the queue, took photos, packed up'},{k:'Brought a new player',n:'1',eg:'Their friend joined and played a paid session'},{k:'4 weeks in a row',n:'1',eg:'Never missed their session for a month'},{k:'Completed their player card',n:'1',eg:'Photo, number and sports all filled in'},{k:'Tried a new department',n:'1',eg:'First time at VolleyBAD, BAD DINK, BAD PACE or another department'},{k:'Above and beyond',n:'1 to 5',eg:'Anything that shows the BAD spirit'}]};
 const LEDGER_TYPES=['Event or tournament','BAD Retreat','No-show','Free session redeemed','Adjustment'];
@@ -66,8 +66,8 @@ const BADGE_COLOUR=['White','Black','Silver','Titanium','Vanta'];
 const levelIdx=uid=>uid?levelFor(uid,badgeCount(uid)).i:0;
 /* perks, by level index: 1 Member, 2 Core, 3 Legend, 4 top */
 const perk={early:uid=>levelIdx(uid)>=1,early48:uid=>levelIdx(uid)>=2,merchOff:uid=>{const i=levelIdx(uid);return i>=3?10:i>=2?5:0},firstPick:uid=>levelIdx(uid)>=3};
-/* card colour follows the BADge level: silver for Member and Core, black Legend card from Legend up */
-const cardEdition=(p,uid)=>{const i=uid?levelIdx(uid):0;return i>=3?'legend':i>=1?'member':(p.edition||'oncourt')};
+/* the card colour is the player's choice (On-Court black, Off-Court white, Courtside grey). The BADge on the front shows the level. */
+const cardEdition=p=>EDITIONS.some(e=>e[0]===(p&&p.edition))?p.edition:'oncourt';
 const cardEdLabel=(p,uid)=>{const i=uid?levelIdx(uid):0;return i>=4?topName():i>=3?'Legend':i>=1?PS().levels[Math.min(i,PS().levels.length-1)].k:((EDITIONS.find(e=>e[0]===(p.edition||'oncourt'))||EDITIONS[0])[1])};
 
 /* old name kept so every screen keeps working */

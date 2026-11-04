@@ -3,6 +3,8 @@ const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],p
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 /* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
 function setView(v){if(window.BAD_GUEST&&v!=='home'){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+  /* signed in but no card or guest pass yet: Home and registration only */
+  if(noCard()&&!['home','card','create'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
   S.view=v;
   for(const id of ['home','card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',(b.dataset.v===v||(v==='create'&&b.dataset.v==='card'))?'page':'false'));
@@ -17,7 +19,7 @@ function render(){unboot();
   if(S.view==='courts')return renderCourts();
   renderNow();
 }
-function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
+function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
   ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
@@ -145,12 +147,12 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span>${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
+      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span>${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p>${esc(s.note)}</p>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
       ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}
-function bindPlay(el){el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
+function bindPlay(el){el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
   const q=s=>el.querySelectorAll(s),now=()=>new Date().toISOString();
   q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderNow()});
   q('[data-joinask]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.joinask,change:false};renderNow()});
@@ -256,10 +258,23 @@ function renderCard(){
           <div>${ic('star')}<span><b>Collect BADges</b><small>A thank you from the founders and crew. Member, Core, then Legend</small></span></div>
         </div>
         <button class="btn wide" id="start">${ic('card')}Register here</button>
+        <details class="gpass" ${S.gpOpen?'open':''}><summary>${ic('guest')}Just trying BAD? Take a guest pass</summary>
+          <p class="fine">For a trial: your name and number, and you can join sessions straight away. Make your full card any time.</p>
+          <div class="fgrid"><div class="field wide"><label for="gp-name">Name</label><input id="gp-name" type="text" maxlength="16" autocomplete="given-name" placeholder="What everyone calls you"></div>
+          <div class="field wide"><label for="gp-mob">Mobile</label><input id="gp-mob" type="tel" maxlength="20" autocomplete="tel" placeholder="+971 5x xxx xxxx"></div>
+          <div class="field wide"><label for="gp-mail">Email <span class="req">optional</span></label><input id="gp-mail" type="email" maxlength="80" autocomplete="email"></div></div>
+          <button class="btn ghost wide" id="gp-go">${ic('guest')}Start my guest pass</button></details>
         <p class="fine">We were all BAD players once. Every level is welcome.</p>${S.loaded?'':'<p class="fine">Loading…</p>'}</div></div>`;
-    $('start').onclick=()=>startCreator();return;
+    $('start').onclick=()=>startCreator();el.querySelector('.gpass').ontoggle=e=>{S.gpOpen=e.target.open};
+    $('gp-go').onclick=async()=>{const n=$('gp-name').value.trim().slice(0,16),m=$('gp-mob').value.trim().slice(0,20),e=$('gp-mail').value.trim().slice(0,80);
+      if(!n){toast('Please add your name.');return}if(!okMobile(m)){toast('Please add a mobile number we can reach you on.');return}if(e&&!okEmail(e)){toast('That email doesn’t look right.');return}
+      const now=new Date().toISOString(),b=$('gp-go');b.disabled=true;
+      try{const gp={nickname:n,listName:n,listKey:keyOf(n),number:'',edition:'oncourt',photo:'',sports:['badminton'],primary:'badminton',createdAt:now,updatedAt:now,memReq:{type:GUEST_PASS,at:now}};await S.db.doc('profiles/'+S.uid).set(gp);S.profiles={...S.profiles,[S.uid]:gp};
+        await S.db.doc('contacts/'+S.uid).set({mobile:m,...(e?{email:e}:{}),updatedAt:now});toast(`Welcome, ${n}. Pick a session in Play.`);setView('play')}catch(x){b.disabled=false;toast("Sorry, that didn't save. Please try again.")}};
+    return;
   }
   const st=statsFor(p.listKey),pt=pointsFor(S.uid),fd=isFounder(S.uid),req=S.requests[S.uid];
+  const gpBanner=isGuestPass(S.uid)?`<div class="note gpnote">${ic('guest')}<div style="display:grid;gap:8px"><span><b>You're on a guest pass.</b> Make your full card to pick your number and colour, earn BADges and keep your points.</span><button class="btn sm" data-gpfull="1" style="justify-self:start">${ic('card')}Make my full card</button></div></div>`:'';
   const mine=myActivity(),nextS=upcoming().find(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out});
   const rk=rankRows('all'),ri=rk.findIndex(r=>r.pid===S.uid),me=ri>=0?rk[ri]:{g:0,w:0};
   const myGames=Object.entries(S.games).filter(([,g])=>[...g.a,...g.b].includes(S.uid)).sort((a,b)=>(b[1].at||'').localeCompare(a[1].at||''));
@@ -273,7 +288,7 @@ function renderCard(){
   el.innerHTML=`<div class="home">
     <aside class="home-card"><div class="flip${S.flipped?' on':''}" id="my-card" role="button" tabindex="0" aria-label="Flip your card to see the invite QR code" aria-pressed="${!!S.flipped}"><div class="flip-in"><div class="face front">${cardHTML(p,st)}</div><div class="face back">${cardBackHTML(p,st)}</div></div></div><p class="fine fliphint">${S.flipped?'Tap to see the front':'Tap the card to flip it'}</p><div class="row" style="justify-content:center"><button class="btn sm" id="save-card">${ic('image')}${S.flipped?'Save back':'Save card'}</button><button class="btn ghost sm" id="edit">${ic('edit')}Edit my card</button></div></aside>
     <div class="home-main">
-      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>${MANIFESTO}
+      <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>${gpBanner}${S.canEdit?`<div class="row"><button class="btn ghost sm" data-signupqr="1">${ic('card')}Sign-up QR</button></div>`:''}
       ${next}
       ${ptsTilesHTML(pt,fd,req)}
       <section class="hsec"><h3 class="ah">Your stats</h3>
@@ -299,6 +314,7 @@ function renderCard(){
         <div><h4>${ic('badminton')}BAD levels</h4><p>${esc(LVL_NOTICE)} Levels go from F to A+, with a W or M rating, and only help us mix games.</p></div></div>
         <div class="list lvls">${PS().levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{locked:!pt.top&&i>pt.levelIdx,label:l.k})}</span><span class="tagl${l.k===pt.level?' solid':''}">${esc(l.k)}${+l.at?' · '+l.at:''}</span><span class="fine">${esc(l.d||'')}</span></div>`).join('')}<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{locked:!pt.top,label:topName()})}</span><span class="tagl${pt.top?' solid':''}">${esc(topName())}</span><span class="fine">${esc(PS().top.d||'Reserved for the founders of BAD. Every perk, always.')}</span></div></div></details>
     </div></div>`;
+  el.querySelectorAll('[data-gpfull]').forEach(b=>b.onclick=()=>startCreator(myProfile()));el.querySelectorAll('[data-signupqr]').forEach(b=>b.onclick=showSignupQR);
   bindPlay(el);
   el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
   el.querySelectorAll('[data-payall]').forEach(b=>b.onclick=()=>{S.payAll=!S.payAll;renderCard()});
@@ -385,7 +401,7 @@ function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclic
 function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
   const tabs=[['home','Home','About The BAD Club, every department and the weekly sessions. Open to everyone.'],['card','My BAD','Your player card, your sessions, payments, points and BADges.'],['play','Play','Find a session and join it in one tap. Drop out or bring a friend from My BAD.'],['courts','Courts','On the day: check in, see your court and who’s next.'],['club','Club','News, events and the Gallery.'],['quests','Quests','Side Quests: collabs and everything Off Court.'],['board','Board','Points and rankings. Players first.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
   const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. The rotation keeps everyone playing, and you play with anyone.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
-  el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>${MANIFESTO}
+  el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
   <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
   <section class="hsec"><h3 class="ah">House rules</h3>${rulesHTML()}</section>
   <section class="hsec"><h3 class="ah">Points</h3><div class="gcard">${ic('coin')}<div><p><b>${c.per} points</b> for every session you play, whatever the sport. At <b>${c.free} points</b> your next session is free.</p><p>That's <b>${toFree().sessions} sessions</b>${toFree().quests?`, or <b>${toFree().quests} Side Quests</b> (each one counts as an event, ${c.other['Event or tournament']} points)`:''}, or any mix of the two.</p><p class="fine">Points reset if you go ${expWords(c.expire)} without playing. A no-show or late cancellation costs points.</p>${pt&&pt.started?`<p class="fine">You have <b class="num">${isFounder(me)?'∞':pt.balance}</b> points.</p>`:''}</div></div></section>
