@@ -36,6 +36,8 @@ const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 /* ---------- icons (stroke, currentColor) ---------- */
 const P={
+ taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
+ quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
  truck:'<path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
  minus:'<path d="M5 12h14"/>',
@@ -88,10 +90,13 @@ const SPORTS={
  basketball:{club:'BADSHOTS',sport:'Basketball',icon:'basketball'},
  training:{club:'Training Department',sport:'Training',icon:'training',noType:true},
  retreat:{club:'BAD Retreat',sport:'Retreats',icon:'retreat',noType:true},
- vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true}
+ vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true},
+ taste:{club:'Taste BADs',sport:'Food & drink collabs',icon:'taste',noType:true,side:true}
 };
-const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
-const LEVEL_FREE=['retreat','vibe'];
+/* side quests: collaborations and everything off the court. They book like sessions but live on their own tab. */
+const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
+const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+const LEVEL_FREE=['retreat','vibe','taste'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
 const PLAYABLE=['badminton','volleyball','pickleball','run','basketball','dance'];
 const TYPES={
@@ -231,4 +236,4 @@ const fullAdmin=()=>['owner','founder','app'].includes(myRole());
 const canManageAdmins=()=>['owner','founder'].includes(myRole());
 const canSport=k=>fullAdmin()||(myRole()==='cm'&&mySports().includes(k||'badminton'));
 const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a&&['founder','app','cm'].includes(a.role)?{role:a.role,sports:a.sports||[]}:null};
-const roleLabel=r=>!r?'':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';
+const roleLabel=r=>!r?'':r.role==='owner'?'Owner · every department':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';

@@ -1,8 +1,8 @@
 /* ---------- navigation ---------- */
-const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 function setView(v){S.view=v;
-  for(const id of ['card','play','courts','create','club','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['card','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',(b.dataset.v===v||(v==='create'&&b.dataset.v==='card'))?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -14,7 +14,7 @@ function render(){
   renderNow();
 }
 function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canSport(S.courtSport)&&!S.asPlayer));
-  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -37,6 +37,13 @@ function roster(sid){
 }
 function feeFor(s,whenIso){const h=(sessStart(s)-new Date(whenIso))/36e5,f=Number(s.fee)||0;
   if(h>=CFG.freeHours)return{amount:0,label:'No charge'};if(h>=CFG.halfHours)return{amount:f/2,label:'Half fee'};return{amount:f,label:'Full fee'}}
+/* staff take someone off a session. Inside the 48 hours the drop counts as a late cancellation, so the same fee
+   applies as if they had dropped themselves (half from 48 to 24 hours, full under 24). charge=false removes them with no fee. */
+const dropFee=sid=>S.sessions[sid]?feeFor(S.sessions[sid],new Date().toISOString()):{amount:0,label:'No charge'};
+async function staffDrop(uid,sid,gi,charge){const t=new Date().toISOString(),g=gi===''||gi==null?null:+gi;
+  return staffBooking(uid,sid,o=>{if(!o)return undefined;
+    if(g==null)return charge?{...o,out:t,guests:(o.guests||[]).map(x=>x.out?x:{...x,out:t})}:null;
+    return{...o,guests:charge?(o.guests||[]).map((x,i)=>i===g?{...x,out:t}:x):(o.guests||[]).filter((_,i)=>i!==g)}})}
 function upcoming(){const now=Date.now()-2*36e5;return Object.entries(S.sessions).filter(([,s])=>sessStart(s)>now).sort((a,b)=>sessStart(a[1])-sessStart(b[1]))}
 let pendingOut=null,guestFor=null,payFor=null;
 /* Bookings: one change to one session per save, named in op (join, leave, guest or pay), with server times,
@@ -91,8 +98,8 @@ async function dropGuest(sid,gi,late){const now=new Date().toISOString();
 
 function renderPlay(){
   const el=$('v-play'),me=myProfile();
-  const used=[...new Set(Object.values(S.sessions).map(s=>s.sport||'badminton'))].filter(k=>SPORTS[k]);
-  const list=upcoming().filter(([,s])=>S.sport==='all'||(s.sport||'badminton')===S.sport);
+  const used=[...new Set(Object.values(S.sessions).map(s=>s.sport||'badminton'))].filter(k=>SPORTS[k]&&!isSide(k));if(isSide(S.sport))S.sport='all';
+  const list=upcoming().filter(([,s])=>!isSide(s.sport)&&(S.sport==='all'||(s.sport||'badminton')===S.sport));
   const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
     ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from Home</small></span>${ic('arrow')}</button>`:''})()}
@@ -193,7 +200,7 @@ function ptsTilesHTML(pt,fd,req){const c=PS();
       <div class="bar"><i style="width:${Math.min(100,pt.balance/c.free*100)}%"></i></div>
       ${pt.playBy?`<span class="fine">Play by ${esc(fmtD(pt.playBy))} to keep them.</span>`:''}
       ${req?'<span class="tagl">Free session requested</span>':pt.canRedeem?(pt.unpaid?`<span class="fine">Please settle your AED ${pt.unpaid} first, then you can use your free session.</span>`:`<button class="btn sm" id="redeem">${ic('ticket')}Use ${c.free} for a free session</button>`):''}</div>`;
-  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div>
+  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="bstat"><span class="bimg">${badgeArt(pt.top?9:pt.levelIdx,{label:pt.level+' BADge'})}</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div></div>
       ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100)}%"></i></div>`:''}
       ${canGiveBadge()?`<button class="btn ghost sm" data-givebadge="">Give a BADge</button>`:''}</div>`;
   const pay=`<div class="paystat ${pt.unpaid?'owe':'ok'}">${pt.unpaid?`${ic('wallet')}<span>AED ${pt.unpaid} unpaid</span>`:`${ic('check')}<span>Paid up</span>`}</div>`;
@@ -276,8 +283,9 @@ function renderCard(){
           <div class="row" style="margin-top:6px"><button class="btn sm" id="share-inv">${ic('arrow')}Share invite</button><button class="btn ghost sm" id="copy-ref">${ic('copy')}Copy code</button></div></div></div></section>
       <details class="hsec how"><summary class="ah">How points and BADges work</summary>
         <div class="howgrid"><div><h4>${ic('coin')}Points</h4><p>Every session you join earns you ${PS().per} points, whatever you play. Collect ${PS().free} points and your next session is on us. Points reset if you go ${PS().expire} days without playing, so keep showing up.</p></div>
-        <div><h4>${ic('star')}BADges</h4><p>BADges are our way of saying thank you. The founders and crew give them for loyalty and BAD spirit: helping run a session, bringing a friend, showing up week after week, trying a new sport with us. BADges never expire. The more you collect, the higher your level: ${PS().levels.slice(1).map(l=>esc(l.k)).join(', ').replace(/, ([^,]*)$/,', then $1')}.</p></div></div>
-        <div class="list lvls">${PS().levels.map(l=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="tagl${l.k===pt.level?' solid':''}">${esc(l.k)}${+l.at?' · '+l.at:''}</span><span class="fine">${esc(l.d||'')}</span></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="tagl${pt.top?' solid':''}">${esc(topName())}</span><span class="fine">${esc(PS().top.d||'Reserved for the founders of BAD. Every perk, always.')}</span></div></div></details>
+        <div><h4>${ic('star')}BADges</h4><p>BADges are our way of saying thank you. The founders and crew give them for loyalty and BAD spirit: helping run a session, bringing a friend, showing up week after week, trying a new sport with us. BADges never expire. The more you collect, the higher your level: ${PS().levels.slice(1).map(l=>esc(l.k)).join(', ').replace(/, ([^,]*)$/,', then $1')}.</p></div>
+        <div><h4>${ic('badminton')}BAD levels</h4><p>${esc(LVL_NOTICE)} Levels go from F to A+, with a W or M rating, and are only used to make games fair.</p></div></div>
+        <div class="list lvls">${PS().levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{locked:!pt.top&&i>pt.levelIdx,label:l.k})}</span><span class="tagl${l.k===pt.level?' solid':''}">${esc(l.k)}${+l.at?' · '+l.at:''}</span><span class="fine">${esc(l.d||'')}</span></div>`).join('')}<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{locked:!pt.top,label:topName()})}</span><span class="tagl${pt.top?' solid':''}">${esc(topName())}</span><span class="fine">${esc(PS().top.d||'Reserved for the founders of BAD. Every perk, always.')}</span></div></div></details>
     </div></div>`;
   bindPlay(el);
   el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
@@ -333,6 +341,22 @@ async function requestFree(){const p=myProfile();if(!p||!S.db)return;
   try{await S.db.doc('requests/'+S.uid).set({player:p.listKey,at:new Date().toISOString(),type:'free-session'});toast('Thank you. An admin will confirm shortly.')}catch(e){toast("Sorry, that didn't send. Please ask an admin at the session.")}}
 
 /* ---------- club feed ---------- */
+/* ---------- Side Quests: collaborations and everything off the court ----------
+   Each quest is a session in a side department (Taste BADs for food and drink). People join, pay and drop out
+   exactly like a session, and earn event points after it. Posts for those departments show here too. */
+function renderQuests(){
+  const el=$('v-quests');if(!el)return;const f=S.questFilter&&SIDE.includes(S.questFilter)?S.questFilter:'all',today=todayIso();
+  const list=upcoming().filter(([,s])=>isSide(s.sport)&&(f==='all'||s.sport===f));
+  const past=Object.entries(S.sessions).filter(([,s])=>isSide(s.sport)&&sessStart(s)<Date.now()-2*36e5&&(f==='all'||s.sport===f)).sort((a,b)=>sessStart(b[1])-sessStart(a[1])).slice(0,6);
+  const posts=Object.entries(S.posts).filter(([,p])=>isSide(p.club)&&(f==='all'||p.club===f)&&(p.type!=='event'||(p.date||'')>=today)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
+  el.innerHTML=`<div class="hero"><span class="label">Side Quests</span><h2>Off the court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
+    ${SIDE.length>1?sportBar(f,'qf',SIDE):`<div class="qdepts">${SIDE.map(k=>`<div class="qdept">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(SPORTS[k].sport)}</span></div></div>`).join('')}</div>`}
+    ${list.length?`<div class="slist">${list.map(([sid,s])=>sessCard(sid,s)).join('')}</div>`:`<div class="empty">${ic('quest')}<span>No side quests posted yet. The next collab drops here first.</span></div>`}
+    ${posts.length?`<section class="hsec"><h3 class="ah">News from the collabs</h3><div class="list">${posts.map(([,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${esc(SPORTS[p.club]?.club||'')}${p.date?' · '+esc(fmtD(p.date)):''}${p.place?' · '+esc(p.place):''}</div>${p.body?`<p class="fine" style="margin:4px 0 0">${esc(p.body)}</p>`:''}</div>${p.link?`<a class="btn ghost sm" href="${esc(p.link)}" target="_blank" rel="noopener">Open${ic('arrow')}</a>`:''}</div>`).join('')}</div></section>`:''}
+    ${past.length?`<details class="hsec how"><summary class="ah">Past quests</summary><div class="list">${past.map(([,s])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(sportOf(s.sport).icon)}<div><div class="nm">${esc(s.title)}</div><div class="sub">${esc(fmtS(s))}${s.venue?' · '+esc(s.venue):''}</div></div></div>`).join('')}</div></details>`:''}`;
+  el.querySelectorAll('[data-qf]').forEach(b=>b.onclick=()=>{S.questFilter=b.dataset.qf;renderQuests()});
+  bindPlay(el);
+}
 function renderClub(){
   const el=$('v-club'),today=new Date().toISOString().slice(0,10),f=S.clubFilter;
   const ps=Object.entries(S.posts).filter(([,p])=>f==='all'||(p.club||'all')===f||p.club==='all');

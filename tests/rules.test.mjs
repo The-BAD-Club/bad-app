@@ -171,9 +171,21 @@ test('order prices, totals and status come from the product', async () => {
 // ---------- BADges, SOPs, notifications ----------
 test('only founders and crew give BADges', async () => {
   const b = { uid: 'p2', n: 1, reason: 'Crew help', byUid: 'crew1', synced: false };
-  await assertSucceeds(setDoc(doc(ctx('crew1', 'crew@x.com'), 'badges', 'b1'), b));
+  const m = new Date().toISOString().slice(0, 7);
+  const give = (db, uid, n, total, id) => { const w = writeBatch(db); w.set(doc(db, 'badgeq', `${uid}_${m}`), { n: total, u: 'x' }); w.set(doc(db, 'badges', id || `${uid}_${m}_${total}`), { ...b, byUid: uid, n }); return w.commit(); };
+  const crew = ctx('crew1', 'crew@x.com');
+  await assertFails(setDoc(doc(crew, 'badges', 'b1'), b));                               // crew must count it
+  await assertSucceeds(give(crew, 'crew1', 3, 3));
+  await assertFails(give(crew, 'crew1', 1, 3, `crew1_${m}_9`));                          // count must go up by n
+  await assertSucceeds(give(crew, 'crew1', 2, 5));
+  await assertFails(give(crew, 'crew1', 1, 6));                                           // 5 a month
   await assertFails(setDoc(doc(ctx('p1', 'p1@x.com'), 'badges', 'b2'), { ...b, byUid: 'p1' }));
-  await assertFails(setDoc(doc(ctx('crew1', 'crew@x.com'), 'badges', 'b3'), { ...b, n: 50 }));
+  await assertFails(setDoc(doc(crew, 'badges', 'b3'), { ...b, n: 50 }));
+  const cm = ctx('cm1', 'cm@x.com');
+  await assertSucceeds(give(cm, 'cm1', 5, 5));
+  await assertFails(give(cm, 'cm1', 1, 6));
+  const f = ctx('f1', 'founder@x.com');                                                    // founders: no limit, no counter
+  for (let i = 0; i < 7; i++) await assertSucceeds(setDoc(doc(f, 'badges', 'fb' + i), { ...b, byUid: 'f1', n: 5 }));
 });
 test('players read published player guides only', async () => {
   const db = ctx('p1', 'p1@x.com');

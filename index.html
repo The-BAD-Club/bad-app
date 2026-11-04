@@ -805,6 +805,15 @@ body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt
 .xbtn{border:0;background:none;color:inherit;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;padding:0;cursor:pointer}.xbtn svg.i{width:12px;height:12px}.xbtn:hover{background:var(--chip)}
 .pedit{margin-top:10px}.pedit,.pedit input{min-width:0;max-width:100%}.pedit input{width:100%;box-sizing:border-box}.pegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:4px 10px}.pegrid .field{margin:0 0 6px}.pesports{border:0;padding:0;margin:6px 0 0;min-width:0}.pesports .chips{flex-wrap:wrap}.pesports .chips{gap:6px;margin-top:4px}.pesports .chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;width:auto;min-height:32px;padding:4px 12px}.pesports .chip input{margin:0;width:auto}
 .manage{min-width:0}.manage summary{max-width:100%;flex-wrap:wrap}
+.qdepts{display:grid;gap:8px}.qdept{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}.qdept svg.i{width:22px;height:22px}.qdept div{display:grid}
+#v-quests{gap:16px}
+.li.arr .arrctl{gap:6px;flex-wrap:nowrap;justify-content:flex-end;align-items:center}.li.arr .arrctl>.fine{margin-right:4px}.li.arr .arrctl .btn.icon{min-width:34px}
+.acced{display:grid;gap:8px;margin-top:10px;min-width:0}.acced select{width:100%}.addadm{display:grid;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.bart{display:block;width:100%;height:100%}.bart.locked{opacity:.28;filter:grayscale(1)}
+.bstat{display:flex;align-items:center;gap:12px;min-width:0}.bimg{flex:none;width:52px;height:52px}.lvimg{display:block;width:34px;height:34px}
+.bgleft{margin:8px 0 0;font-size:.82rem}
+.v2{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:var(--r-lg,18px);background:linear-gradient(135deg,color-mix(in srgb,var(--ink) 6%,transparent),transparent)}.v2-h{display:grid;gap:4px}.v2-h h3{margin:0}
+@media (max-width:700px){.li.arr .arrctl{grid-column:2/-1;justify-content:flex-start;flex-wrap:wrap;min-width:0}.li.arr .arrctl>.fine,.li.arr .arrctl>.btn:not(.icon){margin-right:auto}}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -833,6 +842,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
       <button data-v="play"></button>
       <button data-v="courts"></button>
       <button data-v="club"></button>
+      <button data-v="quests" aria-label="Side Quests"></button>
       <button data-v="board"></button>
       <button data-v="shop"></button>
       <button data-v="admin" id="nav-admin" hidden></button>
@@ -852,6 +862,7 @@ html.gated .app,html.gated .tabs{visibility:hidden}
   </section>
   <section class="view" id="v-courts" hidden></section>
   <section class="view" id="v-club" hidden></section>
+  <section class="view" id="v-quests" hidden></section>
   <section class="view" id="v-board" hidden></section>
   <section class="view" id="v-shop" hidden></section>
   <section class="view" id="v-admin" hidden></section>
@@ -947,8 +958,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.15';
+const APP_VERSION='0.16';
 const CHANGES=[
+  ['0.16','2026-11-04','Side Quests tab with Taste BADs (food and drink collabs: join like a session, earn event points); community managers get a tick box per department, many per department, owners run all; BADge designs for each level; community managers and crew give up to 5 BADges a month, founders unlimited; Volume II last pieces in the Shop; check-in: reorder or reshuffle arrivals, × to remove, cancellations inside 48 hours charged (half or full fee, or no charge); links straight to a tab (#shop, #quests)'],
   ['0.15','2026-11-04','Edit a player with a Save button (Admin → Players → Edit); no-show list: × per date, − and +, remove a player, add a player by hand; community managers now only manage their own club (an admin entry without a role gives no access)'],
   ['0.14','2026-11-04','Design review: phone tab bar back at the bottom (it sat over the logo), no overlapping buttons on any screen; ∞ BADges for Founders; FRAGMENTS RELEASE pre-order in the Shop; Home shows checked games\' results'],
   ['0.13','2026-11-04','Cancel a session and email everyone who signed up; payment dashboard per session with reminders by email or WhatsApp; payments saved in each player\'s own record so players see their own status'],
@@ -1007,6 +1019,8 @@ const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 /* ---------- icons (stroke, currentColor) ---------- */
 const P={
+ taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
+ quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
  truck:'<path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
  minus:'<path d="M5 12h14"/>',
@@ -1059,10 +1073,13 @@ const SPORTS={
  basketball:{club:'BADSHOTS',sport:'Basketball',icon:'basketball'},
  training:{club:'Training Department',sport:'Training',icon:'training',noType:true},
  retreat:{club:'BAD Retreat',sport:'Retreats',icon:'retreat',noType:true},
- vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true}
+ vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true},
+ taste:{club:'Taste BADs',sport:'Food & drink collabs',icon:'taste',noType:true,side:true}
 };
-const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
-const LEVEL_FREE=['retreat','vibe'];
+/* side quests: collaborations and everything off the court. They book like sessions but live on their own tab. */
+const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
+const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+const LEVEL_FREE=['retreat','vibe','taste'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
 const PLAYABLE=['badminton','volleyball','pickleball','run','basketball','dance'];
 const TYPES={
@@ -1202,7 +1219,7 @@ const fullAdmin=()=>['owner','founder','app'].includes(myRole());
 const canManageAdmins=()=>['owner','founder'].includes(myRole());
 const canSport=k=>fullAdmin()||(myRole()==='cm'&&mySports().includes(k||'badminton'));
 const adminRec=e=>{e=String(e||'').toLowerCase();if((window.BAD_ADMINS||[]).map(x=>x.toLowerCase()).includes(e))return{role:'owner',sports:[]};const a=(S.admins||{})[e];return a&&['founder','app','cm'].includes(a.role)?{role:a.role,sports:a.sports||[]}:null};
-const roleLabel=r=>!r?'':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';
+const roleLabel=r=>!r?'':r.role==='owner'?'Owner · every department':r.role==='cm'?`Community manager · ${(r.sports||[]).map(k=>SPORTS[k]?.club||k).join(', ')||'no sport yet'}`:(ROLES[r.role]||{}).k||'Admin';
 
 /* ---------- Points and BADges ----------
    The numbers live on the "Points Settings" tab of BAD APP – Master. The Apps Script copies them into
@@ -1225,7 +1242,13 @@ const myEntries=uid=>(S.ledger||[]).filter(e=>isV2(e)&&e.uid===uid);
 const myBadges=uid=>Object.entries(S.badges||{}).map(([id,b])=>({...b,_id:id})).filter(b=>b.uid===uid);
 const staffTypes=['Founder','Crew','Community Manager'];
 /* founders and crew (membership level Founder, Crew or Community Manager) can give BADges */
-const canGiveBadge=()=>{if(!S.uid)return false;const m=memStatus(S.uid);return m.state==='verified'&&staffTypes.includes(m.type)};
+const canGiveBadge=()=>{if(!S.uid)return false;const m=memStatus(S.uid);return (m.state==='verified'&&staffTypes.includes(m.type))||(S.canEdit&&!!myRole())};
+/* founders give BADges freely; everyone else (community managers, crew) has a monthly allowance, also checked by the server */
+const BADGE_MONTH=5;
+const badgeFree=()=>!!S.uid&&(isFounder(S.uid)||['owner','founder'].includes(myRole()));
+const monthKey=()=>new Date().toISOString().slice(0,7);
+const badgeLeft=()=>badgeFree()?Infinity:Math.max(0,BADGE_MONTH-((S.badgeQ&&S.badgeQ.m===monthKey())?S.badgeQ.n:0));
+async function loadBadgeQ(){if(!S.db||!S.uid||badgeFree())return;const m=monthKey();try{const d=await S.db.doc(`badgeq/${S.uid}_${m}`).get();S.badgeQ={m,n:d.exists?(d.data().n||0):0}}catch(_){S.badgeQ={m,n:0}}}
 const addDays=(iso,d)=>{const t=new Date(String(iso).slice(0,10)+'T12:00:00');t.setDate(t.getDate()+d);return t.toISOString().slice(0,10)};
 const todayIso=()=>new Date(Date.now()+4*36e5).toISOString().slice(0,10);
 /* everything a player sees about their points and BADges */
@@ -1240,6 +1263,21 @@ function pointsFor(uid){const c=PS(),row=sheetRow(uid)||{},launch=c.launch||'',s
     badges:bdg,level:lv.k,levelIdx:lv.i,next:lv.next,toNext:lv.next?lv.next.at-bdg:0,top:lv.top,unpaid:appUnpaid+sheetUnpaid,appUnpaid,sheetUnpaid}}
 function levelFor(uid,n){const L=PS().levels;if(uid&&isFounder(uid))return{k:topName(),i:L.length,top:true,next:null};let i=0;L.forEach((l,j)=>{if(n>=(Number(l.at)||0))i=j});return{k:L[i].k,i,top:false,next:L[i+1]||null}}
 function badgeCount(uid){const row=sheetRow(uid)||{};return (Number(row.badges)||0)+myBadges(uid).filter(b=>!b.synced).reduce((t,b)=>t+(Number(b.n)||1),0)}
+/* BADge art by level: 0 Rookie, 1 Member, 2 Core, 3 Legend, 4 Founder (∞). Brand colours only: black, white, silver. */
+let BA_N=0;
+function badgeArt(i,o={}){const id='ba'+(++BA_N),lk=o.locked?' locked':'';
+  const silver=`<linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f4f4"/><stop offset=".45" stop-color="#b9b9b9"/><stop offset=".55" stop-color="#d9d9d9"/><stop offset="1" stop-color="#7d7d7d"/></linearGradient>`;
+  const chev=(n,y0,c,w=2.6)=>Array.from({length:n},(_,k)=>`<path d="M22 ${y0+k*6}l10 -6 10 6" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+  const hex=(r,cx=32,cy=32)=>Array.from({length:6},(_,k)=>{const a=Math.PI/3*k-Math.PI/2;return `${(cx+r*Math.cos(a)).toFixed(2)},${(cy+r*Math.sin(a)).toFixed(2)}`}).join(' ');
+  const star=(R,r,cx=32,cy=32,n=5)=>Array.from({length:n*2},(_,k)=>{const a=Math.PI/n*k-Math.PI/2,q=k%2?r:R;return `${(cx+q*Math.cos(a)).toFixed(2)},${(cy+q*Math.sin(a)).toFixed(2)}`}).join(' ');
+  const rays=(n,r1,r2,c,w)=>Array.from({length:n},(_,k)=>{const a=2*Math.PI/n*k;return `<line x1="${(32+r1*Math.cos(a)).toFixed(2)}" y1="${(32+r1*Math.sin(a)).toFixed(2)}" x2="${(32+r2*Math.cos(a)).toFixed(2)}" y2="${(32+r2*Math.sin(a)).toFixed(2)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`}).join('');
+  let g='';
+  if(i<=0)g=`<circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" stroke-width=".8" stroke-dasharray="1.5 2.5" opacity=".6"/>${chev(1,36,'currentColor')}`;
+  else if(i===1)g=`<defs>${silver}</defs><circle cx="32" cy="32" r="28" fill="url(#${id}s)"/><circle cx="32" cy="32" r="23.5" fill="none" stroke="#111" stroke-width="1" opacity=".55"/>${chev(2,33,'#111')}`;
+  else if(i===2)g=`<defs>${silver}</defs><polygon points="${hex(29)}" fill="url(#${id}s)"/><polygon points="${hex(24)}" fill="none" stroke="#111" stroke-width="1" opacity=".55"/>${chev(3,30,'#111')}`;
+  else if(i===3)g=`<defs>${silver}</defs><polygon points="${hex(30)}" fill="url(#${id}s)"/><polygon points="${hex(27)}" fill="#0b0b0b"/>${rays(12,19,23.5,'#9a9a9a',1.2)}<polygon points="${star(13,5.6)}" fill="url(#${id}s)"/>`;
+  else g=`<defs>${silver}</defs><circle cx="32" cy="32" r="30" fill="url(#${id}s)"/><circle cx="32" cy="32" r="27.4" fill="#000"/>${rays(24,20.5,25.5,'#d0d0d0',1.1)}<circle cx="32" cy="32" r="18.5" fill="none" stroke="url(#${id}s)" stroke-width="1.4"/><path d="M32 32c-3.2-4.6-6.4-6.4-9-6.4a6.4 6.4 0 0 0 0 12.8c2.6 0 5.8-1.8 9-6.4zm0 0c3.2 4.6 6.4 6.4 9 6.4a6.4 6.4 0 0 0 0-12.8c-2.6 0-5.8 1.8-9 6.4z" fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>`;
+  return `<svg class="bart${lk}" viewBox="0 0 64 64" role="img" aria-label="${o.label||''}">${g}</svg>`}
 const levelIdx=uid=>uid?levelFor(uid,badgeCount(uid)).i:0;
 /* perks, by level index: 1 Member, 2 Core, 3 Legend, 4 top */
 const perk={early:uid=>levelIdx(uid)>=1,skipWait:uid=>levelIdx(uid)>=2,merchOff:uid=>{const i=levelIdx(uid);return i>=3?10:i>=2?5:0},firstPick:uid=>levelIdx(uid)>=3};
@@ -1253,16 +1291,16 @@ function statsFor(k){const pr=profileByKey(k),uid=pr&&pr[0];if(!uid)return{earne
 /* ---------- give a BADge ---------- */
 let BG={open:false,uid:'',n:1,reason:'',custom:'',q:''};
 function badgeSheet(){const c=PS(),ps=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&u!==S.uid).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||'')),sel=BG.uid&&S.profiles[BG.uid];
-  const isAb=/above and beyond/i.test(BG.reason),max=isAb||BG.reason==='__custom'?5:1;if(BG.n>max)BG.n=max;
+  const isAb=/above and beyond/i.test(BG.reason),left=badgeLeft(),max=Math.min(isAb||BG.reason==='__custom'?5:1,left);if(BG.n>max)BG.n=Math.max(1,max);
   return `<div class="sheet-ov" data-bgclose="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Give a BADge"><button class="sheet-x" data-bgclose="1" aria-label="Close">${ic('x')}</button>
-    <div class="sheet-in" style="padding:20px;display:grid;gap:16px"><div><span class="label">Founders and crew</span><h2 style="margin:4px 0 0">Give a BADge</h2><p class="fine" style="margin:6px 0 0">BADges say thank you for loyalty and BAD spirit. They never expire.</p></div>
+    <div class="sheet-in" style="padding:20px;display:grid;gap:16px"><div><span class="label">Founders and crew</span><h2 style="margin:4px 0 0">Give a BADge</h2><p class="fine" style="margin:6px 0 0">BADges say thank you for loyalty and BAD spirit. They never expire.</p>${badgeFree()?'':`<p class="bgleft ${left?'':'warn-t'}"><b class="num">${left}</b> of ${BADGE_MONTH} left to give this month${left?'':'. Your allowance resets on the 1st. Founders can still give one.'}</p>`}</div>
     <div class="field" style="margin:0"><span class="lbl">Who for?</span>${sel?`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(sel,sel.listKey)}<div><div class="nm">${esc(sel.nickname||'')}</div><div class="sub">${trackerName(BG.uid)?esc(trackerName(BG.uid))+' on the tracker':'<span class="warn-t">No name on tracker yet. An admin can add it.</span>'}</div></div><button class="chip sm" data-bgpick="">Change</button></div>`
       :`<input type="search" id="bg-q" placeholder="Search a player" value="${esc(BG.q)}" aria-label="Search a player"><div class="list bgpick">${ps.filter(([,p])=>!BG.q||(p.nickname+' '+(p.listName||'')).toLowerCase().includes(BG.q.toLowerCase())).slice(0,8).map(([u,p])=>`<button type="button" class="li" data-bgpick="${esc(u)}" style="grid-template-columns:auto minmax(0,1fr) auto;text-align:left">${avatar(p,p.listKey)}<span class="nm">${esc(p.nickname||'')}</span><span class="fine">${pointsFor(u).badges} BADges</span></button>`).join('')||'<p class="hint">No one found.</p>'}</div>`}</div>
     <div class="field" style="margin:0"><span class="lbl">Why?</span><div class="chips">${c.reasons.map(r=>`<button type="button" class="chip" data-bgr="${esc(r.k)}" aria-pressed="${BG.reason===r.k}" title="${esc(r.eg||'')}">${esc(r.k)}</button>`).join('')}<button type="button" class="chip" data-bgr="__custom" aria-pressed="${BG.reason==='__custom'}">${ic('edit')}Something else</button></div>
       ${BG.reason==='__custom'?`<input id="bg-custom" maxlength="80" placeholder="Type the reason" value="${esc(BG.custom)}" style="margin-top:8px">`:BG.reason?`<p class="fine" style="margin:8px 0 0">${esc((c.reasons.find(r=>r.k===BG.reason)||{}).eg||'')}</p>`:''}</div>
-    ${max>1?`<div class="field" style="margin:0"><span class="lbl">How many?</span><div class="chips">${[1,2,3,4,5].map(n=>`<button type="button" class="chip" data-bgn="${n}" aria-pressed="${BG.n===n}">${n}</button>`).join('')}</div></div>`:''}
-    <button class="btn wide" data-bggive="1" ${sel&&BG.reason&&(BG.reason!=='__custom'||BG.custom.trim())?'':'disabled'}>${ic('star')}Give ${BG.n} BADge${BG.n>1?'s':''}${sel?' to '+esc(sel.nickname||''):''}</button></div></div></div>`}
-function openBadge(uid){BG={open:true,uid:uid||'',n:1,reason:'',custom:'',q:''};drawBadge()}
+    ${max>1?`<div class="field" style="margin:0"><span class="lbl">How many?</span><div class="chips">${[1,2,3,4,5].filter(n=>n<=max).map(n=>`<button type="button" class="chip" data-bgn="${n}" aria-pressed="${BG.n===n}">${n}</button>`).join('')}</div></div>`:''}
+    <button class="btn wide" data-bggive="1" ${left>0&&sel&&BG.reason&&(BG.reason!=='__custom'||BG.custom.trim())?'':'disabled'}>${ic('star')}Give ${BG.n} BADge${BG.n>1?'s':''}${sel?' to '+esc(sel.nickname||''):''}</button></div></div></div>`}
+function openBadge(uid){BG={open:true,uid:uid||'',n:1,reason:'',custom:'',q:''};drawBadge();loadBadgeQ().then(()=>{if(BG.open)drawBadge()})}
 function drawBadge(){let h=$('bg-host');if(!h){h=document.createElement('div');h.id='bg-host';document.body.appendChild(h)}
   if(!BG.open){h.innerHTML='';document.documentElement.classList.remove('sheet-open');return}
   const f=document.activeElement&&document.activeElement.id;h.innerHTML=badgeSheet();document.documentElement.classList.add('sheet-open');
@@ -1277,7 +1315,10 @@ function drawBadge(){let h=$('bg-host');if(!h){h=document.createElement('div');h
   const cu=$('bg-custom');if(cu)cu.oninput=()=>{BG.custom=cu.value;const b=h.querySelector('[data-bggive]');if(b)b.disabled=!cu.value.trim()}}
 async function giveBadge(){const p=S.profiles[BG.uid];if(!p||!S.db)return;const reason=BG.reason==='__custom'?BG.custom.trim():BG.reason;if(!reason)return;
   const me=myProfile()||{},d={date:todayIso(),uid:BG.uid,player:trackerName(BG.uid)||p.nickname||'',name:p.nickname||'',n:BG.n,reason,by:(me.listName||me.nickname||window.BAD_USER?.name||'').trim(),byEmail:window.BAD_USER?.email||'',byUid:S.uid,at:new Date().toISOString(),synced:false};
-  try{await S.db.collection('badges').add(d);toast(`${BG.n} BADge${BG.n>1?'s':''} for ${p.nickname}. Thank you.`);BG.open=false;drawBadge()}catch(e){console.warn(e);toast("Sorry, that didn't save. Please publish the latest rules and try again.")}}
+  try{if(badgeFree())await S.db.collection('badges').add(d);
+    else{const m=monthKey();await loadBadgeQ();const n=(S.badgeQ.n||0)+BG.n;if(n>BADGE_MONTH){toast(`That's more than your ${BADGE_MONTH} BADges this month. ${BADGE_MONTH-S.badgeQ.n} left.`);drawBadge();return}
+      const b=S.db.batch();b.set(S.db.doc(`badgeq/${S.uid}_${m}`),{n,u:new Date().toISOString()});b.set(S.db.doc(`badges/${S.uid}_${m}_${n}`),d);await b.commit();S.badgeQ={m,n}}
+    toast(`${BG.n} BADge${BG.n>1?'s':''} for ${p.nickname}. Thank you.`);BG.open=false;drawBadge()}catch(e){console.warn(e);toast("Sorry, that didn't save. Please publish the latest rules and try again.")}}
 
 /* ---------- points entries: events, retreats, no-shows, free sessions, adjustments ---------- */
 async function addLedger(id,o){const c=PS(),pts=o.pts!=null&&o.pts!==''?Number(o.pts):(c.other[o.type]||0);
@@ -1288,6 +1329,9 @@ async function autoPoints(){if(!S.canEdit||!S.db||S._autoPts)return;const c=PS()
   try{const have=new Set((S.ledger||[]).map(e=>e._id)),now=Date.now(),put=async(id,o)=>{if(have.has(id))return;have.add(id);try{await addLedger(id,o)}catch(_){}};
     for(const [sid,s] of Object.entries(S.sessions)){if(!s.date||s.date<c.launch||!canSport(s.sport))continue;const dept=sportOf(s.sport).club,t=`${s.title||dept} · ${fmtD(s.date)}`;
       for(const e of roster(sid).late)if(!e.guest)await put(`late-${sid}-${e.uid}`,{uid:e.uid,type:'No-show',dept,date:s.date,sid,reason:'Late cancellation: '+t});
+      /* side quests (collabs): everyone in the event earns event points 12 hours after it starts, unless marked as a no-show */
+      if(isSide(s.sport)&&sessStart(s)<now-12*36e5){const nsk=new Set(Object.values(S.noshows||{}).filter(n=>(n.dates||[]).includes(sid)).map(n=>n.player));
+        for(const e of roster(sid).in)if(!e.guest&&!nsk.has(e.key))await put(`quest-${sid}-${e.uid}`,{uid:e.uid,type:'Event or tournament',dept,date:s.date,sid,reason:'Side quest: '+t})}
       if(s.sport==='retreat'&&sessStart(s)<now)for(const [uid,P] of Object.entries(S.payments[sid]||{}))if(P&&P.ok&&!P.waived)await put(`ret-${sid}-${uid}`,{uid,type:'BAD Retreat',dept,date:s.date,sid,reason:t})}
     for(const n of Object.values(S.noshows||{})){const pr=profileByKey(n.player);if(!pr)continue;
       for(const d of (n.dates||[])){if(d.includes('#'))continue;const s=S.sessions[d];if(!s||!s.date||s.date<c.launch)continue;await put(`ns-${d}-${pr[0]}`,{uid:pr[0],type:'No-show',dept:sportOf(s.sport).club,date:s.date,sid:d,reason:`No-show: ${s.title||sportOf(s.sport).club} · ${fmtD(s.date)}`})}}
@@ -1489,10 +1533,10 @@ function gradePickHTML(){
     <p class="fine">Used only to balance games, and shown on your card as W or M. Crew confirm it.</p></div>`}
 
 /* ---------- navigation ---------- */
-const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={card:['card','Home'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 function setView(v){S.view=v;
-  for(const id of ['card','play','courts','create','club','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['card','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',(b.dataset.v===v||(v==='create'&&b.dataset.v==='card'))?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -1504,7 +1548,7 @@ function render(){
   renderNow();
 }
 function renderNow(){$('nav-admin').hidden=!S.canEdit;document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canSport(S.courtSport)&&!S.asPlayer));
-  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -1527,6 +1571,13 @@ function roster(sid){
 }
 function feeFor(s,whenIso){const h=(sessStart(s)-new Date(whenIso))/36e5,f=Number(s.fee)||0;
   if(h>=CFG.freeHours)return{amount:0,label:'No charge'};if(h>=CFG.halfHours)return{amount:f/2,label:'Half fee'};return{amount:f,label:'Full fee'}}
+/* staff take someone off a session. Inside the 48 hours the drop counts as a late cancellation, so the same fee
+   applies as if they had dropped themselves (half from 48 to 24 hours, full under 24). charge=false removes them with no fee. */
+const dropFee=sid=>S.sessions[sid]?feeFor(S.sessions[sid],new Date().toISOString()):{amount:0,label:'No charge'};
+async function staffDrop(uid,sid,gi,charge){const t=new Date().toISOString(),g=gi===''||gi==null?null:+gi;
+  return staffBooking(uid,sid,o=>{if(!o)return undefined;
+    if(g==null)return charge?{...o,out:t,guests:(o.guests||[]).map(x=>x.out?x:{...x,out:t})}:null;
+    return{...o,guests:charge?(o.guests||[]).map((x,i)=>i===g?{...x,out:t}:x):(o.guests||[]).filter((_,i)=>i!==g)}})}
 function upcoming(){const now=Date.now()-2*36e5;return Object.entries(S.sessions).filter(([,s])=>sessStart(s)>now).sort((a,b)=>sessStart(a[1])-sessStart(b[1]))}
 let pendingOut=null,guestFor=null,payFor=null;
 /* Bookings: one change to one session per save, named in op (join, leave, guest or pay), with server times,
@@ -1581,8 +1632,8 @@ async function dropGuest(sid,gi,late){const now=new Date().toISOString();
 
 function renderPlay(){
   const el=$('v-play'),me=myProfile();
-  const used=[...new Set(Object.values(S.sessions).map(s=>s.sport||'badminton'))].filter(k=>SPORTS[k]);
-  const list=upcoming().filter(([,s])=>S.sport==='all'||(s.sport||'badminton')===S.sport);
+  const used=[...new Set(Object.values(S.sessions).map(s=>s.sport||'badminton'))].filter(k=>SPORTS[k]&&!isSide(k));if(isSide(S.sport))S.sport='all';
+  const list=upcoming().filter(([,s])=>!isSide(s.sport)&&(S.sport==='all'||(s.sport||'badminton')===S.sport));
   const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
     ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from Home</small></span>${ic('arrow')}</button>`:''})()}
@@ -1683,7 +1734,7 @@ function ptsTilesHTML(pt,fd,req){const c=PS();
       <div class="bar"><i style="width:${Math.min(100,pt.balance/c.free*100)}%"></i></div>
       ${pt.playBy?`<span class="fine">Play by ${esc(fmtD(pt.playBy))} to keep them.</span>`:''}
       ${req?'<span class="tagl">Free session requested</span>':pt.canRedeem?(pt.unpaid?`<span class="fine">Please settle your AED ${pt.unpaid} first, then you can use your free session.</span>`:`<button class="btn sm" id="redeem">${ic('ticket')}Use ${c.free} for a free session</button>`):''}</div>`;
-  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div>
+  const bd=`<div class="tile hs btile"><span class="label">BADges</span><div class="bstat"><span class="bimg">${badgeArt(pt.top?9:pt.levelIdx,{label:pt.level+' BADge'})}</span><div class="stat"><b class="num">${fd?'<span class="inf">∞</span>':pt.badges}</b><span class="fine"><span class="lvl">${esc(pt.level)}</span>${pt.top?' · every perk':pt.next?` · ${pt.toNext} more to ${esc(pt.next.k)}`:' · top BADge level'}</span></div></div>
       ${!pt.top&&pt.next?`<div class="bar"><i style="width:${Math.min(100,(pt.badges-(+(PS().levels[pt.levelIdx]||{}).at||0))/Math.max(1,(+pt.next.at)-(+(PS().levels[pt.levelIdx]||{}).at||0))*100)}%"></i></div>`:''}
       ${canGiveBadge()?`<button class="btn ghost sm" data-givebadge="">Give a BADge</button>`:''}</div>`;
   const pay=`<div class="paystat ${pt.unpaid?'owe':'ok'}">${pt.unpaid?`${ic('wallet')}<span>AED ${pt.unpaid} unpaid</span>`:`${ic('check')}<span>Paid up</span>`}</div>`;
@@ -1766,8 +1817,9 @@ function renderCard(){
           <div class="row" style="margin-top:6px"><button class="btn sm" id="share-inv">${ic('arrow')}Share invite</button><button class="btn ghost sm" id="copy-ref">${ic('copy')}Copy code</button></div></div></div></section>
       <details class="hsec how"><summary class="ah">How points and BADges work</summary>
         <div class="howgrid"><div><h4>${ic('coin')}Points</h4><p>Every session you join earns you ${PS().per} points, whatever you play. Collect ${PS().free} points and your next session is on us. Points reset if you go ${PS().expire} days without playing, so keep showing up.</p></div>
-        <div><h4>${ic('star')}BADges</h4><p>BADges are our way of saying thank you. The founders and crew give them for loyalty and BAD spirit: helping run a session, bringing a friend, showing up week after week, trying a new sport with us. BADges never expire. The more you collect, the higher your level: ${PS().levels.slice(1).map(l=>esc(l.k)).join(', ').replace(/, ([^,]*)$/,', then $1')}.</p></div></div>
-        <div class="list lvls">${PS().levels.map(l=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="tagl${l.k===pt.level?' solid':''}">${esc(l.k)}${+l.at?' · '+l.at:''}</span><span class="fine">${esc(l.d||'')}</span></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="tagl${pt.top?' solid':''}">${esc(topName())}</span><span class="fine">${esc(PS().top.d||'Reserved for the founders of BAD. Every perk, always.')}</span></div></div></details>
+        <div><h4>${ic('star')}BADges</h4><p>BADges are our way of saying thank you. The founders and crew give them for loyalty and BAD spirit: helping run a session, bringing a friend, showing up week after week, trying a new sport with us. BADges never expire. The more you collect, the higher your level: ${PS().levels.slice(1).map(l=>esc(l.k)).join(', ').replace(/, ([^,]*)$/,', then $1')}.</p></div>
+        <div><h4>${ic('badminton')}BAD levels</h4><p>${esc(LVL_NOTICE)} Levels go from F to A+, with a W or M rating, and are only used to make games fair.</p></div></div>
+        <div class="list lvls">${PS().levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{locked:!pt.top&&i>pt.levelIdx,label:l.k})}</span><span class="tagl${l.k===pt.level?' solid':''}">${esc(l.k)}${+l.at?' · '+l.at:''}</span><span class="fine">${esc(l.d||'')}</span></div>`).join('')}<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{locked:!pt.top,label:topName()})}</span><span class="tagl${pt.top?' solid':''}">${esc(topName())}</span><span class="fine">${esc(PS().top.d||'Reserved for the founders of BAD. Every perk, always.')}</span></div></div></details>
     </div></div>`;
   bindPlay(el);
   el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
@@ -1823,6 +1875,22 @@ async function requestFree(){const p=myProfile();if(!p||!S.db)return;
   try{await S.db.doc('requests/'+S.uid).set({player:p.listKey,at:new Date().toISOString(),type:'free-session'});toast('Thank you. An admin will confirm shortly.')}catch(e){toast("Sorry, that didn't send. Please ask an admin at the session.")}}
 
 /* ---------- club feed ---------- */
+/* ---------- Side Quests: collaborations and everything off the court ----------
+   Each quest is a session in a side department (Taste BADs for food and drink). People join, pay and drop out
+   exactly like a session, and earn event points after it. Posts for those departments show here too. */
+function renderQuests(){
+  const el=$('v-quests');if(!el)return;const f=S.questFilter&&SIDE.includes(S.questFilter)?S.questFilter:'all',today=todayIso();
+  const list=upcoming().filter(([,s])=>isSide(s.sport)&&(f==='all'||s.sport===f));
+  const past=Object.entries(S.sessions).filter(([,s])=>isSide(s.sport)&&sessStart(s)<Date.now()-2*36e5&&(f==='all'||s.sport===f)).sort((a,b)=>sessStart(b[1])-sessStart(a[1])).slice(0,6);
+  const posts=Object.entries(S.posts).filter(([,p])=>isSide(p.club)&&(f==='all'||p.club===f)&&(p.type!=='event'||(p.date||'')>=today)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
+  el.innerHTML=`<div class="hero"><span class="label">Side Quests</span><h2>Off the court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
+    ${SIDE.length>1?sportBar(f,'qf',SIDE):`<div class="qdepts">${SIDE.map(k=>`<div class="qdept">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(SPORTS[k].sport)}</span></div></div>`).join('')}</div>`}
+    ${list.length?`<div class="slist">${list.map(([sid,s])=>sessCard(sid,s)).join('')}</div>`:`<div class="empty">${ic('quest')}<span>No side quests posted yet. The next collab drops here first.</span></div>`}
+    ${posts.length?`<section class="hsec"><h3 class="ah">News from the collabs</h3><div class="list">${posts.map(([,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${esc(SPORTS[p.club]?.club||'')}${p.date?' · '+esc(fmtD(p.date)):''}${p.place?' · '+esc(p.place):''}</div>${p.body?`<p class="fine" style="margin:4px 0 0">${esc(p.body)}</p>`:''}</div>${p.link?`<a class="btn ghost sm" href="${esc(p.link)}" target="_blank" rel="noopener">Open${ic('arrow')}</a>`:''}</div>`).join('')}</div></section>`:''}
+    ${past.length?`<details class="hsec how"><summary class="ah">Past quests</summary><div class="list">${past.map(([,s])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(sportOf(s.sport).icon)}<div><div class="nm">${esc(s.title)}</div><div class="sub">${esc(fmtS(s))}${s.venue?' · '+esc(s.venue):''}</div></div></div>`).join('')}</div></details>`:''}`;
+  el.querySelectorAll('[data-qf]').forEach(b=>b.onclick=()=>{S.questFilter=b.dataset.qf;renderQuests()});
+  bindPlay(el);
+}
 function renderClub(){
   const el=$('v-club'),today=new Date().toISOString().slice(0,10),f=S.clubFilter;
   const ps=Object.entries(S.posts).filter(([,p])=>f==='all'||(p.club||'all')===f||p.club==='all');
@@ -2150,7 +2218,7 @@ function startBoard(sid){const sp=S.sessions[sid].sport||'badminton';
   toast('Court board is open. Next, check players in as they arrive.')}
 
 /* ---------- render ---------- */
-S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='',ciEdit=null,ciRm=false,finishAsk=null;
+S.courtStep=3;S.asPlayer=false;let pendingDone=null,cancelAsk=null,cancelWhy='',walkCat='',ciEdit=null,ciRm=false,ciShuf=false,finishAsk=null;
 const CANCEL_REASONS=['Injury','Player had to leave','Wrong lineup','Court problem','Other'];
 /* timers on playing courts tick once a minute without redrawing the board */
 setInterval(()=>document.querySelectorAll('.timer[data-t0]').forEach(t=>{const m=msOf(t.dataset.t0);if(isFinite(m))t.textContent=Math.max(0,Math.floor((Date.now()-m-Number(t.dataset.pm||0))/60000))+' min'}),20000);
@@ -2185,7 +2253,7 @@ function waitRow(sid,w,wi,edit){
 /* check-in list: rename a guest or walk-in, or take anyone off tonight's list */
 function ciEditor(sid,p){const x=who(sid,p),member=!!x.uid&&!!S.profiles[p],admin=S.canEdit&&canSport((S.sessions[sid]||{}).sport||'badminton');
   return `<div class="cied">${member?`<p class="fine">${esc(x.name)} is a member, so their name comes from their card.</p>`:`<label class="fine" for="ci-nm">Name</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input type="text" id="ci-nm" maxlength="24" value="${esc(x.name)}" style="flex:1;min-width:0"><button class="btn sm" data-act="cirename" data-pid="${esc(p)}">Save</button></div>`}
-    ${ciRm?`<div class="confirm"><b>Take ${esc(x.name)} off tonight's list?</b><p class="fine">${admin&&!x.walk?'They’re removed from the session list too.':x.walk?'The walk-in is removed.':'They’re hidden from tonight’s board. An admin can take them off the session list.'}</p><div class="row" style="gap:6px"><button class="btn sm" data-act="cirmgo" data-pid="${esc(p)}">Remove</button><button class="btn ghost sm" data-act="cirmno">Keep</button></div></div>`
+    ${ciRm?(()=>{const f=admin&&!x.walk?dropFee(sid):{amount:0},fee=f.amount>0;return `<div class="confirm"><b>Take ${esc(x.name)} off tonight's list?</b><p class="fine">${admin&&!x.walk?(fee?`Cancelling inside 48 hours: ${esc(f.label.toLowerCase())}, AED ${f.amount}, goes on their payments. Choose “No charge” if there's a good reason.`:'They’re removed from the session list too. No charge this far ahead.'):x.walk?'The walk-in is removed.':'They’re hidden from tonight’s board. An admin can take them off the session list.'}</p><div class="row" style="gap:6px">${fee?`<button class="btn sm" data-act="cirmgo" data-charge="1" data-pid="${esc(p)}">Cancelled · AED ${f.amount}</button><button class="btn ghost sm" data-act="cirmgo" data-charge="0" data-pid="${esc(p)}">No charge</button>`:`<button class="btn sm" data-act="cirmgo" data-pid="${esc(p)}">Remove</button>`}<button class="btn ghost sm" data-act="cirmno">Keep</button></div></div>`})()
       :`<button class="linkbtn danger" data-act="cirm" data-pid="${esc(p)}">Remove from tonight</button>`}<button class="linkbtn" data-act="ciedit" data-pid="">Done</button></div>`}
 /* guests and walk-ins have no card, so their level and category live on tonight's board */
 const boardLvl=(lv,pid)=>((lv&&lv.lvl)||{})[pid]||{};
@@ -2281,14 +2349,14 @@ function renderCourts(){
         <button class="btn wide" data-act="qr">${ic('eye')}Show check-in QR code</button>
         <p class="fine">Players scan the code when they arrive. You can also check people in by name below, for guests or anyone without their phone.</p>
         <input type="text" id="ci-find" placeholder="Find a player" autocomplete="off">
-        <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button><button class="btn sm ghost icon" data-act="ciedit" data-pid="${esc(p)}" aria-label="Edit or remove ${esc(who(sid,p).name)}">${ic('edit')}</button></div>${ciEdit===p?ciEditor(sid,p):''}</div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
+        <div class="list" id="ci-list">${notYet.map(p=>`<div class="li ci" data-name="${esc(who(sid,p).name.toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr) auto">${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub">${who(sid,p).guestOf?'Guest of '+esc(who(sid,who(sid,p).guestOf).name):'Signed up'}</div></div><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm ghost" data-act="ci" data-pid="${esc(p)}">${ic('check')}Check in</button><button class="btn sm ghost icon" data-act="ciedit" data-pid="${esc(p)}" aria-label="Edit ${esc(who(sid,p).name)}">${ic('edit')}</button><button class="btn sm ghost icon" data-act="cix" data-pid="${esc(p)}" aria-label="Remove ${esc(who(sid,p).name)}, cancelled">${ic('x')}</button></div>${ciEdit===p?ciEditor(sid,p):''}</div>`).join('')||'<span class="fine">Everyone signed up has arrived.</span>'}</div>
         <div class="walkin"><span class="label">Walk-in</span>
           <input type="text" id="walk-name" maxlength="24" placeholder="Name: search members or add a walk-in" autocomplete="off">
           <div id="walk-sugg" class="list" aria-live="polite"></div>
           ${(s.sport||'badminton')==='badminton'?`<select id="walk-g" aria-label="Walk-in BAD level"><option value="U">Level: UNRATED</option>${GRADES.map(([k,d])=>`<option value="${k}">${k} · ${esc(d)}</option>`).join('')}</select>
             <div class="chips" role="group" aria-label="Walk-in category">${Object.entries(CATS).map(([k,l])=>`<button type="button" class="chip sm" data-act="walkcat" data-v="${k}" aria-pressed="${walkCat===k}">${l}</button>`).join('')}</div>`:''}
           <button class="btn ghost sm" data-act="walk" style="justify-self:start">${ic('guest')}Add and check in</button></div></div>
-      <div class="tile"><b>${ic('clock')} Arrived · in order</b><div class="list">${arr.map((p,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div></div>${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}<div class="ci-lvl">${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):((s.sport||'badminton')==='badminton'?guestPick(lv,p):'')}</div></div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
+      <div class="tile"><div class="sec-h"><b>${ic('clock')} Arrived · in order</b>${arr.length>2?(ciShuf?`<span class="row" style="gap:6px"><button class="btn sm" data-act="cishufgo">Shuffle</button><button class="btn ghost sm" data-act="cishuf">Keep</button></span>`:`<button class="btn ghost sm" data-act="cishuf">⇅ Reshuffle</button>`):''}</div>${ciShuf?'<p class="fine">Mixes the arrival order of everyone who isn’t on a court. Games already played still count, so the fairness of turns stays the same.</p>':''}<div class="list">${arr.map((p,i)=>`<div class="li arr" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${pav(sid,p)}<div><div class="nm">${esc(who(sid,p).name)}</div><div class="sub num">${hhmm(lv.checkin[p])}${lv.out.includes(p)?' · left':''}${isRest(lv,p)?' · resting':''}</div></div><div class="row arrctl">${lv.out.includes(p)?`<button class="btn ghost sm" data-act="restore" data-pid="${esc(p)}">Back in</button>`:locate(lv,p)?'<span class="fine">Playing</span>':`<button class="btn ghost sm" data-act="unci" data-pid="${esc(p)}">Undo</button>`}<button class="btn ghost sm icon" data-act="ciup" data-pid="${esc(p)}" ${i?'':'disabled'} aria-label="Move ${esc(who(sid,p).name)} up">↑</button><button class="btn ghost sm icon" data-act="cidown" data-pid="${esc(p)}" ${i<arr.length-1?'':'disabled'} aria-label="Move ${esc(who(sid,p).name)} down">↓</button><button class="btn ghost sm icon" data-act="cix" data-pid="${esc(p)}" aria-label="Remove ${esc(who(sid,p).name)}">${ic('x')}</button></div>${ciEdit===p?ciEditor(sid,p):''}<div class="ci-lvl">${S.profiles[p]?((s.sport||'badminton')==='badminton'?gradePick(p,sid):levelPick(p,s.sport||'badminton')):((s.sport||'badminton')==='badminton'?guestPick(lv,p):'')}</div></div>`).join('')||'<span class="fine">No one has checked in yet.</span>'}</div></div></div>
       ${isAttend(s.sport)?'':`<button class="btn wide" data-act="step" data-n="3">Next: run games ${ic('arrow')}</button>`}`;
   }else if(S.courtStep===3){
     body=`${planTile(sid,lv,false)}<p class="hint">${sel?`<b>${esc(who(sid,sel).name)}</b> selected. Tap an open spot or another player to swap.`:'Tap a player, then tap where they should go.'}</p>
@@ -2404,14 +2472,20 @@ function bindCourts(el){enableDrag(el);el.onclick=async ev=>{if(el._skipClick&&e
     toast(`${pp.nickname} is checked in${S.canEdit&&canSport(sp)?' and on the session list':''}.`);return saveLive(sid,lv)}
   if(act==='ciedit'){ciEdit=b.dataset.pid||null;ciRm=false;return renderCourts()}
   if(act==='cirm'){ciRm=true;return renderCourts()}
+  if(act==='cix'){{const f=locate(lv,b.dataset.pid);if(f&&f[0]==='c'&&inG(lv.courts[f[1]])){toast('That player is in a game. Finish or cancel it first.');return}}ciEdit=b.dataset.pid;ciRm=true;return renderCourts()}
+  if(act==='cishuf'){ciShuf=!ciShuf;return renderCourts()}
+  if(act==='ciup'||act==='cidown'){const a=arrivals(lv),i=a.indexOf(b.dataset.pid),j=act==='ciup'?i-1:i+1;if(i<0||j<0||j>=a.length)return;
+    const t=lv.checkin[a[i]];lv.checkin[a[i]]=lv.checkin[a[j]];lv.checkin[a[j]]=t;return saveLive(sid,lv)}
+  if(act==='cishufgo'){ciShuf=false;const a=arrivals(lv).filter(p=>!locate(lv,p)),ts=a.map(p=>lv.checkin[p]);
+    for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}a.forEach((p,i)=>lv.checkin[p]=ts[i]);toast('Arrival order reshuffled. Undo brings it back.');return saveLive(sid,lv)}
   if(act==='cirmno'){ciRm=false;return renderCourts()}
   if(act==='cirename'){const p=b.dataset.pid,n=($('ci-nm')||{}).value.trim().slice(0,24);if(!n){toast('Please type a name.');return}
     if(p.startsWith('w~')){const w=lv.walkins.find(x=>'w~'+x.id===p);if(w)w.name=n}else lv.names={...(lv.names||{}),[p]:n};
     ciEdit=null;toast(`Saved as ${n}.`);return saveLive(sid,lv)}
   if(act==='cirmgo'){const p=b.dataset.pid,x=who(sid,p),admin=S.canEdit&&canSport(sp);ciEdit=null;ciRm=false;
     if(p.startsWith('w~')){lv.walkins=lv.walkins.filter(w=>'w~'+w.id!==p);delete lv.checkin[p];detach(lv,p);toast(`${x.name} removed.`);return saveLive(sid,lv)}
-    if(admin){try{if(p.startsWith('g~')){const [,host]=p.split('~');await staffBooking(host,sid,o=>o?{...o,guests:(o.guests||[]).filter(g=>gpid(host,g.n)!==p)}:undefined)}
-        else await staffBooking(p,sid,()=>null);toast(`${x.name} is off the session list.`)}catch(e){toast("Sorry, that didn't save.")}}
+    if(admin){const charge=b.dataset.charge==='1',f=dropFee(sid);try{if(p.startsWith('g~')){const [,host]=p.split('~'),gs=((S.bookings[host]||{}).s||{})[sid]?.guests||[],gi=gs.findIndex(g=>gpid(host,g.n)===p);if(gi>=0)await staffDrop(host,sid,gi,charge)}
+        else await staffDrop(p,sid,'',charge);toast(charge&&f.amount?`${x.name} is off the list. AED ${f.amount} late cancellation added to their payments.`:`${x.name} is off the session list.`)}catch(e){toast("Sorry, that didn't save.")}}
     lv.hide={...(lv.hide||{}),[p]:true};detach(lv,p);delete lv.checkin[p];if(!admin)toast(`${x.name} is hidden from tonight's board.`);return saveLive(sid,lv)}
   if(act==='walkcat'){walkCat=walkCat===b.dataset.v?'':b.dataset.v;document.querySelectorAll('[data-act=walkcat]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===walkCat));return}
   if(act==='walk'){const n=$('walk-name').value.trim().slice(0,24);if(!n){toast("Please type the player's name.");return}
@@ -2829,7 +2903,7 @@ function addPlayerPanel(sid,r){const inIds=new Set([...r.in,...r.wait].filter(e=
       :`<div class="row"><input type="text" id="ag-name" maxlength="30" placeholder="Guest's name" style="flex:1;min-width:140px" aria-label="Guest's name"><select id="ag-host" style="flex:1;min-width:160px" aria-label="Guest of"><option value="">No host · BAD guest</option>${hosts.map(([u,p])=>`<option value="${esc(u)}">Guest of ${esc(p.nickname||'')}</option>`).join('')}</select><button class="btn sm" id="ag-go">Add</button></div>
       <p class="fine">With a host, the fee goes under the host's name. With no host, the guest shows on Payments under their own name.</p>`}
     <p class="fine">Added by an admin. Payment starts as cash.</p></div>`}
-function rmRosterBtn(e){const k=`${e.uid}|${e.guest==null?'':e.gi}`;return S.rosterRm===k?`<button class="chip sm" data-rrm="${esc(k)}">Remove?</button>`:`<button class="rmx" data-rrarm="${esc(k)}" aria-label="Take ${esc(e.guest||nameOf(e.uid,e.key))} off this session">${ic('x')}</button>`}
+function rmRosterBtn(e){const k=`${e.uid}|${e.guest==null?'':e.gi}`,f=dropFee(adminSid);return S.rosterRm===k?(f.amount>0&&!(S.bookings[e.uid]||{}).guest&&roster(adminSid).in.some(x=>x.uid===e.uid&&x.gi===e.gi)?`<span class="row rrmc" style="gap:6px;flex-wrap:nowrap"><button class="chip sm" data-rrm="${esc(k)}" data-charge="1" title="${esc(f.label)} for cancelling inside 48 hours">Cancelled · AED ${f.amount}</button><button class="chip sm" data-rrm="${esc(k)}" data-charge="0">No charge</button></span>`:`<button class="chip sm" data-rrm="${esc(k)}">Remove?</button>`):`<button class="rmx" data-rrarm="${esc(k)}" aria-label="Take ${esc(e.guest||nameOf(e.uid,e.key))} off this session">${ic('x')}</button>`}
 function aSessions(list,up){
   if(!canSport(newSport))newSport=Object.keys(SPORTS).find(canSport)||'badminton';
   const s=adminSid&&S.sessions[adminSid],r=s?roster(adminSid):null;
@@ -2878,9 +2952,9 @@ function aPlayers(){
   const nsBy={};for(const n of Object.values(S.noshows))nsBy[n.player]=(n.dates||[]).length;
   const nsKeys=Object.values(S.noshows).filter(n=>(n.dates||[]).length).sort((a,b)=>b.dates.length-a.dates.length);
   const mp=memPending();
-  return `${fullAdmin()?'':`<p class="hint">Players in ${esc(mySports().map(k=>SPORTS[k]?.club).join(', '))}.</p>`}${!fullAdmin()?'':box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
+  return `<p class="note lvl-note">${ic('badminton')}<span><b>${esc(LVL_NOTICE)}</b></span></p>${fullAdmin()?'':`<p class="hint">Players in ${esc(mySports().map(k=>SPORTS[k]?.club).join(', '))}.</p>`}${!fullAdmin()?'':box(`Membership to verify${mp.length?` <span class="badge num">${mp.length}</span>`:''}`,mp.length?`<div class="list">${mp.map(([uid,p,m])=>{const c=S.contacts[uid]||{};return `<div class="li req">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub">Asked for <b>${esc(m.type)}</b>${m.at?' · '+esc(fmtD(m.at)):''}${c.mobile?' · '+esc(c.mobile):''}</div></div><div class="row"><button class="btn sm" data-mok="${esc(uid)}">Verify</button><button class="btn ghost sm" data-mno="${esc(uid)}">Decline</button></div></div>`}).join('')}</div>`:'<p class="hint">Nothing to verify. Guest needs no check.</p>')}
   <div class="field" style="margin:0"><label for="a-q" class="sr">Search players</label><input type="search" id="a-q" placeholder="Search name, email, mobile or level (e.g. unrated, C+)"></div>
-  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')+' '+gradeLabel(uid)).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}${!(p.listName||'').trim()?' <span class="tagl warn">No tracker name</span>':''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div><div class="sub">${esc(st.level||'Rookie')} · ${isFounder(uid)?'∞ BADges':`${st.badges||0} BADge${st.badges===1?'':'s'}`} · ${st.unpaid?`<span class="warn-t">AED ${st.unpaid} unpaid</span>`:'Paid up'}</div></div><div class="pts"><b class="num">${isFounder(uid)?'∞':st.balance}</b><span class="label">pts</span></div>${(p.sports||['badminton']).includes('badminton')&&canSport('badminton')?`<div class="glevel"><span class="label">BAD level · ${esc(gradeLabel(uid))}</span>${gradePick(uid,'')}</div>`:''}${`<details class="manage mrow"><summary>${fullAdmin()?'Edit':'Edit tracker name'}${fullAdmin()&&pendingFor(uid).length?` · AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending`:''}</summary>${editForm(uid,p,c)}${fullAdmin()&&canGiveBadge()&&uid!==S.uid?`<div class="row" style="gap:8px;margin-top:8px"><button class="btn ghost sm" data-givebadge="${esc(uid)}">${ic('star')}Give a BADge</button></div>`:''}${fullAdmin()?`<div class="row" style="gap:8px;margin-top:8px">${pendingFor(uid).length?`<button class="btn ghost" data-freeall="${esc(uid)}">Clear AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending</button>`:''}${window.BAD_WEB&&!p.sample&&canManageAdmins()?(()=>{const em=((S.contacts[uid]||{}).email||'').toLowerCase(),r=adminRec(em),cur=!r?'':r.role==='cm'?'cm:'+((r.sports||[])[0]||''):r.role;if(!em)return '';if(r&&r.role==='owner')return `<span class="tagl solid">${ic('check')}Owner</span>`;return `<select class="memset adm" data-access="${esc(uid)}" aria-label="Admin access for ${esc(p.nickname||'player')}"><option value="">No admin access</option>${Object.keys(SPORTS).map(k=>`<option value="cm:${k}" ${cur==='cm:'+k?'selected':''}>Community manager · ${esc(SPORTS[k].club)}</option>`).join('')}<option value="app" ${cur==='app'?'selected':''}>App admin</option><option value="founder" ${cur==='founder'?'selected':''}>Founder admin</option></select>`})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div>`:''}</details>`}</div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
+  ${box(`Everyone <span class="hint num">${ps.length}</span>`,`<div class="list" id="a-plist">${ps.map(([uid,p])=>{const c=S.contacts[uid]||{},st=statsFor(p.listKey);return `<div class="li" data-q="${esc(((p.nickname||'')+' '+(p.listName||'')+' '+(c.email||'')+' '+(c.mobile||'')+' '+gradeLabel(uid)).toLowerCase())}">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'—')}${p.sample?' <span class="tagl">Sample</span>':''}${(()=>{const m=memStatus(uid);return m.type!=='Guest'?` <span class="tagl${m.state==='verified'?' solid':m.state==='pending'?' warn':''}">${m.state==='verified'?ic('check'):''}${esc(m.type)}</span>`:''})()}${nsBy[p.listKey]?` <span class="tagl warn">${nsBy[p.listKey]} no-show</span>`:''}${!(p.listName||'').trim()?' <span class="tagl warn">No tracker name</span>':''}</div><div class="sub">${[c.email,c.mobile].filter(Boolean).map(esc).join(' · ')||'No contact details'}</div><div class="sub">${(p.sports||[]).map(k=>SPORTS[k]?.club).filter(Boolean).join(' · ')}</div><div class="sub">${esc(st.level||'Rookie')} · ${isFounder(uid)?'∞ BADges':`${st.badges||0} BADge${st.badges===1?'':'s'}`} · ${st.unpaid?`<span class="warn-t">AED ${st.unpaid} unpaid</span>`:'Paid up'}</div></div><div class="pts"><b class="num">${isFounder(uid)?'∞':st.balance}</b><span class="label">pts</span></div>${(p.sports||['badminton']).includes('badminton')&&canSport('badminton')?`<div class="glevel"><span class="label">BAD level · ${esc(gradeLabel(uid))}</span>${gradePick(uid,'')}</div>`:''}${`<details class="manage mrow"><summary>${fullAdmin()?'Edit':'Edit tracker name'}${fullAdmin()&&pendingFor(uid).length?` · AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending`:''}</summary>${editForm(uid,p,c)}${fullAdmin()&&canGiveBadge()&&uid!==S.uid?`<div class="row" style="gap:8px;margin-top:8px"><button class="btn ghost sm" data-givebadge="${esc(uid)}">${ic('star')}Give a BADge</button></div>`:''}${fullAdmin()?`<div class="row" style="gap:8px;margin-top:8px">${pendingFor(uid).length?`<button class="btn ghost" data-freeall="${esc(uid)}">Clear AED ${pendingFor(uid).reduce((t,r)=>t+r.amount,0)} pending</button>`:''}${window.BAD_WEB&&!p.sample&&canManageAdmins()?(()=>{const em=((S.contacts[uid]||{}).email||'').toLowerCase(),r=adminRec(em);if(!em)return '<span class="fine">Add their email above to give admin access.</span>';if((window.BAD_ADMINS||[]).includes(em))return `<span class="tagl solid">${ic('check')}Owner · every department</span>`;return accessEditor(em,r)})():''}<select class="memset" data-memset="${esc(uid)}" aria-label="Membership for ${esc(p.nickname||'player')}">${memTypes().map(t=>`<option ${t.k===memLabel(uid)?'selected':''}>${esc(t.k)}</option>`).join('')}</select></div>`:''}</details>`}</div>`}).join('')||'<div class="empty">No players yet.</div>'}</div>`)}
   ${box('No-show list <span class="tagl">Admins only</span>',`<p class="hint">Players never see this. Mark no-shows from a session’s player list.</p><div class="list">${nsKeys.map(n=>{const id='ns-'+slug(n.player);return `<div class="li nsrow"><div class="row" style="justify-content:space-between;gap:10px;flex-wrap:nowrap"><div class="nm">${esc(n.name||n.player)}</div>
       <div class="row nsctl" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost sm icon" data-nsminus="${esc(id)}" aria-label="One fewer no-show for ${esc(n.name||n.player)}">−</button><b class="num">${n.dates.length}</b><button class="btn ghost sm icon" data-nsplus="${esc(id)}" aria-label="Add a no-show for ${esc(n.name||n.player)}">+</button><button class="btn ghost sm icon" data-nsclear="${esc(id)}" aria-label="Remove ${esc(n.name||n.player)} from the list" title="Remove from the list">${ic('x')}</button></div></div>
       <div class="chips nsdates">${n.dates.map(d=>{const [sd,g]=d.split('#'),lbl=sd.startsWith('manual-')?'Added by hand '+fmtD(sd.slice(7,17)):(S.sessions[sd]?fmtS(S.sessions[sd]):sd)+(g?' (guest)':'');return `<span class="chip sm">${esc(lbl)}<button class="xbtn" data-nsdel="${esc(id)}" data-d="${esc(d)}" aria-label="Remove ${esc(lbl)}">${ic('x')}</button></span>`}).join('')}</div></div>`}).join('')||'<div class="empty">Clean sheet so far.</div>'}</div>
@@ -2924,15 +2998,24 @@ function aPosts(){
   ${box('Posted',`<div class="list">${Object.entries(S.posts).filter(([,p])=>fullAdmin()||canSport(p.club)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||'')).map(([id,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event · '+esc(p.date||''):'Announcement'} · ${esc(p.club&&p.club!=='all'?SPORTS[p.club]?.club||'':'All of BAD')}</div></div><button class="btn ghost sm" data-delpost="${esc(id)}">Remove</button></div>`).join('')||'<p class="hint">Nothing posted yet.</p>'}</div>`)}`;
 }
 
+/* admin access: a role, and for community managers a tick box per department they run. Many people can run one
+   department and one person can run many. Owners run every department automatically. */
+function accessEditor(em,r){const role=r?r.role:'',sp=(r&&r.sports)||[];
+  return `<div class="acced" data-acc="${esc(em||'')}"><div class="field" style="margin:0"><label>Admin access</label><select data-accrole aria-label="Admin role">
+    <option value="" ${!role?'selected':''}>No admin access</option><option value="cm" ${role==='cm'?'selected':''}>Community manager</option><option value="app" ${role==='app'?'selected':''}>App admin</option><option value="founder" ${role==='founder'?'selected':''}>Founder admin</option></select></div>
+    <fieldset class="pesports accdepts" ${role==='cm'?'':'hidden'}><legend class="label">Departments they manage</legend><div class="chips">${Object.keys(SPORTS).map(k=>`<label class="chip sm"><input type="checkbox" data-accdept="${k}" ${sp.includes(k)?'checked':''}> ${esc(SPORTS[k].club)}</label>`).join('')}</div></fieldset>
+    <div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn sm" data-accsave>${ic('check')}Save access</button></div></div>`}
+function deptManagers(){const own=window.BAD_ADMINS||[],A=S.admins||{};
+  return `<p class="hint">Owners run every department. Tick departments for each community manager from Players → Edit, or below in Admins.</p><div class="list">${Object.keys(SPORTS).map(k=>{const cms=Object.entries(A).filter(([e,a])=>!own.includes(e)&&a&&a.role==='cm'&&(a.sports||[]).includes(k)).map(([e])=>{const u=Object.keys(S.contacts||{}).find(u=>(S.contacts[u].email||'').toLowerCase()===e);return u&&S.profiles[u]?S.profiles[u].nickname:e});
+    return `<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(SPORTS[k].icon)}<div><div class="nm">${esc(SPORTS[k].club)}</div><div class="sub">${cms.length?esc(cms.join(', ')):'<span class="warn-t">No community manager yet</span>'} · owners</div></div></div>`}).join('')}</div>`}
 function aSettings(){
   const own=(window.BAD_ADMINS||[]),extra=Object.keys(S.admins||{});
   const gs=id=>`https://docs.google.com/spreadsheets/d/${id}/edit`;
-  return `${window.BAD_WEB&&canManageAdmins()?box('Admins',`<p class="hint">Each admin signs in with this email. Give someone access here, or from Players → Manage.</p>
-    <div class="list">${own.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(e)}</div><div class="sub">${ROLES.owner.d}</div></div><span class="tagl solid">Owner</span></div>`).join('')}${extra.filter(e=>!own.includes(e)).map(e=>{const r=adminRec(e);return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(e)}</div><div class="sub">${r?esc(roleLabel(r)):'<span class="warn-t">No role set, so no admin access. Remove and add again with a role.</span>'}</div></div><button class="btn ghost sm" data-unadmin="${esc(e)}">Remove</button></div>`}).join('')}</div>
-    <div class="fgrid"><div class="field wide"><label for="ad-email">Email</label><input type="email" id="ad-email" placeholder="name@email.com"></div>
-      <div class="field wide"><label for="ad-role">Role</label><select id="ad-role">${Object.keys(SPORTS).map(k=>`<option value="cm:${k}">Community manager · ${esc(SPORTS[k].club)}</option>`).join('')}<option value="app">App admin</option><option value="founder">Founder admin</option></select></div></div>
-    <div class="row"><button class="btn" id="ad-go">Add admin</button></div>
+  return `${window.BAD_WEB&&canManageAdmins()?box('Admins',`<p class="hint">Each admin signs in with this email. Give someone access here, or from Players → Edit. Community managers can run more than one department.</p>
+    <div class="list">${own.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(e)}</div><div class="sub">${ROLES.owner.d}</div></div><span class="tagl solid">Owner</span></div>`).join('')}${extra.filter(e=>!own.includes(e)).map(e=>{const r=adminRec(e);return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(e)}</div><div class="sub">${r?esc(roleLabel(r)):'<span class="warn-t">No role set, so no admin access. Remove and add again with a role.</span>'}</div></div><button class="btn ghost sm" data-unadmin="${esc(e)}">Remove</button><details class="manage mrow" style="grid-column:1/-1"><summary>Change access</summary>${accessEditor(e,r)}</details></div>`}).join('')}</div>
+    <div class="addadm"><span class="label">Add an admin</span><div class="field" style="margin:0"><label for="ad-email">Email</label><input type="email" id="ad-email" placeholder="name@email.com"></div>${accessEditor('',{role:'cm',sports:[]})}</div>
     <details class="manage"><summary>What each role can do</summary><div class="list" style="margin-top:8px">${Object.values(ROLES).map(r=>`<div class="li" style="grid-template-columns:1fr"><div><div class="nm">${r.k}</div><div class="sub">${r.d}</div></div></div>`).join('')}</div></details>`):''}
+  ${window.BAD_WEB&&fullAdmin()?box('Who runs each department',deptManagers()):''}
   ${payPanel()}
   ${box('BAD website',`<p class="hint">Every Club post links here unless you add a different link.</p><div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="site-url">Website link</label><input type="url" id="site-url" placeholder="https://" value="${esc(S.site?.url||'')}"></div><button class="btn" id="site-go">Save</button></div>`)}
   ${boxD('Membership levels',`<p class="hint">Membership levels. Players can request the open ones. “Admins assign” levels (like Crew or Founder) are only given from the Players list. “Needs verifying” waits for an admin before it shows on the card.</p>
@@ -3095,7 +3178,7 @@ function bindAdmin(){
   q('[data-rrarm]').forEach(b=>b.onclick=()=>{S.rosterRm=b.dataset.rrarm;renderNow();setTimeout(()=>{if(S.rosterRm===b.dataset.rrarm){S.rosterRm=null;renderNow()}},4000)});
   q('[data-rrm]').forEach(b=>b.onclick=async()=>{const [uid,gi]=b.dataset.rrm.split('|'),sid=adminSid,cur=S.bookings[uid];S.rosterRm=null;if(!cur)return;const s={...cur.s};
     try{if(cur.guest&&gi===''&&Object.keys(s).length<=1)await S.db.doc('bookings/'+uid).delete();
-      else await staffBooking(uid,sid,o=>gi===''?null:{...o,guests:(o.guests||[]).filter((_,i)=>i!==+gi)});toast('Taken off the session.')}catch(e){toast("Sorry, that didn't save.")}});
+      else{const charge=b.dataset.charge==='1',f=dropFee(sid);await staffDrop(uid,sid,gi,charge);toast(charge?`Taken off. AED ${f.amount} late cancellation added to their payments.`:'Taken off the session.')}}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-freeall]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.freeall,list=pendingFor(uid),at=new Date().toISOString();
     try{for(const r of list)await setPayment(uid,r.sid,{ok:true,waived:true,at,by:window.BAD_USER?.email||''});toast(`Cleared AED ${list.reduce((t,r)=>t+r.amount,0)} for ${S.profiles[uid]?.nickname||'this player'}.`)}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-paid]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.paid,cur={...(S.payments[adminSid]||{})},was=cur[uid]?.ok;cur[uid]={ok:!was,at:new Date().toISOString(),method:S.bookings[uid]?.s?.[adminSid]?.pay||'cash'};
@@ -3112,17 +3195,20 @@ function bindAdmin(){
   q('[data-mverify]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mverify].verify=x.checked;saveTypes(L)});
   q('[data-mstaff]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.mstaff].staff=x.checked;saveTypes(L)});
   q('[data-memset]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.memset,k=x.value;try{const em=((S.contacts[uid]||{}).email||'').toLowerCase();if(window.BAD_WEB&&canManageAdmins()&&lvAdmin(k)&&em&&!isAdminEmail(em)){const pr=S.profiles[uid]||{},r=k==='Community Manager'?{role:'cm',sports:[pr.primary||(pr.sports||['badminton'])[0]]}:k==='Founder'?{role:'founder',sports:[]}:{role:'app',sports:[]};await S.db.doc('admins/'+em).set({...r,addedBy:window.BAD_USER?.email||'',at:new Date().toISOString(),via:k});toast(`${S.profiles[uid]?.nickname||'Player'} can now use the Admin tab.`)}await S.db.doc('profiles/'+uid).update({memReq:{type:k,at:new Date().toISOString()}});await setMem(uid,{type:k,at:new Date().toISOString(),by:window.BAD_USER?.email||''});toast(`${S.profiles[uid]?.nickname||'Player'} is now ${k}.`)}catch(e){toast("Sorry, that didn't save.")}});
-  const accessVal=v=>v==='app'?{role:'app',sports:[]}:v==='founder'?{role:'founder',sports:[]}:v.startsWith('cm:')?{role:'cm',sports:[v.slice(3)]}:null;
-  q('[data-access]').forEach(x=>x.onchange=async()=>{const uid=x.dataset.access,em=((S.contacts[uid]||{}).email||'').toLowerCase(),nm=S.profiles[uid]?.nickname||'Player',r=accessVal(x.value);if(!em)return;
-    try{if(!r){await S.db.doc('admins/'+em).delete();toast(`${nm} no longer has admin access.`)}else{await S.db.doc('admins/'+em).set({...r,addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} is now ${roleLabel(r)}. They may need to reopen the app.`)}}catch(e){toast("Sorry, that didn't save.")}});
+  q('.acced [data-accrole]').forEach(x=>x.onchange=()=>{const f=x.closest('.acced').querySelector('.accdepts');if(f)f.hidden=x.value!=='cm'});
+  q('[data-accsave]').forEach(b=>b.onclick=async()=>{const box=b.closest('.acced'),em=(box.dataset.acc||($('ad-email')||{}).value||'').trim().toLowerCase(),role=box.querySelector('[data-accrole]').value,sp=[...box.querySelectorAll('[data-accdept]:checked')].map(x=>x.dataset.accdept);
+    if(!/^\S+@\S+\.\S+$/.test(em)){toast('Please enter a full email address.');return}if((window.BAD_ADMINS||[]).includes(em)){toast('Owners already run every department.');return}
+    if(role==='cm'&&!sp.length){toast('Tick at least one department they manage.');return}
+    const u=Object.keys(S.contacts||{}).find(u=>(S.contacts[u].email||'').toLowerCase()===em),nm=(u&&S.profiles[u]?.nickname)||em;
+    try{if(!role){await S.db.doc('admins/'+em).delete();toast(`${nm} no longer has admin access.`)}
+      else{const r={role,sports:role==='cm'?sp:[]},old=(S.admins||{})[em]||{};await S.db.doc('admins/'+em).set({...old,...r,addedBy:old.addedBy||window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} is now ${roleLabel(r)}. They may need to reopen the app.`);if(!box.dataset.acc&&$('ad-email'))$('ad-email').value=''}}
+    catch(e){toast("Sorry, that didn't save.")}});
   q('[data-adm]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.adm,em=((S.contacts[uid]||{}).email||'').toLowerCase(),nm=S.profiles[uid]?.nickname||'Player';if(!em)return;
     try{if(isAdminEmail(em)){await S.db.doc('admins/'+em).delete();toast(`${nm} no longer has admin access.`)}else{const pr=S.profiles[uid]||{},sp=pr.primary||(pr.sports||['badminton'])[0]||'badminton';await S.db.doc('admins/'+em).set({role:'cm',sports:[sp],addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${nm} is now community manager for ${SPORTS[sp]?.club||sp}. They may need to reopen the app.`)}}catch(e){toast("Sorry, that didn't save.")}});
   q('[data-madmin]').forEach(x=>x.onchange=()=>{const L=memTypes().map(t=>({...t}));L[+x.dataset.madmin].admin=x.checked;saveTypes(L)});
   q('[data-mdel]').forEach(b=>b.onclick=()=>{const L=memTypes().filter((_,i)=>i!==+b.dataset.mdel);saveTypes(L)});
   on('mt-add',()=>{const k=$('mt-name').value.trim();if(!k){toast('Please name the type.');return}if(memTypes().some(t=>t.k.toLowerCase()===k.toLowerCase())){toast('That type already exists.');return}saveTypes([...memTypes(),{k,d:$('mt-desc').value.trim(),verify:true}])});
   on('site-go',async()=>{const u=$('site-url').value.trim();if(u&&!/^https:\/\//.test(u)){toast('Please use a full https:// link.');return}try{await S.db.doc('config/site').set({url:u});toast('Website link saved.')}catch(e){toast("Sorry, that didn't save.")}});
-  on('ad-go',async()=>{const e=$('ad-email').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e)){toast('Please enter a full email address.');return}const r=accessVal($('ad-role').value);
-    try{await S.db.doc('admins/'+e).set({...r,addedBy:window.BAD_USER?.email||'',at:new Date().toISOString()});toast(`${e} is now ${roleLabel(r)}.`);$('ad-email').value=''}catch(x){toast("Sorry, that didn't save.")}});
   q('[data-unadmin]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('admins/'+b.dataset.unadmin).delete();toast('Removed.')}catch(x){toast("Sorry, that didn't save.")}});
 }
 async function approve(id){const r=S.requests[id];if(!r)return;const pt=pointsFor(id),c=PS();
@@ -3223,12 +3309,14 @@ function dropHTML(){const d=FEATURED_DROP;
       <span class="btn wide">${ic('bag')}Pre-order the set${ic('arrow')}</span><span class="fine">${esc(d.note)}</span></div></a>`}
 function renderShop(){
   const el=$('v-shop');if(!el)return;
-  const all=liveProducts(),f=S.shopFilter,list=all.filter(([,p])=>f==='all'||p.drop===f);
+  const all=liveProducts(),f=S.shopFilter,isV2=([,p])=>/volume ii/i.test(p.dropName||''),v2=all.filter(isV2).filter(([pid,p])=>leftAll(p,pid)>0),list=all.filter(x=>!isV2(x)&&(f==='all'||x[1].drop===f));
   const next=all.filter(([,p])=>p.drop==='limited'&&!released(p)).sort((a,b)=>new Date(a[1].releaseAt)-new Date(b[1].releaseAt))[0];
   const bagN=S.bag.reduce((t,i)=>t+i.qty,0),bagT=S.bag.reduce((t,i)=>t+i.qty*i.price,0);
   const mine=Object.entries(S.myOrders).sort((a,b)=>String(b[1].createdAt).localeCompare(String(a[1].createdAt)));
   el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, essentials stay.</p></div>${dropHTML()}
     ${next?(()=>{const [pid,p]=next;return `<button class="dropban" data-pid="${esc(pid)}">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="">`:''}<div class="db-t"><span class="label">Next limited drop${p.dropName?' · '+esc(p.dropName):''}</span><b>${esc(p.name)}</b><span class="fine">${esc(dropWhen(p.releaseAt))}</span></div><span class="db-c num">${countdown(p.releaseAt)}</span></button>`})():''}
+    ${v2.length?`<section class="v2"><div class="v2-h"><span class="label">Volume II · Last pieces</span><h3>The Volume II kit is back, in small numbers.</h3><p class="fine">What's left from the Volume II drop. No restock once they're gone.</p></div>
+      <div class="pgrid">${v2.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">Volume II</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div></section>`:''}
     <div class="chips" role="group" aria-label="Filter">${[['all','All'],['limited','Limited drops'],['essentials','Essentials']].map(([k,l])=>`<button class="chip" data-sf="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
     ${list.length?`<div class="pgrid">${list.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">${esc(p.drop==='limited'?(p.dropName||'Limited drop'):'Essentials')}</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div>`
       :`<div class="empty">${ic('bag')}<span>${all.length?'Nothing here right now.':'The first drop is on its way. Check back soon.'}</span></div>`}
@@ -3338,7 +3426,7 @@ function aShop(){
     <div class="row"><button class="btn" id="pf-save">${ic('check')}Save product</button><button class="btn ghost" id="pf-cancel">Cancel</button>${shopEdit!=='new'?`<button class="btn ghost" id="pf-del">Delete</button>`:''}</div>`,'formbox'):'';
   return `<div class="tiles">${tile(Object.values(S.products).filter(p=>p.status==='live').length,'Live products')}${tile(ords.filter(([,o])=>o.status==='new').length,'New orders')}${tile(`<small>AED</small> ${revenue}`,'Paid sales')}</div>
   ${form}
-  ${box(`Products <span class="hint num">${prods.length}</span>`,`${shopEdit?'':`<div class="row"><button class="btn" id="pf-new">${ic('plus')}Add a product</button></div>`}
+  ${box(`Products <span class="hint num">${prods.length}</span>`,`${shopEdit?'':`<div class="row"><button class="btn" id="pf-new">${ic('plus')}Add a product</button>${Object.values(S.products).some(p=>/volume ii/i.test(p.dropName||''))?'':`<button class="btn ghost" id="pf-v2">${ic('bag')}Add Volume II last pieces</button>`}</div>`}
     <div class="list">${prods.map(([pid,p])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="bthumb">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="">`:ic('bag')}</div><div><div class="nm">${esc(p.name)} <span class="tagl${p.status==='live'?' solid':''}">${p.status==='live'?(released(p)?'Live':'Drops '+esc(dropWhen(p.releaseAt))):p.status==='draft'?'Draft':'Archived'}</span></div><div class="sub">${esc(DROPS[p.drop]||'')}${p.dropName?' · '+esc(p.dropName):''} · ${aed(p.price)}</div><div class="sub num">${sizeList(p).map(z=>`${esc(sizeName(z))} ${leftOf(p,pid,z)}/${(p.sizes||{})[z]||0}`).join(' · ')} left</div></div><button class="btn ghost sm" data-pedit="${esc(pid)}">Edit</button></div>`).join('')||'<p class="hint">No products yet. Add your first drop.</p>'}</div>`)}
   ${box(`Orders <span class="hint num">${ords.length}</span>`,`<div class="chips">${[['open','Open'],['new','Placed'],['paid','Paid'],['ready','Ready'],['done','Collected'],['cancelled','Cancelled'],['all','All']].map(([k,l])=>`<button class="chip" data-of="${k}" aria-pressed="${shopOrdF===k}">${l}</button>`).join('')}</div>
     <div class="list">${shown.map(([oid,o])=>{const sx=o.session&&S.sessions[o.session];return `<div class="li ord" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(o.name||'Player')} · <span class="num">#${esc(oid.slice(-5).toUpperCase())}</span></div>
@@ -3352,6 +3440,10 @@ function parseSizes(t){t=String(t||'').trim();if(!t)return null;if(/^\d+$/.test(
 function bindShopAdmin(){
   const on=(id,f)=>{const x=$(id);if(x)x.onclick=f},q=s=>document.querySelectorAll('#v-admin '+s);
   const keep=()=>{if(!$('pf-name'))return;S.pDraft={name:$('pf-name').value,price:$('pf-price').value,maxPer:$('pf-max').value,dropName:$('pf-drop').value,sizesRaw:$('pf-sizes').value,relRaw:$('pf-rel').value,status:$('pf-status').value,desc:$('pf-desc').value}};
+  /* Volume II leftovers, from the "Final" table on BAD Volume II Preorders. Saved as drafts: check stock, add photos, then set them live. */
+  on('pf-v2',async()=>{const now=new Date().toISOString(),base={drop:'limited',dropName:'Volume II',maxPer:0,status:'draft',releaseAt:null,images:[],createdAt:now,updatedAt:now};
+    const L=[['On Court Jersey',120,{S:7,M:8,L:1},'The Volume II on-court jersey.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'The Volume II off-court tee.'],['Rally Towel',0,{OS:12},'Set the price before going live.'],['Tote Bag',45,{OS:24},'The Volume II tote.'],['Socks',50,{OS:16},'Volume II socks.']];
+    try{for(const [i,[name,price,sizes,desc]] of L.entries())await S.db.doc('products/v2-'+slug(name)).set({...base,name,price,sizes,desc,order:100+i});toast('Volume II added as drafts. Check the stock, add photos and set the Rally Towel price, then show them in the shop.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   on('pf-new',()=>{shopEdit='new';S.pImgs=[];S.pDrop='limited';S.pDraft=null;renderAdmin()});
   q('[data-pedit]').forEach(b=>b.onclick=()=>{shopEdit=b.dataset.pedit;S.pImgs=null;S.pDrop=null;S.pDraft=null;renderAdmin();scrollTo({top:0})});
   on('pf-cancel',()=>{shopEdit=null;S.pImgs=null;S.pDraft=null;renderAdmin()});
@@ -3409,12 +3501,14 @@ function bindBrand(){
 /* ---------- boot ---------- */
 S.contacts={};S.brand={};
 (async function boot(){
+  /* links straight to a tab: …/#shop, #quests, #play, #club, #board, #courts (used by short links like the Volume II one) */
+  {const v=(location.hash||'').match(/^#(shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['card','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
   render();
   const C=window.claude;if(!C||!C.use){S.loaded=true;render();return}
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
   S.db=db;if(user){S.uid=await user.id();S.canEdit=await user.canEdit()}
   if(S.uid&&db)db.doc('contacts/'+S.uid).get().then(d=>{if(d.exists)S.myContact=d.data()}).catch(()=>{});
-  if(S.canEdit&&innerWidth>=1000&&S.view==='card'&&!S.pendingCI)setView('admin');
+  if(S.deepView)setView(S.deepView);else if(S.canEdit&&innerWidth>=1000&&S.view==='card'&&!S.pendingCI)setView('admin');
   if(S.canEdit){C.use('mcp').then(m=>{S.mcp=m});C.use('assets').then(a=>{S.assets=a})}
   if(!db){S.loaded=true;render();return}
   let pending=10;
