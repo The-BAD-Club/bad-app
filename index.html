@@ -830,6 +830,10 @@ body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}.droptgt
 .hrules{list-style:none;margin:0;padding:0;display:grid;gap:8px}.hrules li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,14px)}.hrules li div{display:grid;gap:2px}
 details.rules .hrules{margin-top:10px}
 .sign span:first-child{font-weight:900;letter-spacing:.14em}
+.preo{display:grid;gap:14px;padding:18px;border:1px solid var(--line);border-radius:var(--r-lg,18px)}.preo-h{display:grid;gap:4px}.preo-h h3{margin:0;font-size:1.6rem;letter-spacing:.02em}
+.preo-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.preo-item{display:grid;gap:8px;align-content:start;min-width:0}
+.preo-img{display:block;aspect-ratio:4/5;border-radius:var(--r-md,14px);background:#111 center/cover no-repeat}.preo-thumbs{display:flex;gap:6px}.pth{width:42px;height:42px;border-radius:8px;border:1px solid var(--line);background:#111 center/cover;padding:0;cursor:pointer;opacity:.6}.pth.on{opacity:1;border-color:var(--ink)}
+.preo-meta{display:grid;gap:4px}.preo-meta b{font-size:1.05rem;letter-spacing:.03em}.preo-meta p{margin:2px 0 6px}.preo-meta .btn{justify-self:start}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -976,8 +980,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.21';
+const APP_VERSION='0.22';
 const CHANGES=[
+  ['0.22','2026-11-04','Shop: every FRAGMENTS pre-order (THE RITUAL SET, BADASS shorts, REVERSE jersey) with pictures and prices; the full Volume II lineup with its product photos, Clubhouse Kit shown sold out, Rally Towel and Socks AED 55; sold-out products stay visible; edit a session from Admin → Sessions'],
   ['0.21','2026-11-04','House rules (Guide and Play): play with anyone, respect the rotation, check in, drop out early, pay, call it honestly, respect everyone, leave it better, photos; BOLD. AGILE. DEFIANT. on Home and the Guide; no promise of balanced games anywhere'],
   ['0.20','2026-11-04','Nobody skips the waiting list: it is first come, first served; Core and up now get sign-ups 48 hours early instead (Members 24 hours); BADge colours: Rookie white, Member black, Core silver, Legend titanium, Founder vanta; delete a session from Admin → Sessions'],
   ['0.19','2026-11-04','Drag players up or down the Arrived list (grab the number); points now reset after 6 months without playing; the Guide and Home show how many sessions or Side Quests make a free session'],
@@ -3003,7 +3008,7 @@ let adminSid=null;
 const nameOf=(uid,key)=>S.profiles[uid]?.nickname||S.bookings[uid]?.name||allKeys()[key]||key||'Unknown';
 function mcpErr(e){const c=e&&e.code;return c==='server_not_connected'?'Add Google Sheets in claude.ai Settings → Connectors.':c==='needs_reauth'?'Reconnect Google Sheets in claude.ai Settings → Connectors.':(c==='not_in_manifest'||c==='approval_required')?'Allow Google Sheets for this page, then try again.':(e&&e.message)||'Something went wrong.'}
 
-let aTab='today',showNew=false,showPast=false,adminPicked=false;
+let aTab='today',showNew=false,editSid=null,showPast=false,adminPicked=false;
 const ATABS=[['today','Today','clock'],['sessions','Sessions','ticket'],['players','Players','users'],['points','Points & BADges','coin'],['posts','Club posts','club'],['payments','Payments','wallet'],['shop','Shop','bag'],['settings','Settings','admin']];
 const fmtS=x=>{const d=dParts(x.date);return `${d.w} ${d.d} ${d.m}`};
 const unpaidOf=sid=>{const r=roster(sid);return r.in.filter(e=>!e.guest&&!S.payments[sid]?.[e.uid]?.ok)};
@@ -3071,21 +3076,24 @@ function aSessions(list,up){
   const shown=showPast?list.slice().reverse():up.concat(s&&!up.some(([i])=>i===adminSid)?[[adminSid,s]]:[]);
   const picker=`<div class="sports" role="group" aria-label="Pick a session">${shown.map(([id,x])=>`<button type="button" class="sp" data-sid="${esc(id)}" aria-pressed="${id===adminSid}">${ic(sportOf(x.sport).icon)}${fmtS(x)} · ${esc(x.title)}</button>`).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
     <div class="row" style="justify-content:space-between"><label class="chip sm"><input type="checkbox" id="a-past" ${showPast?'checked':''}> Show past sessions</label><button class="btn sm${showNew?' ghost':''}" id="a-new">${showNew?ic('x')+'Close':ic('plus')+'Add a session'}</button></div>`;
-  const form=showNew?box('Add a session',`
-    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).filter(canSport).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===newSport}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
+  /* the same form adds a session or edits one (editSid) */
+  const E=editSid&&S.sessions[editSid]?S.sessions[editSid]:null,sp0=newSport,v=(k,d)=>esc(E&&E[k]!=null&&E[k]!==''?E[k]:d);
+  const form=showNew||E?box(E?'Edit session':'Add a session',`
+    <div class="field" style="margin:0"><span class="lbl">Club</span><div class="sports">${Object.keys(SPORTS).filter(canSport).map(k=>`<button type="button" class="sp" data-nsp="${k}" aria-pressed="${k===sp0}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div></div>
     <div class="fgrid">
-      <div class="field"><label for="n-title">Name</label><input type="text" id="n-title" value="${esc(defaultTitle(newSport))}"></div>
-      <div class="field"><label for="n-date">Date</label><input type="date" id="n-date"></div>
-      <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${newSport==='volleyball'?'19:00':'20:00'}"></div>
-      <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${newSport==='volleyball'?'22:30':'22:00'}"></div>
-      <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="40"></div>
-      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${newSport==='volleyball'?18:newSport==='pickleball'?16:newSport==='badminton'?16:20}"></div>
-      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${newSport==='badminton'?4:''}"></div>
-      ${COURT_SPORTS.includes(newSport)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${DEF_COURTS[newSport]||1}"></div>`:''}
-      <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue"></div>
-      <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens"><p class="fine">Leave blank to open straight away. Member level and up can join 24 hours before this.</p></div></div>
-    <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc"> Time to be confirmed</label>
-    <div class="row"><button class="btn" id="n-go">${ic('plus')}Post session</button></div>`,'formbox'):'';
+      <div class="field"><label for="n-title">Name</label><input type="text" id="n-title" value="${v('title',defaultTitle(sp0))}"></div>
+      <div class="field"><label for="n-date">Date</label><input type="date" id="n-date" value="${v('date','')}"></div>
+      <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${v('start',sp0==='volleyball'?'19:00':'20:00')}"></div>
+      <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${v('end',sp0==='volleyball'?'22:30':'22:00')}"></div>
+      <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="${v('fee',40)}"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${v('capacity',sp0==='volleyball'?18:sp0==='pickleball'?16:sp0==='badminton'?16:20)}"></div>
+      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${E?(E.waitCap==null?'':esc(E.waitCap)):(sp0==='badminton'?4:'')}"></div>
+      ${COURT_SPORTS.includes(sp0)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${v('courts',DEF_COURTS[sp0]||1)}"></div>`:''}
+      <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue" value="${v('venue','')}"></div>
+      <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens" value="${v('opens','')}"><p class="fine">Leave blank to open straight away. Members can join 24 hours before this, Core and up 48 hours before.</p></div></div>
+    <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc" ${E&&E.timeTbc?'checked':''}> Time to be confirmed</label>
+    ${E?`<p class="fine">Changes show for everyone straight away. People already signed up stay signed up.</p>`:''}
+    <div class="row">${E?`<button class="btn" id="n-save">${ic('check')}Save changes</button><button class="btn ghost" id="n-cancel">Cancel</button>`:`<button class="btn" id="n-go">${ic('plus')}Post session</button>`}</div>`,'formbox'):'';
   if(!s)return picker+form+'<div class="empty">No sessions yet.</div>';
   const paid=r.in.filter(e=>!e.guest&&S.payments[adminSid]?.[e.uid]?.ok).length,owed=owedOf(adminSid);
   const nm=e=>e.guest?`${esc(e.guest)} <span class="tagl">Guest of ${esc(nameOf(e.uid,e.key))}</span>`:esc(nameOf(e.uid,e.key))+(S.bookings[e.uid]?.guest?' <span class="tagl">Guest</span>':'')+(S.bookings[e.uid]?.s?.[adminSid]?.byAdmin?' <span class="tagl">Added by admin</span>':'');
@@ -3094,7 +3102,7 @@ function aSessions(list,up){
   return `${picker}${form}
   <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))+'–'+esc(fmtTime(s.end||''))} · AED ${esc(s.fee)}</span><h3 class="big">${esc(s.title)}</h3>
     <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
-    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}<button class="btn ghost sm" id="s-delask">${ic('x')}Delete</button></div>
+    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}<button class="btn ghost sm" id="s-edit">${ic('edit')}Edit</button><button class="btn ghost sm" id="s-delask">${ic('x')}Delete</button></div>
     ${S.delAsk===adminSid?(()=>{const n=r.in.length+r.wait.length;return `<div class="confirm"><b>Delete ${esc(s.title)} for good?</b><p class="fine">${n?`${n} ${n===1?'person is':'people are'} signed up. Deleting doesn't tell them. To let them know by email, use Cancel session instead.`:'No one has signed up yet.'} The court board for this session goes too. This can't be undone.</p><div class="row" style="gap:6px"><button class="btn sm" id="s-delgo">Delete session</button><button class="btn ghost sm" id="s-delno">Keep it</button></div></div>`})():''}
     ${cancelOpen&&!s.cancelled?cancelPanel(adminSid,s,r):''}</div>
   ${payDash(adminSid,s,r)}
@@ -3266,7 +3274,14 @@ function bindAdmin(){
   q('[data-courts]').forEach(b=>b.onclick=()=>{S.courtSport=b.dataset.courts;setView('courts')});
   q('.sp[data-sid]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sid;adminPicked=true;renderAdmin()});
   const past=$('a-past');if(past)past.onchange=()=>{showPast=past.checked;renderAdmin()};
-  on('a-new',()=>{showNew=!showNew;renderAdmin()});
+  on('a-new',()=>{showNew=!showNew;editSid=null;renderAdmin()});
+  on('s-edit',()=>{editSid=adminSid;showNew=false;const x=S.sessions[adminSid];if(x)newSport=x.sport||'badminton';renderAdmin();scrollTo({top:0})});
+  on('n-cancel',()=>{editSid=null;renderAdmin()});
+  on('n-save',async()=>{const sid=editSid,old=S.sessions[sid];if(!old)return;const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
+    const sp=newSport||old.sport||'badminton';if(!canSport(sp)){toast('You can only move sessions to your own departments.');return}
+    const d={sport:sp,date,start:$('n-start').value||old.start||'20:00',end:$('n-end').value||old.end||'22:00',timeTbc:$('n-tbc').checked,title:$('n-title').value.trim()||old.title,fee:Number($('n-fee').value)||0,capacity:Math.max(1,Number($('n-cap').value)||old.capacity||20),
+      waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):(old.courts??null),venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''};
+    try{await S.db.doc('sessions/'+sid).update(d);editSid=null;toast('Session updated.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   q('#a-plist [data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,'',x.dataset.gk,x.value));
   q('#a-plist [data-greset]').forEach(x=>x.onclick=()=>saveGrade(x.dataset.greset,'','ovr',''));
   const aq=$('a-q');if(aq)aq.oninput=()=>{const v=aq.value.trim().toLowerCase();q('#a-plist [data-q]').forEach(li=>li.hidden=!!v&&!li.dataset.q.includes(v))};
@@ -3480,34 +3495,47 @@ function countdown(iso){const ms=new Date(iso).getTime()-Date.now();if(ms<=0)ret
 const dropWhen=iso=>new Date(iso).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Dubai'});
 function prodTag(p,pid){if(!released(p))return`<span class="ptag">Drops in ${countdown(p.releaseAt)}</span>`;if(firstPick(p)&&Date.now()<new Date(p.releaseAt).getTime())return`<span class="ptag">${ic('star')}First pick for you</span>`;const l=leftAll(p,pid);if(!l)return'<span class="ptag dark">Sold out</span>';if(l<=5)return`<span class="ptag">Only ${l} left</span>`;return p.drop==='limited'?'<span class="ptag">Limited</span>':''}
 
-/* Featured drop: FRAGMENTS RELEASE runs on its own pre-order site for now. Images come from that site. */
-const FEATURED_DROP={url:'https://fragments-release.thebadclub-co.workers.dev/',base:'https://fragments-release.thebadclub-co.workers.dev/assets/',
-  title:'FRAGMENTS RELEASE',set:'The Ritual Set',sub:'Three bandanas. Small pieces, a shared identity.',status:'Pre-orders are open',note:'Pickup at BAD rallies · arrives in about 3–4 weeks',
-  designs:[['BEYOND','bandana-design-01-clean.webp','Net lines and stars: going past the barrier'],['CADENCE','bandana-design-02-clean.webp','Measured border, black field, BAD at the centre'],['CURRENT','bandana-design-03-clean.webp','Grey waves for effort and motion']]};
-function dropHTML(){const d=FEATURED_DROP;
-  return `<a class="drop" href="${d.url}" target="_blank" rel="noopener"><div class="drop-img" style="background-image:url('${d.base}bandana-pack-clean.webp')"></div>
-    <div class="drop-body"><span class="label">${esc(d.status)}</span><h3>${esc(d.title)}</h3><p><b>${esc(d.set)}</b> · ${esc(d.sub)}</p>
-      <div class="drop-designs">${d.designs.map(([n,f,t])=>`<figure><div style="background-image:url('${d.base}${f}')"></div><figcaption><b>${n}</b><span>${esc(t)}</span></figcaption></figure>`).join('')}</div>
-      <span class="btn wide">${ic('bag')}Pre-order the set${ic('arrow')}</span><span class="fine">${esc(d.note)}</span></div></a>`}
+/* Pre-orders: FRAGMENTS RELEASE runs on its own pre-order site. Every piece shows here with its pictures and price;
+   ordering opens that site at the right piece. Images come from that site. */
+const FRAG={url:'https://fragments-release.thebadclub-co.workers.dev/',base:'https://fragments-release.thebadclub-co.workers.dev/assets/',title:'FRAGMENTS RELEASE',
+  sub:'Small pieces. A shared identity. A series of small BAD releases, each carrying something of the community.',status:'Pre-orders are open',note:'Arrives in about 3–4 weeks · pickup at BAD rallies',
+  items:[
+   {k:'ritual',name:'THE RITUAL SET',kind:'Three-bandana set',price:175,imgs:['bandana-pack-clean.webp','bandana-design-01-clean.webp','bandana-design-02-clean.webp','bandana-design-03-clean.webp'],
+    d:'Three bandanas, one ritual: BEYOND (net lines and stars), CADENCE (measured border, BAD at the centre) and CURRENT (grey waves, MAKE BAD GOOD AGAIN).'},
+   {k:'badass',name:'BADASS',kind:'Everyday sporting shorts',price:135,imgs:['badass-men-front.webp','badass-men-back.webp','badass-women-front.webp','badass-women-back.webp'],
+    d:'Your everyday base, light and easy to move in. Men’s cut: longer, straighter, clean back. Women’s cut: shorter, curved hem, signature back. XXS to XXL.'},
+   {k:'reverse',name:'REVERSE',kind:'Personalised on-court jersey',price:155,imgs:['reverse-front.webp','reverse-back.webp'],
+    d:'Our first white on-court jersey. Collared, oversized, cropped, with your name (up to 8 letters) and number. Pre-order only: once production starts, it’s gone.'}]};
+function dropHTML(){const d=FRAG,pick=S.fragPick||{};
+  return `<section class="preo"><div class="preo-h"><span class="label">${esc(d.status)}</span><h3>${esc(d.title)}</h3><p class="fine">${esc(d.sub)}</p></div>
+    <div class="preo-grid">${d.items.map(it=>{const i=Math.min(pick[it.k]||0,it.imgs.length-1);return `<article class="preo-item"><a class="preo-img" href="${d.url}#${it.k}" target="_blank" rel="noopener" style="background-image:url('${d.base}${it.imgs[i]}')" aria-label="Pre-order ${esc(it.name)}"></a>
+      ${it.imgs.length>1?`<div class="preo-thumbs">${it.imgs.map((f,j)=>`<button class="pth${j===i?' on':''}" data-fp="${it.k}:${j}" style="background-image:url('${d.base}${f}')" aria-label="Picture ${j+1} of ${esc(it.name)}"></button>`).join('')}</div>`:''}
+      <div class="preo-meta"><span class="fine">${esc(it.kind)}</span><b>${esc(it.name)}</b><span class="num">${aed(it.price)}</span><p class="fine">${esc(it.d)}</p>
+      <a class="btn sm" href="${d.url}#${it.k}" target="_blank" rel="noopener">${ic('bag')}Pre-order${ic('arrow')}</a></div></article>`}).join('')}</div>
+    <p class="fine">${esc(d.note)}</p></section>`}
 /* Volume II leftovers, from the "Final" table on BAD Volume II Preorders. Priced pieces go live straight away;
    the Rally Towel waits as a draft until it has a price. Stock and photos can be changed in Admin → Shop. */
+const V2_LINE=[['On Court Jersey',120,{S:7,M:8,L:1},'Built for play. Clean, focused and made for the game. Last pieces, no restock.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'Built for before, after and everything around the game. Last pieces, no restock.'],['Rally Towel',55,{OS:12},'Compact, absorbent and ready for every rally.'],['Tote Bag',45,{OS:24},'Carry the rally. Built for court days and everything after.'],['Socks',55,{OS:16},'The Volume II socks.'],['Clubhouse Kit',399,{OS:0},'On Court + Off Court + Rally Towel + Tote Bag + Socks + one Clubhouse Exclusive item. Sold out.']];
+/* Volume II product shots, from the Volume II preorder page. Used when a product has no photos of its own. */
+const V2_IMG={'v2-on-court-jersey':['assets/v2/oncourt_front.webp','assets/v2/oncourt_back.webp'],'v2-off-court-tee':['assets/v2/offcourt_front.webp','assets/v2/offcourt_back.webp'],'v2-rally-towel':['assets/v2/towel.webp'],'v2-tote-bag':['assets/v2/tote.webp'],'v2-socks':['assets/v2/socks.webp'],'v2-clubhouse-kit':['assets/v2/oncourt_front.webp','assets/v2/offcourt_front.webp','assets/v2/towel.webp','assets/v2/tote.webp','assets/v2/socks.webp','assets/v2/hidden_item.webp']};
+const pImgs=(pid,p)=>(p&&p.images&&p.images.length)?p.images:(V2_IMG[pid]||[]);
+const v2Missing=()=>V2_LINE.filter(([n])=>!S.products['v2-'+slug(n)]);
 async function seedV2(){const now=new Date().toISOString(),base={drop:'limited',dropName:'Volume II',maxPer:0,releaseAt:null,images:[],createdAt:now,updatedAt:now};
-  const L=[['On Court Jersey',120,{S:7,M:8,L:1},'The Volume II on-court jersey. Last pieces, no restock.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'The Volume II off-court tee. Last pieces, no restock.'],['Rally Towel',0,{OS:12},'The Volume II rally towel.'],['Tote Bag',45,{OS:24},'The Volume II tote.'],['Socks',50,{OS:16},'Volume II socks.']];
-  try{for(const [i,[name,price,sizes,desc]] of L.entries())await S.db.doc('products/v2-'+slug(name)).set({...base,name,price,sizes,desc,order:100+i,status:price>0?'live':'draft'});
-    toast('Volume II is in the Shop. Add photos and the Rally Towel price in Admin → Shop.');render()}catch(e){toast("Sorry, that didn't save.")}}
-const v2State=()=>{const v=Object.values(S.products).filter(p=>/volume ii/i.test(p.dropName||''));return !v.length?'none':v.some(p=>p.status==='live')?'live':'draft'};
+  try{for(const [i,[name,price,sizes,desc]] of V2_LINE.entries()){const id='v2-'+slug(name);if(S.products[id])continue;await S.db.doc('products/'+id).set({...base,name,price,sizes,desc,order:100+i,status:price>0?'live':'draft'})}
+    toast('The Volume II lineup is in the Shop, with photos. Check the stock in Admin → Shop.');render()}catch(e){toast("Sorry, that didn't save.")}}
+const v2State=()=>{const v=Object.values(S.products).filter(p=>/volume ii/i.test(p.dropName||''));return !v.length?'none':v2Missing().length?'missing':v.some(p=>p.status==='live')?'live':'draft'};
 function renderShop(){
   const el=$('v-shop');if(!el)return;
-  const all=liveProducts(),f=S.shopFilter,isV2=([,p])=>/volume ii/i.test(p.dropName||''),v2=all.filter(isV2).filter(([pid,p])=>leftAll(p,pid)>0),list=all.filter(x=>!isV2(x)&&(f==='all'||x[1].drop===f));
+  const all=liveProducts(),f=S.shopFilter,isV2=([,p])=>/volume ii/i.test(p.dropName||''),v2=all.filter(isV2),list=all.filter(x=>!isV2(x)&&(f==='all'||x[1].drop===f));
   const next=all.filter(([,p])=>p.drop==='limited'&&!released(p)).sort((a,b)=>new Date(a[1].releaseAt)-new Date(b[1].releaseAt))[0];
   const bagN=S.bag.reduce((t,i)=>t+i.qty,0),bagT=S.bag.reduce((t,i)=>t+i.qty*i.price,0);
   const mine=Object.entries(S.myOrders).sort((a,b)=>String(b[1].createdAt).localeCompare(String(a[1].createdAt)));
-  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; Essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, Essentials stay.</p></div>${shopAdmin()&&v2State()!=='live'?`<div class="note adminnote">${ic('bag')}<div style="display:grid;gap:8px"><span><b>Volume II isn't showing yet.</b> ${v2State()==='none'?'Add the last pieces (jersey, tee, tote, socks, towel) with the stock left over from the drop.':'The pieces are saved as drafts. Set them live in Admin → Shop.'} Only shop admins see this.</span>${v2State()==='none'?`<button class="btn sm" data-v2seed="1" style="justify-self:start">${ic('plus')}Add Volume II to the Shop</button>`:''}</div></div>`:''}${dropHTML()}
-    ${next?(()=>{const [pid,p]=next;return `<button class="dropban" data-pid="${esc(pid)}">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="">`:''}<div class="db-t"><span class="label">Next limited drop${p.dropName?' · '+esc(p.dropName):''}</span><b>${esc(p.name)}</b><span class="fine">${esc(dropWhen(p.releaseAt))}</span></div><span class="db-c num">${countdown(p.releaseAt)}</span></button>`})():''}
-    ${v2.length?`<section class="v2"><div class="v2-h"><span class="label">Volume II · Last pieces</span><h3>The Volume II kit is back, in small numbers.</h3><p class="fine">What's left from the Volume II drop. No restock once they're gone.</p></div>
-      <div class="pgrid">${v2.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">Volume II</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div></section>`:''}
+  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; Essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, Essentials stay.</p></div>${shopAdmin()&&v2State()!=='live'?`<div class="note adminnote">${ic('bag')}<div style="display:grid;gap:8px"><span><b>Volume II isn't showing yet.</b> ${v2State()==='none'||v2State()==='missing'?'Add the full lineup with photos: jersey, tee, towel, tote and socks with the stock left over, and the Clubhouse Kit as sold out.':'The pieces are saved as drafts. Set them live in Admin → Shop.'} Only shop admins see this.</span>${v2State()==='none'||v2State()==='missing'?`<button class="btn sm" data-v2seed="1" style="justify-self:start">${ic('plus')}Add the Volume II lineup</button>`:''}</div></div>`:''}${dropHTML()}
+    ${next?(()=>{const [pid,p]=next;return `<button class="dropban" data-pid="${esc(pid)}">${pImgs(pid,p)[0]?`<img src="${pImgs(pid,p)[0]}" alt="">`:''}<div class="db-t"><span class="label">Next limited drop${p.dropName?' · '+esc(p.dropName):''}</span><b>${esc(p.name)}</b><span class="fine">${esc(dropWhen(p.releaseAt))}</span></div><span class="db-c num">${countdown(p.releaseAt)}</span></button>`})():''}
+    ${v2.length?`<section class="v2"><div class="v2-h"><span class="label">Volume II · Last pieces</span><h3>The Volume II drop.</h3><p class="fine">Every piece from the drop. What's left is yours to grab, with no restock once it's gone. Sold-out pieces stay here for the record.</p></div>
+      <div class="pgrid">${v2.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${pImgs(pid,p)[0]?`<img src="${pImgs(pid,p)[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">Volume II</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div></section>`:''}
     <div class="chips" role="group" aria-label="Filter">${[['all','All'],['limited','Limited drops'],['essentials','Essentials']].map(([k,l])=>`<button class="chip" data-sf="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
-    ${list.length?`<div class="pgrid">${list.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">${esc(p.drop==='limited'?(p.dropName||'Limited drop'):'Essentials')}</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div>`
+    ${list.length?`<div class="pgrid">${list.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${pImgs(pid,p)[0]?`<img src="${pImgs(pid,p)[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">${esc(p.drop==='limited'?(p.dropName||'Limited drop'):'Essentials')}</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div>`
       :`<div class="empty">${ic('bag')}<span>${all.length?'Nothing here right now.':'The first drop is on its way. Check back soon.'}</span></div>`}
     ${mine.length?`<section class="hsec"><h3 class="ah">My orders</h3><div class="list">${mine.map(([oid,o])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">Order ${esc(oid.slice(-5).toUpperCase())} · ${esc(fmtD(o.createdAt))}</div><div class="sub">${o.items.map(i=>`${i.qty}× ${esc(i.name)}${i.size&&i.size!=='OS'?' ('+esc(i.size)+')':''}`).join(', ')}</div><div class="sub">${o.fulfil==='delivery'?ic('truck')+' Porter delivery':ic('pin')+' Pick up'} · ${esc(PAY[o.pay]?.label||'')}</div></div><div style="display:grid;justify-items:end;gap:4px"><b class="num">${aed(o.total)}</b><span class="tagl${o.status==='done'||o.status==='paid'||o.status==='ready'?' solid':o.status==='cancelled'?' warn':''}">${esc(ORDER_ST[o.status]||o.status)}</span></div></div>`).join('')}</div></section>`:''}
     ${bagN?`<button class="bagfab" data-bag="1">${ic('bag')}<span>Bag · ${bagN}</span><b class="num">${aed(bagT)}</b></button>`:''}
@@ -3518,8 +3546,8 @@ function productSheet(pid){const p=S.products[pid];if(!p)return'';const rel=rele
   const q=Math.min(S.shopQty||1,Math.max(1,max));
   return `<div class="sheet-ov" data-close="1"><div class="sheet" role="dialog" aria-label="${esc(p.name)}">
     <button class="sheet-x" data-close="1" aria-label="Close">${ic('x')}</button>
-    <div class="gallery">${(p.images&&p.images.length?p.images:['']).map(u=>u?`<img src="${u}" alt="${esc(p.name)}">`:`<div class="noimg">${ic('bag')}</div>`).join('')}</div>
-    ${p.images&&p.images.length>1?`<p class="fine" style="text-align:center">Swipe for more photos</p>`:''}
+    <div class="gallery">${(pImgs(pid,p).length?pImgs(pid,p):['']).map(u=>u?`<img src="${u}" alt="${esc(p.name)}">`:`<div class="noimg">${ic('bag')}</div>`).join('')}</div>
+    ${pImgs(pid,p).length>1?`<p class="fine" style="text-align:center">Swipe for more photos</p>`:''}
     <div class="sheet-b"><span class="label">${esc(p.drop==='limited'?'Limited drop'+(p.dropName?' · '+p.dropName:''):'Essentials')}</span><h3 class="big">${esc(p.name)}</h3><b class="num price">${aed(p.price)}</b>
       ${p.desc?`<p class="muted">${esc(p.desc)}</p>`:''}
       ${!rel?`<div class="note">${ic('clock')}<span>Drops ${esc(dropWhen(p.releaseAt))}. Come back then, it goes fast.</span></div>`:`
@@ -3539,7 +3567,7 @@ function bagSheet(){const c=S.payCfg||{},items=S.bag,sub=items.reduce((t,i)=>t+i
   const ups=upcoming().slice(0,6);
   return `<div class="sheet-ov" data-close="1"><div class="sheet" role="dialog" aria-label="Your bag"><button class="sheet-x" data-close="1" aria-label="Close">${ic('x')}</button><div class="sheet-b">
     <h3 class="big">Your bag</h3>
-    ${items.length?`<div class="list">${items.map((i,n)=>`<div class="li bagline"><div class="bthumb">${S.products[i.pid]?.images?.[0]?`<img src="${S.products[i.pid].images[0]}" alt="">`:ic('bag')}</div><div><div class="nm">${esc(i.name)}</div><div class="sub">${esc(sizeName(i.size))} · ${aed(i.price)}</div><div class="qty sm"><button class="btn ghost sm" data-bq="${n}" data-d="-1" aria-label="One less">${ic('minus')}</button><b class="num">${i.qty}</b><button class="btn ghost sm" data-bq="${n}" data-d="1" aria-label="One more">${ic('plus')}</button></div></div><b class="num">${aed(i.qty*i.price)}</b></div>`).join('')}
+    ${items.length?`<div class="list">${items.map((i,n)=>`<div class="li bagline"><div class="bthumb">${pImgs(i.pid,S.products[i.pid])[0]?`<img src="${pImgs(i.pid,S.products[i.pid])[0]}" alt="">`:ic('bag')}</div><div><div class="nm">${esc(i.name)}</div><div class="sub">${esc(sizeName(i.size))} · ${aed(i.price)}</div><div class="qty sm"><button class="btn ghost sm" data-bq="${n}" data-d="-1" aria-label="One less">${ic('minus')}</button><b class="num">${i.qty}</b><button class="btn ghost sm" data-bq="${n}" data-d="1" aria-label="One more">${ic('plus')}</button></div></div><b class="num">${aed(i.qty*i.price)}</b></div>`).join('')}
       ${(()=>{const w=withOff(sub);return w.off?`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><span>${ic('star')} ${esc(pointsFor(S.uid).level)} ${w.off}% off</span><b class="num">− ${aed(w.disc)}</b></div><div class="li total" style="grid-template-columns:minmax(0,1fr) auto"><b>Total</b><b class="num">${aed(w.total)}</b></div>`:`<div class="li total" style="grid-template-columns:minmax(0,1fr) auto"><b>Total</b><b class="num">${aed(sub)}</b></div>`})()}</div>
     <div class="field" style="margin:0"><span class="lbl">How you'll get it</span><div class="chips"><button class="chip" data-ful="pickup" aria-pressed="${fu==='pickup'}">${ic('pin')}Pick up at a session</button><button class="chip" data-ful="delivery" aria-pressed="${fu==='delivery'}">${ic('truck')}Delivery with Porter</button></div></div>
     ${fu==='pickup'?`<div class="field" style="margin:0"><label for="sh-sess">Which session</label><select id="sh-sess">${ups.map(([sid,x])=>{const d=dParts(x.date);return `<option value="${esc(sid)}" ${S.shopSess===sid?'selected':''}>${esc(x.title)} · ${d.w} ${d.d} ${d.m}</option>`}).join('')}<option value="" ${S.shopSess===''?'selected':''}>Any session, I'll let you know</option></select></div>`
@@ -3549,7 +3577,7 @@ function bagSheet(){const c=S.payCfg||{},items=S.bag,sub=items.reduce((t,i)=>t+i
     :`<div class="empty">${ic('bag')}<span>Your bag is empty.</span></div>`}
   </div></div></div>`}
 
-function bindShop(el){el.querySelectorAll("[data-v2seed]").forEach(b=>b.onclick=()=>{b.disabled=true;seedV2()});
+function bindShop(el){el.querySelectorAll("[data-fp]").forEach(b=>b.onclick=()=>{const [k,j]=b.dataset.fp.split(":");S.fragPick={...(S.fragPick||{}),[k]:+j};renderShop()});el.querySelectorAll("[data-v2seed]").forEach(b=>b.onclick=()=>{b.disabled=true;seedV2()});
   const q=s=>el.querySelectorAll(s);
   q('[data-sf]').forEach(b=>b.onclick=()=>{S.shopFilter=b.dataset.sf;renderShop()});
   q('[data-pid]').forEach(b=>b.onclick=()=>{S.shopPid=b.dataset.pid;S.shopSize=null;S.shopQty=1;renderShop()});
@@ -3616,7 +3644,7 @@ function aShop(){
   return `<div class="tiles">${tile(Object.values(S.products).filter(p=>p.status==='live').length,'Live products')}${tile(ords.filter(([,o])=>o.status==='new').length,'New orders')}${tile(`<small>AED</small> ${revenue}`,'Paid sales')}</div>
   ${form}
   ${box(`Products <span class="hint num">${prods.length}</span>`,`${shopEdit?'':`<div class="row"><button class="btn" id="pf-new">${ic('plus')}Add a product</button>${Object.values(S.products).some(p=>/volume ii/i.test(p.dropName||''))?'':`<button class="btn ghost" id="pf-v2">${ic('bag')}Add Volume II last pieces</button>`}</div>`}
-    <div class="list">${prods.map(([pid,p])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="bthumb">${p.images&&p.images[0]?`<img src="${p.images[0]}" alt="">`:ic('bag')}</div><div><div class="nm">${esc(p.name)} <span class="tagl${p.status==='live'?' solid':''}">${p.status==='live'?(released(p)?'Live':'Drops '+esc(dropWhen(p.releaseAt))):p.status==='draft'?'Draft':'Archived'}</span></div><div class="sub">${esc(DROPS[p.drop]||'')}${p.dropName?' · '+esc(p.dropName):''} · ${aed(p.price)}</div><div class="sub num">${sizeList(p).map(z=>`${esc(sizeName(z))} ${leftOf(p,pid,z)}/${(p.sizes||{})[z]||0}`).join(' · ')} left</div></div><button class="btn ghost sm" data-pedit="${esc(pid)}">Edit</button></div>`).join('')||'<p class="hint">No products yet. Add your first drop.</p>'}</div>`)}
+    <div class="list">${prods.map(([pid,p])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="bthumb">${pImgs(pid,p)[0]?`<img src="${pImgs(pid,p)[0]}" alt="">`:ic('bag')}</div><div><div class="nm">${esc(p.name)} <span class="tagl${p.status==='live'?' solid':''}">${p.status==='live'?(released(p)?'Live':'Drops '+esc(dropWhen(p.releaseAt))):p.status==='draft'?'Draft':'Archived'}</span></div><div class="sub">${esc(DROPS[p.drop]||'')}${p.dropName?' · '+esc(p.dropName):''} · ${aed(p.price)}</div><div class="sub num">${sizeList(p).map(z=>`${esc(sizeName(z))} ${leftOf(p,pid,z)}/${(p.sizes||{})[z]||0}`).join(' · ')} left</div></div><button class="btn ghost sm" data-pedit="${esc(pid)}">Edit</button></div>`).join('')||'<p class="hint">No products yet. Add your first drop.</p>'}</div>`)}
   ${box(`Orders <span class="hint num">${ords.length}</span>`,`<div class="chips">${[['open','Open'],['new','Placed'],['paid','Paid'],['ready','Ready'],['done','Collected'],['cancelled','Cancelled'],['all','All']].map(([k,l])=>`<button class="chip" data-of="${k}" aria-pressed="${shopOrdF===k}">${l}</button>`).join('')}</div>
     <div class="list">${shown.map(([oid,o])=>{const sx=o.session&&S.sessions[o.session];return `<div class="li ord" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(o.name||'Player')} · <span class="num">#${esc(oid.slice(-5).toUpperCase())}</span></div>
       <div class="sub">${o.items.map(i=>`${i.qty}× ${esc(i.name)}${i.size&&i.size!=='OS'?' ('+esc(i.size)+')':''}`).join(', ')}</div>
