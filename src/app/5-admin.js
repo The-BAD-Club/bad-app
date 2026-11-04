@@ -219,7 +219,7 @@ function cancelPanel(sid,s,r){const em=sessionEmails(sid),ppl=[...r.in,...r.wait
 /* payment dashboard for one session: who has paid, who has sent money to check, who is still pending */
 function payDash(sid,s,r){if(!(Number(s.fee)>0))return '';const fee=Number(s.fee)||0;
   const rows=r.in.filter(e=>!e.guest).map(e=>{const P=S.payments[sid]?.[e.uid]||{},b=S.bookings[e.uid]?.s?.[sid]||{},g=(b.guests||[]).filter(x=>!x.out).length;
-    return {uid:e.uid,name:nameOf(e.uid,e.key),st:P.waived?'free':P.ok?'paid':b.sent?'sent':'pending',method:PAY[P.method||b.pay||'cash']?.label||'Cash',amount:fee*(1+g),c:S.contacts[e.uid]||{}}});
+    return {uid:e.uid,name:payName(e.uid)+((b.guests||[]).filter(x=>!x.out).length?' + '+(b.guests||[]).filter(x=>!x.out).map(x=>x.n).join(', ')+' (guest)':'')+(isGuestBk(e.uid)?' (guest)':''),st:P.waived?'free':P.ok?'paid':b.sent?'sent':'pending',method:PAY[P.method||b.pay||'cash']?.label||'Cash',amount:fee*(1+g),c:S.contacts[e.uid]||{}}});
   const grp=k=>rows.filter(x=>x.st===k),pend=grp('pending'),sent=grp('sent'),paid=[...grp('paid'),...grp('free')];
   const collected=grp('paid').reduce((t,x)=>t+x.amount,0),due=[...pend,...sent].reduce((t,x)=>t+x.amount,0);
   const can=typeof canPayFor==='function'?canPayFor(s.sport):true;
@@ -269,6 +269,7 @@ function bindAdmin(){
   q('[data-go]').forEach(b=>b.onclick=()=>{aTab=b.dataset.go;if(b.dataset.sid){adminSid=b.dataset.sid;adminPicked=true}if(b.dataset.new)showNew=true;renderAdmin();scrollTo({top:0})});
   q('[data-courts]').forEach(b=>b.onclick=()=>{S.courtSport=b.dataset.courts;setView('courts')});
   q('.sp-open[data-sid]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sid;adminPicked=true;renderAdmin()});
+  q('[data-glink]').forEach(x=>x.onchange=async()=>{if(!x.value)return;try{await linkGuest(x.dataset.glink,x.value)}catch(e){toast("Sorry, that didn't link. Please try again.")}});
   q('[data-sqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.sqr));
   q('[data-sedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sedit;adminPicked=true;editSid=adminSid;showNew=false;const x=S.sessions[adminSid];if(x)newSport=x.sport||'badminton';renderAdmin();scrollTo({top:0})});
   const past=$('a-past');if(past)past.onchange=()=>{showPast=past.checked;renderAdmin()};
@@ -444,6 +445,26 @@ function payChecks(){const out=[];
   return out.sort((a,b)=>String(a.at).localeCompare(String(b.at)))}
 const rmBtn=(uid,sid,amt)=>`<span class="row" style="gap:8px;flex:none"><span class="num">${amt}</span><button class="rmx" data-uparm="${esc(uid)}|${esc(sid)}" aria-label="Remove this booking" aria-pressed="${S.rmArm===uid+'|'+sid}">${ic('x')}</button></span>`;
 const rmConf=(uid,sid,n)=>S.rmArm===uid+'|'+sid?`<div class="rmconf"><span class="fine">${sid==='*'&&n>1?`Remove all ${n} unpaid bookings?`:'Remove this booking?'} They won’t owe for it and come off the session list.</span><div class="row" style="gap:6px"><button class="chip sm" data-uprm="${esc(uid)}|${esc(sid)}">${ic('x')}Remove</button><button class="chip sm" data-uprmno="1">Keep</button></div></div>`:'';
+/* guests: a name, never just "Player". Guests added by an admin have their own booking (guest:true, a name);
+   guests brought by a player ride on that player's booking and are named next to them. */
+const isGuestBk=uid=>!!(S.bookings[uid]&&S.bookings[uid].guest);
+const payName=uid=>S.profiles[uid]?.nickname||S.bookings[uid]?.name||nameOf(uid,S.bookings[uid]?.key)||'Guest';
+const guestNames=x=>{const g=(x&&x.guests||[]).filter(y=>!y.out).map(y=>y.n);return g.length?` · with ${g.join(', ')} (guest${g.length>1?'s':''})`:''};
+const linkPick=gid=>{const o=Object.entries(S.profiles).filter(([,p])=>!p.sample).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||''));
+  return `<select class="memset" data-glink="${esc(gid)}" aria-label="Link ${esc(payName(gid))} to a player"><option value="">Link to a player…</option>${o.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname)}${p.listName&&p.listName!==p.nickname?' · '+esc(p.listName):''}</option>`).join('')}</select>`};
+/* move a guest's bookings and payment status onto the player's own account, then remove the guest record */
+async function linkGuest(gid,uid,quiet){const g=S.bookings[gid],p=S.profiles[uid];if(!g||!g.guest||!p)return false;
+  for(const [sid,x] of Object.entries(g.s||{})){if(!S.sessions[sid])continue;const mine=S.bookings[uid]?.s?.[sid];
+    if(!mine){const {at,t,pay,sent,ask,out,tout}=x,e={at:at||new Date().toISOString(),pay:pay||'cash',guests:[]};if(t)e.t=t;if(sent)e.sent=sent;if(ask)e.ask=ask;if(out)e.out=out;if(tout)e.tout=tout;
+      await staffBooking(uid,sid,()=>e,{key:p.listKey||'',s:(S.bookings[uid]||{}).s||{}})}
+    const P=S.payments[sid]?.[gid];if(P&&!S.payments[sid]?.[uid])await setPayment(uid,sid,P)}
+  await S.db.doc('bookings/'+gid).delete();if(!quiet)toast(`${payName(gid)}'s bookings and payments are now on ${p.nickname}'s account.`);return true}
+/* run by a full admin's app: a guest who later signs up with the same name is linked to their new account on their own.
+   Only when exactly one player has that name and their card is newer than the guest booking, so nobody gets someone else's history. */
+async function autoLinkGuests(){if(S._glink||!S.db||typeof fullAdmin!=='function'||!fullAdmin()||!Object.keys(S.profiles||{}).length)return;S._glink=true;
+  try{for(const [gid,g] of Object.entries(S.bookings||{})){if(!g.guest||!g.name)continue;const n=normName(g.name),first=Object.values(g.s||{}).map(x=>x.at||'').sort()[0]||'';
+    const m=Object.entries(S.profiles).filter(([,p])=>!p.sample&&(normName(p.nickname)===n||normName(p.listName)===n));
+    if(m.length===1&&String(m[0][1].createdAt||'')>=first)try{await linkGuest(gid,m[0][0],true)}catch(_){}}}finally{S._glink=false}}
 function unpaidList(){const out=[];
   for(const uid of Object.keys(S.bookings||{})){const items=pendingFor(uid).filter(r=>canSport(S.sessions[r.sid].sport));if(items.length)out.push({uid,items,total:items.reduce((t,r)=>t+r.amount,0)})}
   return out.sort((a,b)=>b.total-a.total)}
@@ -451,16 +472,16 @@ function aPayments(){
   const C=payChecks(),U=unpaidList(),Cu=new Set(C.map(c=>c.uid)),UL=U.filter(u=>!Cu.has(u.uid)),owed=U.reduce((t,u)=>t+u.total,0),since=Date.now()-14*864e5,rec=[];
   for(const [sid,m] of Object.entries(S.payments||{})){const s=S.sessions[sid];if(!s||!canSport(s.sport))continue;for(const [uid,P] of Object.entries(m||{}))if(P&&P.ok&&P.at&&Date.parse(P.at)>since)rec.push({sid,uid,P,s})}
   rec.sort((a,b)=>String(b.P.at).localeCompare(String(a.P.at)));
-  const nm=uid=>esc(S.profiles[uid]?.nickname||'Player');
+  const nm=uid=>esc(payName(uid))+(isGuestBk(uid)?' <span class="tagl">Guest</span>':'');
   return `<div class="tiles">${tile(C.length,'To check')}${tile(owed,'AED unpaid')}${tile(U.length,'Players owing')}</div>
   ${payChecksHTML()||box('Payments to check','<p class="hint">Nothing to check right now. When a player taps Check with admin or I\'ve paid, they show here.</p>')}
-  ${box(`Unpaid <span class="hint num">AED ${owed}</span>`,UL.length?`<input type="search" id="pay-q" placeholder="Search a player" value="${esc(S.payQ||'')}" aria-label="Search unpaid players"><div class="list" id="a-unpaid">${UL.map(u=>{const p=S.profiles[u.uid]||{},bs=S.bookings[u.uid]?.s||{};return `<div class="li pcheck" data-q="${esc((p.nickname||'').toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr)">${avatar(p,p.listKey)}<div><div class="row" style="justify-content:space-between"><span class="nm">${nm(u.uid)}</span><b class="num">AED ${u.total}</b></div>
-    ${u.items.map(r=>{const s=S.sessions[r.sid],x=bs[r.sid]||{};return `<div class="sub pline"><span>${esc(s.title||sportOf(s.sport).club)} · ${fmtS(s)} · ${PAY[x.pay||'cash']?.label||'Cash'}</span>${u.items.length>1?rmBtn(u.uid,r.sid,r.amount):''}</div>${rmConf(u.uid,r.sid)}`}).join('')}
-    <div class="row" style="gap:6px;margin-top:8px"><button class="chip sm" data-upok="${esc(u.uid)}">${ic('check')}Mark all paid</button><button class="chip sm" data-upfree="${esc(u.uid)}">Make free</button><button class="chip sm" data-uparm="${esc(u.uid)}|*" aria-pressed="${S.rmArm===u.uid+'|*'}">${ic('x')}Remove</button></div>${rmConf(u.uid,'*',u.items.length)}<div hidden></div></div></div>`}).join('')}</div>`:(U.length?'<p class="hint">Everyone else owing is in Payments to check above.</p>':'<p class="hint">Everyone is paid up. Thank you.</p>'))}
+  ${box(`Unpaid <span class="hint num">AED ${owed}</span>`,UL.length?`<input type="search" id="pay-q" placeholder="Search a player" value="${esc(S.payQ||'')}" aria-label="Search unpaid players"><div class="list" id="a-unpaid">${UL.map(u=>{const p=S.profiles[u.uid]||{},bs=S.bookings[u.uid]?.s||{};return `<div class="li pcheck" data-q="${esc(payName(u.uid).toLowerCase())}" style="grid-template-columns:auto minmax(0,1fr)">${avatar(p,p.listKey)}<div><div class="row" style="justify-content:space-between"><span class="nm">${nm(u.uid)}</span><b class="num">AED ${u.total}</b></div>
+    ${u.items.map(r=>{const s=S.sessions[r.sid],x=bs[r.sid]||{};return `<div class="sub pline"><span>${esc(s.title||sportOf(s.sport).club)} · ${fmtS(s)} · ${PAY[x.pay||'cash']?.label||'Cash'}${guestNames(x)}</span>${u.items.length>1?rmBtn(u.uid,r.sid,r.amount):''}</div>${rmConf(u.uid,r.sid)}`}).join('')}
+    <div class="row" style="gap:6px;margin-top:8px"><button class="chip sm" data-upok="${esc(u.uid)}">${ic('check')}Mark all paid</button><button class="chip sm" data-upfree="${esc(u.uid)}">Make free</button>${isGuestBk(u.uid)&&fullAdmin()?linkPick(u.uid):''}<button class="chip sm" data-uparm="${esc(u.uid)}|*" aria-pressed="${S.rmArm===u.uid+'|*'}">${ic('x')}Remove</button></div>${rmConf(u.uid,'*',u.items.length)}<div hidden></div></div></div>`}).join('')}</div>`:(U.length?'<p class="hint">Everyone else owing is in Payments to check above.</p>':'<p class="hint">Everyone is paid up. Thank you.</p>'))}
   ${boxD(`Confirmed in the last 2 weeks <span class="hint num">${rec.length}</span>`,rec.length?`<div class="list">${rec.slice(0,40).map(r=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><span class="nm">${nm(r.uid)}</span><div class="sub">${esc(r.s.title||sportOf(r.s.sport).club)} · ${fmtS(r.s)}${r.P.by?' · by '+esc(r.P.by.split('@')[0]):''}</div></div><div class="row" style="gap:6px"><span class="tagl solid">${ic('check')}${r.P.waived?'Free':PAY[r.P.method]?.label||'Paid'}</span><button class="chip sm" data-pundo="${esc(r.sid)}|${esc(r.uid)}">Undo</button></div></div>`).join('')}</div>`:'<p class="hint">Nothing confirmed yet.</p>')}`}
 function payChecksHTML(){const L=payChecks();if(!L.length)return '';
-  return box(`Payments to check <span class="hint num">${L.length}</span>`,`<div class="list">${L.map(c=>{const p=S.profiles[c.uid]||{},bs=S.bookings[c.uid]?.s||{};return `<div class="li pcheck" style="grid-template-columns:auto minmax(0,1fr)">${avatar(p,p.listKey)}<div><div class="row" style="justify-content:space-between"><span class="nm">${esc(p.nickname||'Player')}</span><b class="num">AED ${c.total}</b></div>
-    ${c.items.map(r=>{const s=S.sessions[r.sid],x=bs[r.sid]||{};return `<div class="sub pline"><span>${esc(s.title||sportOf(s.sport).club)} · ${fmtS(s)} · ${PAY[x.pay||'cash']?.label||'Cash'}${x.sent?' · says paid':''}</span>${c.items.length>1?rmBtn(c.uid,r.sid,r.amount):''}</div>${rmConf(c.uid,r.sid)}`}).join('')}
+  return box(`Payments to check <span class="hint num">${L.length}</span>`,`<div class="list">${L.map(c=>{const p=S.profiles[c.uid]||{},bs=S.bookings[c.uid]?.s||{};return `<div class="li pcheck" style="grid-template-columns:auto minmax(0,1fr)">${avatar(p,p.listKey)}<div><div class="row" style="justify-content:space-between"><span class="nm">${esc(payName(c.uid))}${isGuestBk(c.uid)?' <span class="tagl">Guest</span>':''}</span><b class="num">AED ${c.total}</b></div>
+    ${c.items.map(r=>{const s=S.sessions[r.sid],x=bs[r.sid]||{};return `<div class="sub pline"><span>${esc(s.title||sportOf(s.sport).club)} · ${fmtS(s)} · ${PAY[x.pay||'cash']?.label||'Cash'}${guestNames(x)}${x.sent?' · says paid':''}</span>${c.items.length>1?rmBtn(c.uid,r.sid,r.amount):''}</div>${rmConf(c.uid,r.sid)}`}).join('')}
     ${c.note?`<p class="hint" style="margin:6px 0 0">“${esc(c.note)}”</p>`:''}
     <div class="row" style="gap:6px;margin-top:8px"><button class="chip sm" data-pcok="${esc(c.uid)}">${ic('check')}Paid</button><button class="chip sm" data-pcfree="${esc(c.uid)}">Make free</button><button class="chip sm" data-pcno="${esc(c.uid)}">Not received</button><button class="chip sm" data-uparm="${esc(c.uid)}|*" aria-pressed="${S.rmArm===c.uid+'|*'}">${ic('x')}Remove</button><button class="chip sm" data-pcrm="${esc(c.uid)}">Remove request</button></div>${rmConf(c.uid,'*',c.items.length)}<div hidden></div></div></div>`}).join('')}</div>`)}
 

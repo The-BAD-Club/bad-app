@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.32 | 2026-11-04 | Payments name every guest (no more "Player"), with a Guest tag and who brought them; when a guest signs up with the same name they are linked to their new account on their own, bookings and payments included; admins can also link a guest to a player by hand |
 | 0.31 | 2026-11-04 | Join BAD on the public Home is now a big full-width button |
 | 0.30 | 2026-11-04 | While the app loads you only see the BAD logo; the app fades in once it's ready, with nothing showing through |
 | 0.29 | 2026-11-04 | Volume II prices: Tote Bag AED 55, Socks AED 55, Rally Towel AED 55 and live; items already in the Shop update on their own |
