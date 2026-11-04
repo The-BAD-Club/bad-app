@@ -59,3 +59,7 @@ html.guest .jointop{margin-left:0}
 .phome .hsess{border:1px solid var(--line)!important;box-shadow:none!important;outline:0}.phome .list{gap:8px}
 .story p{margin:0 0 10px;max-width:60ch;line-height:1.55;color:var(--muted)}.story p b{color:var(--ink);font-weight:600}.story p:last-child{margin-bottom:0}details.story p:first-of-type{margin-top:10px}
 .phero h2.phtitle{font-family:inherit;font-size:clamp(1.6rem,7vw,2.6rem);margin:0}
+
+/* the main call to action on the public Home: big and unmissable */
+.bigjoin{width:100%;max-width:520px;justify-content:center;font-size:1.25rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:20px 28px;min-height:64px;border-radius:999px;margin-top:6px}
+.bigjoin svg.i{width:24px;height:24px}

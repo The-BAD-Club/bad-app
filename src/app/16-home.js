@@ -11,7 +11,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const guest=!!window.BAD_GUEST,me=!guest&&S.uid&&typeof myProfile==='function'?myProfile():null,c=PS();
   const next=(S.loaded||S.pubSessions)?upcoming().filter(([,s])=>!s.cancelled&&!isSide(s.sport)).slice(0,3):[];
   const cta=guest
-    ?`<div class="row"><button class="btn" data-hjoin="1">${ic('card')}Join BAD</button></div>`
+    ?`<button class="btn bigjoin" data-hjoin="1">${ic('card')}Join BAD</button>`
     :`<div class="row"><button class="btn" data-hgo="card">${ic('card')}${me?'Open My BAD':'Make my card'}</button><button class="btn ghost" data-hgo="play">${ic('play')}Find a session</button></div>`;
   const depts=Object.keys(SPORTS).filter(k=>k!=='vibe');
   const story=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
