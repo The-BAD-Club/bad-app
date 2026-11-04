@@ -371,8 +371,8 @@ test('Home photos and videos: anyone can read config/home, only full admins writ
   await assertFails(setDoc(doc(anon(), 'config', 'home'), h));
 });
 test('sign-ups under review and guest passes only see their own data', async () => {
+  await env.withSecurityRulesDisabled(async c => { const db = c.firestore(); await setDoc(doc(db, 'profiles', 'new1'), { nickname: 'Newbie' }); await setDoc(doc(db, 'bookings', 'new1'), { s: {} }); });
   const n = ctx('new1', 'new1@x.com');
-  await env.withSecurityRulesDisabled(async c => { await setDoc(doc(c.firestore(), 'profiles', 'new1'), { nickname: 'Newbie' }); await setDoc(doc(c.firestore(), 'bookings', 'new1'), { s: {} }); });
   await assertSucceeds(getDoc(doc(n, 'profiles', 'new1')));                                          // own card
   await assertFails(getDoc(doc(n, 'profiles', 'p2')));                                               // nobody else's
   await assertFails(getDocs(collection(n, 'profiles')));
