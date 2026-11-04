@@ -1081,8 +1081,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.33';
+const APP_VERSION='0.34';
 const CHANGES=[
+  ['0.34','2026-11-04','Badminton department is now BADminton; Wednesday Rally and Friday Rally are now BADminton Wednesday and BADminton Friday (existing sessions renamed on their own)'],
   ['0.33','2026-11-04','Courts is now Check-in and Pay: one list with who came, how each person paid, walk-ins, and End session (with optional no-shows); the court queue, games and rankings are paused while the queue is rebuilt; guests and walk-ins keep their names; fewer tabs: Home, My BAD, Play (On Court and Off Court), Courts, Club, Shop; the Guide opens from Home and the Board from My BAD'],
   ['0.32','2026-11-04','Payments name every guest (no more "Player"), with a Guest tag and who brought them; when a guest signs up with the same name they are linked to their new account on their own, bookings and payments included; admins can also link a guest to a player by hand'],
   ['0.31','2026-11-04','Join BAD on the public Home is now a big full-width button'],
@@ -1123,7 +1124,7 @@ function whatsNewHTML(){return `<p class="hint" style="margin-top:0">You're on v
 (function addVer(){if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',addVer);return}const f=document.querySelector('footer.sign');if(f&&!f.querySelector('.ver')){const s=document.createElement('span');s.className='ver num';s.textContent='BAD App v'+APP_VERSION+(APP_VERSION.startsWith('0.')?' · testing':'');f.appendChild(s)}})();
 
 const CFG={freeHours:48,halfHours:24};
-const SHEETS=[{id:'1xKhAHUrprXUPyrpGrKL6hQKDGxY7GUNCnhsEDFRjUzY',day:'wed',label:'Wednesday Rally'},{id:'1V7Ps7jnQ5KpDEB2E7B1WK9aSvwt_3l_mehe4fokgxV4',day:'fri',label:'Friday Rally'}];
+const SHEETS=[{id:'1xKhAHUrprXUPyrpGrKL6hQKDGxY7GUNCnhsEDFRjUzY',day:'wed',label:'BADminton Wednesday'},{id:'1V7Ps7jnQ5KpDEB2E7B1WK9aSvwt_3l_mehe4fokgxV4',day:'fri',label:'BADminton Friday'}];
 const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','White','#fff'],['courtside','Courtside','Grey','#969696']];
 const LEVELS=['Beginner','Intermediate','Advanced','Pro','National'];
 const LEVEL_SHORT=LEVELS;
@@ -1209,7 +1210,7 @@ const ic=(n,cls='')=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="tru
 
 /* ---------- BAD clubs ---------- */
 const SPORTS={
- badminton:{club:'The BAD Club',sport:'Badminton',icon:'badminton'},
+ badminton:{club:'BADminton',sport:'Badminton',icon:'badminton'},
  volleyball:{club:'VolleyBAD',sport:'Volleyball',icon:'volleyball'},
  pickleball:{club:'BAD DINK',sport:'Pickleball',icon:'pickleball'},
  run:{club:'BAD PACE',sport:'Running',icon:'run'},
@@ -1222,7 +1223,7 @@ const SPORTS={
 };
 /* side quests: collaborations and everything Off Court. They book like sessions but live on their own tab. */
 const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
-const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+const ACT_DESC={badminton:'Badminton · BADminton Wednesday & Friday',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 /* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
 const DEPT_DESC={
  badminton:'Where BAD started. Rally nights with doubles on every court and a rotation that keeps everyone playing. All levels welcome, and everyone plays with everyone.',
@@ -3448,7 +3449,13 @@ function payPanel(){const c=S.payCfg||{};
       <div class="field" style="margin:0;flex:1;min-width:160px"><label for="pc-cno">Careem Pay number</label><input type="tel" id="pc-cno" value="${esc(c.careemNo||'')}" placeholder="+971 5x xxx xxxx"></div></div>
     <div class="field" style="margin:0"><label for="pc-clink">Careem Pay link <span class="muted">(optional)</span></label><input type="text" id="pc-clink" value="${esc(c.careemLink||'')}" placeholder="https://"></div>
     <div class="row"><button class="btn" id="pc-save">Save payment details</button></div></div>`}
-const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball:'VolleyBAD',pickleball:'BAD DINK',run:'BAD PACE',dance:'BAD HABITS Dance',basketball:'BAD SHOTS',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
+/* sessions were renamed: Wednesday Rally -> BADminton Wednesday, Friday Rally -> BADminton Friday.
+   A badminton admin's app renames existing sessions once, so lists, emails and the sheet all match. */
+const RALLY_RENAME=[[/^wednesday rally$/i,'BADminton Wednesday'],[/^friday rally$/i,'BADminton Friday']];
+async function renameRallies(){if(S._rr||!S.db||!S.canEdit||typeof canSport!=='function'||!canSport('badminton'))return;S._rr=true;
+  for(const [sid,x] of Object.entries(S.sessions||{})){const t=String(x.title||'').trim(),m=RALLY_RENAME.find(([r])=>r.test(t));if(!m||(x.sport||'badminton')!=='badminton')continue;
+    try{await S.db.doc('sessions/'+sid).update({title:m[1]})}catch(_){}}}
+const defaultTitle=k=>({vibe:'BAD Social',badminton:'BADminton Wednesday',volleyball:'VolleyBAD',pickleball:'BAD DINK',run:'BAD PACE',dance:'BAD HABITS Dance',basketball:'BAD SHOTS',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
 function bindAdmin(){
   const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on('s-cancelask',()=>{cancelOpen=true;renderNow()});
@@ -3917,8 +3924,8 @@ setInterval(()=>{if(S.view==='shop'&&!S.shopPid&&!S.bagOpen&&liveProducts().some
 const IG_URL='https://www.instagram.com/thebad.club/';
 const WEEK=[
   ['Tue','pickleball','BAD DINK','Pickleball. Time changes week to week, check Play.'],
-  ['Wed','badminton','Wednesday Rally','Badminton with The BAD Club.'],
-  ['Fri','badminton','Friday Rally','Badminton with The BAD Club.'],
+  ['Wed','badminton','BADminton Wednesday','Badminton.'],
+  ['Fri','badminton','BADminton Friday','Badminton.'],
   ['Fri','volleyball','VolleyBAD','Volleyball, 7pm to 10:30pm.']];
 function renderHome(){const el=$('v-home');if(!el)return;
   const guest=!!window.BAD_GUEST,me=!guest&&S.uid&&typeof myProfile==='function'?myProfile():null,c=PS();
@@ -4017,7 +4024,7 @@ S.contacts={};S.brand={};
   S.numbers={};db.collection('numbers').onSnapshot(s=>{S.numbers=map(s);if(S.view==='create')render();backfillNumbers()},()=>{});
   col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
   col('requests',s=>S.requests=map(s));
-  col('sessions',s=>{S.sessions=map(s);courtSubs()});
+  col('sessions',s=>{S.sessions=map(s);courtSubs();if(typeof renameRallies==='function')setTimeout(renameRallies,1000)});
   col('bookings',s=>{S.bookings=map(s);if(typeof autoLinkGuests==='function')setTimeout(autoLinkGuests,800)});
   col('posts',s=>S.posts=map(s));
   /* Lean data: court data is loaded only for tonight's sessions, and paused while the app is in the background.

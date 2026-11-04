@@ -1,5 +1,5 @@
 const CFG={freeHours:48,halfHours:24};
-const SHEETS=[{id:'1xKhAHUrprXUPyrpGrKL6hQKDGxY7GUNCnhsEDFRjUzY',day:'wed',label:'Wednesday Rally'},{id:'1V7Ps7jnQ5KpDEB2E7B1WK9aSvwt_3l_mehe4fokgxV4',day:'fri',label:'Friday Rally'}];
+const SHEETS=[{id:'1xKhAHUrprXUPyrpGrKL6hQKDGxY7GUNCnhsEDFRjUzY',day:'wed',label:'BADminton Wednesday'},{id:'1V7Ps7jnQ5KpDEB2E7B1WK9aSvwt_3l_mehe4fokgxV4',day:'fri',label:'BADminton Friday'}];
 const EDITIONS=[['oncourt','On-Court','Black','#000'],['offcourt','Off-Court','White','#fff'],['courtside','Courtside','Grey','#969696']];
 const LEVELS=['Beginner','Intermediate','Advanced','Pro','National'];
 const LEVEL_SHORT=LEVELS;
@@ -85,7 +85,7 @@ const ic=(n,cls='')=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="tru
 
 /* ---------- BAD clubs ---------- */
 const SPORTS={
- badminton:{club:'The BAD Club',sport:'Badminton',icon:'badminton'},
+ badminton:{club:'BADminton',sport:'Badminton',icon:'badminton'},
  volleyball:{club:'VolleyBAD',sport:'Volleyball',icon:'volleyball'},
  pickleball:{club:'BAD DINK',sport:'Pickleball',icon:'pickleball'},
  run:{club:'BAD PACE',sport:'Running',icon:'run'},
@@ -98,7 +98,7 @@ const SPORTS={
 };
 /* side quests: collaborations and everything Off Court. They book like sessions but live on their own tab. */
 const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
-const ACT_DESC={badminton:'Badminton · Wednesday & Friday Rally',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+const ACT_DESC={badminton:'Badminton · BADminton Wednesday & Friday',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 /* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
 const DEPT_DESC={
  badminton:'Where BAD started. Rally nights with doubles on every court and a rotation that keeps everyone playing. All levels welcome, and everyone plays with everyone.',
