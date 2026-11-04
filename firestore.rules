@@ -46,6 +46,10 @@ service cloud.firestore {
     function sessionPath(sid) { return /databases/$(database)/documents/sessions/$(sid); }
     function sportOf(sid) { return get(sessionPath(sid)).data.get('sport', 'badminton'); }
     function isGM(sid) { return signedIn() && sid is string && exists(sessionPath(sid)) && uid() in get(sessionPath(sid)).data.get('gms', []); }
+    // approved members: an admin approves every new sign-up (approved/{uid}.ok). Guest passes and sign-ups under review only see their own data.
+    function approvedPath() { return /databases/$(database)/documents/approved/$(uid()); }
+    function isApproved() { return signedIn() && exists(approvedPath()) && get(approvedPath()).data.get('ok', false) == true; }
+    function isMember() { return isApproved() || isTeam() || isCrew(); }
     function isSelf(id) { return signedIn() && uid() == id; }
     function str(v, max) { return v is string && v.size() <= max; }
     function optStr(m, k, max) { return !(k in m) || m[k] == null || str(m[k], max); }
@@ -65,7 +69,7 @@ service cloud.firestore {
     }
 
     match /posts/{id} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create, update: if isFull() || (request.resource.data.get('club', 'all') != 'all' && isCmFor(request.resource.data.club));
       allow delete: if isFull() || (resource.data.get('club', 'all') != 'all' && isCmFor(resource.data.club));
     }
@@ -84,13 +88,13 @@ service cloud.firestore {
       allow delete: if signedIn() && (resource.data.uid == uid() || isFull());
     }
     match /gallery/{id} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create, update: if (isFull() || isCmFor(request.resource.data.get('club', 'all'))) && str(request.resource.data.title, 80)
         && request.resource.data.photos is list && request.resource.data.photos.size() <= 12;
       allow delete: if isFull() || isCmFor(resource.data.get('club', 'all'));
     }
     match /profiles/{id} {
-      allow read: if signedIn();
+      allow read: if isMember() || isSelf(id);
       allow create: if isSelf(id) && validProfile(request.resource.data) && numberOk(id);
       // listName ("name on tracker") ties points and payments to a player: a player sets it once, staff change it after.
       // createdAt decides the first 100, so it never changes once set.
@@ -118,7 +122,7 @@ service cloud.firestore {
     // Bookings: one document per player, one entry per session. Every change names the session it touches (op.sid),
     // only that entry may change, join and leave times come from the server clock, and nobody edits someone else's entry.
     match /bookings/{id} {
-      allow read: if signedIn();
+      allow read: if isMember() || isSelf(id);
       allow create, update: if (isSelf(id) && validOwnBooking()) || staffBooking();
       allow delete: if (resource.data.get('guest', false) == true && isAdminAny()) || isFull();
     }
@@ -148,17 +152,17 @@ service cloud.firestore {
     }
 
     match /games/{gid} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create, update: if canRun(sportOf(request.resource.data.sid)) || isGM(request.resource.data.sid);
       allow delete: if canRun(sportOf(resource.data.sid)) || isGM(resource.data.sid);
     }
     // Scores for checked games (v2): a player in the game submits, a player from the OTHER team confirms or disputes,
     // and Support (admins for the sport or the session's Game Master) finalises. Scores must fit the game's format.
     match /results/{gid} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create, update: if resultOk(gid);
       match /log/{lid} {
-        allow read: if signedIn();
+        allow read: if isMember();
         allow create: if staffFor(gameOf(gid)) && request.resource.data.by == uid() && request.resource.data.at == request.time;
       }
     }
@@ -202,13 +206,13 @@ service cloud.firestore {
     }
     // The court board: every save carries the next revision number, so two organisers can never overwrite each other.
     match /live/{sid} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create: if (canRun(sportOf(sid)) || isGM(sid)) && request.resource.data.rev == 1;
       allow update: if (canRun(sportOf(sid)) || isGM(sid)) && request.resource.data.rev == resource.data.get('rev', 0) + 1;
       allow delete: if canDept(sportOf(sid));
     }
     match /scores/{id} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow write: if isSelf(id) && request.resource.data.keys().hasOnly(['g']) && request.resource.data.g is map && request.resource.data.g.size() <= 500;
     }
     // BADges: founders give freely. Everyone else has 5 a month, counted in badgeq/{uid}_{YYYY-MM} (UTC month),
@@ -219,7 +223,7 @@ service cloud.firestore {
     function qBefore() { return exists(qPath()) ? get(qPath()).data.n : 0; }
     function badgeFree() { return isFounder() || memberType() == 'Founder'; }
     match /badges/{id} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create: if (isAdminAny() || isCrew()) && request.resource.data.byUid == uid()
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 5
         && str(request.resource.data.reason, 80) && request.resource.data.synced == false
@@ -237,7 +241,7 @@ service cloud.firestore {
     // BAD grades (badminton): everyone can read the grade and category shown on cards. Crew, admins and the session's
     // Game Master set them; every change also writes a log entry that can't be edited, with who and when.
     match /grades/{id} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create, update: if canGrade(request.resource.data.get('sid', '')) && validGrade(request.resource.data);
       match /log/{lid} {
         allow read: if isAdminAny() || isCrew();
@@ -254,7 +258,7 @@ service cloud.firestore {
     }
     // BAD PACE run log: runners save their own run for a session; crew for that sport (or the Game Master) can save anyone's
     match /runs/{id} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create, update: if request.resource.data.keys().hasOnly(['sid', 'pid', 'km', 'secs', 'by', 'at'])
         && str(request.resource.data.sid, 80) && str(request.resource.data.pid, 120) && id == request.resource.data.sid + '_' + request.resource.data.pid
         && request.resource.data.km is number && request.resource.data.km > 0 && request.resource.data.km <= 100
@@ -272,7 +276,7 @@ service cloud.firestore {
     }
     // BADDEST PLAYER award per session: admins for that sport, signed and timed by the server
     match /awards/{sid} {
-      allow read: if signedIn();
+      allow read: if isMember();
       allow create, update: if canRun(sportOf(sid)) && request.resource.data.sid == sid && request.resource.data.by == uid()
         && request.resource.data.at == request.time && request.resource.data.winners is list && request.resource.data.winners.size() <= 8;
     }
@@ -285,6 +289,7 @@ service cloud.firestore {
     // ---------- private to the player and staff ----------
     match /contacts/{id} {
       allow read: if isSelf(id) || isAdminAny();
+      allow delete: if isFull();
       allow write: if (isSelf(id) || isFull()) && request.resource.data.keys().hasOnly(['email', 'mobile', 'whatsapp', 'instagram', 'updatedAt'])
         && optStr(request.resource.data, 'email', 120) && optStr(request.resource.data, 'mobile', 30) && optStr(request.resource.data, 'instagram', 40);
     }
@@ -363,6 +368,11 @@ service cloud.firestore {
     }
 
     // ---------- settings ----------
+    match /approved/{id} {
+      allow read: if isSelf(id) || isAdminAny();
+      allow create, update: if isAdminAny() && request.resource.data.ok is bool && request.resource.data.keys().hasOnly(['ok', 'by', 'at', 'auto', 'archived']);
+      allow delete: if isAdminAny();
+    }
     match /config/{doc} {
       allow read: if signedIn() || doc == 'home';   // config/home: the photos and video links on the public Home page
       allow write: if (doc == 'payments' && isFinance() && request.resource.data.updatedBy == email() && request.resource.data.updatedAt == request.time

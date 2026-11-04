@@ -12,29 +12,36 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const next=(S.loaded||S.pubSessions)?upcoming().filter(([,s])=>!s.cancelled&&!isSide(s.sport)).slice(0,3):[];
   const cta=guest
     ?`<button class="btn bigjoin" data-hjoin="1">${ic('card')}Join BAD</button>`
-    :`<div class="row"><button class="btn" data-hgo="card">${ic('card')}${me?'Open My BAD':'Make my card'}</button><button class="btn ghost" data-hgo="play">${ic('play')}Find a session</button></div>`;
-  const depts=Object.keys(SPORTS).filter(k=>k!=='vibe');
-  const first=[['card','Make your card','Free, and it takes a minute.'],['play','Pick a session','Book your spot in Play.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
+    :'';
+  const first=[['card','Make your card','Free, and it takes a minute. An admin approves new cards.'],['play','Pick a session','Book your spot in Play. New? Join as a guest.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
+  const sessions=next.length?`<section class="hsec"><h3 class="ah">Coming up</h3><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
+    :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`;
+  const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
+    <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','WTH is BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
     <section class="phero">
       <h2 class="manifesto phtitle">THE BAD CLUB</h2>
       <p class="muted">A Dubai sports community. Every level is welcome.</p>
       ${cta}
     </section>
-    <button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
-    <div class="homelinks">${(guest?[['guide','guide','Guide'],['wth','spark','WTH is BAD']]:[['guide','guide','Guide'],['wth','spark','WTH is BAD'],['quests','quest','Off Court'],['shop','bag','Shop']]).map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>
-    ${homePhotosHTML()}
-    ${guest?`<section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>`:''}
-    ${next.length?`<section class="hsec"><div class="sec-h"><h3 class="ah">Coming up</h3><button class="linkbtn" data-hgo="play">See all${ic('arrow')}</button></div><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
-    :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`}
+    ${guest?`${homePhotosHTML()}${about}
+    <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
+    ${sessions}`
+    :`${newsHTML()}${sessions}${homePhotosHTML()}${about}`}
     ${homeVideosHTML()}
     ${igHTML()}
-    <section class="hsec"><h3 class="ah">Departments</h3><div class="dgrid">${depts.map(k=>`<div class="dchip">${ic(SPORTS[k].icon)}<span>${esc(k==='training'?'Training':SPORTS[k].club)}</span></div>`).join('')}</div></section>
-    <p class="fine phfoot">${ic('coin')}${c.per} points every session · ${c.free} points is a free session</p>
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
-  el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>setView(b.dataset.hgo));
+  el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>{if(b.dataset.cm)S.clubMode=b.dataset.cm;setView(b.dataset.hgo)});
 }
+/* Club news on Home: upcoming events first, then the latest news. The full list and the Gallery are one tap away. */
+function newsHTML(){if(notMember())return '';const today=new Date().toISOString().slice(0,10),ps=Object.entries(S.posts||{});
+  const ev=ps.filter(([,p])=>p.type==='event'&&(p.date||'')>=today).sort((a,b)=>a[1].date.localeCompare(b[1].date)),nw=ps.filter(([,p])=>p.type!=='event').sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
+  const top=[...ev,...nw].slice(0,3);
+  const links=`<div class="row" style="gap:8px"><button class="btn ghost sm" data-hgo="club" data-cm="news">${ic('club')}All news</button><button class="btn ghost sm" data-hgo="club" data-cm="gallery">${ic('photo')}Gallery</button></div>`;
+  if(!top.length)return `<section class="hsec"><h3 class="ah">What's on</h3><p class="fine">No news right now.</p>${links}</section>`;
+  return `<section class="hsec"><h3 class="ah">What's on</h3><div class="list">${top.map(([id,p])=>{const d=p.date?dParts(p.date):null,sp=SPORTS[p.club];
+    return `<button class="li act" data-hgo="club" data-cm="news" style="grid-template-columns:auto minmax(0,1fr) auto">${d?`<div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div>`:`<span class="ic-bub soft">${ic('club')}</span>`}<div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event':'News'} · ${esc(sp?sp.club:'All of BAD')}</div></div>${ic('arrow')}</button>`}).join('')}</div>${links}</section>`}
 /* called by the sign-in bridge when nobody is signed in: show Home, and if they followed a link to another tab, ask them to sign in for it */
 window.badGuestMode=function(){loadHomeMediaPublic();
   /* visitors see the real upcoming sessions (sessions are public in the security rules); if that read isn't allowed yet, the weekly list shows instead */
@@ -51,6 +58,7 @@ function faqList(){const c=PS();return [
     ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
     ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
     ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
+    ['Is BAD a registered company?','Yes. The BAD Club LLC, License No. 2649469.01.'],
     ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
   ['Joining and booking',[
     ['How do I join?','Tap Join BAD and make your player card. It is free and takes a minute. Just want to try once? Take a guest pass instead.'],
@@ -80,12 +88,11 @@ function renderWth(){const el=$('v-wth');if(!el)return;
   <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="faq">FAQs</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
-/* photos: the ones an admin picked for Home, then the latest Gallery albums, then the Volume II shots until real photos are added */
-const HOME_FALLBACK=['assets/v2/oncourt_front.webp','assets/v2/offcourt_front.webp','assets/v2/towel.webp','assets/v2/tote.webp','assets/v2/oncourt_back.webp'];
+/* photos: community photos an admin picked for Home, then the latest Gallery albums (members only). No merch here. */
 function homePhotos(){const h=S.homeMedia||{},own=(h.photos||[]).filter(Boolean);
   const gal=Object.values(S.gallery||{}).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).flatMap(a=>a.photos||[]).slice(0,8);
-  const all=[...own,...gal];return all.length?all.slice(0,10):HOME_FALLBACK}
-function homePhotosHTML(small){const ps=homePhotos();return `<div class="hstrip${small?' sm':''}" aria-label="Photos from BAD">${ps.map((u,i)=>`<figure><img src="${esc(u)}" alt="" loading="${i<2?'eager':'lazy'}" decoding="async"></figure>`).join('')}</div>`}
+  return [...own,...gal].slice(0,10)}
+function homePhotosHTML(small){const ps=homePhotos();if(!ps.length)return S.canEdit&&!small?`<button class="addphotos" data-hgo="admin">${ic('photo')}<span><b>Add community photos</b><small>Admin, Club posts, Home photos and videos</small></span></button>`:'';return `<div class="hstrip${small?' sm':''}" aria-label="Photos from BAD">${ps.map((u,i)=>`<figure><img src="${esc(u)}" alt="" loading="${i<2?'eager':'lazy'}" decoding="async"></figure>`).join('')}</div>`}
 /* video links: YouTube, Instagram reels or posts, TikTok, or a direct .mp4 */
 function vidEmbed(u){u=String(u||'').trim();let m;
   if((m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{6,})/)))return {k:'yt',src:`https://www.youtube-nocookie.com/embed/${m[1]}`};

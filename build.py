@@ -6,8 +6,8 @@ FB='https://www.gstatic.com/firebasejs/10.12.2/'
 h=open(SRC+'1-head.html').read()
 css=open('src/gate.css').read()
 h=h.replace('</style>',css+'\n</style>',1)
-h=h.replace('<span>Community over competition · #MakeBadGoodAgain</span></footer>',
- '<span>Community over competition · #MakeBadGoodAgain</span><button class="signout" onclick="badSignOut()">Sign out</button></footer>',1)
+h=h.replace('<span>Community over competition · #MakeBadGoodAgain</span><span class="legal">',
+ '<span>Community over competition · #MakeBadGoodAgain</span><button class="signout" onclick="badSignOut()">Sign out</button><span class="legal">',1)
 import json
 _l=open(SRC+'0-logo.js').read();_L=json.loads(_l[_l.index('{'):_l.rindex('}')+1])
 # logo splash: in the page itself so it shows before any script runs, until the app knows who you are (see unboot() in 4-views.js)

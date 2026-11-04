@@ -197,6 +197,16 @@ const typeOf=p=>{const sp=mainSport(p);return (p.types&&p.types[sp])||(sp==='bad
 /* ---------- points ---------- */
 function profileByKey(k){return Object.entries(S.profiles).find(([,p])=>p.listKey===k)}
 function myProfile(){return S.uid?S.profiles[S.uid]:null}
+/* ---------- approvals: an admin approves every new card before they see the community ----------
+   Cards made before approvals started count as approved. Until then (and on a guest pass) people see Home, Play, the Shop and their own My BAD.
+   The security rules enforce this: other players, bookings, courts, posts and the Gallery need an approved card. */
+const APPROVE_FROM='2026-11-04T21:00:00Z';
+const preApproval=p=>!!p&&!p.sample&&!isGuestPassP(p)&&(!p.createdAt||String(p.createdAt)<APPROVE_FROM);
+const isGuestPassP=p=>!!p&&!!p.memReq&&p.memReq.type===GUEST_PASS;
+function approvalOf(uid){const a=(S.approvals||{})[uid];return a?(a.ok===true?'ok':'no'):preApproval(S.profiles[uid])?'ok':'review'}
+const notMember=()=>!!S.uid&&!S.member&&!window.BAD_GUEST;
+const underReview=()=>notMember()&&!!myProfile()&&!isGuestPass(S.uid)&&!(S.myApproval&&S.myApproval.ok===false);
+const MEMBER_VIEWS=['courts','club','board'];
 function allKeys(){const m={};for(const e of S.ledger)if(!m[e.player])m[e.player]=e.name||e.player;for(const p of Object.values(S.profiles))if(p.listKey&&!m[p.listKey])m[p.listKey]=p.listName||p.nickname;return m}
 
 /* ---------- card (minimal) ---------- */

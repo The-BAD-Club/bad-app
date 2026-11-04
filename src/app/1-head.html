@@ -890,7 +890,7 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 #a-plist details.glevel[open]>summary::after{content:''}
 #a-plist details.glevel{display:block;min-width:0;max-width:100%;overflow:hidden}#a-plist details.glevel .gpick{margin-top:6px}
 #a-plist details.glevel>summary::-webkit-details-marker{display:none}
-.seg2{display:flex;width:100%}.seg2 button{flex:1}
+.seg2{display:flex;width:100%}.seg2 button{flex:1;white-space:nowrap;padding:8px 6px;letter-spacing:.05em}
 .mmain>.row{margin:12px 0 22px}
 @media(max-width:560px){.mcourt .mc-s,.mwait .mc-s{display:none}.mcourt .mchip,.mwait .mchip{grid-template-columns:auto minmax(0,1fr);padding-right:8px;gap:6px}.mcourt .mchip .av,.mwait .mchip .av,.mcourt .mchip .avatar,.mwait .mchip .avatar{width:26px;height:26px}}
 /* v0.37 Home: FAQs, photos, videos, Instagram */
@@ -910,6 +910,10 @@ html.nocard .tabs button:not([data-v=home]){display:none}
 #v-faq,#v-wth{gap:20px}
 @media(min-width:900px){.hstrip,.hvids{margin:0;padding:2px 0 6px}.hstrip figure{flex-basis:30%}}
 .hmthumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.hmthumb{position:relative;width:72px;height:90px;border-radius:10px;overflow:hidden}.hmthumb img{width:100%;height:100%;object-fit:cover}.hmthumb .rmx{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6)}
+.nomember .tabs button[data-v=courts]{display:none}
+.homelinks.two{grid-template-columns:1fr 1fr}
+.addphotos{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:18px;border:1px dashed var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.addphotos small{display:block;color:var(--muted);font-size:.8rem}
+.sign .legal{flex-basis:100%;order:9;font-size:.54rem;letter-spacing:.14em;opacity:.55;margin-top:2px}@media (max-width:560px){.sign .legal{grid-column:1/-1}}
 </style>
 
 <div class="wrap">
@@ -921,7 +925,6 @@ html.nocard .tabs button:not([data-v=home]){display:none}
       <button data-v="card"></button>
       <button data-v="play"></button>
       <button data-v="courts"></button>
-      <button data-v="club"></button>
       <button data-v="shop"></button>
       <button data-v="admin" id="nav-admin" hidden></button>
     </nav>
@@ -949,7 +952,7 @@ html.nocard .tabs button:not([data-v=home]){display:none}
   <section class="view" id="v-board" hidden></section>
   <section class="view" id="v-shop" hidden></section>
   <section class="view" id="v-admin" hidden></section>
-  <footer class="sign"><span>Bold. Agile. Defiant.</span><span>Community over competition · #MakeBadGoodAgain</span></footer>
+  <footer class="sign"><span>Bold. Agile. Defiant.</span><span>Community over competition · #MakeBadGoodAgain</span><span class="legal">The BAD Club LLC · License No. 2649469.01</span></footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="photo-in" accept="image/*" hidden>
