@@ -24,7 +24,8 @@ function renderHome(){const el=$('v-home');if(!el)return;
       <p class="muted">A Dubai sports community. Every level is welcome.</p>
       ${cta}
     </section>
-    ${guest?`<section class="hsec story"><h3 class="ah">Why we made BAD</h3>${story}</section>`:`<details class="hsec how story"><summary class="ah">Why we made BAD</summary>${story}</details>`}
+    <div class="homelinks">${(guest?[['guide','guide','How BAD works']]:[['play','play','On Court'],['quests','quest','Off Court'],['guide','guide','How BAD works'],['shop','bag','Shop']]).map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>
+    ${guest?`<section class="hsec story"><h3 class="ah">Why we made BAD</h3>${story}</section>`:''}
     ${guest?`<section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>`:''}
     ${next.length?`<section class="hsec"><div class="sec-h"><h3 class="ah">Coming up</h3><button class="linkbtn" data-hgo="play">See all${ic('arrow')}</button></div><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`}

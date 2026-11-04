@@ -2,12 +2,14 @@
 const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
 /* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
-function setView(v){if(window.BAD_GUEST&&v!=='home'){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+function setView(v){if(window.BAD_GUEST&&v!=='home'&&v!=='guide'){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
   /* signed in but no card or guest pass yet: Home and registration only */
-  if(noCard()&&!['home','card','create'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
+  if(noCard()&&!['home','card','create','guide'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
   S.view=v;
   for(const id of ['home','card','guide','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
-  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',(b.dataset.v===v||(v==='create'&&b.dataset.v==='card'))?'page':'false'));
+  /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
+  const tabOf={create:'card',guide:'home',quests:'play',board:'card'}[v]||v;
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
 /* the logo splash stays up until we know who you are and your data has loaded, so nobody sees the registration screen by mistake */
@@ -108,11 +110,13 @@ async function addGuest(sid,name){name=name.trim().slice(0,24);if(!name){toast("
 async function dropGuest(sid,gi,late){const now=new Date().toISOString();
   try{await saveBooking(sid,'guest',o=>{const g=[...(o.guests||[])];if(late)g[gi]={...g[gi],out:now};else g.splice(gi,1);return {...o,guests:g}});pendingOut=null;toast(late?'Guest removed. The fee is noted under your name.':'Guest removed.')}catch(e){toast("Sorry, that didn't save.")}}
 
+const courtSwitch=v=>`<div class="seg2" role="group" aria-label="On Court or Off Court"><button data-oc="play" aria-pressed="${v==='play'}">On Court</button><button data-oc="quests" aria-pressed="${v==='quests'}">Off Court</button></div>`;
+const bindSwitch=el=>el.querySelectorAll('[data-oc]').forEach(b=>b.onclick=()=>setView(b.dataset.oc));
 function renderPlay(){
   const el=$('v-play'),me=myProfile();
   const used=[...new Set(Object.values(S.sessions).map(s=>s.sport||'badminton'))].filter(k=>SPORTS[k]&&!isSide(k));if(isSide(S.sport))S.sport='all';
   const list=upcoming().filter(([,s])=>!isSide(s.sport)&&(S.sport==='all'||(s.sport||'badminton')===S.sport));
-  const head=`<div class="hero"><span class="label">Sessions</span><h2>Find your next game.</h2>
+  const head=`${courtSwitch('play')}<div class="hero"><span class="label">On Court</span><h2>Find your next game.</h2>
     ${me?'':`<div class="note">${ic('card')}<div style="display:grid;gap:8px"><span>Please register your player card first. After that, joining any session is one tap.</span><button class="btn sm" id="go-card" style="justify-self:start">Register here</button></div></div>`}</div>
     ${(()=>{const n=me?upcoming().filter(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}).length:0;return n?`<button class="mystrip" data-goview="card">${ic('ticket')}<span><b>You're booked for ${n} session${n===1?'':'s'}</b><small>Cancel, change payment or bring a friend from My BAD</small></span>${ic('arrow')}</button>`:''})()}
     ${sportBar(S.sport,'flt',used)}${S.sport!=='all'?deptCard(S.sport):''}`;
@@ -152,7 +156,7 @@ function sessCard(sid,s){const me=myProfile();
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
       ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}
-function bindPlay(el){el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
+function bindPlay(el){bindSwitch(el);el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
   const q=s=>el.querySelectorAll(s),now=()=>new Date().toISOString();
   q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderNow()});
   q('[data-joinask]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.joinask,change:false};renderNow()});
@@ -291,11 +295,11 @@ function renderCard(){
       <div class="hero" style="gap:4px"><span class="label">Hello, ${esc(p.nickname)} · ${esc(memLabel(S.uid))}</span><h2>${nextS?'See you on court.':'Ready to play?'}</h2></div>${gpBanner}${S.canEdit?`<div class="row"><button class="btn ghost sm" data-signupqr="1">${ic('card')}Sign-up QR</button></div>`:''}
       ${next}
       ${ptsTilesHTML(pt,fd,req)}
-      <section class="hsec"><h3 class="ah">Your stats</h3>
+      <section class="hsec"><div class="sec-h"><h3 class="ah">Your stats</h3><button class="linkbtn" data-goview="board">${ic('board')}Board${ic('arrow')}</button></div>
         <div class="tiles hstats h3">
           ${statT('Sessions',attended,'Played with BAD')}
-          ${statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
-          ${S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
+          ${QUEUE_OFF?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
+          ${QUEUE_OFF?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','See it on the Board',`<button class="linkbtn" data-rankgo="1">Open the Rank board${ic('arrow')}</button>`)}
         </div></section>
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
@@ -377,7 +381,7 @@ function renderQuests(){
   const list=upcoming().filter(([,s])=>isSide(s.sport)&&(f==='all'||s.sport===f));
   const past=Object.entries(S.sessions).filter(([,s])=>isSide(s.sport)&&sessStart(s)<Date.now()-2*36e5&&(f==='all'||s.sport===f)).sort((a,b)=>sessStart(b[1])-sessStart(a[1])).slice(0,6);
   const posts=Object.entries(S.posts).filter(([,p])=>isSide(p.club)&&(f==='all'||p.club===f)&&(p.type!=='event'||(p.date||'')>=today)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
-  el.innerHTML=`<div class="hero"><span class="label">Side Quests</span><h2>Off Court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
+  el.innerHTML=`${courtSwitch('quests')}<div class="hero"><span class="label">Side Quests</span><h2>Off Court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
     ${SIDE.length>1?sportBar(f,'qf',SIDE):`<div class="qdepts">${SIDE.map(k=>`<div class="qdept">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(SPORTS[k].sport)}</span></div></div>`).join('')}</div>`}
     ${list.length?`<div class="slist">${list.map(([sid,s])=>sessCard(sid,s)).join('')}</div>`:`<div class="empty">${ic('quest')}<span>No side quests posted yet. The next collab drops here first.</span></div>`}
     ${posts.length?`<section class="hsec"><h3 class="ah">News from the collabs</h3><div class="list">${posts.map(([,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${esc(SPORTS[p.club]?.club||'')}${p.date?' · '+esc(fmtD(p.date)):''}${p.place?' · '+esc(p.place):''}</div>${p.body?`<p class="fine" style="margin:4px 0 0">${esc(p.body)}</p>`:''}</div>${p.link?`<a class="btn ghost sm" href="${esc(p.link)}" target="_blank" rel="noopener">Open${ic('arrow')}</a>`:''}</div>`).join('')}</div></section>`:''}
@@ -401,7 +405,8 @@ function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclic
 function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
   const tabs=[['home','Home','About The BAD Club, every department and the weekly sessions. Open to everyone.'],['card','My BAD','Your player card, your sessions, payments, points and BADges.'],['play','Play','Find a session and join it in one tap. Drop out or bring a friend from My BAD.'],['courts','Courts','On the day: check in, see your court and who’s next.'],['club','Club','News, events and the Gallery.'],['quests','Quests','Side Quests: collabs and everything Off Court.'],['board','Board','Points and rankings. Players first.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
   const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. The rotation keeps everyone playing, and you play with anyone.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
-  el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
+  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
+  <details class="hsec how story"><summary class="ah">Why we made BAD</summary><p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p><p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p></details>
   <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
   <section class="hsec"><h3 class="ah">House rules</h3>${rulesHTML()}</section>
   <section class="hsec"><h3 class="ah">Points</h3><div class="gcard">${ic('coin')}<div><p><b>${c.per} points</b> for every session you play, whatever the sport. At <b>${c.free} points</b> your next session is free.</p><p>That's <b>${toFree().sessions} sessions</b>${toFree().quests?`, or <b>${toFree().quests} Side Quests</b> (each one counts as an event, ${c.other['Event or tournament']} points)`:''}, or any mix of the two.</p><p class="fine">Points reset if you go ${expWords(c.expire)} without playing. A no-show or late cancellation costs points.</p>${pt&&pt.started?`<p class="fine">You have <b class="num">${isFounder(me)?'∞':pt.balance}</b> points.</p>`:''}</div></div></section>
@@ -412,6 +417,8 @@ function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid
   <section class="hsec"><h3 class="ah">Joining and dropping out</h3><div class="gcard">${ic('clock')}<div><p>Drop out for free up to 48 hours before. From 48 to 24 hours, half the fee applies. Under 24 hours, the full fee.</p><p class="fine">Pay by cash, bank transfer, Ziina or Careem Pay. Your payment status is on My BAD.</p></div></div></section>
   <section class="hsec"><h3 class="ah">The departments</h3><div class="depts">${Object.keys(SPORTS).map(deptCard).join('')}</div></section>
   <section class="hsec"><h3 class="ah">The tabs</h3><div class="list">${tabs.map(([i,t,d])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="ic-bub soft">${ic(NAV[i]?NAV[i][0]:i)}</span><div><div class="nm">${t}</div><div class="sub">${d}</div></div></div>`).join('')}</div></section>`;
+
+  el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
 }
 function renderClub(){
   const el=$('v-club'),today=new Date().toISOString().slice(0,10),f=S.clubFilter;
