@@ -834,6 +834,10 @@ details.rules .hrules{margin-top:10px}
 .preo-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.preo-item{display:grid;gap:8px;align-content:start;min-width:0}
 .preo-img{display:block;aspect-ratio:4/5;border-radius:var(--r-md,14px);background:#111 center/cover no-repeat}.preo-thumbs{display:flex;gap:6px}.pth{width:42px;height:42px;border-radius:8px;border:1px solid var(--line);background:#111 center/cover;padding:0;cursor:pointer;opacity:.6}.pth.on{opacity:1;border-color:var(--ink)}
 .preo-meta{display:grid;gap:4px}.preo-meta b{font-size:1.05rem;letter-spacing:.03em}.preo-meta p{margin:2px 0 6px}.preo-meta .btn{justify-self:start}
+.sessrow{align-items:center}.sessrow>svg.i{width:20px;height:20px}.sessrow.on{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent)}.sp-open{all:unset;cursor:pointer;display:grid;gap:2px;min-width:0}.sp-open .nm{overflow-wrap:anywhere}.sp-open:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:6px}
+.slist-a .li{border:1px solid var(--line);border-radius:var(--r-md,14px);padding:10px 12px}
+.sedit{display:inline-flex;align-items:center;gap:4px;font-size:.8rem}.sedit svg.i{width:13px;height:13px}
+.og100{font-size:.62rem;letter-spacing:.12em;text-transform:none;white-space:nowrap;opacity:.9}.og100 b{font-weight:900}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1044,6 +1048,7 @@ const CHANGES=[
   ['0.25','2026-11-04','Simpler Home: Bold. Agile. Defiant., one line about BAD, Join BAD, the next 3 sessions, the departments and one line on points'],
   ['0.24','2026-11-04','Home and the loading screen use the BAD logo, with Bold. Agile. Defiant. small in the bottom-left corner while loading; visitors see the real upcoming sessions on Home; house rules now apply to every department, Side Quest and event'],
   ['0.23','2026-11-04','Public Home: anyone can see The BAD Club (who we are, every week, what we do, the departments, why join, house rules, Instagram) without signing in, and sign in from there; your own page is now called My BAD; while the app loads only The BAD Club logo shows, never the registration screen'],
+  ['0.23','2026-11-04','Edit any session straight from the Admin session list or from its card in Play and Quests; the first 100 now carry OG 100 · No. X on the back of the card, top right (no longer on the front)'],
   ['0.22','2026-11-04','Shop: every FRAGMENTS pre-order (THE RITUAL SET, BADASS shorts, REVERSE jersey) with pictures and prices; the full Volume II lineup with its product photos, Clubhouse Kit shown sold out, Rally Towel and Socks AED 55; sold-out products stay visible; edit a session from Admin → Sessions'],
   ['0.21','2026-11-04','House rules (Guide and Play): play with anyone, respect the rotation, check in, drop out early, pay, call it honestly, respect everyone, leave it better, photos; BOLD. AGILE. DEFIANT. on Home and the Guide; no promise of balanced games anywhere'],
   ['0.20','2026-11-04','Nobody skips the waiting list: it is first come, first served; Core and up now get sign-ups 48 hours early instead (Members 24 hours); BADge colours: Rookie white, Member black, Core silver, Legend titanium, Founder vanta; delete a session from Admin → Sessions'],
@@ -1245,7 +1250,7 @@ function refCode(uid,p){const n=String(p?.nickname||'BAD').toUpperCase().replace
   while(taken(c)&&i<25)c=base+String.fromCharCode(65+i++);return c}
 /* ---------- the first 100 ----------
    The first 100 people to make a card (by the time their card was first saved, which nobody can change afterwards)
-   get a First 100 mark on their card, start one BADge level up, and wear a number from 0 to 99.
+   get an OG 100 mark on their card, start one BADge level up, and wear a number from 0 to 99.
    After that, new numbers have three digits (100 to 999). Every number belongs to one player: first come, first served. */
 const FIRST_N=100;
 function signupOrder(){if(S._so&&S._so.ref===S.profiles)return S._so.o;
@@ -1278,7 +1283,7 @@ function cardHTML(p,st,opt){
   const lvl=plays?(cu?gradeLabel(cu):'LVL UNRATED'):sportOf(sp).club;
   /* minimal front: who you are, your BAD level and your points. Everything else is on the back. */
   return `<div class="pc ${ed}"><div class="ph${p.photo?'':' placeholder'}" style="background-image:url('${esc(img)}')"></div>
-    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${isFirst100(cu)?`<b class="f100">FIRST 100</b> · `:''}${esc(mem)}</span></div>
+    <div class="hd"><span><img src="${logo}" alt="BAD"></span><span>${esc(mem)}</span></div>
     <div class="jn num" aria-hidden="true">${esc(jersey(p))}</div>
     <div class="nick">${esc(p.nickname||'Your name')}</div>
     ${ty?`<div class="style">${esc(ty)}</div>`:''}
@@ -1330,9 +1335,9 @@ function cardBackHTML(p,st){
   const ed=cardEdition(p,uidOfProfile(p)),logo=ed==='oncourt'||ed==='legend'?LOGO.badW:LOGO.badK;
   const code=p.ref||'',qr=code&&typeof qrData==='function'?qrData(inviteUrl(code),400):'';
   const since=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
-  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span></div>
+  return `<div class="pc ${ed} cback"><div class="hd"><span><img src="${logo}" alt="BAD"></span>${isFirst100(uidOfProfile(p))?`<span class="og100" aria-label="One of the first 100 members, number ${first100No(uidOfProfile(p))}"><b>OG 100</b> · No. ${first100No(uidOfProfile(p))}</span>`:''}</div>
     <div class="cb-mid"><div class="qrbox">${qr?`<img src="${qr}" alt="QR code to join BAD with ${esc(p.nickname||'this')} card">`:`<span class="fine">QR appears once your card is saved</span>`}</div>
-      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}${isFirst100(uidOfProfile(p))?`<div class="cb-sub f100">First 100 · No. ${first100No(uidOfProfile(p))}</div>`:''}</div>
+      <div class="cb-code num">${esc(code||'—')}</div>${since?`<div class="cb-sub">Since ${esc(since)}</div>`:''}</div>
     <div class="stats lv2"><span><b class="num">${isFounder(uidOfProfile(p))?'<span class="inf">∞</span>':(st.badges||0)}</b><small>BADges</small></span><b>${esc(p.shot||'')}</b></div>
   </div>`}
 
@@ -1837,12 +1842,12 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span>${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span></div>
+      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span>${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p>${esc(s.note)}</p>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
       ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}
-function bindPlay(el){
+function bindPlay(el){el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
   const q=s=>el.querySelectorAll(s),now=()=>new Date().toISOString();
   q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderNow()});
   q('[data-joinask]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.joinask,change:false};renderNow()});
@@ -2083,7 +2088,7 @@ function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid
   <section class="hsec"><h3 class="ah">Points</h3><div class="gcard">${ic('coin')}<div><p><b>${c.per} points</b> for every session you play, whatever the sport. At <b>${c.free} points</b> your next session is free.</p><p>That's <b>${toFree().sessions} sessions</b>${toFree().quests?`, or <b>${toFree().quests} Side Quests</b> (each one counts as an event, ${c.other['Event or tournament']} points)`:''}, or any mix of the two.</p><p class="fine">Points reset if you go ${expWords(c.expire)} without playing. A no-show or late cancellation costs points.</p>${pt&&pt.started?`<p class="fine">You have <b class="num">${isFounder(me)?'∞':pt.balance}</b> points.</p>`:''}</div></div></section>
   <section class="hsec"><h3 class="ah">BADges and levels</h3><p class="fine">BADges are a thank you from the founders and crew, for helping out, bringing friends and showing up. They never expire. More BADges, higher level, better perks.</p>
     <div class="list lvls">${c.levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{label:l.k})}</span><div><div class="nm">${esc(l.k)} <span class="fine">· ${BADGE_COLOUR[i]||''}${+l.at?` · ${l.at} BADges`:''}</span></div><div class="sub">${esc(l.d||'')}</div></div></div>`).join('')}<div class="li" style="grid-template-columns:auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{label:topName()})}</span><div><div class="nm">${esc(topName())} <span class="fine">· Vanta · Founders</span></div><div class="sub">${esc(c.top.d||'')}</div></div></div></div>
-    <div class="gcard f100c"><b class="f100">FIRST 100</b><div><p>The first 100 people to make a card start <b>one level up</b>, get a First 100 mark on their card and wear a number from 0 to 99.${first100Left()?` <b class="num">${first100Left()}</b> spots left.`:' All 100 spots are taken: new numbers are 100 to 999.'}</p><p class="fine">Every jersey number belongs to one player, first come first served.</p></div></div></section>
+    <div class="gcard f100c"><b class="f100">OG 100</b><div><p>The first 100 people to make a card start <b>one level up</b>, get the OG 100 mark on the back of their card and wear a number from 0 to 99.${first100Left()?` <b class="num">${first100Left()}</b> spots left.`:' All 100 spots are taken: new numbers are 100 to 999.'}</p><p class="fine">Every jersey number belongs to one player, first come first served.</p></div></div></section>
   <section class="hsec"><h3 class="ah">BAD levels</h3><div class="gcard">${ic('badminton')}<div><p><b>${esc(LVL_NOTICE)}</b></p><p class="fine">Levels run from F to A+, with a W or M rating. They only help us mix games.</p></div></div></section>
   <section class="hsec"><h3 class="ah">Joining and dropping out</h3><div class="gcard">${ic('clock')}<div><p>Drop out for free up to 48 hours before. From 48 to 24 hours, half the fee applies. Under 24 hours, the full fee.</p><p class="fine">Pay by cash, bank transfer, Ziina or Careem Pay. Your payment status is on My BAD.</p></div></div></section>
   <section class="hsec"><h3 class="ah">The departments</h3><div class="depts">${Object.keys(SPORTS).map(deptCard).join('')}</div></section>
@@ -3142,7 +3147,7 @@ function aSessions(list,up){
   const s=adminSid&&S.sessions[adminSid],r=s?roster(adminSid):null;
   const ns=S.noshows,nsId=e=>e.guest?`${adminSid}#g-${slug(e.guest)}`:adminSid,isNS=e=>Object.values(ns).some(n=>n.player===e.key&&(n.dates||[]).includes(nsId(e)));
   const shown=showPast?list.slice().reverse():up.concat(s&&!up.some(([i])=>i===adminSid)?[[adminSid,s]]:[]);
-  const picker=`<div class="sports" role="group" aria-label="Pick a session">${shown.map(([id,x])=>`<button type="button" class="sp" data-sid="${esc(id)}" aria-pressed="${id===adminSid}">${ic(sportOf(x.sport).icon)}${fmtS(x)} · ${esc(x.title)}</button>`).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
+  const picker=`<div class="list slist-a" role="list" aria-label="Sessions">${shown.map(([id,x])=>{const rr=roster(id);return `<div class="li sessrow${id===adminSid?' on':''}" role="listitem" style="grid-template-columns:auto minmax(0,1fr) auto">${ic(sportOf(x.sport).icon)}<button type="button" class="sp-open" data-sid="${esc(id)}" aria-pressed="${id===adminSid}"><span class="nm">${fmtS(x)} · ${esc(x.title)}${x.cancelled?' <span class="tagl warn">Cancelled</span>':''}</span><span class="sub">${x.timeTbc?'Time TBC':esc(fmtTime(x.start))+'–'+esc(fmtTime(x.end||''))}${x.venue?' · '+esc(x.venue):''} · ${rr.in.length}/${rr.cap} in${rr.wait.length?` · ${rr.wait.length} waiting`:''}</span></button><button type="button" class="btn ghost sm" data-sedit="${esc(id)}" aria-label="Edit ${esc(x.title)}">${ic('edit')}Edit</button></div>`}).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
     <div class="row" style="justify-content:space-between"><label class="chip sm"><input type="checkbox" id="a-past" ${showPast?'checked':''}> Show past sessions</label><button class="btn sm${showNew?' ghost':''}" id="a-new">${showNew?ic('x')+'Close':ic('plus')+'Add a session'}</button></div>`;
   /* the same form adds a session or edits one (editSid) */
   const E=editSid&&S.sessions[editSid]?S.sessions[editSid]:null,sp0=newSport,v=(k,d)=>esc(E&&E[k]!=null&&E[k]!==''?E[k]:d);
@@ -3340,7 +3345,8 @@ function bindAdmin(){
   q('[data-at]').forEach(b=>b.onclick=()=>{aTab=b.dataset.at;renderAdmin();scrollTo({top:0})});
   q('[data-go]').forEach(b=>b.onclick=()=>{aTab=b.dataset.go;if(b.dataset.sid){adminSid=b.dataset.sid;adminPicked=true}if(b.dataset.new)showNew=true;renderAdmin();scrollTo({top:0})});
   q('[data-courts]').forEach(b=>b.onclick=()=>{S.courtSport=b.dataset.courts;setView('courts')});
-  q('.sp[data-sid]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sid;adminPicked=true;renderAdmin()});
+  q('.sp-open[data-sid]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sid;adminPicked=true;renderAdmin()});
+  q('[data-sedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sedit;adminPicked=true;editSid=adminSid;showNew=false;const x=S.sessions[adminSid];if(x)newSport=x.sport||'badminton';renderAdmin();scrollTo({top:0})});
   const past=$('a-past');if(past)past.onchange=()=>{showPast=past.checked;renderAdmin()};
   on('a-new',()=>{showNew=!showNew;editSid=null;renderAdmin()});
   on('s-edit',()=>{editSid=adminSid;showNew=false;const x=S.sessions[adminSid];if(x)newSport=x.sport||'badminton';renderAdmin();scrollTo({top:0})});
