@@ -40,7 +40,7 @@ function dropHTML(){const d=FRAG,pick=S.fragPick||{};
     <p class="fine">${esc(d.note)}</p></section>`}
 /* Volume II leftovers, from the "Final" table on BAD Volume II Preorders. Priced pieces go live straight away;
    the Rally Towel waits as a draft until it has a price. Stock and photos can be changed in Admin → Shop. */
-const V2_LINE=[['On Court Jersey',120,{S:7,M:8,L:1},'Built for play. Clean, focused and made for the game. Last pieces, no restock.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'Built for before, after and everything around the game. Last pieces, no restock.'],['Rally Towel',55,{OS:12},'Compact, absorbent and ready for every rally.'],['Tote Bag',45,{OS:24},'Carry the rally. Built for court days and everything after.'],['Socks',55,{OS:16},'The Volume II socks.'],['Clubhouse Kit',399,{OS:0},'On Court + Off Court + Rally Towel + Tote Bag + Socks + one Clubhouse Exclusive item. Sold out.']];
+const V2_LINE=[['On Court Jersey',120,{S:7,M:8,L:1},'Built for play. Clean, focused and made for the game. Last pieces, no restock.'],['Off Court Tee',140,{S:6,M:3,L:2,XXL:1},'Built for before, after and everything around the game. Last pieces, no restock.'],['Rally Towel',55,{OS:12},'Compact, absorbent and ready for every rally.'],['Tote Bag',55,{OS:24},'Carry the rally. Built for court days and everything after.'],['Socks',55,{OS:16},'The Volume II socks.'],['Clubhouse Kit',399,{OS:0},'On Court + Off Court + Rally Towel + Tote Bag + Socks + one Clubhouse Exclusive item. Sold out.']];
 /* Volume II product shots, from the Volume II preorder page. Used when a product has no photos of its own. */
 const V2_IMG={'v2-on-court-jersey':['assets/v2/oncourt_front.webp','assets/v2/oncourt_back.webp'],'v2-off-court-tee':['assets/v2/offcourt_front.webp','assets/v2/offcourt_back.webp'],'v2-rally-towel':['assets/v2/towel.webp'],'v2-tote-bag':['assets/v2/tote.webp'],'v2-socks':['assets/v2/socks.webp'],'v2-clubhouse-kit':['assets/v2/oncourt_front.webp','assets/v2/offcourt_front.webp','assets/v2/towel.webp','assets/v2/tote.webp','assets/v2/socks.webp','assets/v2/hidden_item.webp']};
 const pImgs=(pid,p)=>(p&&p.images&&p.images.length)?p.images:(V2_IMG[pid]||[]);
@@ -48,8 +48,14 @@ const v2Missing=()=>V2_LINE.filter(([n])=>!S.products['v2-'+slug(n)]);
 async function seedV2(){const now=new Date().toISOString(),base={drop:'limited',dropName:'Volume II',maxPer:0,releaseAt:null,images:[],createdAt:now,updatedAt:now};
   try{for(const [i,[name,price,sizes,desc]] of V2_LINE.entries()){const id='v2-'+slug(name);if(S.products[id])continue;await S.db.doc('products/'+id).set({...base,name,price,sizes,desc,order:100+i,status:price>0?'live':'draft'})}
     toast('The Volume II lineup is in the Shop, with photos. Check the stock in Admin → Shop.');render()}catch(e){toast("Sorry, that didn't save.")}}
+/* Volume II prices changed after some items were created: a shop admin's app brings existing items in line once
+   (price only; the towel also goes live). Stock, photos and descriptions stay as they are. */
+const V2_PRICE_FIX={'v2-tote-bag':55,'v2-socks':55,'v2-rally-towel':55};
+async function syncV2Prices(){if(S._v2fix||!S.db||typeof shopAdmin!=='function'||!shopAdmin()||!Object.keys(S.products||{}).length)return;S._v2fix=true;
+  for(const [id,price] of Object.entries(V2_PRICE_FIX)){const p=S.products[id];if(!p)continue;const upd={};if(+p.price!==price)upd.price=price;if(id==='v2-rally-towel'&&p.status==='draft')upd.status='live';
+    if(Object.keys(upd).length)try{await S.db.doc('products/'+id).update({...upd,updatedAt:new Date().toISOString()})}catch(_){}}}
 const v2State=()=>{const v=Object.values(S.products).filter(p=>/volume ii/i.test(p.dropName||''));return !v.length?'none':v2Missing().length?'missing':v.some(p=>p.status==='live')?'live':'draft'};
-function renderShop(){
+function renderShop(){syncV2Prices();
   const el=$('v-shop');if(!el)return;
   const all=liveProducts(),f=S.shopFilter,isV2=([,p])=>/volume ii/i.test(p.dropName||''),v2=all.filter(isV2),list=all.filter(x=>!isV2(x)&&(f==='all'||x[1].drop===f));
   const next=all.filter(([,p])=>p.drop==='limited'&&!released(p)).sort((a,b)=>new Date(a[1].releaseAt)-new Date(b[1].releaseAt))[0];
