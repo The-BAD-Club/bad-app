@@ -95,7 +95,8 @@ function aSessions(list,up){
   return `${picker}${form}
   <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))+'–'+esc(fmtTime(s.end||''))} · AED ${esc(s.fee)}</span><h3 class="big">${esc(s.title)}</h3>
     <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
-    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}</div>
+    <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}<button class="btn ghost sm" id="s-delask">${ic('x')}Delete</button></div>
+    ${S.delAsk===adminSid?(()=>{const n=r.in.length+r.wait.length;return `<div class="confirm"><b>Delete ${esc(s.title)} for good?</b><p class="fine">${n?`${n} ${n===1?'person is':'people are'} signed up. Deleting doesn't tell them. To let them know by email, use Cancel session instead.`:'No one has signed up yet.'} The court board for this session goes too. This can't be undone.</p><div class="row" style="gap:6px"><button class="btn sm" id="s-delgo">Delete session</button><button class="btn ghost sm" id="s-delno">Keep it</button></div></div>`})():''}
     ${cancelOpen&&!s.cancelled?cancelPanel(adminSid,s,r):''}</div>
   ${payDash(adminSid,s,r)}
   ${gmPanel(adminSid,s)}
@@ -245,6 +246,9 @@ const defaultTitle=k=>({vibe:'BAD Social',badminton:'Wednesday Rally',volleyball
 function bindAdmin(){
   const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on('s-cancelask',()=>{cancelOpen=true;renderNow()});
+  on('s-delask',()=>{S.delAsk=adminSid;renderNow()});on('s-delno',()=>{S.delAsk=null;renderNow()});
+  on('s-delgo',async()=>{const sid=adminSid,t=(S.sessions[sid]||{}).title||'Session';S.delAsk=null;
+    try{await S.db.doc('sessions/'+sid).delete();try{if(S.live[sid])await S.db.doc('live/'+sid).delete()}catch(_){}delete S.sessions[sid];delete S.live[sid];if(S.courtSid===sid)S.courtSid=null;adminSid=null;adminPicked=false;toast(`${t} is deleted.`);renderAdmin()}catch(e){toast("Sorry, that didn't delete.")}});
   on('s-cancelno',()=>{cancelOpen=false;renderNow()});
   q('[data-cwhy]').forEach(b=>b.onclick=()=>{cancelWhyS=b.dataset.cwhy;renderNow()});
   on('s-cancelgo',async()=>{const sid=adminSid,s=S.sessions[sid],text=($('s-cmsg')||{}).value||'',mail=($('s-cmail')||{}).checked,em=sessionEmails(sid);

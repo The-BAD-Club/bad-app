@@ -2,11 +2,15 @@
    The numbers live on the "Points Settings" tab of BAD APP – Master. The Apps Script copies them into
    config/points every 15 minutes, together with each player's row from "Points Balance" (config/sheetPoints).
    New BADges and points entries given in the app show straight away and are added to the sheet on the next sync. */
-const PTS_FALLBACK={per:5,free:100,expire:90,launch:'',other:{'Event or tournament':10,'BAD Retreat':20,'No-show':-4,'Free session redeemed':-100,'Adjustment':0},
-  levels:[{k:'Rookie',at:0,d:'Player card, earn points, join any session'},{k:'Member',at:3,d:'Silver Member card, sign-ups open to you 24 hours early'},{k:'Core',at:10,d:'Skip the waitlist when a session is full, 5% off merch, a vote on new sessions and events'},{k:'Legend',at:25,d:'Black Legend card, 10% off merch, first pick of limited merch drops, invites to members-only events, first spots for BAD Retreat'}],
+const PTS_FALLBACK={per:5,free:100,expire:180,launch:'',other:{'Event or tournament':10,'BAD Retreat':20,'No-show':-4,'Free session redeemed':-100,'Adjustment':0},
+  levels:[{k:'Rookie',at:0,d:'Player card, earn points, join any session'},{k:'Member',at:3,d:'Silver Member card, sign-ups open to you 24 hours early'},{k:'Core',at:10,d:'Listed first on the waiting list when a session is full, 5% off merch, a vote on new sessions and events'},{k:'Legend',at:25,d:'Black Legend card, 10% off merch, first pick of limited merch drops, invites to members-only events, first spots for BAD Retreat'}],
   top:{k:'',d:'Reserved for the founders of BAD. Every perk, always.'},
   reasons:[{k:'Crew help',n:'1',eg:'Set up courts, ran the queue, took photos, packed up'},{k:'Brought a new player',n:'1',eg:'Their friend joined and played a paid session'},{k:'4 weeks in a row',n:'1',eg:'Never missed their session for a month'},{k:'Completed their player card',n:'1',eg:'Photo, number and sports all filled in'},{k:'Tried a new department',n:'1',eg:'First time at VolleyBAD, BAD DINK, BAD PACE or another department'},{k:'Above and beyond',n:'1 to 5',eg:'Anything that shows the BAD spirit'}]};
 const LEDGER_TYPES=['Event or tournament','BAD Retreat','No-show','Free session redeemed','Adjustment'];
+/* "180 days" reads better as "6 months" */
+const expWords=d=>{d=+d||0;return d%365===0?(d===365?'a year':d/365+' years'):d%30===0||d===180?(d===180?'6 months':Math.round(d/30)+' months'):d+' days'};
+/* how many sessions (or Side Quests, which count as events) make a free session */
+const toFree=()=>{const c=PS(),ev=+c.other['Event or tournament']||0;return{sessions:Math.ceil(c.free/(+c.per||5)),quests:ev?Math.ceil(c.free/ev):0}};
 function PS(){const c=S.ptsCfg||{};return{...PTS_FALLBACK,...c,other:{...PTS_FALLBACK.other,...(c.other||{})},levels:(c.levels&&c.levels.length?c.levels:PTS_FALLBACK.levels),top:{...PTS_FALLBACK.top,...(c.top||{})},reasons:(c.reasons&&c.reasons.length?c.reasons:PTS_FALLBACK.reasons)}}
 /* the top level's name is still being chosen; never show it as "Founder" (that's a membership role) */
 const topName=()=>{const n=String(PS().top.k||'').trim();return n&&n.toLowerCase()!=='founder'?n:'Top level'};
@@ -40,24 +44,28 @@ function pointsFor(uid){const c=PS(),row=sheetRow(uid)||{},launch=c.launch||'',s
     badges:bdg,level:lv.k,levelIdx:lv.i,next:lv.next,toNext:lv.next?lv.next.at-bdg:0,top:lv.top,unpaid:appUnpaid+sheetUnpaid,appUnpaid,sheetUnpaid}}
 function levelFor(uid,n){const L=PS().levels;if(uid&&isFounder(uid))return{k:topName(),i:L.length,top:true,next:null};let i=0;L.forEach((l,j)=>{if(n>=(Number(l.at)||0))i=j});/* the first 100 start one level up */if(isFirst100(uid))i=Math.min(i+1,L.length-1);return{k:L[i].k,i,top:false,next:L[i+1]||null}}
 function badgeCount(uid){const row=sheetRow(uid)||{};return (Number(row.badges)||0)+myBadges(uid).filter(b=>!b.synced).reduce((t,b)=>t+(Number(b.n)||1),0)}
-/* BADge art by level: 0 Rookie, 1 Member, 2 Core, 3 Legend, 4 Founder (∞). Brand colours only: black, white, silver. */
+/* BADge art by level: 0 Rookie white, 1 Member black, 2 Core silver, 3 Legend titanium, 4 Founder vanta (∞). */
 let BA_N=0;
 function badgeArt(i,o={}){const id='ba'+(++BA_N),lk=o.locked?' locked':'';
-  const silver=`<linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f4f4"/><stop offset=".45" stop-color="#b9b9b9"/><stop offset=".55" stop-color="#d9d9d9"/><stop offset="1" stop-color="#7d7d7d"/></linearGradient>`;
+  const grad=(n,stops)=>`<linearGradient id="${id}${n}" x1="0" y1="0" x2="1" y2="1">${stops.map(([o,c])=>`<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+  const silver=grad('s',[[0,'#f6f6f6'],[.45,'#bcbcbc'],[.55,'#dcdcdc'],[1,'#808080']]);
+  const titan=grad('t',[[0,'#9ea3aa'],[.4,'#6c7179'],[.55,'#8b9098'],[1,'#3d4147']]);
+  const rim=grad('r',[[0,'#2a2a2a'],[.5,'#5a5a5a'],[1,'#1a1a1a']]);
   const chev=(n,y0,c,w=2.6)=>Array.from({length:n},(_,k)=>`<path d="M22 ${y0+k*6}l10 -6 10 6" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
   const hex=(r,cx=32,cy=32)=>Array.from({length:6},(_,k)=>{const a=Math.PI/3*k-Math.PI/2;return `${(cx+r*Math.cos(a)).toFixed(2)},${(cy+r*Math.sin(a)).toFixed(2)}`}).join(' ');
   const star=(R,r,cx=32,cy=32,n=5)=>Array.from({length:n*2},(_,k)=>{const a=Math.PI/n*k-Math.PI/2,q=k%2?r:R;return `${(cx+q*Math.cos(a)).toFixed(2)},${(cy+q*Math.sin(a)).toFixed(2)}`}).join(' ');
   const rays=(n,r1,r2,c,w)=>Array.from({length:n},(_,k)=>{const a=2*Math.PI/n*k;return `<line x1="${(32+r1*Math.cos(a)).toFixed(2)}" y1="${(32+r1*Math.sin(a)).toFixed(2)}" x2="${(32+r2*Math.cos(a)).toFixed(2)}" y2="${(32+r2*Math.sin(a)).toFixed(2)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`}).join('');
   let g='';
-  if(i<=0)g=`<circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" stroke-width=".8" stroke-dasharray="1.5 2.5" opacity=".6"/>${chev(1,36,'currentColor')}`;
-  else if(i===1)g=`<defs>${silver}</defs><circle cx="32" cy="32" r="28" fill="url(#${id}s)"/><circle cx="32" cy="32" r="23.5" fill="none" stroke="#111" stroke-width="1" opacity=".55"/>${chev(2,33,'#111')}`;
+  if(i<=0)g=`<circle cx="32" cy="32" r="28" fill="#fafafa" stroke="#cfcfcf" stroke-width="1.2"/><circle cx="32" cy="32" r="23" fill="none" stroke="#111" stroke-width=".8" stroke-dasharray="1.5 2.5" opacity=".45"/>${chev(1,36,'#111')}`;
+  else if(i===1)g=`<circle cx="32" cy="32" r="28" fill="#141414" stroke="#3a3a3a" stroke-width="1.2"/><circle cx="32" cy="32" r="23.5" fill="none" stroke="#fff" stroke-width="1" opacity=".55"/>${chev(2,33,'#fff')}`;
   else if(i===2)g=`<defs>${silver}</defs><polygon points="${hex(29)}" fill="url(#${id}s)"/><polygon points="${hex(24)}" fill="none" stroke="#111" stroke-width="1" opacity=".55"/>${chev(3,30,'#111')}`;
-  else if(i===3)g=`<defs>${silver}</defs><polygon points="${hex(30)}" fill="url(#${id}s)"/><polygon points="${hex(27)}" fill="#0b0b0b"/>${rays(12,19,23.5,'#9a9a9a',1.2)}<polygon points="${star(13,5.6)}" fill="url(#${id}s)"/>`;
-  else g=`<defs>${silver}</defs><circle cx="32" cy="32" r="30" fill="url(#${id}s)"/><circle cx="32" cy="32" r="27.4" fill="#000"/>${rays(24,20.5,25.5,'#d0d0d0',1.1)}<circle cx="32" cy="32" r="18.5" fill="none" stroke="url(#${id}s)" stroke-width="1.4"/><path d="M32 32c-3.2-4.6-6.4-6.4-9-6.4a6.4 6.4 0 0 0 0 12.8c2.6 0 5.8-1.8 9-6.4zm0 0c3.2 4.6 6.4 6.4 9 6.4a6.4 6.4 0 0 0 0-12.8c-2.6 0-5.8 1.8-9 6.4z" fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>`;
+  else if(i===3)g=`<defs>${titan}</defs><polygon points="${hex(30)}" fill="url(#${id}t)"/><polygon points="${hex(26.5)}" fill="none" stroke="#e6e8eb" stroke-width=".8" opacity=".5"/>${rays(12,19,23,'#d7dade',1.2)}<polygon points="${star(13,5.6)}" fill="#f2f3f5"/>`;
+  else g=`<defs>${rim}</defs><circle cx="32" cy="32" r="30" fill="url(#${id}r)"/><circle cx="32" cy="32" r="28.6" fill="#000"/>${rays(24,21,25.5,'#2b2b2b',1.1)}<circle cx="32" cy="32" r="18.5" fill="none" stroke="#262626" stroke-width="1.2"/><path d="M32 32c-3.2-4.6-6.4-6.4-9-6.4a6.4 6.4 0 0 0 0 12.8c2.6 0 5.8-1.8 9-6.4zm0 0c3.2 4.6 6.4 6.4 9 6.4a6.4 6.4 0 0 0 0-12.8c-2.6 0-5.8 1.8-9 6.4z" fill="none" stroke="#f0f0f0" stroke-width="2.6" stroke-linejoin="round"/>`;
   return `<svg class="bart${lk}" viewBox="0 0 64 64" role="img" aria-label="${o.label||''}">${g}</svg>`}
+const BADGE_COLOUR=['White','Black','Silver','Titanium','Vanta'];
 const levelIdx=uid=>uid?levelFor(uid,badgeCount(uid)).i:0;
 /* perks, by level index: 1 Member, 2 Core, 3 Legend, 4 top */
-const perk={early:uid=>levelIdx(uid)>=1,skipWait:uid=>levelIdx(uid)>=2,merchOff:uid=>{const i=levelIdx(uid);return i>=3?10:i>=2?5:0},firstPick:uid=>levelIdx(uid)>=3};
+const perk={early:uid=>levelIdx(uid)>=1,early48:uid=>levelIdx(uid)>=2,merchOff:uid=>{const i=levelIdx(uid);return i>=3?10:i>=2?5:0},firstPick:uid=>levelIdx(uid)>=3};
 /* card colour follows the BADge level: silver for Member and Core, black Legend card from Legend up */
 const cardEdition=(p,uid)=>{const i=uid?levelIdx(uid):0;return i>=3?'legend':i>=1?'member':(p.edition||'oncourt')};
 const cardEdLabel=(p,uid)=>{const i=uid?levelIdx(uid):0;return i>=4?topName():i>=3?'Legend':i>=1?PS().levels[Math.min(i,PS().levels.length-1)].k:((EDITIONS.find(e=>e[0]===(p.edition||'oncourt'))||EDITIONS[0])[1])};
