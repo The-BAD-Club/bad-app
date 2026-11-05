@@ -137,6 +137,13 @@ const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:
 /* BAD's contact number: WhatsApp, Careem Pay and ENBD FastPay. Admin → Settings can change each one. */
 /* session time: '12pm to 2pm', or 'From 12pm' when there's no end time yet */
 const timeRange=(s,dash)=>s.timeTbc?'Time to be confirmed':s.end?`${fmtTime(s.start)}${dash?'–':' to '}${fmtTime(s.end)}`:`From ${fmtTime(s.start)}`;
+/* event types (mainly for Side Quests). Free events never ask for payment. */
+const EVENT_KINDS={paid:'Paid event',free:'Free event',collab:'Collab',invite:'Invite only'};
+const evKind=s=>s&&EVENT_KINDS[s.kind]?s.kind:(s&&+s.fee>0?'paid':'free');
+const igHandle=h=>String(h||'').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/[/?#].*$/,'').replace(/^@/,'');
+/* Off Court words: people are BADDIES and the person running it is the Organizer */
+const offCourt=s=>!!s&&isSide(s.sport);
+const peopleWord=s=>offCourt(s)?'BADDIES':'Players',runnerWord=s=>offCourt(s)?'Organizer':'Game Master';
 const BAD_PHONE='+971564131580',BAD_EMAIL='thebadclub.co@gmail.com';
 const waNum=()=>String((S.site&&S.site.whatsapp)||BAD_PHONE).replace(/[^0-9]/g,'');
 const waLink=t=>`https://wa.me/${waNum()}?text=${encodeURIComponent(t||'Hi BAD, I\'d like to know more about The BAD Club.')}`;

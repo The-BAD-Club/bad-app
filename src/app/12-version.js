@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.56';
+const APP_VERSION='0.57';
 const CHANGES=[
+  ['0.57','2026-11-05','Events: Type (Paid event, Free event, Collab, Invite only) and the brand’s Instagram; free events never charge; Off Court events call people BADDIES and the Game Master the Organizer; Edit a registered BADDIE straight from the event; unregistered guests get Match to a player with the closest names first; BAD × NOMANI agenda: Have fun, Take UGC content'],
   ['0.56','2026-11-05','Events: an Agenda field (one line per item, times in bold) next to spots, waiting list, venue, Google Maps link and details, all editable with Edit; a full event with no waiting list just says Full'],
   ['0.55','2026-11-05','Side Quests: Add a Side Quest button for admins (12 spots, no waiting list, no fee by default); sessions can have no end time (shows From 12pm), a Google Maps link and details; BAD × NOMANI now from 12pm, strictly 12; link a guest to their player card from the session’s player list'],
   ['0.54','2026-11-05','Side Quests: BAD × NOMANI Offcourt Lunch (Taste BADs, Sat 7 Nov, 12:00–12:30, NOMANI at The Chedi Al Bait, Sharjah), capped at 12 with the guest list in; sessions can show a Directions link; free sessions skip the payment question and don’t show AED 0'],

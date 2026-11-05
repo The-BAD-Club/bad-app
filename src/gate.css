@@ -146,3 +146,8 @@ html.guest footer.sign .legal b,html.guest footer.sign .legal span{grid-column:1
 .snote{font-size:.88rem;line-height:1.5;color:var(--muted);margin:4px 0}
 .agenda{display:grid;gap:6px;margin:6px 0}.agenda ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .agenda li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;font-size:.86rem}.agenda li b{min-width:3.4em;font-weight:700}.agenda li:not(:has(b)){grid-template-columns:minmax(0,1fr)}
+@media (max-width:600px){
+  .li.pl{grid-template-columns:auto auto minmax(0,1fr)!important;row-gap:8px}
+  .li.pl>.row:last-child{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap!important}
+  .li.pl .glinkrow select{max-width:none}
+}
