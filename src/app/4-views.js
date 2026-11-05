@@ -91,7 +91,9 @@ const payOn=k=>{const c=S.payCfg||{};return c[k]!==false};
 function payPicker(sid,isChange){return `<div class="confirm"><b>${isChange?'Change how you pay':'How would you like to pay?'}</b>
   <div class="paypick">${Object.entries(PAY).filter(([k])=>payOn(k)).map(([k,m])=>`<button type="button" data-pay="${k}" data-sid="${sid}" data-change="${isChange?1:0}">${ic(m.icon)}<b>${m.label}</b><span class="fine">${m.sub}</span></button>`).join('')}</div>
   <button class="btn ghost sm" data-paycancel="1" style="justify-self:start">Cancel</button></div>`}
-const careemDet=(c,amt)=>c.careemNo||c.careemLink?`<div class="paydet">${c.careemName?`<span class="fine">Send to</span><b>${esc(c.careemName)}</b>`:''}${c.careemNo?`<span class="fine">Careem Pay</span><b class="num">${esc(c.careemNo)}</b>`:''}<span class="fine">Amount</span><b class="num">AED ${esc(amt)}</b></div>${c.careemLink?`<a class="btn" href="${esc(c.careemLink)}" target="_blank" rel="noopener">${ic('phone')}Open Careem Pay</a>`:''}`:'<p class="fine">An admin will share the Careem Pay details with you.</p>';
+const fastpayDet=(c,amt,ref)=>{const n=c.fastpayNo||BAD_PHONE;return `<div class="paydet">${c.fastpayName||c.careemName?`<span class="fine">Send to</span><b>${esc(c.fastpayName||c.careemName)}</b>`:''}<span class="fine">ENBD FastPay</span><b class="num">${esc(phoneFmt(n))}</b><span class="fine">Amount</span><b class="num">AED ${esc(amt)}</b>${ref?`<span class="fine">Reference</span><b>${esc(ref)}</b>`:''}</div>`};
+const careemDet=(c0,amt)=>{const c={...c0,careemNo:c0.careemNo||BAD_PHONE};return careemDet0(c,amt)};
+const careemDet0=(c,amt)=>c.careemNo||c.careemLink?`<div class="paydet">${c.careemName?`<span class="fine">Send to</span><b>${esc(c.careemName)}</b>`:''}${c.careemNo?`<span class="fine">Careem Pay</span><b class="num">${esc(c.careemNo)}</b>`:''}<span class="fine">Amount</span><b class="num">AED ${esc(amt)}</b></div>${c.careemLink?`<a class="btn" href="${esc(c.careemLink)}" target="_blank" rel="noopener">${ic('phone')}Open Careem Pay</a>`:''}`:'<p class="fine">An admin will share the Careem Pay details with you.</p>';
 function payInfo(sid,s,mine,amt){const fee=amt!=null?amt:s.fee;
   const k=mine.pay||'cash',m=PAY[k],c=S.payCfg||{},ok=S.payments[sid]?.[S.uid]?.ok;
   if(S.payments[sid]?.[S.uid]?.waived)return `<div class="payline ok">${ic('check')}<span><b>Free</b> · nothing to pay</span></div>`;
@@ -101,6 +103,7 @@ function payInfo(sid,s,mine,amt){const fee=amt!=null?amt:s.fee;
   if(k==='ziina')det=c.ziinaLink?`<a class="btn sm" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Pay AED ${esc(fee)} with Ziina</a>`:'<p class="fine">An admin will send you a Ziina link.</p>';
   if(k==='cash')det=`<p class="fine">Please bring AED ${esc(fee)} in cash to the session.</p>`;
   if(k==='careem')det=careemDet(c,fee);
+  if(k==='fastpay')det=fastpayDet(c,fee,(myProfile()?.nickname||'')+' '+s.date);
   return `<div class="payline"><div class="row" style="justify-content:space-between"><span class="ic-row">${ic(m.icon)}<span><b>${m.label}</b> · AED ${esc(fee)}${mine.sent?' · <span class="fine">sent, waiting for confirmation</span>':''}</span></span><button class="btn ghost sm" data-paychange="${sid}">Change</button></div>
     ${det}${k!=='cash'&&!mine.sent?`<button class="btn ghost sm" data-sent="${sid}" style="justify-self:start">${ic('check')}I've paid</button>`:''}${mine.sent?`<button class="linkbtn" data-unsent="${sid}" style="justify-self:start">Tapped by mistake? Undo</button>`:''}</div>`;
 }
@@ -208,6 +211,7 @@ function payAllHTML(due,total){
   if(k==='ziina')det=c.ziinaLink?`<a class="btn" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Open Ziina and send AED ${total}</a>`:'<p class="fine">An admin will send you a Ziina link for AED '+total+'.</p>';
   if(k==='cash')det=`<p class="fine">Please bring AED ${total} in cash to your next session. An admin will confirm it there.</p>`;
   if(k==='careem')det=careemDet(c,total);
+  if(k==='fastpay')det=fastpayDet(c,total,ref);
   return `<div class="payall"><div class="list">${due.map(r=>{const d=dParts(r.s.date);return `<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><span>${esc(r.s.title||sportOf(r.s.sport).club)} <span class="fine">· ${d.d} ${d.m}${r.status==='Dropped late'?' · late drop fee':''}${r.guests?` · +${r.guests} guest${r.guests>1?'s':''}`:''}</span></span><b class="num">AED ${r.amount}</b></div>`}).join('')}
     <div class="li total" style="grid-template-columns:minmax(0,1fr) auto"><b>Total</b><b class="num">AED ${total}</b></div></div>
     <div class="chips" role="group" aria-label="How you'll pay">${opts.map(o=>`<button class="chip" data-pam="${o}" aria-pressed="${o===k}">${ic(PAY[o].icon)}${PAY[o].label}</button>`).join('')}</div>
@@ -245,7 +249,7 @@ function activityHTML(){
       <div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(r.s.title||sp.club)}</div><div class="sub">${esc(r.status)}${r.games?` · ${r.games} game${r.games===1?'':'s'}`:''}${r.guests?` · +${r.guests} guest${r.guests>1?'s':''}`:''}${r.amount?` · ${ic(PAY[r.method].icon)} ${PAY[r.method].label}`:''}</div></div>
       <div style="display:grid;justify-items:end;gap:4px">${r.amount?`<b class="num">AED ${r.amount}</b>`:''}${badge(r.payState)}${due?`<span class="paygo">${r.payState==='sent'?'Details':'Pay'} ›</span>`:''}</div></div>`;
       return due?`<details class="payrow" data-payrow="${esc(r.sid)}" ${open?'open':''}><summary>${row}</summary><div class="paybody">${payFor&&payFor.sid===r.sid?payPicker(r.sid,true):payInfo(r.sid,r.s,r.x,r.amount)}</div></details>`:row}).join('')||`<div class="empty">${ic('play')}<span>No sessions yet. Your bookings, games and payments will show here.</span></div>`}</div>
-    ${due.length?`<p class="fine">Cash is confirmed by an admin at the session. For bank transfer or Ziina, open the session above and tap I've paid after sending.</p>`:''}</div>`;
+    ${due.length?`<p class="fine">Cash is confirmed by an admin at the session. For bank transfer, Ziina, Careem Pay or ENBD FastPay, open the session above and tap I've paid after sending.</p>`:''}</div>`;
 }
 /* Home: a checked game shows its result or what's still needed; scores are added on the Courts screen */
 function homeGameRow(gid,g){const sid=g.sid,t=typeof teamOf==='function'?teamOf(g,S.uid):null,st=typeof gState==='function'?gState(gid,g):g.st;

@@ -292,7 +292,7 @@ function quickStart(sp){const att=isAttend(sp),def={basketball:['19:00','21:00',
 /* ---------- Check-in & Pay: the session sheet while the queue is switched off ----------
    One list of everyone signed up (and walk-ins): tap to mark who came, set how they paid, take people off.
    Payments for players and admin-added guests are their real payment records; walk-ins are noted on the sheet. */
-const PAYOPT=[['','Not paid'],['cash','Paid · Cash'],['bank','Paid · Bank'],['ziina','Paid · Ziina'],['careem','Paid · Careem'],['free','Free']];
+const PAYOPT=[['','Not paid'],['cash','Paid · Cash'],['bank','Paid · Bank'],['ziina','Paid · Ziina'],['careem','Paid · Careem'],['fastpay','Paid · FastPay'],['free','Free']];
 let endAsk=false,endNS=true,sheetQ='';
 function payOf(sid,lv,pid){const s=S.sessions[sid]||{},fee=+s.fee||0;
   if(pid.startsWith('g~')){const host=pid.split('~')[1];return{kind:'host',host}}

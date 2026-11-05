@@ -69,6 +69,7 @@ const P={
  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2a5 5 0 0 1 5.5 5.8"/>',
  plus:'<path d="M12 5v14M5 12h14"/>', check:'<path d="M5 12.5l4.5 4.5L19 7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
  guest:'<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>',
+ wa:'<path d="M4 20l1.3-3.8A8 8 0 1 1 8 19z"/><path d="M9 9.5c.3 2.3 2.2 4.2 4.5 4.5l1-1.2 2 .8-.4 1.9c-4 .3-7.6-3.3-7.3-7.3l1.9-.4.8 2z"/>',
  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
  phone:'<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/>',
  at:'<circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1"/>',
@@ -132,7 +133,12 @@ const noCard=()=>!window.BAD_GUEST&&!!S.loaded&&!!S.uid&&!S.canEdit&&!(S.profile
 const MANIFESTO=`<div class="manifesto" aria-label="Bold. Agile. Defiant."><b>BOLD.</b><b>AGILE.</b><b>DEFIANT.</b></div>`;
 const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(DEPT_DESC[k]||SPORTS[k].sport)}</span></div></div>`:'';
 const LEVEL_FREE=['retreat','vibe','taste'];
-const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'}};
+const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'},fastpay:{label:'ENBD FastPay',sub:'Send to our mobile number',icon:'bank'}};
+/* BAD's contact number: WhatsApp, Careem Pay and ENBD FastPay. Admin → Settings can change each one. */
+const BAD_PHONE='+971564131580',BAD_EMAIL='thebadclub.co@gmail.com';
+const waNum=()=>String((S.site&&S.site.whatsapp)||BAD_PHONE).replace(/[^0-9]/g,'');
+const waLink=t=>`https://wa.me/${waNum()}?text=${encodeURIComponent(t||'Hi BAD, I\'d like to know more about The BAD Club.')}`;
+const phoneFmt=n=>{const d=String(n||'').replace(/[^0-9]/g,'');return d.length===12&&d.startsWith('971')?`+971 ${d.slice(3,5)} ${d.slice(5,8)} ${d.slice(8)}`:String(n||'')};
 const PLAYABLE=['badminton','volleyball','pickleball','run','basketball','dance'];
 const TYPES={
  badminton:{'Smasher':'Ends rallies from the back.','Net Ninja':'Lives at the tape.','The Wall':'Returns everything.','Trickster':'Holds, flicks, deceives.','Rally Machine':'No errors. Ever.'},

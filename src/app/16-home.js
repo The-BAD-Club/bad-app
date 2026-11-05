@@ -26,6 +26,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
     :`${newsHTML()}${sessions}${about}`}
     ${homeVideosHTML()}
     ${igHTML()}
+    ${contactHTML()}
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
   bindHero(el);
@@ -39,6 +40,9 @@ function newsHTML(){if(notMember())return '';const today=new Date().toISOString(
   if(!top.length)return `<section class="hsec"><h3 class="ah">What's on</h3><p class="fine">No news right now.</p>${links}</section>`;
   return `<section class="hsec"><h3 class="ah">What's on</h3><div class="list">${top.map(([id,p])=>{const d=p.date?dParts(p.date):null,sp=SPORTS[p.club];
     return `<button class="li act" data-hgo="club" data-cm="news" style="grid-template-columns:auto minmax(0,1fr) auto">${d?`<div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div>`:`<span class="ic-bub soft">${ic('club')}</span>`}<div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event':'News'} · ${esc(sp?sp.club:'All of BAD')}</div></div>${ic('arrow')}</button>`}).join('')}</div>${links}</section>`}
+/* Talk to us: WhatsApp (with a ready message), email and Instagram. On Home and the FAQs, for visitors and members. */
+function contactHTML(){return `<section class="hsec talk"><h3 class="ah">Talk to us</h3><p class="fine">Questions about joining, a collab or a private session? We usually reply the same day.</p>
+  <div class="talkrow"><a class="btn" href="${waLink()}" target="_blank" rel="noopener">${ic('wa')}WhatsApp</a><a class="btn ghost" href="mailto:${BAD_EMAIL}?subject=${encodeURIComponent('Hello BAD')}">${ic('mail')}Email</a></div></section>`}
 /* called by the sign-in bridge when nobody is signed in: show Home, and if they followed a link to another tab, ask them to sign in for it */
 window.badGuestMode=function(){loadHomeMediaPublic();
   /* visitors see the real upcoming sessions (sessions are public in the security rules); if that read isn't allowed yet, the weekly list shows instead */
@@ -72,10 +76,11 @@ function faqList(){const c=PS();return [
     ['What is the OG 100?','The first 100 people to make a card. They start one BADge level up and get an OG 100 number on the back of their card.'],
     ['Can I pick my jersey number?','Yes, when you make your card. Numbers are first come, first served. Once 0 to 99 are taken, numbers have three digits.']]],
   ['Anything else?',[
-    ['How do I reach you?','Send us a message on Instagram at @thebad.club, or speak to any of the crew at a session.']]]]}
+    ['How do I reach you?','WhatsApp us on '+phoneFmt(BAD_PHONE)+', email '+BAD_EMAIL+', send a message on Instagram at @thebad.club, or speak to any of the crew at a session.']]]]}
 function renderFaq(){const el=$('v-faq');if(!el)return;
   el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">FAQs</span><h2>Good questions.</h2><p class="muted">Everything people ask before their first BAD session.</p></div>
   ${faqList().map(([h,qs])=>`<section class="hsec"><h3 class="ah">${esc(h)}</h3><div class="faq">${qs.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>`).join('')}
+  ${contactHTML()}
   <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="guide">${ic('guide')}Read the Guide</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
