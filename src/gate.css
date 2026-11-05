@@ -99,3 +99,5 @@ footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
 .vh-in p.vh-tag{font-weight:400;letter-spacing:.04em;font-size:clamp(.8rem,3.6vw,1rem)}
 .joinrow{display:grid;justify-items:center}.joinrow .bigjoin{margin:0;max-width:none}@media(min-width:761px){.joinrow .bigjoin{max-width:520px}}
 .talkrow{display:flex;flex-wrap:wrap;gap:8px}.talkrow .btn{flex:1 1 0;justify-content:center;min-width:110px}
+.played .chips{margin-bottom:4px}.played label.lbl{display:block;margin-top:12px}
+.talkrow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}.talkrow .btn{min-width:0;padding-left:8px;padding-right:8px;gap:6px;white-space:nowrap}
