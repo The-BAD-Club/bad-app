@@ -537,3 +537,21 @@ function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
     let amount=0;if(x.out)amount=feeFor(s,x.out).amount;else if(r.in.some(e=>e.uid===uid&&!e.guest)){const g=(x.guests||[]).filter(g=>!g.out||r.late.some(e=>e.uid===uid&&e.guest===g.n)).length;amount=(Number(s.fee)||0)*(1+g)}
     if(amount)out.push({sid,amount})}
   return out}
+/* ---------- one-off: BAD × NOMANI Offcourt Lunch (Taste BADs), Sat 7 Nov 2026, capped at 12 with the guest list filled ----------
+   The first admin app that can run Taste BADs creates the session and books the 12 names: a registered player when the
+   name matches a card (nickname or name on tracker), otherwise a BAD guest. Runs once (the session's `seeded` flag). */
+const NOMANI={id:'taste-nomani-2026-11-07',doc:{sport:'taste',title:'BAD × NOMANI · Offcourt Lunch',date:'2026-11-07',start:'12:00',end:'12:30',venue:'NOMANI, The Chedi Al Bait, Sharjah',
+  mapLink:'https://www.google.com/maps/search/?api=1&query=Nomani+The+Chedi+Al+Bait+Sharjah',capacity:12,waitCap:4,fee:0,
+  note:'Dress code: BLACK. BAD. YOU. Wear black, bring your BAD attitude, and let your personality do the rest. Off Court. Still BAD. 🖤'},
+  names:['Marlo','Zee','Kenny','Jelden','Rupha','Mark','Ez','Fay','Clark','Milka','Aaron','Carl']};
+async function seedNomani(){if(S._nomani||!S.db||!S.canEdit||!S.loaded||typeof canSport!=='function'||!canSport('taste'))return;S._nomani=true;
+  const {id,doc,names}=NOMANI;let s=S.sessions[id];if(s&&s.seeded)return;
+  try{if(!s){await S.db.doc('sessions/'+id).set({...doc,createdAt:new Date().toISOString()});S.sessions[id]={...doc}}
+    const norm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const booked=new Set(roster(id).in.concat(roster(id).wait).map(e=>norm(e.guest||nameOf(e.uid,e.key))));
+    let t=Date.parse('2026-11-05T11:00:00Z');
+    for(const n of names){if(booked.has(norm(n)))continue;const at=new Date(t+=1000).toISOString();
+      const m=Object.entries(S.profiles).filter(([,p])=>!p.sample&&(norm(p.nickname)===norm(n)||norm(p.listName)===norm(n)));
+      if(m.length===1)await staffBooking(m[0][0],id,o=>o?undefined:freshEntry('cash',at));
+      else{const gid='g-'+slug(n)+'-nomani';await staffBooking(gid,id,()=>freshEntry('cash',at),{key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{}})}}
+    await S.db.doc('sessions/'+id).update({seeded:true});toast('BAD × NOMANI is in Side Quests with the 12 guests.')}catch(e){console.warn('nomani',e);S._nomani=false}}
