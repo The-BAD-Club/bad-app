@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.54 | 2026-11-05 | Side Quests: BAD × NOMANI Offcourt Lunch (Taste BADs, Sat 7 Nov, 12:00–12:30, NOMANI at The Chedi Al Bait, Sharjah), capped at 12 with the guest list in; sessions can show a Directions link; free sessions skip the payment question and don’t show AED 0 |
 | 0.53 | 2026-11-05 | Footer: app version lines up with the license number |
 | 0.52 | 2026-11-05 | Shop: one clean grid with small photos, name and price, and tabs for All, FRAGMENTS, Volume II and Essentials; tap for the big photo with thumbnails, tap again for full screen; BADASS and REVERSE photos without their white background; footer: app version sits under Sign out |
 | 0.51 | 2026-11-05 | Played with us before? is now No / Yes; Yes shows a plain list of names from the session tracker, plus I can’t find my name; Membership list shows just the level names; FAQs end with WhatsApp, Email and Instagram, then Join BAD and the Guide |

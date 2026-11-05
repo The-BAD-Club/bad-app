@@ -1234,8 +1234,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.53';
+const APP_VERSION='0.54';
 const CHANGES=[
+  ['0.54','2026-11-05','Side Quests: BAD × NOMANI Offcourt Lunch (Taste BADs, Sat 7 Nov, 12:00–12:30, NOMANI at The Chedi Al Bait, Sharjah), capped at 12 with the guest list in; sessions can show a Directions link; free sessions skip the payment question and don’t show AED 0'],
   ['0.53','2026-11-05','Footer: app version lines up with the license number'],
   ['0.52','2026-11-05','Shop: one clean grid with small photos, name and price, and tabs for All, FRAGMENTS, Volume II and Essentials; tap for the big photo with thumbnails, tap again for full screen; BADASS and REVERSE photos without their white background; footer: app version sits under Sign out'],
   ['0.51','2026-11-05','Played with us before? is now No / Yes; Yes shows a plain list of names from the session tracker, plus I can’t find my name; Membership list shows just the level names; FAQs end with WhatsApp, Email and Instagram, then Join BAD and the Guide'],
@@ -2095,7 +2096,7 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}<span>${ic('coin')}AED ${esc(s.fee)}</span>${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
+      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p>${esc(s.note)}</p>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
@@ -2103,7 +2104,7 @@ function sessCard(sid,s){const me=myProfile();
 function bindPlay(el){bindSwitch(el);el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
   const q=s=>el.querySelectorAll(s),now=()=>new Date().toISOString();
   q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderNow()});
-  q('[data-joinask]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.joinask,change:false};renderNow()});
+  q('[data-joinask]').forEach(b=>b.onclick=()=>{const x=S.sessions[b.dataset.joinask];if(x&&!(+x.fee>0)){join(b.dataset.joinask,'cash');return}payFor={sid:b.dataset.joinask,change:false};renderNow()});/* nothing to pay: no payment question */
   q('[data-pay]').forEach(b=>b.onclick=()=>b.dataset.change==='1'?setPay(b.dataset.sid,b.dataset.pay):join(b.dataset.sid,b.dataset.pay));
   q('[data-paycancel]').forEach(b=>b.onclick=()=>{payFor=null;renderNow()});
   q('[data-paychange]').forEach(b=>b.onclick=()=>{payFor={sid:b.dataset.paychange,change:true};renderNow()});
@@ -4033,6 +4034,24 @@ function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
     let amount=0;if(x.out)amount=feeFor(s,x.out).amount;else if(r.in.some(e=>e.uid===uid&&!e.guest)){const g=(x.guests||[]).filter(g=>!g.out||r.late.some(e=>e.uid===uid&&e.guest===g.n)).length;amount=(Number(s.fee)||0)*(1+g)}
     if(amount)out.push({sid,amount})}
   return out}
+/* ---------- one-off: BAD × NOMANI Offcourt Lunch (Taste BADs), Sat 7 Nov 2026, capped at 12 with the guest list filled ----------
+   The first admin app that can run Taste BADs creates the session and books the 12 names: a registered player when the
+   name matches a card (nickname or name on tracker), otherwise a BAD guest. Runs once (the session's `seeded` flag). */
+const NOMANI={id:'taste-nomani-2026-11-07',doc:{sport:'taste',title:'BAD × NOMANI · Offcourt Lunch',date:'2026-11-07',start:'12:00',end:'12:30',venue:'NOMANI, The Chedi Al Bait, Sharjah',
+  mapLink:'https://www.google.com/maps/search/?api=1&query=Nomani+The+Chedi+Al+Bait+Sharjah',capacity:12,waitCap:4,fee:0,
+  note:'Dress code: BLACK. BAD. YOU. Wear black, bring your BAD attitude, and let your personality do the rest. Off Court. Still BAD. 🖤'},
+  names:['Marlo','Zee','Kenny','Jelden','Rupha','Mark','Ez','Fay','Clark','Milka','Aaron','Carl']};
+async function seedNomani(){if(S._nomani||!S.db||!S.canEdit||!S.loaded||typeof canSport!=='function'||!canSport('taste'))return;S._nomani=true;
+  const {id,doc,names}=NOMANI;let s=S.sessions[id];if(s&&s.seeded)return;
+  try{if(!s){await S.db.doc('sessions/'+id).set({...doc,createdAt:new Date().toISOString()});S.sessions[id]={...doc}}
+    const norm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const booked=new Set(roster(id).in.concat(roster(id).wait).map(e=>norm(e.guest||nameOf(e.uid,e.key))));
+    let t=Date.parse('2026-11-05T11:00:00Z');
+    for(const n of names){if(booked.has(norm(n)))continue;const at=new Date(t+=1000).toISOString();
+      const m=Object.entries(S.profiles).filter(([,p])=>!p.sample&&(norm(p.nickname)===norm(n)||norm(p.listName)===norm(n)));
+      if(m.length===1)await staffBooking(m[0][0],id,o=>o?undefined:freshEntry('cash',at));
+      else{const gid='g-'+slug(n)+'-nomani';await staffBooking(gid,id,()=>freshEntry('cash',at),{key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{}})}}
+    await S.db.doc('sessions/'+id).update({seeded:true});toast('BAD × NOMANI is in Side Quests with the 12 guests.')}catch(e){console.warn('nomani',e);S._nomani=false}}
 
 /* ---------- BAD Shop: limited drops and essentials ---------- */
 S.products={};S.stock={};S.myOrders={};S.orders={};S.shopFilter='all';S.shopPid=null;S.bagOpen=false;S.shopDone=null;
@@ -4445,7 +4464,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.uid&&!S.canEdit)db.doc('approved/'+S.uid).onSnapshot(d=>{const was=S.myApproval;S.myApproval=d.exists?d.data():null;if(S.myApproval&&S.myApproval.ok===true&&!S.member)location.reload();else if(JSON.stringify(was)!==JSON.stringify(S.myApproval))render()},()=>{});
   document.documentElement.classList.toggle('nomember',notMember());
   let pending=10;
-  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;unboot();seedWeb();fixups();fixups2();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500);if(S.canEdit)setTimeout(()=>autoApproveExisting(),3000)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
+  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;unboot();if(typeof seedNomani==='function')setTimeout(seedNomani,3000);seedWeb();fixups();fixups2();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500);if(S.canEdit)setTimeout(()=>autoApproveExisting(),3000)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
   /* hosted version: first admin sign-in on an empty database loads the starter sessions, posts and sample players */
   /* one-off content fixes, applied once by an admin's app */
   async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];
