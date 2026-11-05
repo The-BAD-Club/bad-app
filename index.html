@@ -1096,6 +1096,7 @@ html.guest footer.sign .legal b,html.guest footer.sign .legal span{grid-column:1
   .li.pl>.row:last-child{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap!important}
   .li.pl .glinkrow select{max-width:none}
 }
+.agenda li.nt{grid-template-columns:auto minmax(0,1fr)!important}.agenda ol:not(:has(li:not(.nt))) li.nt b{display:none}.agenda ol:not(:has(li:not(.nt))) li.nt{grid-template-columns:minmax(0,1fr)!important}
 
 </style>
 
@@ -1245,8 +1246,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.57';
+const APP_VERSION='0.58';
 const CHANGES=[
+  ['0.58','2026-11-05','BAD × NOMANI: a better agenda'],
   ['0.57','2026-11-05','Events: Type (Paid event, Free event, Collab, Invite only) and the brand’s Instagram; free events never charge; Off Court events call people BADDIES and the Game Master the Organizer; Edit a registered BADDIE straight from the event; unregistered guests get Match to a player with the closest names first; BAD × NOMANI agenda: Have fun, Take UGC content'],
   ['0.56','2026-11-05','Events: an Agenda field (one line per item, times in bold) next to spots, waiting list, venue, Google Maps link and details, all editable with Edit; a full event with no waiting list just says Full'],
   ['0.55','2026-11-05','Side Quests: Add a Side Quest button for admins (12 spots, no waiting list, no fee by default); sessions can have no end time (shows From 12pm), a Google Maps link and details; BAD × NOMANI now from 12pm, strictly 12; link a guest to their player card from the session’s player list'],
@@ -2121,7 +2123,7 @@ function sessCard(sid,s){const me=myProfile();
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
       <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${isSide(s.sport)||s.kind?`<span class="tagl">${esc(EVENT_KINDS[evKind(s)])}</span>`:''}${igHandle(s.brandIg)?`<a class="linkbtn sedit" href="https://www.instagram.com/${esc(igHandle(s.brandIg))}/" target="_blank" rel="noopener">${ic('ig')}@${esc(igHandle(s.brandIg))}</a>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}${runnerWord(s)}: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p class="snote">${esc(s.note)}</p>`:''}
-      ${s.agenda?`<div class="agenda"><span class="label">Agenda</span><ol>${String(s.agenda).split(/\n+/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*[-–·:]?\s+(.*)$/i);return m?`<li><b class="num">${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li><span>${esc(l)}</span></li>`}).join('')}</ol></div>`:''}
+      ${s.agenda?`<div class="agenda"><span class="label">Agenda</span><ol>${String(s.agenda).split(/\n+/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*[-–·:]?\s+(.*)$/i);return m?`<li><b class="num">${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li class="nt"><b class="num" aria-hidden="true"></b><span>${esc(l)}</span></li>`}).join('')}</ol></div>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
       ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}
@@ -4077,11 +4079,11 @@ function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
    name matches a card (nickname or name on tracker), otherwise a BAD guest. Runs once (the session's `seeded` flag). */
 const NOMANI={id:'taste-nomani-2026-11-07',doc:{sport:'taste',title:'BAD × NOMANI · Offcourt Lunch',date:'2026-11-07',start:'12:00',end:'',venue:'NOMANI, The Chedi Al Bait, Sharjah',
   mapLink:'https://www.google.com/maps/search/?api=1&query=Nomani+The+Chedi+Al+Bait+Sharjah',capacity:12,waitCap:0,fee:0,
-  kind:'collab',agenda:'Have fun\nTake UGC content',note:'Dress code: BLACK. BAD. YOU. Wear black, bring your BAD attitude, and let your personality do the rest. Off Court. Still BAD. 🖤'},
+  kind:'collab',agenda:'12:00 Arrive, settle in, say hi\nLunch, BAD style: good food, better company\nContent break: shoot, film and share the moment (tag @thebad.club)\nStay as long as the vibe does',note:'Dress code: BLACK. BAD. YOU. Wear black, bring your BAD attitude, and let your personality do the rest. Off Court. Still BAD. 🖤'},
   names:['Marlo','Zee','Kenny','Jelden','Rupha','Mark','Ez','Fay','Clark','Milka','Aaron','Carl']};
 async function seedNomani(){if(S._nomani||!S.db||!S.canEdit||!S.loaded||typeof canSport!=='function'||!canSport('taste'))return;S._nomani=true;
   const {id,doc,names}=NOMANI;let s=S.sessions[id];
-  if(s&&(s.end==='12:30'||s.waitCap!==0||!s.agenda||!s.kind))try{const u={};if(s.end==='12:30')u.end='';if(s.waitCap!==0)u.waitCap=0;if(!s.agenda)u.agenda='Have fun\nTake UGC content';if(!s.kind)u.kind='collab';await S.db.doc('sessions/'+id).update(u)}catch(_){}
+  if(s&&(s.end==='12:30'||s.waitCap!==0||!s.agenda||s.agenda==='Have fun\nTake UGC content'||!s.kind))try{const u={};if(s.end==='12:30')u.end='';if(s.waitCap!==0)u.waitCap=0;if(!s.agenda||s.agenda==='Have fun\nTake UGC content')u.agenda='12:00 Arrive, settle in, say hi\nLunch, BAD style: good food, better company\nContent break: shoot, film and share the moment (tag @thebad.club)\nStay as long as the vibe does';if(!s.kind)u.kind='collab';await S.db.doc('sessions/'+id).update(u)}catch(_){}
   if(s&&s.seeded)return;
   try{if(!s){await S.db.doc('sessions/'+id).set({...doc,createdAt:new Date().toISOString()});S.sessions[id]={...doc}}
     const norm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
