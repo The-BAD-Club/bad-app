@@ -140,3 +140,6 @@ footer.sign .legal span{grid-column:1;grid-row:2;align-self:center}
 footer.sign .signout{grid-column:2;grid-row:1;align-self:center;padding:6px 0;min-height:32px}
 footer.sign .ver{grid-column:2!important;grid-row:2!important;align-self:center!important;justify-self:end;line-height:1}
 html.guest footer.sign .legal b,html.guest footer.sign .legal span{grid-column:1}
+.glinkrow{margin-top:6px}.glinkrow select{max-width:240px;font-size:.8rem;padding:6px 8px}
+[data-addquest]{justify-self:start}
+.li.pl>div{min-width:0}.glinkrow select{width:100%;max-width:220px;min-width:0;box-sizing:border-box}
