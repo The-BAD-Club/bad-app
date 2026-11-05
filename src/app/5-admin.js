@@ -270,7 +270,7 @@ const RALLY_RENAME=[[/^wednesday rally$/i,'BADminton Wednesday'],[/^friday rally
 async function renameRallies(){if(S._rr||!S.db||!S.canEdit||typeof canSport!=='function'||!canSport('badminton'))return;S._rr=true;
   for(const [sid,x] of Object.entries(S.sessions||{})){const t=String(x.title||'').trim(),m=RALLY_RENAME.find(([r])=>r.test(t));if(!m||(x.sport||'badminton')!=='badminton')continue;
     try{await S.db.doc('sessions/'+sid).update({title:m[1]})}catch(_){}}}
-const defaultTitle=k=>({vibe:'BAD Social',badminton:'BADminton Wednesday',volleyball:'VolleyBAD',pickleball:'BAD DINK',run:'BAD PACE',dance:'BAD HABITS Dance',basketball:'BAD SHOTS',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs'}[k]||'Session');
+const defaultTitle=k=>({vibe:'BAD Social',badminton:'BADminton Wednesday',volleyball:'VolleyBAD',pickleball:'BAD DINK',run:'BAD PACE',dance:'BAD HABITS Dance',basketball:'BAD SHOTS',training:'Training',retreat:'BAD Retreat',taste:'Taste BADs',party:'BAD X'}[k]||'Session');
 function bindAdmin(){
   const q=s=>document.querySelectorAll('#v-admin '+s),on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
   on('s-cancelask',()=>{cancelOpen=true;renderNow()});

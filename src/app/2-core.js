@@ -97,11 +97,12 @@ const SPORTS={
  training:{club:'Training Department',sport:'Training',icon:'training',noType:true},
  retreat:{club:'BAD Retreat',sport:'Retreats',icon:'retreat',noType:true},
  vibe:{club:'BAD Community',sport:'Here for the vibe',icon:'users',noType:true},
- taste:{club:'Taste BADs',sport:'Food & drink collabs',icon:'taste',noType:true,side:true}
+ taste:{club:'Taste BADs',sport:'Food & drink collabs',icon:'taste',noType:true,side:true},
+ party:{club:'BAD X',sport:'BAD experiences: parties and nights out',icon:'spark',noType:true,side:true}
 };
 /* side quests: collaborations and everything Off Court. They book like sessions but live on their own tab. */
 const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
-const ACT_DESC={badminton:'Badminton · BADminton Wednesday & Friday',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+const ACT_DESC={badminton:'Badminton · BADminton Wednesday & Friday',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',party:'Parties and experiences · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 /* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
 const DEPT_DESC={
  badminton:'Where BAD started. Rally nights with doubles on every court and a rotation that keeps everyone playing. All levels welcome, and everyone plays with everyone.',
@@ -113,7 +114,8 @@ const DEPT_DESC={
  training:'Coaching and drills to level up your game, run by BAD coaches.',
  retreat:'Trips away with the club: sport, food and time together. Limited spots, announced early.',
  vibe:'Here for the vibe. Socials and everything that brings BAD together off court.',
- taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. A Side Quest.'};
+ taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. A Side Quest.',
+ party:'BAD X, short for BAD experience: the parties and nights where every department ends up in one room. The Clubhouse, BAD-O-WEEN, the Christmas Party. A Side Quest.'};
 /* house rules: one set for every department, Side Quest and event. Shown in the Guide, Play and on Home */
 const HOUSE_RULES=[
  ['users','Welcome everyone','Every level, every partner, every team. Levels help us mix games and groups, they don’t choose who you play or go with.'],
@@ -132,7 +134,7 @@ const isGuestPass=uid=>{const p=uid&&S.profiles[uid];return !!p&&!!p.memReq&&p.m
 const noCard=()=>!window.BAD_GUEST&&!!S.loaded&&!!S.uid&&!S.canEdit&&!(S.profiles||{})[S.uid];
 const MANIFESTO=`<div class="manifesto" aria-label="Bold. Agile. Defiant."><b>BOLD.</b><b>AGILE.</b><b>DEFIANT.</b></div>`;
 const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(DEPT_DESC[k]||SPORTS[k].sport)}</span></div></div>`:'';
-const LEVEL_FREE=['retreat','vibe','taste'];
+const LEVEL_FREE=['retreat','vibe','taste','party'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'},fastpay:{label:'ENBD FastPay',sub:'Send to our mobile number',icon:'bank'}};
 /* BAD's contact number: WhatsApp, Careem Pay and ENBD FastPay. Admin → Settings can change each one. */
 /* session time: '12pm to 2pm', or 'From 12pm' when there's no end time yet */

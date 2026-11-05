@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.59';
+const APP_VERSION='0.60';
 const CHANGES=[
+  ['0.60','2026-11-05','BAD X (short for BAD experience): a new Side Quest department for parties and nights out, next to Taste BADs; Side Quests can be filtered by department, and Add a Side Quest uses the one you have open'],
   ['0.59','2026-11-05','BAD × NOMANI agenda: tasting the new menu and creating content'],
   ['0.58','2026-11-05','BAD × NOMANI: a better agenda'],
   ['0.57','2026-11-05','Events: Type (Paid event, Free event, Collab, Invite only) and the brand’s Instagram; free events never charge; Off Court events call people BADDIES and the Game Master the Organizer; Edit a registered BADDIE straight from the event; unregistered guests get Match to a player with the closest names first; BAD × NOMANI agenda: Have fun, Take UGC content'],
