@@ -46,6 +46,7 @@ function renderStep(){
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
       <div class="field"><label for="c-mem">Membership</label><select id="c-mem">${(memType(D.memType)?.staff?[memType(D.memType),...memPick()]:memPick()).map(t=>`<option value="${esc(t.k)}" ${t.k===D.memType?'selected':''}>${esc(t.k)}</option>`).join('')}</select><p class="fine" id="c-mem-hint">${memHint(D.memType)}</p></div>
       <div class="field"><label for="c-ig">Instagram <span class="req">optional</span></label>${inp('c-ig','at','text',D.instagram,'@yourhandle','maxlength="40"')}</div>
+      <div class="field"><label for="c-bio">Short bio <span class="req">optional</span></label><textarea id="c-bio" rows="2" maxlength="160" placeholder="Lefty. Loves a smash. Here for the vibes.">${esc(D.bio||'')}</textarea><span class="fine">Shows on your profile. Members only.</span></div>
       ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'KENNY#08','maxlength="16" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?(()=>{if(D._played==null)D._played=!!D.listName&&free.some(([k])=>k===keyOf(D.listName));
         return `<div class="field played"><span class="lbl">Played with us before?</span><div class="chips seg" role="group" aria-label="Played with us before?"><button type="button" class="chip" data-played="0" aria-pressed="${!D._played}">No, first time</button><button type="button" class="chip" data-played="1" aria-pressed="${!!D._played}">Yes</button></div>
@@ -54,7 +55,7 @@ function renderStep(){
     $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,3);e.target.value=D.number;const h=$('c-num-hint');h.textContent=numHint(D.number);h.classList.toggle('warn-t',!!numProblem(D.number));$('next').disabled=!stepValid();if($('skip'))$('skip').disabled=!stepValid();preview()};
     $('c-mem').onchange=e=>{D.memType=e.target.value;$('c-mem-hint').textContent=memHint(D.memType)};
     const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();if(step===0)$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
-    on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
+    on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-bio','bio');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
     const rh=()=>{const el=$('c-ref-hint');if(!el)return;const i=codeInfo(D.referredBy);el.textContent=!i?'':i.kind==='club'?`✓ ${i.label}.`:i.kind==='member'?`✓ Invited by ${i.name}. Welcome.`:i.kind==='off'?'This code has ended.':'We can’t find that code. Please check the spelling.'};
     if($('c-ref')){$('c-ref').addEventListener('input',rh);rh()}
     const l=$('c-list');if(l)l.onchange=e=>{D.listName=e.target.value==='__none'?'':e.target.value;preview()};
@@ -172,7 +173,7 @@ async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:numNorm(D.number),edition:EDITIONS.some(e=>e[0]===D.edition)?D.edition:'oncourt',photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),grade:gradeRow(D.grade)&&D.sports.includes('badminton')?D.grade:'',lv2:Object.fromEntries(Object.entries(D.lv2||{}).filter(([k,v])=>D.sports.includes(k)&&LEVELS_BY[k]&&Number.isInteger(v))),cat:CATS[D.cat]?D.cat:'',
-    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
+    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),bio:(D.bio||'').trim().slice(0,160),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
     try{if(numProblem(D.number)){toast(numProblem(D.number));step=0;renderStep();return}

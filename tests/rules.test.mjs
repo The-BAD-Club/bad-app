@@ -395,3 +395,36 @@ test('archive and delete players', async () => {
   await assertSucceeds(deleteDoc(doc(ctx('f1', 'founder@x.com'), 'profiles', 'p2')));
   await assertFails(deleteDoc(doc(ctx('p1', 'p1@x.com'), 'contacts', 'p2')));
 });
+test('the Feed: members post, react once, give props once a day, owners and admins delete', async () => {
+  await env.withSecurityRulesDisabled(async c => { await setDoc(doc(c.firestore(), 'profiles', 'nm1'), { nickname: 'New' }); });
+  const p1 = ctx('p1', 'p1@x.com'), p2 = ctx('p2', 'p2@x.com'), cm = ctx('cm1', 'cm@x.com');
+  const post = { uid: 'p1', kind: 'post', text: 'Friday was fun', n: 1, dept: 'badminton', at: '2026-11-06T10:00:00Z' };
+  await assertSucceeds(setDoc(doc(p1, 'feed', 'f1'), post));
+  await assertFails(setDoc(doc(p1, 'feed', 'f2'), { ...post, uid: 'p2' }));                          // not as someone else
+  await assertFails(setDoc(doc(p1, 'feed', 'f3'), { ...post, text: 'x'.repeat(501) }));
+  await assertFails(setDoc(doc(p1, 'feed', 'f4'), { ...post, n: 9 }));
+  await assertFails(setDoc(doc(p1, 'feed', 'f5'), { ...post, r: { p2: '🔥' } }));                     // no fake reactions
+  await assertSucceeds(setDoc(doc(p1, 'feedimg', 'f1-0'), { uid: 'p1', post: 'f1', d: 'data:image/jpeg;base64,xx' }));
+  await assertSucceeds(getDoc(doc(p2, 'feed', 'f1')));
+  await assertSucceeds(getDoc(doc(p2, 'feedimg', 'f1-0')));
+  await assertFails(getDoc(doc(ctx('nm1', 'nm1@x.com'), 'feed', 'f1')));                              // not approved yet
+  await assertSucceeds(updateDoc(doc(p2, 'feed', 'f1'), { 'r.p2': '🔥' }));
+  await assertFails(updateDoc(doc(p2, 'feed', 'f1'), { 'r.p1': '😂' }));                              // only your own reaction
+  await assertFails(updateDoc(doc(p2, 'feed', 'f1'), { text: 'edited' }));
+  await assertSucceeds(updateDoc(doc(p2, 'feed', 'f1'), { 'rep.p2': true }));
+  await assertFails(updateDoc(doc(p2, 'feed', 'f1'), { hidden: true }));
+  await assertSucceeds(updateDoc(doc(cm, 'feed', 'f1'), { hidden: true }));
+  const props = { uid: 'p2', kind: 'props', to: 'p1', e: '🔥', d: 20261106, at: '2026-11-06T10:00:00Z' };
+  await assertSucceeds(setDoc(doc(p2, 'feed', 'p_p2_p1_20261106'), props));
+  await assertFails(setDoc(doc(p2, 'feed', 'p_p2_p1_x'), props));                                     // id must match: one a day
+  await assertFails(setDoc(doc(p1, 'feed', 'p_p1_p1_20261106'), { ...props, uid: 'p1' }));            // not to yourself
+  await assertFails(deleteDoc(doc(p2, 'feed', 'f1')));
+  await assertSucceeds(deleteDoc(doc(p1, 'feed', 'f1')));
+  await assertSucceeds(deleteDoc(doc(cm, 'feed', 'p_p2_p1_20261106')));
+});
+test('profiles take a short bio', async () => {
+  await env.withSecurityRulesDisabled(async c => { await setDoc(doc(c.firestore(), 'profiles', 'p1'), { nickname: 'P1', createdAt: '2026-01-01' }); });
+  const p1 = ctx('p1', 'p1@x.com');
+  await assertSucceeds(updateDoc(doc(p1, 'profiles', 'p1'), { bio: 'Lefty. Loves a smash.' }));
+  await assertFails(updateDoc(doc(p1, 'profiles', 'p1'), { bio: 'x'.repeat(161) }));
+});

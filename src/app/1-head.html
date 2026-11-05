@@ -940,6 +940,30 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
 .top{position:sticky}.backbtn{position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;background:none;color:var(--muted);border-radius:999px;cursor:pointer;padding:0}
 .backbtn:hover{color:var(--ink);background:var(--soft,#111)}.backbtn[hidden]{display:none}
 .top:has(.backbtn:not([hidden])) .wordmark{margin-left:24px;transition:margin .15s}
+.nomember .tabs button[data-v=feed]{display:none}
+.plink{all:unset;cursor:pointer;font-weight:inherit;color:inherit}.plink:hover{text-decoration:underline}.plink:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+.fcompose{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:16px;border:1px solid var(--line);border-radius:20px}
+.fc-in{display:grid;gap:10px;min-width:0}.fc-in textarea{width:100%;resize:vertical;min-height:52px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:1rem;line-height:1.5;padding:6px 0;outline:none}
+.fc-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fc-bar select{flex:1 1 100%;min-width:0;max-width:none;order:-1}.fc-bar #f-go{margin-left:auto}.fc-add.off{opacity:.4;pointer-events:none}
+.fc-thumbs{display:flex;gap:8px;flex-wrap:wrap}.fc-th{position:relative;width:72px;height:72px;border-radius:12px;overflow:hidden}.fc-th img{width:100%;height:100%;object-fit:cover}.fc-th .rmx{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6)}
+.flist{display:grid;gap:16px}
+.fpost{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:20px}.fpost.hid{opacity:.55}
+.fp-head,.fp-props{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
+.fp-emo{width:40px;height:40px;display:grid;place-items:center;font-size:1.5rem;border-radius:999px;background:var(--soft,#111)}
+.fp-text{margin:0;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.fp-pics{display:grid;gap:4px;border-radius:14px;overflow:hidden;margin:0 -4px}.fp-pics figure{margin:0;background:#0d0d0d;aspect-ratio:4/5;overflow:hidden}.fp-pics img{width:100%;height:100%;object-fit:cover;display:block}
+.fp-pics.n1 figure{aspect-ratio:4/5;max-height:560px}.fp-pics.n2,.fp-pics.n4{grid-template-columns:1fr 1fr}.fp-pics.n3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}.fp-pics.n3 figure:first-child{grid-row:1/3;aspect-ratio:auto}.fp-pics.n3 figure:not(:first-child),.fp-pics.n4 figure{aspect-ratio:1}
+.fp-react{display:flex;gap:6px;flex-wrap:wrap}.fp-react button{display:inline-flex;align-items:center;gap:4px;min-height:34px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer}
+.fp-react button[aria-pressed=true]{border-color:var(--ink);background:var(--soft,#111)}.fp-react .num{font-size:.78rem;color:var(--muted)}
+.pmenu{position:relative}.pmenu summary{list-style:none;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:999px;color:var(--muted)}.pmenu summary::-webkit-details-marker{display:none}
+.pmenu-in{position:absolute;right:0;top:38px;z-index:4;display:grid;min-width:160px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--bg);box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.pmenu-in button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;font-size:.9rem}.pmenu-in button:hover{background:var(--soft,#111)}.pmenu-in button[disabled]{opacity:.5;cursor:default}
+.prof{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}.prof .av{width:72px;height:72px;font-size:1.6rem}.prof-n{margin:0}
+.prof-bio{margin:0;line-height:1.55;font-size:1.02rem}.prof-d{gap:8px}
+.propsel{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.propsel button{display:grid;justify-items:start;gap:4px;padding:12px;border:1px solid var(--line);border-radius:16px;background:none;color:var(--ink);font:inherit;cursor:pointer;font-size:1.4rem}.propsel button span{font-size:.82rem;font-weight:600}.propsel button:hover{border-color:var(--ink)}
+#v-feed,#v-player{gap:24px}
+.prof-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px}.prof-tiles .tile{min-width:0}
+.tabs button[data-v=feed]{order:0}
 </style>
 
 <div class="wrap">
@@ -949,6 +973,7 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
     <button class="themebtn" id="theme" type="button" aria-label="Switch to light theme" title="Light or dark"><svg class="sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <nav class="tabs" aria-label="Sections">
       <button data-v="home"></button>
+      <button data-v="feed"></button>
       <button data-v="card"></button>
       <button data-v="play"></button>
       <button data-v="courts"></button>
@@ -960,6 +985,8 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
   <section class="view" id="v-home" hidden></section>
   <section class="view" id="v-card"></section>
   <section class="view" id="v-guide" hidden></section>
+  <section class="view" id="v-feed" hidden></section>
+  <section class="view" id="v-player" hidden></section>
   <section class="view" id="v-faq" hidden></section>
   <section class="view" id="v-wth" hidden></section>
   <section class="view" id="v-play" hidden></section>

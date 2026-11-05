@@ -40,6 +40,7 @@ const P={
  photo:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
  taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
  snd:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l4 6M21 9l-4 6"/>',sndon:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+ feed:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 14l4-4 5 5M13 13l2-2 5 5"/><circle cx="15.5" cy="8.5" r="1.3"/>',dots:'<circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/>',
  spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
  quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
@@ -224,7 +225,7 @@ const isGuestPassP=p=>!!p&&!!p.memReq&&p.memReq.type===GUEST_PASS;
 function approvalOf(uid){const a=(S.approvals||{})[uid];return a?(a.ok===true?'ok':'no'):preApproval(S.profiles[uid])?'ok':'review'}
 const notMember=()=>!!S.uid&&!S.member&&!window.BAD_GUEST;
 const underReview=()=>notMember()&&!!myProfile()&&!isGuestPass(S.uid)&&!(S.myApproval&&S.myApproval.ok===false);
-const MEMBER_VIEWS=['courts','club','board'];
+const MEMBER_VIEWS=['courts','club','board','feed','player'];
 function allKeys(){const m={};for(const e of S.ledger)if(!m[e.player])m[e.player]=e.name||e.player;for(const p of Object.values(S.profiles))if(p.listKey&&!m[p.listKey])m[p.listKey]=p.listName||p.nickname;return m}
 
 /* ---------- card (minimal) ---------- */

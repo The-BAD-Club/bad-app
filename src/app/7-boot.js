@@ -2,7 +2,7 @@
 S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals={};
 (async function boot(){
   /* links straight to a tab: …/#shop, #quests, #play, #club, #board, #courts (used by short links like the Volume II one) */
-  {const v=(location.hash||'').match(/^#(home|guide|faq|wth|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
+  {const v=(location.hash||'').match(/^#(home|feed|guide|faq|wth|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','faq','wth','feed','player','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
   render();
   const C=window.claude;if(!C||!C.use){S.loaded=true;render();return}
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
@@ -58,6 +58,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.member)db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
+  if(S.member)db.collection('feed').orderBy('at','desc').limit(80).onSnapshot(s=>{S.feed=map(s);if(['feed','player'].includes(S.view))render()},()=>{});
   db.doc('config/home').onSnapshot(d=>{S.homeMedia=d.exists?d.data():{};if(['home','wth'].includes(S.view))render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};S.siteLoaded=true;render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});
