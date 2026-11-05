@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.51';
+const APP_VERSION='0.52';
 const CHANGES=[
+  ['0.52','2026-11-05','Shop: one clean grid with small photos, name and price, and tabs for All, FRAGMENTS, Volume II and Essentials; tap for the big photo with thumbnails, tap again for full screen; BADASS and REVERSE photos without their white background; footer: app version sits under Sign out'],
   ['0.51','2026-11-05','Played with us before? is now No / Yes; Yes shows a plain list of names from the session tracker, plus I can’t find my name; Membership list shows just the level names; FAQs end with WhatsApp, Email and Instagram, then Join BAD and the Guide'],
   ['0.50','2026-11-05','Talk to us on Home and the FAQs: WhatsApp (+971 56 413 1580, with a ready message) and email; ENBD FastPay added as a way to pay (sessions, Pay all and the Shop), using the same number; Careem Pay shows it too until a number is set in Admin, Settings, Payments; WhatsApp number editable in Settings'],
   ['0.49','2026-11-05','WTH is BAD and the Gallery use the club photos (sessions, VolleyBAD, Taste BADs, BAD-O-WEEN, the Off-Court shoot) (the Gallery shows them as BAD moments until event albums are added); stills from the film are gone; landscape photos get a wider frame'],
