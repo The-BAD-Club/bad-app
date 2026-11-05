@@ -151,3 +151,4 @@ html.guest footer.sign .legal b,html.guest footer.sign .legal span{grid-column:1
   .li.pl>.row:last-child{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap!important}
   .li.pl .glinkrow select{max-width:none}
 }
+.agenda li.nt{grid-template-columns:auto minmax(0,1fr)!important}.agenda ol:not(:has(li:not(.nt))) li.nt b{display:none}.agenda ol:not(:has(li:not(.nt))) li.nt{grid-template-columns:minmax(0,1fr)!important}

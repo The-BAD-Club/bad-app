@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.58 | 2026-11-05 | BAD × NOMANI: a better agenda |
 | 0.57 | 2026-11-05 | Events: Type (Paid event, Free event, Collab, Invite only) and the brand’s Instagram; free events never charge; Off Court events call people BADDIES and the Game Master the Organizer; Edit a registered BADDIE straight from the event; unregistered guests get Match to a player with the closest names first; BAD × NOMANI agenda: Have fun, Take UGC content |
 | 0.56 | 2026-11-05 | Events: an Agenda field (one line per item, times in bold) next to spots, waiting list, venue, Google Maps link and details, all editable with Edit; a full event with no waiting list just says Full |
 | 0.55 | 2026-11-05 | Side Quests: Add a Side Quest button for admins (12 spots, no waiting list, no fee by default); sessions can have no end time (shows From 12pm), a Google Maps link and details; BAD × NOMANI now from 12pm, strictly 12; link a guest to their player card from the session’s player list |
