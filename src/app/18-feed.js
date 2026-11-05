@@ -34,14 +34,17 @@ function composerHTML(){const d=S.fDraft;
       <select id="f-dept" aria-label="Department"><option value="">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}" ${d.dept===k?'selected':''}>${esc(SPORTS[k].club)}</option>`).join('')}</select>
       <button class="btn sm" id="f-go">Post</button></div></div></section>`}
 
-function renderFeed(){const el=$('v-feed');if(!el)return;
-  if(notMember()){el.innerHTML=`<div class="hero"><span class="label">Feed</span><h2>The community, live.</h2></div><div class="empty">${ic('clock')}<span>The Feed opens once your card is approved.</span></div>`;return}
-  const L=feedList();
-  el.innerHTML=`<div class="hero"><span class="label">Feed</span><h2>The community, live.</h2><p class="muted">Photos, shout-outs and props from BAD. Be kind, be BAD.</p></div>
-    ${myProfile()?composerHTML():''}
-    <div class="flist">${L.length?L.map(([id,p])=>postHTML(id,p)).join(''):`<div class="empty">${ic('photo')}<span>Nothing here yet. Post the first photo from your last session.</span></div>`}</div>`;
-  bindFeed(el)}
-
+/* the Feed lives on Home, under Coming up. Only the list refreshes when someone posts or reacts, so a half-written post is never lost. */
+S.feedShow=S.feedShow||10;
+function feedListHTML(){const L=feedList();if(!L.length)return `<div class="empty">${ic('photo')}<span>Nothing here yet. Post the first photo from your last session.</span></div>`;
+  return L.slice(0,S.feedShow).map(([id,p])=>postHTML(id,p)).join('')+(L.length>S.feedShow?`<button class="btn ghost wide" data-fmore="1">Show more</button>`:'')}
+function feedSectionHTML(){if(notMember()||!myProfile())return '';
+  return `<section class="hsec" id="home-feed"><div class="sec-h"><h3 class="ah">Feed</h3><span class="fine">Photos, shout-outs and props</span></div>${composerHTML()}<div class="flist" id="flist">${feedListHTML()}</div></section>`}
+function bindHomeFeed(el){const f=el.querySelector('#home-feed');if(!f)return;bindFeed(f);const m=f.querySelector('[data-fmore]');if(m)m.onclick=()=>{S.feedShow+=10;refreshFeedList()};
+  if(S.scrollFeed){S.scrollFeed=0;setTimeout(()=>f.scrollIntoView({block:'start',behavior:'smooth'}),80)}}
+function refreshFeedList(){const l=$('flist');if(!l)return;l.innerHTML=feedListHTML();const f=$('home-feed');bindFeed(l);const m=l.querySelector('[data-fmore]');if(m)m.onclick=()=>{S.feedShow+=10;refreshFeedList()}}
+/* after posting or changing the photos: redraw the whole Feed block (composer included) */
+function renderFeed(){if(S.view==='player')return renderPlayer();const f=$('home-feed');if(!f)return;const tmp=document.createElement('div');tmp.innerHTML=feedSectionHTML();const n=tmp.firstElementChild;if(!n)return;f.replaceWith(n);bindHomeFeed(n.parentElement||document)}
 let feedIO=null;
 function loadFeedImg(k){if(S.feedImg[k]!==undefined)return;S.feedImg[k]='';S.db.doc('feedimg/'+k).get().then(d=>{if(!d.exists)return;S.feedImg[k]=d.data().d;document.querySelectorAll(`[data-fimg="${CSS.escape(k)}"]`).forEach(f=>{f.innerHTML=`<img src="${S.feedImg[k]}" alt="" decoding="async">`})}).catch(()=>{delete S.feedImg[k]})}
 function bindFeed(el){
@@ -86,7 +89,9 @@ function renderPlayer(){const el=$('v-player');if(!el)return;const uid=S.profUid
   const depts=(p.sports||[]).filter(k=>SPORTS[k]).map(k=>`<span class="tagl">${ic(SPORTS[k].icon)}${esc(SPORTS[k].club)}</span>`).join('');
   const posts=feedList().filter(([,x])=>x.uid===uid&&x.kind==='post').slice(0,6);
   const today=new Date().toISOString().slice(0,10).replace(/-/g,''),given=Object.keys(S.feed).some(k=>k==='p_'+S.uid+'_'+uid+'_'+today);
-  el.innerHTML=`<section class="prof">${avatar(p,p.listKey)}<div><h2 class="prof-n">${esc(p.nickname)}</h2>
+  const stc=typeof statsFor==='function'?statsFor(p.listKey):{};
+  el.innerHTML=`<div class="prof-card">${cardHTML(p,{balance:stc.balance||0,badges:typeof badgeCount==='function'?badgeCount(uid):0,sessions:st.played})}</div>
+    <section class="prof">${avatar(p,p.listKey)}<div><h2 class="prof-n">${esc(p.nickname)}</h2>
       <div class="sub">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)).padStart(2,'0'):''}${og?` · OG 100 #${og}`:''}${lvl&&lvl.name?` · ${esc(lvl.name)}`:''}</div></div></section>
     ${p.bio?`<p class="prof-bio">${esc(p.bio)}</p>`:me?`<p class="fine">Add a short bio in My BAD so people know who you are.</p>`:''}
     ${depts?`<div class="row prof-d">${depts}</div>`:''}
@@ -99,3 +104,21 @@ function renderPlayer(){const el=$('v-player');if(!el)return;const uid=S.profUid
     try{const doc={uid:S.uid,kind:'props',to:uid,e,d,at:new Date().toISOString()};await S.db.doc('feed/'+id).set(doc);S.feed[id]=doc;toast(`${e} Props sent to ${p.nickname}.`);renderPlayer()}
     catch(err){b.disabled=false;toast(err&&err.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't go through.")}});
 }
+
+/* ---------- Baddies: everyone in the community, with search and a department filter ---------- */
+S.bdQ=S.bdQ||'';S.bdSport=S.bdSport||'all';
+function baddiesList(){const q=S.bdQ.trim().toLowerCase();
+  return Object.entries(S.profiles).filter(([,p])=>!p.sample&&p.nickname&&(S.bdSport==='all'||(p.sports||['badminton']).includes(S.bdSport))&&(!q||p.nickname.toLowerCase().includes(q)||String(p.number||'')===q))
+    .sort((a,b)=>a[1].nickname.localeCompare(b[1].nickname))}
+function baddiesGrid(){const L=baddiesList();
+  return L.length?`<div class="bdgrid">${L.map(([uid,p])=>{const og=typeof first100No==='function'?first100No(uid):0;
+    return `<button class="bd" data-prof="${esc(uid)}">${avatar(p,p.listKey)}<span class="bd-n">${esc(p.nickname)}</span><span class="bd-s">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)):''}${og?` · OG #${og}`:''}</span><span class="bd-i">${(p.sports||[]).filter(k=>SPORTS[k]).slice(0,4).map(k=>ic(SPORTS[k].icon)).join('')}</span></button>`}).join('')}</div>`
+    :`<div class="empty">${ic('users')}<span>No baddies match that.</span></div>`}
+function renderBaddies(){const el=$('v-baddies');if(!el)return;
+  const used=[...new Set(Object.values(S.profiles).flatMap(p=>p.sports||[]))].filter(k=>SPORTS[k]);
+  el.innerHTML=`<div class="hero"><span class="label">Baddies</span><h2>The community.</h2><p class="muted">${Object.values(S.profiles).filter(p=>!p.sample).length} baddies and counting. Tap anyone to see their card.</p></div>
+    <div class="field" style="margin:0"><label for="bd-q" class="sr">Search baddies</label><input type="search" id="bd-q" placeholder="Search by name or number" value="${esc(S.bdQ)}"></div>
+    ${sportBar(S.bdSport,'bdf',used)}<div id="bd-out">${baddiesGrid()}</div>`;
+  const bindOut=()=>el.querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
+  const qi=$('bd-q');qi.oninput=()=>{S.bdQ=qi.value;$('bd-out').innerHTML=baddiesGrid();bindOut()};
+  el.querySelectorAll('[data-bdf]').forEach(b=>b.onclick=()=>{S.bdSport=b.dataset.bdf;renderBaddies()});bindOut()}

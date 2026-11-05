@@ -1,5 +1,5 @@
 /* ---------- navigation ---------- */
-const NAV={home:['home','Home'],feed:['feed','Feed'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v,{tab:1})});
 /* back: every page opened from another page remembers where you came from. The small arrow at the top and the phone's own
    back gesture both go one step back. Tapping a tab starts fresh; On Court / Off Court / Board swap in place. */
@@ -9,16 +9,17 @@ window.addEventListener('popstate',()=>{if(S.navStack.length)goBack();else syncB
 function syncBack(){const b=$('backbtn');if(b)b.hidden=!S.navStack.length}
 (function(){const b=$('backbtn');if(b)b.onclick=()=>{try{history.back()}catch(_){goBack()}}})();
 /* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
-function setView(v,o){o=o||{};if(window.BAD_GUEST&&!['home','guide','faq','wth'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+function setView(v,o){o=o||{};if(v==='feed'){v='home';S.scrollFeed=1}
+  if(window.BAD_GUEST&&!['home','guide','faq','wth','sess'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
   /* signed in but no card or guest pass yet: Home and registration only */
-  if(noCard()&&!['home','card','create','guide','faq','wth'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
+  if(noCard()&&!['home','card','create','guide','faq','wth','sess'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
   if(notMember()&&MEMBER_VIEWS.includes(v)){toast(underReview()?'This opens once your card is approved. You can still book sessions in Play.':'This is for BAD members. You can still book sessions in Play.');v=v==='board'?'play':'home'}
   if(o.tab||o.swap){if(o.tab&&v!==S.view)S.navStack=[]}
   else if(!o.back&&S.view&&S.view!==v&&(o.push||(window.event&&window.event.isTrusted&&/click|pointerup|keydown/.test(window.event.type)))){S.navStack.push(S.view);if(S.navStack.length>20)S.navStack.shift();try{history.pushState({bad:v},'')}catch(_){}}
   S.view=v;syncBack();
-  for(const id of ['home','card','guide','faq','wth','feed','player','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['home','card','guide','faq','wth','player','baddies','sess','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'feed'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'home',baddies:'home',sess:'play'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -32,7 +33,7 @@ function render(){unboot();
   renderNow();
 }
 function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
-  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,feed:renderFeed,player:renderPlayer,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,player:renderPlayer,baddies:renderBaddies,sess:renderSess,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -165,13 +166,13 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${isSide(s.sport)||s.kind?`<span class="tagl">${esc(EVENT_KINDS[evKind(s)])}</span>`:''}${igHandle(s.brandIg)?`<a class="linkbtn sedit" href="https://www.instagram.com/${esc(igHandle(s.brandIg))}/" target="_blank" rel="noopener">${ic('ig')}@${esc(igHandle(s.brandIg))}</a>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}${runnerWord(s)}: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
+      <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${isSide(s.sport)||s.kind?`<span class="tagl">${esc(EVENT_KINDS[evKind(s)])}</span>`:''}${igHandle(s.brandIg)?`<a class="linkbtn sedit" href="https://www.instagram.com/${esc(igHandle(s.brandIg))}/" target="_blank" rel="noopener">${ic('ig')}@${esc(igHandle(s.brandIg))}</a>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}<button class="linkbtn sedit" data-share="${esc(sid)}">${ic('share')}Share</button>${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}${runnerWord(s)}: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p class="snote">${esc(s.note)}</p>`:''}
       ${s.agenda?`<div class="agenda"><span class="label">Agenda</span><ol>${String(s.agenda).split(/\n+/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*[-–·:]?\s+(.*)$/i);return m?`<li><b class="num">${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li class="nt"><b class="num" aria-hidden="true"></b><span>${esc(l)}</span></li>`}).join('')}</ol></div>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
       ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}
-function bindPlay(el){bindSwitch(el);el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
+function bindPlay(el){bindSwitch(el);if(S.scrollSess){const c=el.querySelector(`[data-sess="${CSS.escape(S.scrollSess)}"]`);S.scrollSess=null;if(c){setTimeout(()=>c.scrollIntoView({block:'center',behavior:'smooth'}),60);c.classList.add('flash')}}el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
   const q=s=>el.querySelectorAll(s),now=()=>new Date().toISOString();
   q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderNow()});
   q('[data-joinask]').forEach(b=>b.onclick=()=>{const x=S.sessions[b.dataset.joinask];if(x&&!(+x.fee>0)){join(b.dataset.joinask,'cash');return}payFor={sid:b.dataset.joinask,change:false};renderNow()});/* nothing to pay: no payment question */
