@@ -1077,6 +1077,14 @@ footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
 footer.sign .ver{grid-column:2;grid-row:2;justify-self:end;text-align:right;align-self:start}
 html.guest footer.sign .legal{grid-column:1}
 .sc-img{position:relative;overflow:hidden;width:100%}.sc-img img{position:absolute;inset:9%;width:82%;height:82%;object-fit:contain}.sc-img>svg.i{width:28px;height:28px}
+/* footer: two rows. Row 1: THE BAD CLUB LLC · Sign out. Row 2: License No. · app version, on one line */
+footer.sign{grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;row-gap:4px!important}
+footer.sign .legal{display:contents!important}
+footer.sign .legal b{grid-column:1;grid-row:1}
+footer.sign .legal span{grid-column:1;grid-row:2;align-self:center}
+footer.sign .signout{grid-column:2;grid-row:1;align-self:center;padding:6px 0;min-height:32px}
+footer.sign .ver{grid-column:2!important;grid-row:2!important;align-self:center!important;justify-self:end;line-height:1}
+html.guest footer.sign .legal b,html.guest footer.sign .legal span{grid-column:1}
 
 </style>
 
@@ -1226,8 +1234,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.52';
+const APP_VERSION='0.53';
 const CHANGES=[
+  ['0.53','2026-11-05','Footer: app version lines up with the license number'],
   ['0.52','2026-11-05','Shop: one clean grid with small photos, name and price, and tabs for All, FRAGMENTS, Volume II and Essentials; tap for the big photo with thumbnails, tap again for full screen; BADASS and REVERSE photos without their white background; footer: app version sits under Sign out'],
   ['0.51','2026-11-05','Played with us before? is now No / Yes; Yes shows a plain list of names from the session tracker, plus I can’t find my name; Membership list shows just the level names; FAQs end with WhatsApp, Email and Instagram, then Join BAD and the Guide'],
   ['0.50','2026-11-05','Talk to us on Home and the FAQs: WhatsApp (+971 56 413 1580, with a ready message) and email; ENBD FastPay added as a way to pay (sessions, Pay all and the Shop), using the same number; Careem Pay shows it too until a number is set in Admin, Settings, Payments; WhatsApp number editable in Settings'],
