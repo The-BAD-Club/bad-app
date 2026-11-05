@@ -1091,6 +1091,11 @@ html.guest footer.sign .legal b,html.guest footer.sign .legal span{grid-column:1
 .snote{font-size:.88rem;line-height:1.5;color:var(--muted);margin:4px 0}
 .agenda{display:grid;gap:6px;margin:6px 0}.agenda ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .agenda li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;font-size:.86rem}.agenda li b{min-width:3.4em;font-weight:700}.agenda li:not(:has(b)){grid-template-columns:minmax(0,1fr)}
+@media (max-width:600px){
+  .li.pl{grid-template-columns:auto auto minmax(0,1fr)!important;row-gap:8px}
+  .li.pl>.row:last-child{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap!important}
+  .li.pl .glinkrow select{max-width:none}
+}
 
 </style>
 
@@ -1240,8 +1245,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.56';
+const APP_VERSION='0.57';
 const CHANGES=[
+  ['0.57','2026-11-05','Events: Type (Paid event, Free event, Collab, Invite only) and the brand’s Instagram; free events never charge; Off Court events call people BADDIES and the Game Master the Organizer; Edit a registered BADDIE straight from the event; unregistered guests get Match to a player with the closest names first; BAD × NOMANI agenda: Have fun, Take UGC content'],
   ['0.56','2026-11-05','Events: an Agenda field (one line per item, times in bold) next to spots, waiting list, venue, Google Maps link and details, all editable with Edit; a full event with no waiting list just says Full'],
   ['0.55','2026-11-05','Side Quests: Add a Side Quest button for admins (12 spots, no waiting list, no fee by default); sessions can have no end time (shows From 12pm), a Google Maps link and details; BAD × NOMANI now from 12pm, strictly 12; link a guest to their player card from the session’s player list'],
   ['0.54','2026-11-05','Side Quests: BAD × NOMANI Offcourt Lunch (Taste BADs, Sat 7 Nov, 12:00–12:30, NOMANI at The Chedi Al Bait, Sharjah), capped at 12 with the guest list in; sessions can show a Directions link; free sessions skip the payment question and don’t show AED 0'],
@@ -1443,6 +1449,13 @@ const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:
 /* BAD's contact number: WhatsApp, Careem Pay and ENBD FastPay. Admin → Settings can change each one. */
 /* session time: '12pm to 2pm', or 'From 12pm' when there's no end time yet */
 const timeRange=(s,dash)=>s.timeTbc?'Time to be confirmed':s.end?`${fmtTime(s.start)}${dash?'–':' to '}${fmtTime(s.end)}`:`From ${fmtTime(s.start)}`;
+/* event types (mainly for Side Quests). Free events never ask for payment. */
+const EVENT_KINDS={paid:'Paid event',free:'Free event',collab:'Collab',invite:'Invite only'};
+const evKind=s=>s&&EVENT_KINDS[s.kind]?s.kind:(s&&+s.fee>0?'paid':'free');
+const igHandle=h=>String(h||'').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/[/?#].*$/,'').replace(/^@/,'');
+/* Off Court words: people are BADDIES and the person running it is the Organizer */
+const offCourt=s=>!!s&&isSide(s.sport);
+const peopleWord=s=>offCourt(s)?'BADDIES':'Players',runnerWord=s=>offCourt(s)?'Organizer':'Game Master';
 const BAD_PHONE='+971564131580',BAD_EMAIL='thebadclub.co@gmail.com';
 const waNum=()=>String((S.site&&S.site.whatsapp)||BAD_PHONE).replace(/[^0-9]/g,'');
 const waLink=t=>`https://wa.me/${waNum()}?text=${encodeURIComponent(t||'Hi BAD, I\'d like to know more about The BAD Club.')}`;
@@ -2106,7 +2119,7 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
+      <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${isSide(s.sport)||s.kind?`<span class="tagl">${esc(EVENT_KINDS[evKind(s)])}</span>`:''}${igHandle(s.brandIg)?`<a class="linkbtn sedit" href="https://www.instagram.com/${esc(igHandle(s.brandIg))}/" target="_blank" rel="noopener">${ic('ig')}@${esc(igHandle(s.brandIg))}</a>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}${runnerWord(s)}: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p class="snote">${esc(s.note)}</p>`:''}
       ${s.agenda?`<div class="agenda"><span class="label">Agenda</span><ol>${String(s.agenda).split(/\n+/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*[-–·:]?\s+(.*)$/i);return m?`<li><b class="num">${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li><span>${esc(l)}</span></li>`}).join('')}</ol></div>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
@@ -3564,14 +3577,15 @@ function aToday(list,up){
 
 /* Game Master: runs the courts for one session, even without admin access */
 function gmPanel(sid,s){const gms=s.gms||[],ps=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&!gms.includes(u)).sort((a,b)=>{const st=u=>memType(memLabel(u))?.staff?0:1;return st(a[0])-st(b[0])||(a[1].nickname||'').localeCompare(b[1].nickname||'')});
-  return box(`Game Master${gms.length>1?'s':''}`,`<p class="hint" style="margin-top:0">Runs the courts and the queue for this session. They can open the board and log games, even without admin access.</p>
-    ${gms.length?`<div class="list">${gms.map(u=>{const p=S.profiles[u]||{};return `<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'Player')}</div><div class="sub">${esc(memLabel(u))}</div></div><button class="rmx" data-gmrm="${esc(u)}" aria-label="Remove ${esc(p.nickname||'')} as Game Master">${ic('x')}</button></div>`}).join('')}</div>`:''}
-    <div class="row" style="margin-top:10px"><select id="gm-pick" style="flex:1;min-width:180px" aria-label="Pick a Game Master"><option value="">${gms.length?'Add another Game Master':'Pick a Game Master'}</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${memType(memLabel(u))?.staff?' · '+esc(memLabel(u)):''}</option>`).join('')}</select><button class="btn sm" id="gm-add">${ic('plus')}Add</button></div>`)}
+  const W=runnerWord(s);
+  return box(`${W}${gms.length>1?'s':''}`,`<p class="hint" style="margin-top:0">${offCourt(s)?'Runs this event on the day: checks BADDIES in and is the go-to person for the brand and the group.':'Runs the courts and the queue for this session. They can open the board and log games, even without admin access.'}</p>
+    ${gms.length?`<div class="list">${gms.map(u=>{const p=S.profiles[u]||{};return `<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(p,p.listKey)}<div><div class="nm">${esc(p.nickname||'Player')}</div><div class="sub">${esc(memLabel(u))}</div></div><button class="rmx" data-gmrm="${esc(u)}" aria-label="Remove ${esc(p.nickname||'')} as ${W}">${ic('x')}</button></div>`}).join('')}</div>`:''}
+    <div class="row" style="margin-top:10px"><select id="gm-pick" style="flex:1;min-width:180px" aria-label="Pick ${offCourt(s)?'an':'a'} ${W}"><option value="">${gms.length?'Add another '+W:(offCourt(s)?'Pick an ':'Pick a ')+W}</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${memType(memLabel(u))?.staff?' · '+esc(memLabel(u)):''}</option>`).join('')}</select><button class="btn sm" id="gm-add">${ic('plus')}Add</button></div>`)}
 /* add people by hand: a registered player, or a guest (with or without a host) */
-function addPlayerPanel(sid,r){const inIds=new Set([...r.in,...r.wait].filter(e=>!e.guest).map(e=>e.uid)),ps=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&!inIds.has(u)).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||'')),hosts=Object.entries(S.profiles).filter(([u])=>inIds.has(u));
+function addPlayerPanel(sid,r){const oc=offCourt(S.sessions[sid]);const inIds=new Set([...r.in,...r.wait].filter(e=>!e.guest).map(e=>e.uid)),ps=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&!inIds.has(u)).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||'')),hosts=Object.entries(S.profiles).filter(([u])=>inIds.has(u));
   const m=S.addMode||'player';
-  return `<div class="addp"><div class="chips" role="group" aria-label="Add someone"><button type="button" class="chip sm" data-addmode="player" aria-pressed="${m==='player'}">${ic('plus')}Add a player</button><button type="button" class="chip sm" data-addmode="guest" aria-pressed="${m==='guest'}">${ic('guest')}Add a guest</button></div>
-    ${m==='player'?`<div class="row"><select id="ap-uid" style="flex:1;min-width:180px" aria-label="Player to add"><option value="">Pick a registered player</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${p.listName&&p.listName!==p.nickname?' ('+esc(p.listName)+')':''}</option>`).join('')}</select><button class="btn sm" id="ap-go">Add</button></div>`
+  return `<div class="addp"><div class="chips" role="group" aria-label="Add someone"><button type="button" class="chip sm" data-addmode="player" aria-pressed="${m==='player'}">${ic('plus')}${oc?'Add a BADDIE':'Add a player'}</button><button type="button" class="chip sm" data-addmode="guest" aria-pressed="${m==='guest'}">${ic('guest')}Add a guest</button></div>
+    ${m==='player'?`<div class="row"><select id="ap-uid" style="flex:1;min-width:180px" aria-label="Player to add"><option value="">${oc?'Pick a registered BADDIE':'Pick a registered player'}</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${p.listName&&p.listName!==p.nickname?' ('+esc(p.listName)+')':''}</option>`).join('')}</select><button class="btn sm" id="ap-go">Add</button></div>`
       :`<div class="row"><input type="text" id="ag-name" maxlength="30" placeholder="Guest's name" style="flex:1;min-width:140px" aria-label="Guest's name"><select id="ag-host" style="flex:1;min-width:160px" aria-label="Guest of"><option value="">No host · BAD guest</option>${hosts.map(([u,p])=>`<option value="${esc(u)}">Guest of ${esc(p.nickname||'')}</option>`).join('')}</select><button class="btn sm" id="ag-go">Add</button></div>
       <p class="fine">With a host, the fee goes under the host's name. With no host, the guest shows on Payments under their own name.</p>`}
     <p class="fine">Added by an admin. Payment starts as cash.</p></div>`}
@@ -3597,6 +3611,8 @@ function aSessions(list,up){
       <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${E?(E.waitCap==null?'':esc(E.waitCap)):(sp0==='badminton'?4:isSide(sp0)?0:'')}"></div>
       ${COURT_SPORTS.includes(sp0)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${v('courts',DEF_COURTS[sp0]||1)}"></div>`:''}
       <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue" value="${v('venue','')}"></div>
+      <div class="field"><label for="n-kind">Type</label><select id="n-kind">${Object.entries(EVENT_KINDS).map(([k,l])=>`<option value="${k}" ${(E?evKind(E):isSide(sp0)?'free':'paid')===k?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label for="n-ig">Brand Instagram <span class="req">optional</span></label><input type="text" id="n-ig" placeholder="@brand" value="${E&&E.brandIg?'@'+esc(igHandle(E.brandIg)):''}"></div>
       <div class="field wide"><label for="n-map">Google Maps link <span class="req">optional</span></label><input type="url" id="n-map" placeholder="https://maps.google.com/…" value="${v('mapLink','')}"></div>
       <div class="field wide"><label for="n-note">Details <span class="req">optional</span></label><textarea id="n-note" rows="3" maxlength="500" placeholder="Dress code, what to bring, anything people should know">${E?esc(E.note||''):''}</textarea></div>
       <div class="field wide"><label for="n-agenda">Agenda <span class="req">optional</span></label><textarea id="n-agenda" rows="4" maxlength="800" placeholder="One line each, for example:&#10;12:00 Welcome drinks&#10;12:30 Lunch&#10;2:00 Group photo">${E?esc(E.agenda||''):''}</textarea><p class="fine">One item per line. Start a line with a time if it has one.</p></div>
@@ -3608,7 +3624,7 @@ function aSessions(list,up){
   const paid=r.in.filter(e=>!e.guest&&S.payments[adminSid]?.[e.uid]?.ok).length,owed=owedOf(adminSid);
   const nm=e=>e.guest?`${esc(e.guest)} <span class="tagl">Guest of ${esc(nameOf(e.uid,e.key))}</span>`:esc(nameOf(e.uid,e.key))+(S.bookings[e.uid]?.guest?' <span class="tagl">Guest</span>':'')+(S.bookings[e.uid]?.s?.[adminSid]?.byAdmin?' <span class="tagl">Added by admin</span>':'');
   const rosterHTML=r.in.map((e,i)=>`<div class="li pl"><span class="rank num">${i+1}</span>${e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)}<div><div class="nm">${nm(e)}</div><div class="sub">${e.guest?'Host is responsible':isGuestBk(e.uid)?'':esc(S.contacts[e.uid]?.mobile||S.contacts[e.uid]?.whatsapp||'')}${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)?` · ${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)} games`:''}</div>${!e.guest&&isGuestBk(e.uid)?`<div class="glinkrow">${linkPick(e.uid)}</div>`:''}</div>
-      <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm ${isNS(e)?'':'ghost'} nsb" data-ns="${esc(e.key)}" data-uid="${esc(e.uid)}" data-d="${esc(nsId(e))}" title="Hidden from players">${isNS(e)?'No-show ✕':'No-show'}</button>${rmRosterBtn(e)}</div></div>`).join('')||'<div class="empty">No one yet.</div>';
+      <div class="row" style="gap:6px;flex-wrap:nowrap">${!e.guest&&!isGuestBk(e.uid)&&S.profiles[e.uid]?`<button class="btn ghost sm" data-peopen="${esc(e.uid)}">${ic('edit')}Edit</button>`:''}<button class="btn sm ${isNS(e)?'':'ghost'} nsb" data-ns="${esc(e.key)}" data-uid="${esc(e.uid)}" data-d="${esc(nsId(e))}" title="Hidden from players">${isNS(e)?'No-show ✕':'No-show'}</button>${rmRosterBtn(e)}</div></div>`).join('')||'<div class="empty">No one yet.</div>';
   return `${picker}${form}
   <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(timeRange(s,1))}${+s.fee>0?' · AED '+esc(s.fee):' · Free'}</span><h3 class="big">${esc(s.title)}</h3>
     <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
@@ -3617,7 +3633,7 @@ function aSessions(list,up){
     ${cancelOpen&&!s.cancelled?cancelPanel(adminSid,s,r):''}</div>
   ${sessStart(s)<Date.now()&&owed?payDash(adminSid,s,r):`<p class="hint">${ic('wallet')} Payments are taken on the night in Courts${(s.sport||'badminton')==='badminton'?' (step 2, Check in)':' (Check-in &amp; Pay)'}. Anything still owed afterwards shows here and in Payments.</p>`}
   ${gmPanel(adminSid,s)}
-  ${boxD(`Players <span class="hint num">${r.in.length}</span>`,`<div class="list">${rosterHTML}</div>${addPlayerPanel(adminSid,r)}`)}
+  ${boxD(`${peopleWord(s)} <span class="hint num">${r.in.length}</span>`,`<div class="list">${rosterHTML}</div>${addPlayerPanel(adminSid,r)}`)}
   ${r.wait.length?box('Waitlist',`<div class="list">${r.wait.map((e,i)=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span><div class="nm">${nm(e)}</div>${rmRosterBtn(e)}</div>`).join('')}</div>`):''}
   ${r.late.length?box('Dropped late · fee owed',`<div class="list">${r.late.map(e=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${nm(e)}</div><div class="sub">${esc(e.fee.label)}${e.guest?' · host pays':''} · dropped ${esc(new Date(e.out).toLocaleString('en-GB',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}))}</div></div><b class="num">AED ${e.fee.amount}</b></div>`).join('')}</div>`):''}`;
 }
@@ -3801,6 +3817,7 @@ function bindAdmin(){
   q('[data-go]').forEach(b=>b.onclick=()=>{aTab=b.dataset.go;if(b.dataset.sid){adminSid=b.dataset.sid;adminPicked=true}if(b.dataset.new)showNew=true;renderAdmin();scrollTo({top:0})});
   q('[data-courts]').forEach(b=>b.onclick=()=>{S.courtSport=b.dataset.courts;setView('courts')});
   q('.sp-open[data-sid]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sid;adminPicked=true;renderAdmin()});
+  q('[data-peopen]').forEach(b=>b.onclick=()=>{const u=b.dataset.peopen;aTab='players';renderAdmin();setTimeout(()=>{const f=document.querySelector(`form[data-pedit="${CSS.escape(u)}"]`);const d=f&&f.closest('details');if(d){d.open=true;d.closest('.li')?.scrollIntoView({block:'center'})}},60)});
   q('[data-glink]').forEach(x=>x.onchange=async()=>{if(!x.value)return;try{await linkGuest(x.dataset.glink,x.value)}catch(e){toast("Sorry, that didn't link. Please try again.")}});
   q('[data-sqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.sqr));
   q('[data-sedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.sedit;adminPicked=true;editSid=adminSid;showNew=false;const x=S.sessions[adminSid];if(x)newSport=x.sport||'badminton';renderAdmin();scrollTo({top:0})});
@@ -3810,8 +3827,8 @@ function bindAdmin(){
   on('n-cancel',()=>{editSid=null;renderAdmin()});
   on('n-save',async()=>{const sid=editSid,old=S.sessions[sid];if(!old)return;const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const sp=newSport||old.sport||'badminton';if(!canSport(sp)){toast('You can only move sessions to your own departments.');return}
-    const d={sport:sp,date,start:$('n-start').value||old.start||'20:00',end:$('n-end').value,timeTbc:$('n-tbc').checked,title:$('n-title').value.trim()||old.title,fee:Number($('n-fee').value)||0,capacity:Math.max(1,Number($('n-cap').value)||old.capacity||20),
-      waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):(old.courts??null),venue:$('n-venue').value.trim(),mapLink:$('n-map').value.trim(),note:$('n-note').value.trim().slice(0,500),agenda:$('n-agenda').value.trim().slice(0,800),opens:$('n-opens')?.value||''};
+    const d={sport:sp,date,start:$('n-start').value||old.start||'20:00',end:$('n-end').value,timeTbc:$('n-tbc').checked,title:$('n-title').value.trim()||old.title,fee:$('n-kind').value==='free'?0:Number($('n-fee').value)||0,capacity:Math.max(1,Number($('n-cap').value)||old.capacity||20),
+      waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):(old.courts??null),venue:$('n-venue').value.trim(),mapLink:$('n-map').value.trim(),note:$('n-note').value.trim().slice(0,500),agenda:$('n-agenda').value.trim().slice(0,800),kind:$('n-kind').value,brandIg:igHandle($('n-ig').value).slice(0,40),opens:$('n-opens')?.value||''};
     try{await S.db.doc('sessions/'+sid).update(d);editSid=null;toast('Session updated.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   q('#a-plist [data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,'',x.dataset.gk,x.value));
   q('#a-plist [data-greset]').forEach(x=>x.onclick=()=>saveGrade(x.dataset.greset,'','ovr',''));
@@ -3832,7 +3849,7 @@ function bindAdmin(){
   q('[data-nsp]').forEach(b=>b.onclick=()=>{newSport=b.dataset.nsp;renderAdmin()});
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
-    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value,timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),mapLink:$('n-map').value.trim(),note:$('n-note').value.trim().slice(0,500),agenda:$('n-agenda').value.trim().slice(0,800),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value,timeTbc:$('n-tbc').checked,title,fee:$('n-kind').value==='free'?0:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),mapLink:$('n-map').value.trim(),note:$('n-note').value.trim().slice(0,500),agenda:$('n-agenda').value.trim().slice(0,800),kind:$('n-kind').value,brandIg:igHandle($('n-ig').value).slice(0,40),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   const hmSave=async d=>{const cur=S.homeMedia||{},nx={photos:cur.photos||[],videos:cur.videos||[],...d,updatedAt:new Date().toISOString()};while(JSON.stringify(nx).length>950000&&nx.photos.length)nx.photos.shift();await S.db.doc('config/home').set(nx);return nx};
   on('hm-go',async()=>{const b=$('hm-go'),files=[...($('hm-files').files||[])],lines=$('hm-vids').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),bad=lines.filter(x=>!vidEmbed(x));
     if(bad.length){toast(`That link isn't a video we can show: ${bad[0].slice(0,40)}`);return}
@@ -4009,8 +4026,13 @@ const rmConf=(uid,sid,n)=>S.rmArm===uid+'|'+sid?`<div class="rmconf"><span class
 const isGuestBk=uid=>!!(S.bookings[uid]&&S.bookings[uid].guest);
 const payName=uid=>S.profiles[uid]?.nickname||S.bookings[uid]?.name||nameOf(uid,S.bookings[uid]?.key)||'Guest';
 const guestNames=x=>{const g=(x&&x.guests||[]).filter(y=>!y.out).map(y=>y.n);return g.length?` · with ${g.join(', ')} (guest${g.length>1?'s':''})`:''};
-const linkPick=gid=>{const o=Object.entries(S.profiles).filter(([,p])=>!p.sample).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||''));
-  return `<select class="memset" data-glink="${esc(gid)}" aria-label="Link ${esc(payName(gid))} to a player"><option value="">Link to a player…</option>${o.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname)}${p.listName&&p.listName!==p.nickname?' · '+esc(p.listName):''}</option>`).join('')}</select>`};
+/* how close two names are: 0 same, 1 one starts the other, 2 one or two letters apart, 3 same first 3 letters; null otherwise */
+const lev=(a,b)=>{const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t}}return d[b.length]};
+function nameScore(g,p){const a=normName(g),best=[p.nickname,p.listName].filter(Boolean).map(x=>{const b=normName(x);if(!a||!b)return null;if(a===b)return 0;if(a.startsWith(b)||b.startsWith(a))return 1;if(lev(a,b)<=2)return 2;if(a.slice(0,3)===b.slice(0,3))return 3;return null}).filter(x=>x!=null);return best.length?Math.min(...best):null}
+const linkPick=gid=>{const gname=payName(gid),o=Object.entries(S.profiles).filter(([,p])=>!p.sample).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||''));
+  const opt=([u,p])=>`<option value="${esc(u)}">${esc(p.nickname)}${p.listName&&p.listName!==p.nickname?' · '+esc(p.listName):''}</option>`;
+  const near=o.map(x=>[x,nameScore(gname,x[1])]).filter(([,sc])=>sc!=null).sort((a,b)=>a[1]-b[1]).slice(0,5).map(([x])=>x);
+  return `<select class="memset" data-glink="${esc(gid)}" aria-label="Match ${esc(gname)} to a player"><option value="">${near.length?'Match to a player · '+near.length+' close':'Match to a player…'}</option>${near.length?`<optgroup label="Closest to ${esc(gname)}">${near.map(opt).join('')}</optgroup><optgroup label="Everyone">${o.map(opt).join('')}</optgroup>`:o.map(opt).join('')}</select>`};
 /* move a guest's bookings and payment status onto the player's own account, then remove the guest record */
 async function linkGuest(gid,uid,quiet){const g=S.bookings[gid],p=S.profiles[uid];if(!g||!g.guest||!p)return false;
   for(const [sid,x] of Object.entries(g.s||{})){if(!S.sessions[sid])continue;const mine=S.bookings[uid]?.s?.[sid];
@@ -4055,11 +4077,11 @@ function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
    name matches a card (nickname or name on tracker), otherwise a BAD guest. Runs once (the session's `seeded` flag). */
 const NOMANI={id:'taste-nomani-2026-11-07',doc:{sport:'taste',title:'BAD × NOMANI · Offcourt Lunch',date:'2026-11-07',start:'12:00',end:'',venue:'NOMANI, The Chedi Al Bait, Sharjah',
   mapLink:'https://www.google.com/maps/search/?api=1&query=Nomani+The+Chedi+Al+Bait+Sharjah',capacity:12,waitCap:0,fee:0,
-  note:'Dress code: BLACK. BAD. YOU. Wear black, bring your BAD attitude, and let your personality do the rest. Off Court. Still BAD. 🖤'},
+  kind:'collab',agenda:'Have fun\nTake UGC content',note:'Dress code: BLACK. BAD. YOU. Wear black, bring your BAD attitude, and let your personality do the rest. Off Court. Still BAD. 🖤'},
   names:['Marlo','Zee','Kenny','Jelden','Rupha','Mark','Ez','Fay','Clark','Milka','Aaron','Carl']};
 async function seedNomani(){if(S._nomani||!S.db||!S.canEdit||!S.loaded||typeof canSport!=='function'||!canSport('taste'))return;S._nomani=true;
   const {id,doc,names}=NOMANI;let s=S.sessions[id];
-  if(s&&(s.end==='12:30'||s.waitCap!==0))try{await S.db.doc('sessions/'+id).update({end:'',waitCap:0})}catch(_){}
+  if(s&&(s.end==='12:30'||s.waitCap!==0||!s.agenda||!s.kind))try{const u={};if(s.end==='12:30')u.end='';if(s.waitCap!==0)u.waitCap=0;if(!s.agenda)u.agenda='Have fun\nTake UGC content';if(!s.kind)u.kind='collab';await S.db.doc('sessions/'+id).update(u)}catch(_){}
   if(s&&s.seeded)return;
   try{if(!s){await S.db.doc('sessions/'+id).set({...doc,createdAt:new Date().toISOString()});S.sessions[id]={...doc}}
     const norm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
