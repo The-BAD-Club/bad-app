@@ -937,10 +937,14 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
 .pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pgrid figure{margin:0;border-radius:14px;overflow:hidden;aspect-ratio:4/5;background:#0d0d0d}.pgrid figure.wide{grid-column:1/-1;aspect-ratio:3/2}.pgrid img{width:100%;height:100%;object-fit:cover;display:block}
 @media(min-width:760px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:480px){.hstats.h3{grid-template-columns:repeat(2,minmax(0,1fr))!important}.hstats.h3 .tile:first-child{grid-column:1/-1}}.hstats .tile{min-width:0}.hstats .tile .label{overflow-wrap:anywhere}
+.top{position:sticky}.backbtn{position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;background:none;color:var(--muted);border-radius:999px;cursor:pointer;padding:0}
+.backbtn:hover{color:var(--ink);background:var(--soft,#111)}.backbtn[hidden]{display:none}
+.top:has(.backbtn:not([hidden])) .wordmark{margin-left:24px;transition:margin .15s}
 </style>
 
 <div class="wrap">
   <header class="top">
+    <button class="backbtn" id="backbtn" type="button" aria-label="Back" title="Back" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="wordmark"><b>BAD</b></div>
     <button class="themebtn" id="theme" type="button" aria-label="Switch to light theme" title="Light or dark"><svg class="sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <nav class="tabs" aria-label="Sections">
