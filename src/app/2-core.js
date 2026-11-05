@@ -135,6 +135,8 @@ const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${e
 const LEVEL_FREE=['retreat','vibe','taste'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'},fastpay:{label:'ENBD FastPay',sub:'Send to our mobile number',icon:'bank'}};
 /* BAD's contact number: WhatsApp, Careem Pay and ENBD FastPay. Admin → Settings can change each one. */
+/* session time: '12pm to 2pm', or 'From 12pm' when there's no end time yet */
+const timeRange=(s,dash)=>s.timeTbc?'Time to be confirmed':s.end?`${fmtTime(s.start)}${dash?'–':' to '}${fmtTime(s.end)}`:`From ${fmtTime(s.start)}`;
 const BAD_PHONE='+971564131580',BAD_EMAIL='thebadclub.co@gmail.com';
 const waNum=()=>String((S.site&&S.site.whatsapp)||BAD_PHONE).replace(/[^0-9]/g,'');
 const waLink=t=>`https://wa.me/${waNum()}?text=${encodeURIComponent(t||'Hi BAD, I\'d like to know more about The BAD Club.')}`;

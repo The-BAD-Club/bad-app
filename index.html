@@ -1085,6 +1085,9 @@ footer.sign .legal span{grid-column:1;grid-row:2;align-self:center}
 footer.sign .signout{grid-column:2;grid-row:1;align-self:center;padding:6px 0;min-height:32px}
 footer.sign .ver{grid-column:2!important;grid-row:2!important;align-self:center!important;justify-self:end;line-height:1}
 html.guest footer.sign .legal b,html.guest footer.sign .legal span{grid-column:1}
+.glinkrow{margin-top:6px}.glinkrow select{max-width:240px;font-size:.8rem;padding:6px 8px}
+[data-addquest]{justify-self:start}
+.li.pl>div{min-width:0}.glinkrow select{width:100%;max-width:220px;min-width:0;box-sizing:border-box}
 
 </style>
 
@@ -1234,8 +1237,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.54';
+const APP_VERSION='0.55';
 const CHANGES=[
+  ['0.55','2026-11-05','Side Quests: Add a Side Quest button for admins (12 spots, no waiting list, no fee by default); sessions can have no end time (shows From 12pm), a Google Maps link and details; BAD × NOMANI now from 12pm, strictly 12; link a guest to their player card from the session's player list'],
   ['0.54','2026-11-05','Side Quests: BAD × NOMANI Offcourt Lunch (Taste BADs, Sat 7 Nov, 12:00–12:30, NOMANI at The Chedi Al Bait, Sharjah), capped at 12 with the guest list in; sessions can show a Directions link; free sessions skip the payment question and don’t show AED 0'],
   ['0.53','2026-11-05','Footer: app version lines up with the license number'],
   ['0.52','2026-11-05','Shop: one clean grid with small photos, name and price, and tabs for All, FRAGMENTS, Volume II and Essentials; tap for the big photo with thumbnails, tap again for full screen; BADASS and REVERSE photos without their white background; footer: app version sits under Sign out'],
@@ -1433,6 +1437,8 @@ const deptCard=k=>SPORTS[k]?`<div class="deptc">${ic(SPORTS[k].icon)}<div><b>${e
 const LEVEL_FREE=['retreat','vibe','taste'];
 const PAY={cash:{label:'Cash',sub:'Pay at the session',icon:'cash'},bank:{label:'Bank transfer',sub:'Send before the session',icon:'bank'},ziina:{label:'Ziina',sub:'Pay with a link',icon:'wallet'},careem:{label:'Careem Pay',sub:'Send in the Careem app',icon:'phone'},fastpay:{label:'ENBD FastPay',sub:'Send to our mobile number',icon:'bank'}};
 /* BAD's contact number: WhatsApp, Careem Pay and ENBD FastPay. Admin → Settings can change each one. */
+/* session time: '12pm to 2pm', or 'From 12pm' when there's no end time yet */
+const timeRange=(s,dash)=>s.timeTbc?'Time to be confirmed':s.end?`${fmtTime(s.start)}${dash?'–':' to '}${fmtTime(s.end)}`:`From ${fmtTime(s.start)}`;
 const BAD_PHONE='+971564131580',BAD_EMAIL='thebadclub.co@gmail.com';
 const waNum=()=>String((S.site&&S.site.whatsapp)||BAD_PHONE).replace(/[^0-9]/g,'');
 const waLink=t=>`https://wa.me/${waNum()}?text=${encodeURIComponent(t||'Hi BAD, I\'d like to know more about The BAD Club.')}`;
@@ -2096,7 +2102,7 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${s.timeTbc?'Time to be confirmed':`${fmtTime(s.start)} to ${fmtTime(s.end)}`}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
+      <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}Game Master: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p>${esc(s.note)}</p>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
@@ -2332,10 +2338,12 @@ function renderQuests(){
   const posts=Object.entries(S.posts).filter(([,p])=>isSide(p.club)&&(f==='all'||p.club===f)&&(p.type!=='event'||(p.date||'')>=today)).sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
   el.innerHTML=`${courtSwitch('quests')}<div class="hero"><span class="label">Side Quests</span><h2>Off Court.</h2><p class="muted">Collabs, food, drinks and everything BAD that isn't a game. Join like a session and earn event points.</p></div>
     ${SIDE.length>1?sportBar(f,'qf',SIDE):`<div class="qdepts">${SIDE.map(k=>`<div class="qdept">${ic(SPORTS[k].icon)}<div><b>${esc(SPORTS[k].club)}</b><span class="fine">${esc(SPORTS[k].sport)}</span></div></div>`).join('')}</div>`}
+    ${S.canEdit&&typeof canSport==='function'&&SIDE.some(canSport)?`<button class="btn" data-addquest="1">${ic('plus')}Add a Side Quest</button>`:''}
     ${list.length?`<div class="slist">${list.map(([sid,s])=>sessCard(sid,s)).join('')}</div>`:`<div class="empty">${ic('quest')}<span>No side quests posted yet. The next collab drops here first.</span></div>`}
     ${posts.length?`<section class="hsec"><h3 class="ah">News from the collabs</h3><div class="list">${posts.map(([,p])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">${esc(p.title)}</div><div class="sub">${esc(SPORTS[p.club]?.club||'')}${p.date?' · '+esc(fmtD(p.date)):''}${p.place?' · '+esc(p.place):''}</div>${p.body?`<p class="fine" style="margin:4px 0 0">${esc(p.body)}</p>`:''}</div>${p.link?`<a class="btn ghost sm" href="${esc(p.link)}" target="_blank" rel="noopener">Open${ic('arrow')}</a>`:''}</div>`).join('')}</div></section>`:''}
     ${past.length?`<details class="hsec how"><summary class="ah">Past quests</summary><div class="list">${past.map(([,s])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr)">${ic(sportOf(s.sport).icon)}<div><div class="nm">${esc(s.title)}</div><div class="sub">${esc(fmtS(s))}${s.venue?' · '+esc(s.venue):''}</div></div></div>`).join('')}</div></details>`:''}`;
   el.querySelectorAll('[data-qf]').forEach(b=>b.onclick=()=>{S.questFilter=b.dataset.qf;renderQuests()});
+  el.querySelectorAll('[data-addquest]').forEach(b=>b.onclick=()=>{aTab='sessions';showNew=true;editSid=null;newSport=SIDE.find(canSport)||'taste';setView('admin');setTimeout(()=>{const f=document.querySelector('#v-admin .formbox');if(f)f.scrollIntoView({block:'start'})},60)});
   bindPlay(el);
 }
 /* ---------- Gallery: an album per event, with photos and a link to the full set ---------- */
@@ -3568,7 +3576,7 @@ function aSessions(list,up){
   const s=adminSid&&S.sessions[adminSid],r=s?roster(adminSid):null;
   const ns=S.noshows,nsId=e=>e.guest?`${adminSid}#g-${slug(e.guest)}`:adminSid,isNS=e=>Object.values(ns).some(n=>n.player===e.key&&(n.dates||[]).includes(nsId(e)));
   const shown=showPast?list.slice().reverse():up.concat(s&&!up.some(([i])=>i===adminSid)?[[adminSid,s]]:[]);
-  const picker=`<div class="list slist-a" role="list" aria-label="Sessions">${shown.map(([id,x])=>{const rr=roster(id);return `<div class="li sessrow${id===adminSid?' on':''}" role="listitem" style="grid-template-columns:auto minmax(0,1fr) auto">${ic(sportOf(x.sport).icon)}<button type="button" class="sp-open" data-sid="${esc(id)}" aria-pressed="${id===adminSid}"><span class="nm">${fmtS(x)} · ${esc(x.title)}${x.cancelled?' <span class="tagl warn">Cancelled</span>':''}</span><span class="sub">${x.timeTbc?'Time TBC':esc(fmtTime(x.start))+'–'+esc(fmtTime(x.end||''))}${x.venue?' · '+esc(x.venue):''} · ${rr.in.length}/${rr.cap} in${rr.wait.length?` · ${rr.wait.length} waiting`:''}</span></button><span class="row" style="gap:6px;flex-wrap:nowrap"><button type="button" class="btn ghost sm icon" data-sqr="${esc(id)}" aria-label="Check-in QR for ${esc(x.title)}" title="Check-in QR">${ic('eye')}</button><button type="button" class="btn ghost sm" data-sedit="${esc(id)}" aria-label="Edit ${esc(x.title)}">${ic('edit')}Edit</button></span></div>`}).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
+  const picker=`<div class="list slist-a" role="list" aria-label="Sessions">${shown.map(([id,x])=>{const rr=roster(id);return `<div class="li sessrow${id===adminSid?' on':''}" role="listitem" style="grid-template-columns:auto minmax(0,1fr) auto">${ic(sportOf(x.sport).icon)}<button type="button" class="sp-open" data-sid="${esc(id)}" aria-pressed="${id===adminSid}"><span class="nm">${fmtS(x)} · ${esc(x.title)}${x.cancelled?' <span class="tagl warn">Cancelled</span>':''}</span><span class="sub">${x.timeTbc?'Time TBC':esc(timeRange(x,1))}${x.venue?' · '+esc(x.venue):''} · ${rr.in.length}/${rr.cap} in${rr.wait.length?` · ${rr.wait.length} waiting`:''}</span></button><span class="row" style="gap:6px;flex-wrap:nowrap"><button type="button" class="btn ghost sm icon" data-sqr="${esc(id)}" aria-label="Check-in QR for ${esc(x.title)}" title="Check-in QR">${ic('eye')}</button><button type="button" class="btn ghost sm" data-sedit="${esc(id)}" aria-label="Edit ${esc(x.title)}">${ic('edit')}Edit</button></span></div>`}).join('')||'<span class="hint">No upcoming sessions.</span>'}</div>
     <div class="row" style="justify-content:space-between"><label class="chip sm"><input type="checkbox" id="a-past" ${showPast?'checked':''}> Show past sessions</label><button class="btn sm${showNew?' ghost':''}" id="a-new">${showNew?ic('x')+'Close':ic('plus')+'Add a session'}</button></div>`;
   /* the same form adds a session or edits one (editSid) */
   const E=editSid&&S.sessions[editSid]?S.sessions[editSid]:null,sp0=newSport,v=(k,d)=>esc(E&&E[k]!=null&&E[k]!==''?E[k]:d);
@@ -3578,12 +3586,14 @@ function aSessions(list,up){
       <div class="field"><label for="n-title">Name</label><input type="text" id="n-title" value="${v('title',defaultTitle(sp0))}"></div>
       <div class="field"><label for="n-date">Date</label><input type="date" id="n-date" value="${v('date','')}"></div>
       <div class="field"><label for="n-start">Start</label><input type="time" id="n-start" value="${v('start',sp0==='volleyball'?'19:00':'20:00')}"></div>
-      <div class="field"><label for="n-end">End</label><input type="time" id="n-end" value="${v('end',sp0==='volleyball'?'22:30':'22:00')}"></div>
-      <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="${v('fee',40)}"></div>
-      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${v('capacity',sp0==='volleyball'?18:sp0==='pickleball'?16:sp0==='badminton'?16:20)}"></div>
-      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${E?(E.waitCap==null?'':esc(E.waitCap)):(sp0==='badminton'?4:'')}"></div>
+      <div class="field"><label for="n-end">End <span class="req">optional</span></label><input type="time" id="n-end" value="${E?esc(E.end||''):isSide(sp0)?'':(sp0==='volleyball'?'22:30':'22:00')}"></div>
+      <div class="field"><label for="n-fee">Fee (AED)</label><input type="number" id="n-fee" value="${v('fee',isSide(sp0)?0:40)}"></div>
+      <div class="field"><label for="n-cap">Spots</label><input type="number" id="n-cap" value="${v('capacity',isSide(sp0)?12:sp0==='volleyball'?18:sp0==='pickleball'?16:sp0==='badminton'?16:20)}"></div>
+      <div class="field"><label for="n-wait">Waiting list</label><input type="number" id="n-wait" min="0" placeholder="No limit" value="${E?(E.waitCap==null?'':esc(E.waitCap)):(sp0==='badminton'?4:isSide(sp0)?0:'')}"></div>
       ${COURT_SPORTS.includes(sp0)?`<div class="field"><label for="n-courts">Courts</label><input type="number" id="n-courts" min="1" max="8" value="${v('courts',DEF_COURTS[sp0]||1)}"></div>`:''}
       <div class="field wide"><label for="n-venue">Venue</label><input type="text" id="n-venue" value="${v('venue','')}"></div>
+      <div class="field wide"><label for="n-map">Google Maps link <span class="req">optional</span></label><input type="url" id="n-map" placeholder="https://maps.google.com/…" value="${v('mapLink','')}"></div>
+      <div class="field wide"><label for="n-note">Details <span class="req">optional</span></label><textarea id="n-note" rows="3" maxlength="500" placeholder="Dress code, what to bring, anything people should know">${E?esc(E.note||''):''}</textarea></div>
       <div class="field wide"><label for="n-opens">Sign-ups open <span class="req">optional</span></label><input type="datetime-local" id="n-opens" value="${v('opens','')}"><p class="fine">Leave blank to open straight away. Members can join 24 hours before this, Core and up 48 hours before.</p></div></div>
     <label class="chip sm" style="justify-self:start"><input type="checkbox" id="n-tbc" ${E&&E.timeTbc?'checked':''}> Time to be confirmed</label>
     ${E?`<p class="fine">Changes show for everyone straight away. People already signed up stay signed up.</p>`:''}
@@ -3591,10 +3601,10 @@ function aSessions(list,up){
   if(!s)return picker+form+'<div class="empty">No sessions yet.</div>';
   const paid=r.in.filter(e=>!e.guest&&S.payments[adminSid]?.[e.uid]?.ok).length,owed=owedOf(adminSid);
   const nm=e=>e.guest?`${esc(e.guest)} <span class="tagl">Guest of ${esc(nameOf(e.uid,e.key))}</span>`:esc(nameOf(e.uid,e.key))+(S.bookings[e.uid]?.guest?' <span class="tagl">Guest</span>':'')+(S.bookings[e.uid]?.s?.[adminSid]?.byAdmin?' <span class="tagl">Added by admin</span>':'');
-  const rosterHTML=r.in.map((e,i)=>`<div class="li pl"><span class="rank num">${i+1}</span>${e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)}<div><div class="nm">${nm(e)}</div><div class="sub">${e.guest?'Host is responsible':esc(S.contacts[e.uid]?.mobile||S.contacts[e.uid]?.whatsapp||'')}${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)?` · ${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)} games`:''}</div></div>
+  const rosterHTML=r.in.map((e,i)=>`<div class="li pl"><span class="rank num">${i+1}</span>${e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)}<div><div class="nm">${nm(e)}</div><div class="sub">${e.guest?'Host is responsible':isGuestBk(e.uid)?'':esc(S.contacts[e.uid]?.mobile||S.contacts[e.uid]?.whatsapp||'')}${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)?` · ${gamesFor(adminSid,e.guest?gpid(e.uid,e.guest):e.uid)} games`:''}</div>${!e.guest&&isGuestBk(e.uid)?`<div class="glinkrow">${linkPick(e.uid)}</div>`:''}</div>
       <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm ${isNS(e)?'':'ghost'} nsb" data-ns="${esc(e.key)}" data-uid="${esc(e.uid)}" data-d="${esc(nsId(e))}" title="Hidden from players">${isNS(e)?'No-show ✕':'No-show'}</button>${rmRosterBtn(e)}</div></div>`).join('')||'<div class="empty">No one yet.</div>';
   return `${picker}${form}
-  <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(fmtTime(s.start))+'–'+esc(fmtTime(s.end||''))} · AED ${esc(s.fee)}</span><h3 class="big">${esc(s.title)}</h3>
+  <div class="nextcard"><span class="label">${fmtS(s)} · ${s.timeTbc?'Time TBC':esc(timeRange(s,1))}${+s.fee>0?' · AED '+esc(s.fee):' · Free'}</span><h3 class="big">${esc(s.title)}</h3>
     <div class="tiles t4">${tile(`${r.in.length}<small>/${r.cap}</small>`,'In')}${tile(r.wait.length,'Waiting')}${tile(`${paid}<small>/${r.in.filter(e=>!e.guest).length}</small>`,'Paid')}${tile(`<small>AED</small> ${owed}`,'Still to collect')}</div>
     <div class="row"><button class="btn ghost sm" data-courts="${esc(s.sport)}">${ic('court')}Run courts</button>${s.cancelled?`<span class="tagl warn">Cancelled${s.cancelReason?' · '+esc(s.cancelReason):''}</span><button class="btn ghost sm" id="s-uncancel">Reinstate session</button>`:`<button class="btn ghost sm" id="s-cancelask">${ic('x')}Cancel session</button>`}<button class="btn ghost sm" id="s-edit">${ic('edit')}Edit</button><button class="btn ghost sm" id="s-delask">${ic('x')}Delete</button></div>
     ${S.delAsk===adminSid?(()=>{const n=r.in.length+r.wait.length;return `<div class="confirm"><b>Delete ${esc(s.title)} for good?</b><p class="fine">${n?`${n} ${n===1?'person is':'people are'} signed up. Deleting doesn't tell them. To let them know by email, use Cancel session instead.`:'No one has signed up yet.'} The court board for this session goes too. This can't be undone.</p><div class="row" style="gap:6px"><button class="btn sm" id="s-delgo">Delete session</button><button class="btn ghost sm" id="s-delno">Keep it</button></div></div>`})():''}
@@ -3794,8 +3804,8 @@ function bindAdmin(){
   on('n-cancel',()=>{editSid=null;renderAdmin()});
   on('n-save',async()=>{const sid=editSid,old=S.sessions[sid];if(!old)return;const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const sp=newSport||old.sport||'badminton';if(!canSport(sp)){toast('You can only move sessions to your own departments.');return}
-    const d={sport:sp,date,start:$('n-start').value||old.start||'20:00',end:$('n-end').value||old.end||'22:00',timeTbc:$('n-tbc').checked,title:$('n-title').value.trim()||old.title,fee:Number($('n-fee').value)||0,capacity:Math.max(1,Number($('n-cap').value)||old.capacity||20),
-      waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):(old.courts??null),venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''};
+    const d={sport:sp,date,start:$('n-start').value||old.start||'20:00',end:$('n-end').value,timeTbc:$('n-tbc').checked,title:$('n-title').value.trim()||old.title,fee:Number($('n-fee').value)||0,capacity:Math.max(1,Number($('n-cap').value)||old.capacity||20),
+      waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):(old.courts??null),venue:$('n-venue').value.trim(),mapLink:$('n-map').value.trim(),note:$('n-note').value.trim().slice(0,500),opens:$('n-opens')?.value||''};
     try{await S.db.doc('sessions/'+sid).update(d);editSid=null;toast('Session updated.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   q('#a-plist [data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,'',x.dataset.gk,x.value));
   q('#a-plist [data-greset]').forEach(x=>x.onclick=()=>saveGrade(x.dataset.greset,'','ovr',''));
@@ -3816,7 +3826,7 @@ function bindAdmin(){
   q('[data-nsp]').forEach(b=>b.onclick=()=>{newSport=b.dataset.nsp;renderAdmin()});
   on('n-go',async()=>{const date=$('n-date').value;if(!date){toast('Please pick a date.');return}
     const title=$('n-title').value.trim()||defaultTitle(newSport),id=slug(title).slice(0,24)+'-'+date;
-    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value||'22:00',timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
+    try{await S.db.doc('sessions/'+id).set({sport:newSport,date,start:$('n-start').value||'20:00',end:$('n-end').value,timeTbc:$('n-tbc').checked,title,fee:Number($('n-fee').value)||0,capacity:Number($('n-cap').value)||20,waitCap:$('n-wait').value===''?null:Math.max(0,Math.round(Number($('n-wait').value)||0)),courts:$('n-courts')?Math.max(1,Math.round(Number($('n-courts').value)||1)):null,venue:$('n-venue').value.trim(),mapLink:$('n-map').value.trim(),note:$('n-note').value.trim().slice(0,500),opens:$('n-opens')?.value||''});showNew=false;adminSid=id;adminPicked=true;toast('Session posted.');renderAdmin()}catch(e){toast("Sorry, that didn't save.")}});
   const hmSave=async d=>{const cur=S.homeMedia||{},nx={photos:cur.photos||[],videos:cur.videos||[],...d,updatedAt:new Date().toISOString()};while(JSON.stringify(nx).length>950000&&nx.photos.length)nx.photos.shift();await S.db.doc('config/home').set(nx);return nx};
   on('hm-go',async()=>{const b=$('hm-go'),files=[...($('hm-files').files||[])],lines=$('hm-vids').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),bad=lines.filter(x=>!vidEmbed(x));
     if(bad.length){toast(`That link isn't a video we can show: ${bad[0].slice(0,40)}`);return}
@@ -4037,12 +4047,14 @@ function pendingFor(uid){const b=S.bookings[uid]?.s||{},out=[];
 /* ---------- one-off: BAD × NOMANI Offcourt Lunch (Taste BADs), Sat 7 Nov 2026, capped at 12 with the guest list filled ----------
    The first admin app that can run Taste BADs creates the session and books the 12 names: a registered player when the
    name matches a card (nickname or name on tracker), otherwise a BAD guest. Runs once (the session's `seeded` flag). */
-const NOMANI={id:'taste-nomani-2026-11-07',doc:{sport:'taste',title:'BAD × NOMANI · Offcourt Lunch',date:'2026-11-07',start:'12:00',end:'12:30',venue:'NOMANI, The Chedi Al Bait, Sharjah',
-  mapLink:'https://www.google.com/maps/search/?api=1&query=Nomani+The+Chedi+Al+Bait+Sharjah',capacity:12,waitCap:4,fee:0,
+const NOMANI={id:'taste-nomani-2026-11-07',doc:{sport:'taste',title:'BAD × NOMANI · Offcourt Lunch',date:'2026-11-07',start:'12:00',end:'',venue:'NOMANI, The Chedi Al Bait, Sharjah',
+  mapLink:'https://www.google.com/maps/search/?api=1&query=Nomani+The+Chedi+Al+Bait+Sharjah',capacity:12,waitCap:0,fee:0,
   note:'Dress code: BLACK. BAD. YOU. Wear black, bring your BAD attitude, and let your personality do the rest. Off Court. Still BAD. 🖤'},
   names:['Marlo','Zee','Kenny','Jelden','Rupha','Mark','Ez','Fay','Clark','Milka','Aaron','Carl']};
 async function seedNomani(){if(S._nomani||!S.db||!S.canEdit||!S.loaded||typeof canSport!=='function'||!canSport('taste'))return;S._nomani=true;
-  const {id,doc,names}=NOMANI;let s=S.sessions[id];if(s&&s.seeded)return;
+  const {id,doc,names}=NOMANI;let s=S.sessions[id];
+  if(s&&(s.end==='12:30'||s.waitCap!==0))try{await S.db.doc('sessions/'+id).update({end:'',waitCap:0})}catch(_){}
+  if(s&&s.seeded)return;
   try{if(!s){await S.db.doc('sessions/'+id).set({...doc,createdAt:new Date().toISOString()});S.sessions[id]={...doc}}
     const norm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
     const booked=new Set(roster(id).in.concat(roster(id).wait).map(e=>norm(e.guest||nameOf(e.uid,e.key))));
