@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.55';
+const APP_VERSION='0.56';
 const CHANGES=[
+  ['0.56','2026-11-05','Events: an Agenda field (one line per item, times in bold) next to spots, waiting list, venue, Google Maps link and details, all editable with Edit; a full event with no waiting list just says Full'],
   ['0.55','2026-11-05','Side Quests: Add a Side Quest button for admins (12 spots, no waiting list, no fee by default); sessions can have no end time (shows From 12pm), a Google Maps link and details; BAD × NOMANI now from 12pm, strictly 12; link a guest to their player card from the session’s player list'],
   ['0.54','2026-11-05','Side Quests: BAD × NOMANI Offcourt Lunch (Taste BADs, Sat 7 Nov, 12:00–12:30, NOMANI at The Chedi Al Bait, Sharjah), capped at 12 with the guest list in; sessions can show a Directions link; free sessions skip the payment question and don’t show AED 0'],
   ['0.53','2026-11-05','Footer: app version lines up with the license number'],
