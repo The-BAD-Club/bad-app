@@ -1046,6 +1046,37 @@ footer.sign .ver{grid-row:2;grid-column:1/-1;justify-self:start}
 .talkrow{display:flex;flex-wrap:wrap;gap:8px}.talkrow .btn{flex:1 1 0;justify-content:center;min-width:110px}
 .played .chips{margin-bottom:4px}.played label.lbl{display:block;margin-top:12px}
 .talkrow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}.talkrow .btn{min-width:0;padding-left:8px;padding-right:8px;gap:6px;white-space:nowrap}
+/* ---------- Shop: clean grid ---------- */
+.shop-h{display:grid;gap:4px}.shop-h h2{margin:0;font-size:clamp(2rem,6vw,2.6rem)}
+.stabs{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line);margin:2px 0 4px}.stabs::-webkit-scrollbar{display:none}
+.stabs button{flex:none;background:none;border:0;padding:10px 0;margin-bottom:-1px;font:inherit;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid transparent;cursor:pointer}
+.stabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.shopg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 14px}
+@media(min-width:700px){.shopg{grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 20px}}
+@media(min-width:1100px){.shopg{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.sc{all:unset;cursor:pointer;display:grid;gap:10px;align-content:start;min-width:0}
+.sc-img{aspect-ratio:1;display:grid;place-items:center;background:none;color:var(--muted)}
+.sc-img img{width:82%;height:82%;object-fit:contain;transition:transform .4s ease}
+.sc:hover .sc-img img{transform:scale(1.04)}
+.sc.out .sc-img img{opacity:.45}
+.sc-m{display:grid;gap:2px;text-align:center;justify-items:center}
+.sc-m b{font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.sc-m span{font-size:.78rem;color:var(--muted)}
+.sc-m small{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.sc:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.gal{display:grid;gap:10px;padding:16px 16px 0}
+.gal-main{all:unset;cursor:zoom-in;display:grid;place-items:center;aspect-ratio:1;max-height:56vh;width:100%}
+.gal-main img{max-width:100%;max-height:56vh;width:auto;height:auto;object-fit:contain}
+.gal-th{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.gal-th button{all:unset;cursor:pointer;width:52px;height:52px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;opacity:.55}
+.gal-th button.on{opacity:1;border-color:var(--ink)}
+.gal-th img{max-width:44px;max-height:44px;object-fit:contain}
+.zoomov{position:fixed;inset:0;z-index:100;background:#000;display:grid;place-items:center;cursor:zoom-out;padding:12px}
+.zoomov img{max-width:100%;max-height:100%;object-fit:contain}
+.zoomov .sheet-x{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:12px}
+footer.sign .ver{grid-column:2;grid-row:2;justify-self:end;text-align:right;align-self:start}
+html.guest footer.sign .legal{grid-column:1}
+.sc-img{position:relative;overflow:hidden;width:100%}.sc-img img{position:absolute;inset:9%;width:82%;height:82%;object-fit:contain}.sc-img>svg.i{width:28px;height:28px}
 
 </style>
 
@@ -1195,8 +1226,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.51';
+const APP_VERSION='0.52';
 const CHANGES=[
+  ['0.52','2026-11-05','Shop: one clean grid with small photos, name and price, and tabs for All, FRAGMENTS, Volume II and Essentials; tap for the big photo with thumbnails, tap again for full screen; BADASS and REVERSE photos without their white background; footer: app version sits under Sign out'],
   ['0.51','2026-11-05','Played with us before? is now No / Yes; Yes shows a plain list of names from the session tracker, plus I can’t find my name; Membership list shows just the level names; FAQs end with WhatsApp, Email and Instagram, then Join BAD and the Guide'],
   ['0.50','2026-11-05','Talk to us on Home and the FAQs: WhatsApp (+971 56 413 1580, with a ready message) and email; ENBD FastPay added as a way to pay (sessions, Pay all and the Shop), using the same number; Careem Pay shows it too until a number is set in Admin, Settings, Payments; WhatsApp number editable in Settings'],
   ['0.49','2026-11-05','WTH is BAD and the Gallery use the club photos (sessions, VolleyBAD, Taste BADs, BAD-O-WEEN, the Off-Court shoot) (the Gallery shows them as BAD moments until event albums are added); stills from the film are gone; landscape photos get a wider frame'],
@@ -4026,6 +4058,9 @@ const FRAG={url:'https://fragments-release.thebadclub-co.workers.dev/',base:'htt
     d:'Your everyday base, light and easy to move in. Men’s cut: longer, straighter, clean back. Women’s cut: shorter, curved hem, signature back. XXS to XXL.'},
    {k:'reverse',name:'REVERSE',kind:'Personalised on-court jersey',price:155,imgs:['reverse-front.webp','reverse-back.webp'],
     d:'Our first white on-court jersey. Collared, oversized, cropped, with your name (up to 8 letters) and number. Pre-order only: once production starts, it’s gone.'}]};
+/* cut-outs with the white background removed (assets/frag), used instead of the originals where we have them */
+const FRAG_LOCAL=new Set(['badass-men-front.webp','badass-men-back.webp','badass-women-front.webp','badass-women-back.webp','reverse-front.webp','reverse-back.webp']);
+const fragImg=f=>FRAG_LOCAL.has(f)?'assets/frag/'+f:FRAG.base+f;
 function dropHTML(){const d=FRAG,pick=S.fragPick||{};
   return `<section class="preo"><div class="preo-h"><span class="label">${esc(d.status)}</span><h3>${esc(d.title)}</h3><p class="fine">${esc(d.sub)}</p></div>
     <div class="preo-grid">${d.items.map(it=>{const i=Math.min(pick[it.k]||0,it.imgs.length-1);return `<article class="preo-item"><a class="preo-img" href="${d.url}#${it.k}" target="_blank" rel="noopener" style="background-image:url('${d.base}${it.imgs[i]}')" aria-label="Pre-order ${esc(it.name)}"></a>
@@ -4050,30 +4085,45 @@ async function syncV2Prices(){if(S._v2fix||!S.db||typeof shopAdmin!=='function'|
   for(const [id,price] of Object.entries(V2_PRICE_FIX)){const p=S.products[id];if(!p)continue;const upd={};if(+p.price!==price)upd.price=price;if(id==='v2-rally-towel'&&p.status==='draft')upd.status='live';
     if(Object.keys(upd).length)try{await S.db.doc('products/'+id).update({...upd,updatedAt:new Date().toISOString()})}catch(_){}}}
 const v2State=()=>{const v=Object.values(S.products).filter(p=>/volume ii/i.test(p.dropName||''));return !v.length?'none':v2Missing().length?'missing':v.some(p=>p.status==='live')?'live':'draft'};
+/* ---------- the shop grid: one clean grid like a fashion store. Small photo, name, price; tap for the big view ---------- */
+function shopItems(){const all=liveProducts(),isV2=p=>/volume ii/i.test(p.dropName||'');
+  const frag=FRAG.items.map(it=>({id:'frag:'+it.k,cat:'fragments',name:it.name,price:it.price,img:fragImg(it.imgs[0]),tag:'Pre-order',sub:'FRAGMENTS'}));
+  const prods=all.map(([pid,p])=>{const l=released(p)?leftAll(p,pid):1;return{id:pid,cat:isV2(p)?'v2':p.drop==='limited'?'limited':'essentials',name:p.name,price:p.price,img:pImgs(pid,p)[0]||'',
+    tag:!released(p)?'Drops in '+countdown(p.releaseAt):!l?'Sold out':l<=5?'Only '+l+' left':'',sub:isV2(p)?'Volume II':p.drop==='limited'?(p.dropName||'Limited drop'):'Essentials',out:!l}});
+  return [...frag,...prods]}
+const SHOP_CATS=[['all','All'],['fragments','FRAGMENTS'],['v2','Volume II'],['limited','Limited drops'],['essentials','Essentials']];
+function shopCard(x){return `<button class="sc${x.out?' out':''}" data-sc="${esc(x.id)}"><div class="sc-img">${x.img?`<img src="${esc(x.img)}" alt="${esc(x.name)}" loading="lazy">`:ic('bag')}</div>
+  <div class="sc-m"><b>${esc(x.name)}</b><span class="num">${aed(x.price)}</span>${x.tag?`<small>${esc(x.tag)}</small>`:''}</div></button>`}
+function fragSheet(k){const it=FRAG.items.find(i=>i.k===k);if(!it)return'';const imgs=it.imgs.map(fragImg),i=Math.min(S.galIdx||0,imgs.length-1);
+  return `<div class="sheet-ov" data-close="1"><div class="sheet" role="dialog" aria-label="${esc(it.name)}"><button class="sheet-x" data-close="1" aria-label="Close">${ic('x')}</button>
+    ${galHTML(imgs,i,it.name)}
+    <div class="sheet-b"><span class="label">FRAGMENTS · ${esc(FRAG.status)}</span><h3 class="big">${esc(it.name)}</h3><b class="num price">${aed(it.price)}</b><span class="fine">${esc(it.kind)}</span>
+      <p class="muted">${esc(it.d)}</p><a class="btn wide" href="${FRAG.url}#${it.k}" target="_blank" rel="noopener">${ic('bag')}Pre-order${ic('arrow')}</a><p class="fine">${esc(FRAG.note)}</p></div></div></div>`}
+/* big photo with small thumbnails underneath; tap the big photo for full screen */
+function galHTML(imgs,i,name){if(!imgs.length)return `<div class="gal"><div class="gal-main noimg">${ic('bag')}</div></div>`;
+  return `<div class="gal"><button class="gal-main" data-zoom="${esc(imgs[i])}" aria-label="See ${esc(name)} full screen"><img src="${esc(imgs[i])}" alt="${esc(name)}"></button>
+    ${imgs.length>1?`<div class="gal-th">${imgs.map((u,j)=>`<button class="${j===i?'on':''}" data-gi="${j}" aria-label="Photo ${j+1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>`:''}</div>`}
+function openZoom(src){const o=document.createElement('div');o.className='zoomov';o.innerHTML=`<img src="${esc(src)}" alt=""><button class="sheet-x" aria-label="Close">${ic('x')}</button>`;o.onclick=()=>o.remove();document.body.appendChild(o)}
 function renderShop(){syncV2Prices();
   const el=$('v-shop');if(!el)return;
-  const all=liveProducts(),f=S.shopFilter,isV2=([,p])=>/volume ii/i.test(p.dropName||''),v2=all.filter(isV2),list=all.filter(x=>!isV2(x)&&(f==='all'||x[1].drop===f));
+  const all=liveProducts(),items=shopItems(),cats=SHOP_CATS.filter(([k])=>k==='all'||items.some(x=>x.cat===k)),f=cats.some(([k])=>k===S.shopFilter)?S.shopFilter:'all',list=items.filter(x=>f==='all'||x.cat===f);
   const next=all.filter(([,p])=>p.drop==='limited'&&!released(p)).sort((a,b)=>new Date(a[1].releaseAt)-new Date(b[1].releaseAt))[0];
   const bagN=S.bag.reduce((t,i)=>t+i.qty,0),bagT=S.bag.reduce((t,i)=>t+i.qty*i.price,0);
   const mine=Object.entries(S.myOrders).sort((a,b)=>String(b[1].createdAt).localeCompare(String(a[1].createdAt)));
-  el.innerHTML=`<div class="hero"><span class="label">BAD Shop</span><h2>Drops &amp; Essentials.</h2><p class="muted">Made for BADDIES. Limited drops go once, Essentials stay.</p></div>${shopAdmin()&&v2State()!=='live'?`<div class="note adminnote">${ic('bag')}<div style="display:grid;gap:8px"><span><b>Volume II isn't showing yet.</b> ${v2State()==='none'||v2State()==='missing'?'Add the full lineup with photos: jersey, tee, towel, tote and socks with the stock left over, and the Clubhouse Kit as sold out.':'The pieces are saved as drafts. Set them live in Admin → Shop.'} Only shop admins see this.</span>${v2State()==='none'||v2State()==='missing'?`<button class="btn sm" data-v2seed="1" style="justify-self:start">${ic('plus')}Add the Volume II lineup</button>`:''}</div></div>`:''}${dropHTML()}
+  el.innerHTML=`<div class="shop-h"><span class="label">BAD Shop</span><h2>Shop</h2></div>${shopAdmin()&&v2State()!=='live'?`<div class="note adminnote">${ic('bag')}<div style="display:grid;gap:8px"><span><b>Volume II isn't showing yet.</b> ${v2State()==='none'||v2State()==='missing'?'Add the full lineup with photos: jersey, tee, towel, tote and socks with the stock left over, and the Clubhouse Kit as sold out.':'The pieces are saved as drafts. Set them live in Admin → Shop.'} Only shop admins see this.</span>${v2State()==='none'||v2State()==='missing'?`<button class="btn sm" data-v2seed="1" style="justify-self:start">${ic('plus')}Add the Volume II lineup</button>`:''}</div></div>`:''}
     ${next?(()=>{const [pid,p]=next;return `<button class="dropban" data-pid="${esc(pid)}">${pImgs(pid,p)[0]?`<img src="${pImgs(pid,p)[0]}" alt="">`:''}<div class="db-t"><span class="label">Next limited drop${p.dropName?' · '+esc(p.dropName):''}</span><b>${esc(p.name)}</b><span class="fine">${esc(dropWhen(p.releaseAt))}</span></div><span class="db-c num">${countdown(p.releaseAt)}</span></button>`})():''}
-    ${v2.length?`<section class="v2"><div class="v2-h"><span class="label">Volume II · Last pieces</span><h3>The Volume II drop.</h3><p class="fine">Every piece from the drop. What's left is yours to grab, with no restock once it's gone. Sold-out pieces stay here for the record.</p></div>
-      <div class="pgrid">${v2.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${pImgs(pid,p)[0]?`<img src="${pImgs(pid,p)[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">Volume II</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div></section>`:''}
-    <div class="chips" role="group" aria-label="Filter">${[['all','All'],['limited','Limited drops'],['essentials','Essentials']].map(([k,l])=>`<button class="chip" data-sf="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
-    ${list.length?`<div class="pgrid">${list.map(([pid,p])=>`<button class="pcard" data-pid="${esc(pid)}"><div class="pimg">${pImgs(pid,p)[0]?`<img src="${pImgs(pid,p)[0]}" alt="${esc(p.name)}" loading="lazy">`:`<span>${ic('bag')}</span>`}${prodTag(p,pid)}</div><div class="pmeta"><span class="fine">${esc(p.drop==='limited'?(p.dropName||'Limited drop'):'Essentials')}</span><b>${esc(p.name)}</b><span class="num">${aed(p.price)}</span></div></button>`).join('')}</div>`
-      :`<div class="empty">${ic('bag')}<span>${all.length?'Nothing here right now.':'The first drop is on its way. Check back soon.'}</span></div>`}
+    <nav class="stabs" aria-label="Shop categories">${cats.map(([k,l])=>`<button data-sf="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</nav>
+    ${list.length?`<div class="shopg">${list.map(shopCard).join('')}</div>`:`<div class="empty">${ic('bag')}<span>The first drop is on its way. Check back soon.</span></div>`}
     ${mine.length?`<section class="hsec"><h3 class="ah">My orders</h3><div class="list">${mine.map(([oid,o])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm">Order ${esc(oid.slice(-5).toUpperCase())} · ${esc(fmtD(o.createdAt))}</div><div class="sub">${o.items.map(i=>`${i.qty}× ${esc(i.name)}${i.size&&i.size!=='OS'?' ('+esc(i.size)+')':''}`).join(', ')}</div><div class="sub">${o.fulfil==='delivery'?ic('truck')+' Porter delivery':ic('pin')+' Pick up'} · ${esc(PAY[o.pay]?.label||'')}</div></div><div style="display:grid;justify-items:end;gap:4px"><b class="num">${aed(o.total)}</b><span class="tagl${o.status==='done'||o.status==='paid'||o.status==='ready'?' solid':o.status==='cancelled'?' warn':''}">${esc(ORDER_ST[o.status]||o.status)}</span></div></div>`).join('')}</div></section>`:''}
     ${bagN?`<button class="bagfab" data-bag="1">${ic('bag')}<span>Bag · ${bagN}</span><b class="num">${aed(bagT)}</b></button>`:''}
-    ${S.shopPid?productSheet(S.shopPid):''}${S.bagOpen?bagSheet():''}`;
+    ${S.shopPid?(String(S.shopPid).startsWith('frag:')?fragSheet(S.shopPid.slice(5)):productSheet(S.shopPid)):''}${S.bagOpen?bagSheet():''}`;
   bindShop(el);
 }
 function productSheet(pid){const p=S.products[pid];if(!p)return'';const rel=released(p),sz=sizeList(p),sel=S.shopSize&&sz.includes(S.shopSize)?S.shopSize:(sz.length===1?sz[0]:null),left=sel?leftOf(p,pid,sel):0,inBag=S.bag.filter(i=>i.pid===pid).reduce((t,i)=>t+i.qty,0),max=Math.max(0,Math.min(left,(p.maxPer||99)-inBag));
   const q=Math.min(S.shopQty||1,Math.max(1,max));
   return `<div class="sheet-ov" data-close="1"><div class="sheet" role="dialog" aria-label="${esc(p.name)}">
     <button class="sheet-x" data-close="1" aria-label="Close">${ic('x')}</button>
-    <div class="gallery">${(pImgs(pid,p).length?pImgs(pid,p):['']).map(u=>u?`<img src="${u}" alt="${esc(p.name)}">`:`<div class="noimg">${ic('bag')}</div>`).join('')}</div>
-    ${pImgs(pid,p).length>1?`<p class="fine" style="text-align:center">Swipe for more photos</p>`:''}
+    ${galHTML(pImgs(pid,p),Math.min(S.galIdx||0,Math.max(0,pImgs(pid,p).length-1)),p.name)}
     <div class="sheet-b"><span class="label">${esc(p.drop==='limited'?'Limited drop'+(p.dropName?' · '+p.dropName:''):'Essentials')}</span><h3 class="big">${esc(p.name)}</h3><b class="num price">${aed(p.price)}</b>
       ${p.desc?`<p class="muted">${esc(p.desc)}</p>`:''}
       ${!rel?`<div class="note">${ic('clock')}<span>Drops ${esc(dropWhen(p.releaseAt))}. Come back then, it goes fast.</span></div>`:`
@@ -4107,7 +4157,10 @@ function bagSheet(){const c=S.payCfg||{},items=S.bag,sub=items.reduce((t,i)=>t+i
 function bindShop(el){el.querySelectorAll("[data-fp]").forEach(b=>b.onclick=()=>{const [k,j]=b.dataset.fp.split(":");S.fragPick={...(S.fragPick||{}),[k]:+j};renderShop()});el.querySelectorAll("[data-v2seed]").forEach(b=>b.onclick=()=>{b.disabled=true;seedV2()});
   const q=s=>el.querySelectorAll(s);
   q('[data-sf]').forEach(b=>b.onclick=()=>{S.shopFilter=b.dataset.sf;renderShop()});
-  q('[data-pid]').forEach(b=>b.onclick=()=>{S.shopPid=b.dataset.pid;S.shopSize=null;S.shopQty=1;renderShop()});
+  q('[data-pid]').forEach(b=>b.onclick=()=>{S.shopPid=b.dataset.pid;S.shopSize=null;S.shopQty=1;S.galIdx=0;renderShop()});
+  q('[data-sc]').forEach(b=>b.onclick=()=>{S.shopPid=b.dataset.sc;S.shopSize=null;S.shopQty=1;S.galIdx=0;renderShop()});
+  q('[data-gi]').forEach(b=>b.onclick=()=>{S.galIdx=+b.dataset.gi;renderShop()});
+  q('[data-zoom]').forEach(b=>b.onclick=()=>openZoom(b.dataset.zoom));
   const closeS=()=>{S.shopPid=null;S.bagOpen=false;S.shopDone=null;renderShop()};
   q('.sheet-ov').forEach(o=>o.onclick=e=>{if(e.target===o)closeS()});
   q('.sheet [data-close]').forEach(b=>b.onclick=closeS);
