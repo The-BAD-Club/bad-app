@@ -107,9 +107,9 @@ service cloud.firestore {
     }
     function validProfile(d) {
       return d.keys().hasOnly(['nickname', 'listName', 'listKey', 'number', 'edition', 'photo', 'sports', 'primary', 'types', 'levels', 'level',
-                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat', 'lv2'])
+                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat', 'lv2', 'bio'])
         && str(d.nickname, 16) && optStr(d, 'listName', 30) && optStr(d, 'listKey', 40) && optStr(d, 'number', 3)
-        && optStr(d, 'photo', 400000) && optStr(d, 'ref', 20) && optStr(d, 'referredBy', 16) && optStr(d, 'shot', 20)
+        && optStr(d, 'photo', 400000) && optStr(d, 'bio', 160) && optStr(d, 'ref', 20) && optStr(d, 'referredBy', 16) && optStr(d, 'shot', 20)
         && (!('sports' in d) || (d.sports is list && d.sports.size() <= 10))
         && (!('refs' in d) || (d.refs is list && d.refs.size() <= 6))
         && (!('sample' in d) || isFull())
@@ -368,6 +368,38 @@ service cloud.firestore {
     }
 
     // ---------- settings ----------
+    // The Feed: approved members post photos and words, react with one emoji each, give props, and report posts.
+    // Posts go up right away. Owners delete their own; admins hide or delete anything.
+    function feedMap(d, k) { return !(k in d) || (d[k] is map && d[k].size() == 0); }
+    match /feed/{id} {
+      allow read: if isMember();
+      allow create: if isMember() && request.resource.data.uid == uid()
+        && request.resource.data.keys().hasOnly(['uid', 'kind', 'text', 'n', 'dept', 'at', 'to', 'e', 'd', 'r', 'rep'])
+        && request.resource.data.kind in ['post', 'props']
+        && optStr(request.resource.data, 'text', 500) && optStr(request.resource.data, 'dept', 20) && str(request.resource.data.at, 40)
+        && (!('n' in request.resource.data) || (request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 4))
+        && feedMap(request.resource.data, 'r') && feedMap(request.resource.data, 'rep')
+        && (request.resource.data.kind == 'post'
+            || (str(request.resource.data.to, 128) && request.resource.data.to != uid() && str(request.resource.data.e, 8)
+                && request.resource.data.d is int
+                && id == 'p_' + uid() + '_' + request.resource.data.to + '_' + string(request.resource.data.d)));
+      // one reaction and one report per member: you can only change your own key
+      allow update: if (isMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['r'])
+                        && request.resource.data.r is map
+                        && request.resource.data.r.diff(resource.data.get('r', {})).affectedKeys().hasOnly([uid()])
+                        && (!(uid() in request.resource.data.r) || str(request.resource.data.r[uid()], 8)))
+                    || (isMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rep'])
+                        && request.resource.data.rep is map
+                        && request.resource.data.rep.diff(resource.data.get('rep', {})).affectedKeys().hasOnly([uid()]))
+                    || (isAdminAny() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden']) && request.resource.data.hidden is bool);
+      allow delete: if (signedIn() && resource.data.uid == uid()) || isAdminAny();
+    }
+    match /feedimg/{id} {
+      allow read: if isMember();
+      allow create: if isMember() && request.resource.data.uid == uid() && request.resource.data.keys().hasOnly(['uid', 'post', 'd'])
+        && str(request.resource.data.post, 60) && str(request.resource.data.d, 300000);
+      allow delete: if (signedIn() && resource.data.uid == uid()) || isAdminAny();
+    }
     match /approved/{id} {
       allow read: if isSelf(id) || isAdminAny();
       allow create, update: if isAdminAny() && request.resource.data.ok is bool && request.resource.data.keys().hasOnly(['ok', 'by', 'at', 'auto', 'archived']);

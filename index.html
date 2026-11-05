@@ -946,6 +946,30 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
 .top{position:sticky}.backbtn{position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;background:none;color:var(--muted);border-radius:999px;cursor:pointer;padding:0}
 .backbtn:hover{color:var(--ink);background:var(--soft,#111)}.backbtn[hidden]{display:none}
 .top:has(.backbtn:not([hidden])) .wordmark{margin-left:24px;transition:margin .15s}
+.nomember .tabs button[data-v=feed]{display:none}
+.plink{all:unset;cursor:pointer;font-weight:inherit;color:inherit}.plink:hover{text-decoration:underline}.plink:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+.fcompose{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:16px;border:1px solid var(--line);border-radius:20px}
+.fc-in{display:grid;gap:10px;min-width:0}.fc-in textarea{width:100%;resize:vertical;min-height:52px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:1rem;line-height:1.5;padding:6px 0;outline:none}
+.fc-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fc-bar select{flex:1 1 100%;min-width:0;max-width:none;order:-1}.fc-bar #f-go{margin-left:auto}.fc-add.off{opacity:.4;pointer-events:none}
+.fc-thumbs{display:flex;gap:8px;flex-wrap:wrap}.fc-th{position:relative;width:72px;height:72px;border-radius:12px;overflow:hidden}.fc-th img{width:100%;height:100%;object-fit:cover}.fc-th .rmx{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6)}
+.flist{display:grid;gap:16px}
+.fpost{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:20px}.fpost.hid{opacity:.55}
+.fp-head,.fp-props{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
+.fp-emo{width:40px;height:40px;display:grid;place-items:center;font-size:1.5rem;border-radius:999px;background:var(--soft,#111)}
+.fp-text{margin:0;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.fp-pics{display:grid;gap:4px;border-radius:14px;overflow:hidden;margin:0 -4px}.fp-pics figure{margin:0;background:#0d0d0d;aspect-ratio:4/5;overflow:hidden}.fp-pics img{width:100%;height:100%;object-fit:cover;display:block}
+.fp-pics.n1 figure{aspect-ratio:4/5;max-height:560px}.fp-pics.n2,.fp-pics.n4{grid-template-columns:1fr 1fr}.fp-pics.n3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}.fp-pics.n3 figure:first-child{grid-row:1/3;aspect-ratio:auto}.fp-pics.n3 figure:not(:first-child),.fp-pics.n4 figure{aspect-ratio:1}
+.fp-react{display:flex;gap:6px;flex-wrap:wrap}.fp-react button{display:inline-flex;align-items:center;gap:4px;min-height:34px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer}
+.fp-react button[aria-pressed=true]{border-color:var(--ink);background:var(--soft,#111)}.fp-react .num{font-size:.78rem;color:var(--muted)}
+.pmenu{position:relative}.pmenu summary{list-style:none;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:999px;color:var(--muted)}.pmenu summary::-webkit-details-marker{display:none}
+.pmenu-in{position:absolute;right:0;top:38px;z-index:4;display:grid;min-width:160px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--bg);box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.pmenu-in button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;font-size:.9rem}.pmenu-in button:hover{background:var(--soft,#111)}.pmenu-in button[disabled]{opacity:.5;cursor:default}
+.prof{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}.prof .av{width:72px;height:72px;font-size:1.6rem}.prof-n{margin:0}
+.prof-bio{margin:0;line-height:1.55;font-size:1.02rem}.prof-d{gap:8px}
+.propsel{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.propsel button{display:grid;justify-items:start;gap:4px;padding:12px;border:1px solid var(--line);border-radius:16px;background:none;color:var(--ink);font:inherit;cursor:pointer;font-size:1.4rem}.propsel button span{font-size:.82rem;font-weight:600}.propsel button:hover{border-color:var(--ink)}
+#v-feed,#v-player{gap:24px}
+.prof-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px}.prof-tiles .tile{min-width:0}
+.tabs button[data-v=feed]{order:0}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1135,6 +1159,7 @@ footer.sign .sig-line{display:none}
     <button class="themebtn" id="theme" type="button" aria-label="Switch to light theme" title="Light or dark"><svg class="sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <nav class="tabs" aria-label="Sections">
       <button data-v="home"></button>
+      <button data-v="feed"></button>
       <button data-v="card"></button>
       <button data-v="play"></button>
       <button data-v="courts"></button>
@@ -1146,6 +1171,8 @@ footer.sign .sig-line{display:none}
   <section class="view" id="v-home" hidden></section>
   <section class="view" id="v-card"></section>
   <section class="view" id="v-guide" hidden></section>
+  <section class="view" id="v-feed" hidden></section>
+  <section class="view" id="v-player" hidden></section>
   <section class="view" id="v-faq" hidden></section>
   <section class="view" id="v-wth" hidden></section>
   <section class="view" id="v-play" hidden></section>
@@ -1274,8 +1301,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.61';
+const APP_VERSION='0.62';
 const CHANGES=[
+  ['0.62','2026-11-05','The Feed: its own tab for approved members. Post photos (up to 4) and words, tag a department, react with one BAD emoji, report a post; owners delete their own, admins hide or delete anything. Player profiles: tap a name on the Board or in the Feed to see their card, bio, departments, sessions, props and posts. Props: give a player 🔥 🧱 🤝 😂 or 🏸 once a day from their profile; it shows in the Feed. Short bio on your card. Needs the new security rules'],
   ['0.61','2026-11-05','Calmer text spacing across the app (one spacing scale, more room between sections, easier-to-read paragraphs); the footer is three tidy lines (The BAD Club LLC, licence number, app version) with Sign out on the right; a small back arrow at the top takes you one step back, and the phone back gesture does the same; WTH is BAD is now About BAD'],
   ['0.60','2026-11-05','BAD X (short for BAD experience): a new Side Quest department for parties and nights out, next to Taste BADs; Side Quests can be filtered by department, and Add a Side Quest uses the one you have open'],
   ['0.59','2026-11-05','BAD × NOMANI agenda: tasting the new menu and creating content'],
@@ -1385,6 +1413,7 @@ const P={
  photo:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
  taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
  snd:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l4 6M21 9l-4 6"/>',sndon:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+ feed:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 14l4-4 5 5M13 13l2-2 5 5"/><circle cx="15.5" cy="8.5" r="1.3"/>',dots:'<circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/>',
  spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
  quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
@@ -1569,7 +1598,7 @@ const isGuestPassP=p=>!!p&&!!p.memReq&&p.memReq.type===GUEST_PASS;
 function approvalOf(uid){const a=(S.approvals||{})[uid];return a?(a.ok===true?'ok':'no'):preApproval(S.profiles[uid])?'ok':'review'}
 const notMember=()=>!!S.uid&&!S.member&&!window.BAD_GUEST;
 const underReview=()=>notMember()&&!!myProfile()&&!isGuestPass(S.uid)&&!(S.myApproval&&S.myApproval.ok===false);
-const MEMBER_VIEWS=['courts','club','board'];
+const MEMBER_VIEWS=['courts','club','board','feed','player'];
 function allKeys(){const m={};for(const e of S.ledger)if(!m[e.player])m[e.player]=e.name||e.player;for(const p of Object.values(S.profiles))if(p.listKey&&!m[p.listKey])m[p.listKey]=p.listName||p.nickname;return m}
 
 /* ---------- card (minimal) ---------- */
@@ -1835,6 +1864,7 @@ function renderStep(){
       <div class="field"><label for="c-mob">Mobile number</label>${inp('c-mob','phone','tel',D.mobile,'+971 5x xxx xxxx','autocomplete="tel"')}</div>
       <div class="field"><label for="c-mem">Membership</label><select id="c-mem">${(memType(D.memType)?.staff?[memType(D.memType),...memPick()]:memPick()).map(t=>`<option value="${esc(t.k)}" ${t.k===D.memType?'selected':''}>${esc(t.k)}</option>`).join('')}</select><p class="fine" id="c-mem-hint">${memHint(D.memType)}</p></div>
       <div class="field"><label for="c-ig">Instagram <span class="req">optional</span></label>${inp('c-ig','at','text',D.instagram,'@yourhandle','maxlength="40"')}</div>
+      <div class="field"><label for="c-bio">Short bio <span class="req">optional</span></label><textarea id="c-bio" rows="2" maxlength="160" placeholder="Lefty. Loves a smash. Here for the vibes.">${esc(D.bio||'')}</textarea><span class="fine">Shows on your profile. Members only.</span></div>
       ${D._editing?'':`<div class="field"><label for="c-ref">Referral code <span class="req">optional</span></label>${inp('c-ref','gift','text',D.referredBy,'KENNY#08','maxlength="16" style="text-transform:uppercase"')}<p class=\"fine\" id=\"c-ref-hint\" role=\"status\"></p></div>`}
       ${free.length?(()=>{if(D._played==null)D._played=!!D.listName&&free.some(([k])=>k===keyOf(D.listName));
         return `<div class="field played"><span class="lbl">Played with us before?</span><div class="chips seg" role="group" aria-label="Played with us before?"><button type="button" class="chip" data-played="0" aria-pressed="${!D._played}">No, first time</button><button type="button" class="chip" data-played="1" aria-pressed="${!!D._played}">Yes</button></div>
@@ -1843,7 +1873,7 @@ function renderStep(){
     $('c-num').oninput=e=>{D.number=e.target.value.replace(/\D/g,'').slice(0,3);e.target.value=D.number;const h=$('c-num-hint');h.textContent=numHint(D.number);h.classList.toggle('warn-t',!!numProblem(D.number));$('next').disabled=!stepValid();if($('skip'))$('skip').disabled=!stepValid();preview()};
     $('c-mem').onchange=e=>{D.memType=e.target.value;$('c-mem-hint').textContent=memHint(D.memType)};
     const on=(id,k,f)=>{const e=$(id);if(e)e.oninput=x=>{D[k]=f?f(x.target.value):x.target.value;$('next').disabled=!stepValid();if(step===0)$('skip').disabled=!stepValid();if(k==='nickname')preview()}};
-    on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
+    on('c-nick','nickname');on('c-email','email');on('c-mob','mobile');on('c-ig','instagram');on('c-bio','bio');on('c-ref','referredBy',v=>v.trim().toUpperCase().slice(0,16));
     const rh=()=>{const el=$('c-ref-hint');if(!el)return;const i=codeInfo(D.referredBy);el.textContent=!i?'':i.kind==='club'?`✓ ${i.label}.`:i.kind==='member'?`✓ Invited by ${i.name}. Welcome.`:i.kind==='off'?'This code has ended.':'We can’t find that code. Please check the spelling.'};
     if($('c-ref')){$('c-ref').addEventListener('input',rh);rh()}
     const l=$('c-list');if(l)l.onchange=e=>{D.listName=e.target.value==='__none'?'':e.target.value;preview()};
@@ -1961,7 +1991,7 @@ async function saveProfile(){
   const now=new Date().toISOString();
   const data={/* _src/_crop stay on this device */nickname:D.nickname.trim().slice(0,16),listName:((D.listName||'').trim()||D.nickname.trim()).slice(0,30),number:numNorm(D.number),edition:EDITIONS.some(e=>e[0]===D.edition)?D.edition:'oncourt',photo:D.photo||'',
     sports:D.sports.length?D.sports:['badminton'],primary:mainSport(D),types:D.types,style:D.types.badminton||'',levels:Object.fromEntries(Object.entries(D.levels).filter(([k])=>D.sports.includes(k))),level:D.levels[mainSport(D)]??null,hand:D.hand,shot:(D.shot||'').trim().slice(0,14),grade:gradeRow(D.grade)&&D.sports.includes('badminton')?D.grade:'',lv2:Object.fromEntries(Object.entries(D.lv2||{}).filter(([k,v])=>D.sports.includes(k)&&LEVELS_BY[k]&&Number.isInteger(v))),cat:CATS[D.cat]?D.cat:'',
-    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
+    listKey:keyOf(D.listName||D.nickname),createdAt:D.createdAt||now,updatedAt:now,ref:refCode(S.uid||D.nickname,{nickname:D.nickname,number:D.number}),refs:[...new Set([...(D.refs||[]),...(D.ref?[D.ref]:[])])].slice(-6),referredBy:(D.referredBy||'').toUpperCase().slice(0,16),bio:(D.bio||'').trim().slice(0,160),memReq:{type:D.memType||'Guest',at:(D.memReq&&D.memReq.type===D.memType)?D.memReq.at:now}};
   const contact={email:D.email.trim().slice(0,80),mobile:D.mobile.trim().slice(0,20),instagram:(D.instagram||'').trim().slice(0,40),updatedAt:now};
   if(S.db&&S.uid){
     try{if(numProblem(D.number)){toast(numProblem(D.number));step=0;renderStep();return}
@@ -1997,7 +2027,7 @@ function gradePickHTML(){
     <p class="fine">Used only to help mix games, and shown on your card as W or M. Crew confirm it.</p></div>`}
 
 /* ---------- navigation ---------- */
-const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={home:['home','Home'],feed:['feed','Feed'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v,{tab:1})});
 /* back: every page opened from another page remembers where you came from. The small arrow at the top and the phone's own
    back gesture both go one step back. Tapping a tab starts fresh; On Court / Off Court / Board swap in place. */
@@ -2014,9 +2044,9 @@ function setView(v,o){o=o||{};if(window.BAD_GUEST&&!['home','guide','faq','wth']
   if(o.tab||o.swap){if(o.tab&&v!==S.view)S.navStack=[]}
   else if(!o.back&&S.view&&S.view!==v&&(o.push||(window.event&&window.event.isTrusted&&/click|pointerup|keydown/.test(window.event.type)))){S.navStack.push(S.view);if(S.navStack.length>20)S.navStack.shift();try{history.pushState({bad:v},'')}catch(_){}}
   S.view=v;syncBack();
-  for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['home','card','guide','faq','wth','feed','player','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'feed'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -2030,7 +2060,7 @@ function render(){unboot();
   renderNow();
 }
 function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
-  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,feed:renderFeed,player:renderPlayer,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -3192,13 +3222,14 @@ function renderBoard(){
   const toggle=`<div class="chips"><button class="chip" data-bm="points" aria-pressed="${mode==='points'}">${ic('coin')}Points</button>${queueOff('badminton')?'':`<button class="chip" data-bm="rank" aria-pressed="${mode==='rank'}">${ic('board')}Rank</button>`}</div>`;
   let body;
   if(mode==='rank'){const rows=rankRows(f);
-    body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm">${esc(p.nickname)}</div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
+    body=rows.map((r,i)=>{const p=S.profiles[r.pid];return `<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${i+1}</span>${avatar(p)}<div><div class="nm"><button class="plink" data-prof="${esc(r.pid)}">${esc(p.nickname)}</button></div><div class="sub num">${r.w} won · ${r.g-r.w} lost · ${r.d>0?'+':''}${r.d} points</div></div><b class="num">${Math.round(r.w/r.g*100)}%</b></div>`}).join('')||`<div class="empty">${ic('board')}<span>Rank appears once games have scores. Add yours on the Courts tab.</span></div>`;
   }else{const rows=Object.entries(S.profiles).filter(([,p])=>f==='all'||(p.sports||['badminton']).includes(f)).map(([uid,p])=>({p,uid,st:statsFor(p.listKey),fd:isFounder(uid)})).sort((a,b)=>(a.fd-b.fd)||b.st.earned-a.st.earned||a.p.nickname.localeCompare(b.p.nickname));let rk=0;/* players first, founders always at the bottom */
     body=rows.map((r,i)=>`${r.fd&&(i===0||!rows[i-1].fd)?'<div class="sec-h fdiv"><span class="label">Founders</span></div>':''}<div class="li" style="grid-template-columns:auto auto minmax(0,1fr) auto"><span class="rank num">${r.fd?'':++rk}</span>${avatar(r.p)}
-      <div><div class="nm">${esc(r.p.nickname)} ${r.uid&&levelIdx(r.uid)>=1?`<span class="tagl">${esc(levelFor(r.uid,badgeCount(r.uid)).k)}</span>`:''}${r.p.sample?' <span class="tagl">Sample</span>':''}</div><div class="sub ic-row" style="gap:6px">${(r.p.sports||['badminton']).map(s=>ic(SPORTS[s]?.icon||'badminton')).join('')}<span>${esc(typeOf(r.p)||'Player')}${r.st.sessions?` · ${r.st.sessions} session${r.st.sessions===1?'':'s'}`:''}</span></div></div>
+      <div><div class="nm">${r.uid?`<button class="plink" data-prof="${esc(r.uid)}">${esc(r.p.nickname)}</button>`:esc(r.p.nickname)} ${r.uid&&levelIdx(r.uid)>=1?`<span class="tagl">${esc(levelFor(r.uid,badgeCount(r.uid)).k)}</span>`:''}${r.p.sample?' <span class="tagl">Sample</span>':''}</div><div class="sub ic-row" style="gap:6px">${(r.p.sports||['badminton']).map(s=>ic(SPORTS[s]?.icon||'badminton')).join('')}<span>${esc(typeOf(r.p)||'Player')}${r.st.sessions?` · ${r.st.sessions} session${r.st.sessions===1?'':'s'}`:''}</span></div></div>
       <b class="num">${r.fd?'<span class="inf">∞</span>':r.st.earned}</b></div>`).join('')||`<div class="empty">${ic('board')}<span>No one on the board yet. You could be first.</span></div>`}
   $('v-board').innerHTML=`${courtSwitch('board')}<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'}</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;
   bindSwitch($('v-board'));
+  $('v-board').querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
   document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.bf;renderBoard()});
   document.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{S.boardMode=b.dataset.bm;renderBoard()});
 }
@@ -4498,6 +4529,108 @@ function igHTML(){return `<a class="igcard" href="${IG_URL}" target="_blank" rel
 /* visitors read the Home photos and videos with the public connection (config/home is public in the security rules) */
 function loadHomeMediaPublic(){const db=window.badPublicDb;if(!db||S.homeMedia)return;db.doc('config/home').get().then(d=>{S.homeMedia=d.exists?d.data():{};if(S.view==='home'||S.view==='wth')renderNow()}).catch(()=>{})}
 
+/* ---------- the Feed: photos, words and props from the community ----------
+   Approved members only (the security rules enforce it). Posts go up straight away. One emoji reaction per person per post,
+   one report per person; owners delete their own posts, admins hide or delete anything.
+   Photos are shrunk on the phone and kept in their own documents (feedimg), loaded only when a post scrolls into view. */
+const FEED_EMO=['🔥','🧱','🤝','😂','🏸'];
+const PROPS=[['🔥','Smash of the night'],['🧱','The Wall'],['🤝','Good sport'],['😂','Vibes'],['🏸','Clutch']];
+const propLabel=e=>(PROPS.find(p=>p[0]===e)||['',''])[1];
+S.feed=S.feed||{};S.feedImg=S.feedImg||{};S.fDraft=S.fDraft||{text:'',photos:[],dept:''};
+const ago=iso=>{const t=Date.parse(iso||'');if(!t)return '';const m=Math.round((Date.now()-t)/60000);if(m<1)return 'just now';if(m<60)return m+'m';const h=Math.round(m/60);if(h<24)return h+'h';const d=Math.round(h/24);if(d<7)return d+'d';return new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short'})};
+const pname=uid=>(S.profiles[uid]||{}).nickname||'A BAD member';
+const plink=uid=>`<button class="plink" data-prof="${esc(uid)}">${esc(pname(uid))}</button>`;
+function feedList(){return Object.entries(S.feed).filter(([,p])=>!p.hidden||S.canEdit).sort((a,b)=>String(b[1].at||'').localeCompare(String(a[1].at||'')))}
+
+function postHTML(id,p){const mine=p.uid===S.uid,r=p.r||{},myR=r[S.uid],rep=Object.keys(p.rep||{}).length;
+  const counts=FEED_EMO.map(e=>[e,Object.values(r).filter(x=>x===e).length]);
+  const menu=`<details class="pmenu"><summary aria-label="More">${ic('dots')}</summary><div class="pmenu-in">
+    ${mine?`<button data-fdel="${esc(id)}">Delete post</button>`:`<button data-frep="${esc(id)}" ${(p.rep||{})[S.uid]?'disabled':''}>${(p.rep||{})[S.uid]?'Reported':'Report'}</button>`}
+    ${S.canEdit?`<button data-fhide="${esc(id)}">${p.hidden?'Show again':'Hide'}</button>${mine?'':`<button data-fdel="${esc(id)}">Delete</button>`}`:''}</div></details>`;
+  const head=p.kind==='props'
+    ?`<div class="fp-props"><span class="fp-emo" aria-hidden="true">${esc(p.e||'')}</span><div><div class="nm">${plink(p.uid)} gave ${plink(p.to)} props</div><div class="sub">${esc(propLabel(p.e))} · ${esc(ago(p.at))}</div></div>${menu}</div>`
+    :`<div class="fp-head">${avatar(S.profiles[p.uid],'')}<div><div class="nm">${plink(p.uid)}</div><div class="sub">${esc(ago(p.at))}${p.dept&&SPORTS[p.dept]?' · '+esc(SPORTS[p.dept].club):''}</div></div>${menu}</div>`;
+  const n=p.n||0;
+  const pics=n?`<div class="fp-pics n${n}">${Array.from({length:n},(_,i)=>{const k=id+'-'+i,src=S.feedImg[k];return `<figure data-fimg="${esc(k)}">${src?`<img src="${esc(src)}" alt="" decoding="async">`:''}</figure>`}).join('')}</div>`:'';
+  return `<article class="fpost${p.hidden?' hid':''}" data-post="${esc(id)}">${head}
+    ${p.hidden?'<span class="tagl warn">Hidden from members</span>':''}${S.canEdit&&rep?`<span class="tagl warn">Reported by ${rep}</span>`:''}
+    ${p.text?`<p class="fp-text">${esc(p.text)}</p>`:''}${pics}
+    <div class="fp-react" role="group" aria-label="React">${counts.map(([e,c])=>`<button data-freact="${esc(id)}" data-e="${e}" aria-pressed="${myR===e}" aria-label="React ${e}">${e}${c?`<span class="num">${c}</span>`:''}</button>`).join('')}</div></article>`}
+
+function composerHTML(){const d=S.fDraft;
+  return `<section class="fcompose">${avatar(myProfile(),'')}<div class="fc-in">
+    <label for="f-text" class="sr">Share something</label><textarea id="f-text" rows="2" maxlength="500" placeholder="Share a moment from BAD…">${esc(d.text)}</textarea>
+    ${d.photos.length?`<div class="fc-thumbs">${d.photos.map((u,i)=>`<div class="fc-th"><img src="${esc(u)}" alt=""><button class="rmx" data-frm="${i}" aria-label="Remove photo ${i+1}">${ic('x')}</button></div>`).join('')}</div>`:''}
+    <div class="fc-bar"><label class="btn ghost sm fc-add${d.photos.length>=4?' off':''}">${ic('photo')}Photos<input type="file" id="f-files" accept="image/*" multiple hidden ${d.photos.length>=4?'disabled':''}></label>
+      <select id="f-dept" aria-label="Department"><option value="">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}" ${d.dept===k?'selected':''}>${esc(SPORTS[k].club)}</option>`).join('')}</select>
+      <button class="btn sm" id="f-go">Post</button></div></div></section>`}
+
+function renderFeed(){const el=$('v-feed');if(!el)return;
+  if(notMember()){el.innerHTML=`<div class="hero"><span class="label">Feed</span><h2>The community, live.</h2></div><div class="empty">${ic('clock')}<span>The Feed opens once your card is approved.</span></div>`;return}
+  const L=feedList();
+  el.innerHTML=`<div class="hero"><span class="label">Feed</span><h2>The community, live.</h2><p class="muted">Photos, shout-outs and props from BAD. Be kind, be BAD.</p></div>
+    ${myProfile()?composerHTML():''}
+    <div class="flist">${L.length?L.map(([id,p])=>postHTML(id,p)).join(''):`<div class="empty">${ic('photo')}<span>Nothing here yet. Post the first photo from your last session.</span></div>`}</div>`;
+  bindFeed(el)}
+
+let feedIO=null;
+function loadFeedImg(k){if(S.feedImg[k]!==undefined)return;S.feedImg[k]='';S.db.doc('feedimg/'+k).get().then(d=>{if(!d.exists)return;S.feedImg[k]=d.data().d;document.querySelectorAll(`[data-fimg="${CSS.escape(k)}"]`).forEach(f=>{f.innerHTML=`<img src="${S.feedImg[k]}" alt="" decoding="async">`})}).catch(()=>{delete S.feedImg[k]})}
+function bindFeed(el){
+  if(feedIO)feedIO.disconnect();
+  const figs=el.querySelectorAll('[data-fimg]');
+  if('IntersectionObserver' in window){feedIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){loadFeedImg(e.target.dataset.fimg);feedIO.unobserve(e.target)}}),{rootMargin:'400px'});figs.forEach(f=>{if(!S.feedImg[f.dataset.fimg])feedIO.observe(f)})}
+  else figs.forEach(f=>loadFeedImg(f.dataset.fimg));
+  el.querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
+  const t=$('f-text');if(t)t.oninput=()=>{S.fDraft.text=t.value};
+  const dp=$('f-dept');if(dp)dp.onchange=()=>{S.fDraft.dept=dp.value};
+  const fi=$('f-files');if(fi)fi.onchange=async()=>{const fs=[...fi.files].slice(0,4-S.fDraft.photos.length);for(const f of fs){try{S.fDraft.photos.push(await shrinkFeed(f))}catch(_){toast("That photo couldn't be read.")}}renderFeed();const t2=$('f-text');if(t2)t2.focus()};
+  el.querySelectorAll('[data-frm]').forEach(b=>b.onclick=()=>{S.fDraft.photos.splice(+b.dataset.frm,1);renderFeed()});
+  const go=$('f-go');if(go)go.onclick=postFeed;
+  el.querySelectorAll('[data-freact]').forEach(b=>b.onclick=()=>reactFeed(b.dataset.freact,b.dataset.e));
+  el.querySelectorAll('[data-frep]').forEach(b=>b.onclick=async()=>{try{await S.db.doc('feed/'+b.dataset.frep).update({['rep.'+S.uid]:true});toast('Thanks. The crew will take a look.')}catch(e){toast("Sorry, that didn't go through.")}});
+  el.querySelectorAll('[data-fhide]').forEach(b=>b.onclick=async()=>{const id=b.dataset.fhide;try{await S.db.doc('feed/'+id).update({hidden:!S.feed[id].hidden})}catch(e){toast(e&&e.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't save.")}});
+  el.querySelectorAll('[data-fdel]').forEach(b=>b.onclick=async()=>{const id=b.dataset.fdel;if(S.fDelArm!==id){S.fDelArm=id;b.textContent='Tap again to delete';return}S.fDelArm=null;
+    try{const n=(S.feed[id]||{}).n||0;for(let i=0;i<n;i++)await S.db.doc('feedimg/'+id+'-'+i).delete().catch(()=>{});await S.db.doc('feed/'+id).delete();toast('Post deleted.')}catch(e){toast("Sorry, that didn't delete.")}});
+}
+/* feed photos: 1080px on the long side, then smaller until each fits comfortably in its own document */
+function shrinkFeed(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{let w=1080,q=.78,out='';
+  for(let t=0;t<6;t++){const k=Math.min(1,w/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<240000)break;w=Math.round(w*.85);q=Math.max(.6,q-.05)}
+  URL.revokeObjectURL(u);res(out)};im.onerror=rej;im.src=u})}
+async function postFeed(){const d=S.fDraft,text=(d.text||'').trim().slice(0,500);if(!text&&!d.photos.length){toast('Write something or add a photo first.');return}
+  const b=$('f-go');b.disabled=true;b.textContent='Posting…';
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6),photos=d.photos.slice(0,4);
+  try{for(let i=0;i<photos.length;i++){await S.db.doc('feedimg/'+id+'-'+i).set({uid:S.uid,post:id,d:photos[i]});S.feedImg[id+'-'+i]=photos[i]}
+    const post={uid:S.uid,kind:'post',at:new Date().toISOString(),n:photos.length};if(text)post.text=text;if(d.dept)post.dept=d.dept;
+    await S.db.doc('feed/'+id).set(post);S.fDraft={text:'',photos:[],dept:''};toast('Posted.');renderFeed()}
+  catch(e){b.disabled=false;b.textContent='Post';toast(e&&e.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't post. Try a smaller photo?")}}
+async function reactFeed(id,e){const p=S.feed[id];if(!p)return;const cur=(p.r||{})[S.uid],FV=firebase.firestore.FieldValue;
+  p.r=p.r||{};if(cur===e)delete p.r[S.uid];else p.r[S.uid]=e;if(S.view==='feed')renderFeed();
+  try{await S.db.doc('feed/'+id).update({['r.'+S.uid]:cur===e?FV.delete():e})}catch(err){toast("Sorry, that didn't save.")}}
+
+/* ---------- player profiles ---------- */
+function openProfile(uid){if(!uid)return;S.profUid=uid;setView('player',{push:1})}
+function profStats(uid){let played=0;const b=(S.bookings[uid]||{}).s||{};for(const [sid,x] of Object.entries(b)){const s=S.sessions[sid];if(s&&sessStart(s)<Date.now()&&!x.out)played++}
+  const props={};Object.values(S.feed).forEach(p=>{if(p.kind==='props'&&p.to===uid&&!p.hidden)props[p.e]=(props[p.e]||0)+1});return {played,props}}
+function renderPlayer(){const el=$('v-player');if(!el)return;const uid=S.profUid,p=S.profiles[uid];
+  if(!p||notMember()){el.innerHTML=`<div class="empty">${ic('users')}<span>This profile isn't available.</span></div>`;return}
+  const me=uid===S.uid,st=profStats(uid),lvl=typeof levelFor==='function'?levelFor(uid):null,og=typeof first100No==='function'?first100No(uid):0;
+  const depts=(p.sports||[]).filter(k=>SPORTS[k]).map(k=>`<span class="tagl">${ic(SPORTS[k].icon)}${esc(SPORTS[k].club)}</span>`).join('');
+  const posts=feedList().filter(([,x])=>x.uid===uid&&x.kind==='post').slice(0,6);
+  const today=new Date().toISOString().slice(0,10).replace(/-/g,''),given=Object.keys(S.feed).some(k=>k==='p_'+S.uid+'_'+uid+'_'+today);
+  el.innerHTML=`<section class="prof">${avatar(p,p.listKey)}<div><h2 class="prof-n">${esc(p.nickname)}</h2>
+      <div class="sub">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)).padStart(2,'0'):''}${og?` · OG 100 #${og}`:''}${lvl&&lvl.name?` · ${esc(lvl.name)}`:''}</div></div></section>
+    ${p.bio?`<p class="prof-bio">${esc(p.bio)}</p>`:me?`<p class="fine">Add a short bio in My BAD so people know who you are.</p>`:''}
+    ${depts?`<div class="row prof-d">${depts}</div>`:''}
+    <div class="tiles prof-tiles"><div class="tile"><b class="num">${st.played}</b><span class="label">Sessions</span></div><div class="tile"><b class="num">${Object.values(st.props).reduce((a,b)=>a+b,0)}</b><span class="label">Props</span></div><div class="tile"><b class="num">${posts.length}</b><span class="label">Posts</span></div></div>
+    ${Object.keys(st.props).length?`<section class="hsec"><h3 class="ah">Props</h3><div class="row">${PROPS.filter(([e])=>st.props[e]).map(([e,l])=>`<span class="tagl">${e} ${esc(l)} <b class="num">${st.props[e]}</b></span>`).join('')}</div></section>`:''}
+    ${me?'':`<section class="hsec"><h3 class="ah">Give props</h3>${given?`<p class="fine">You gave ${esc(p.nickname)} props today. You can give them more tomorrow.</p>`:`<p class="fine">Once a day per player. It shows in the Feed.</p><div class="propsel">${PROPS.map(([e,l])=>`<button data-gprop="${e}">${e}<span>${esc(l)}</span></button>`).join('')}</div>`}</section>`}
+    ${posts.length?`<section class="hsec"><h3 class="ah">Posts</h3><div class="flist">${posts.map(([id,x])=>postHTML(id,x)).join('')}</div></section>`:''}`;
+  bindFeed(el);
+  el.querySelectorAll('[data-gprop]').forEach(b=>b.onclick=async()=>{const e=b.dataset.gprop,d=+today,id='p_'+S.uid+'_'+uid+'_'+d;b.disabled=true;
+    try{const doc={uid:S.uid,kind:'props',to:uid,e,d,at:new Date().toISOString()};await S.db.doc('feed/'+id).set(doc);S.feed[id]=doc;toast(`${e} Props sent to ${p.nickname}.`);renderPlayer()}
+    catch(err){b.disabled=false;toast(err&&err.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't go through.")}});
+}
+
 /* ---------- brand: official BAD logos (BAD ASSETS folder, files 03 white / 04 black) built in; brand fonts by upload ---------- */
 function applyBrand(){
   const b=S.brand||{};
@@ -4532,7 +4665,7 @@ function bindBrand(){
 S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals={};
 (async function boot(){
   /* links straight to a tab: …/#shop, #quests, #play, #club, #board, #courts (used by short links like the Volume II one) */
-  {const v=(location.hash||'').match(/^#(home|guide|faq|wth|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
+  {const v=(location.hash||'').match(/^#(home|feed|guide|faq|wth|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','faq','wth','feed','player','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
   render();
   const C=window.claude;if(!C||!C.use){S.loaded=true;render();return}
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
@@ -4588,6 +4721,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.member)db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
+  if(S.member)db.collection('feed').orderBy('at','desc').limit(80).onSnapshot(s=>{S.feed=map(s);if(['feed','player'].includes(S.view))render()},()=>{});
   db.doc('config/home').onSnapshot(d=>{S.homeMedia=d.exists?d.data():{};if(['home','wth'].includes(S.view))render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};S.siteLoaded=true;render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});

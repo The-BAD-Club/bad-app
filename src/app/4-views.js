@@ -1,5 +1,5 @@
 /* ---------- navigation ---------- */
-const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={home:['home','Home'],feed:['feed','Feed'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v,{tab:1})});
 /* back: every page opened from another page remembers where you came from. The small arrow at the top and the phone's own
    back gesture both go one step back. Tapping a tab starts fresh; On Court / Off Court / Board swap in place. */
@@ -16,9 +16,9 @@ function setView(v,o){o=o||{};if(window.BAD_GUEST&&!['home','guide','faq','wth']
   if(o.tab||o.swap){if(o.tab&&v!==S.view)S.navStack=[]}
   else if(!o.back&&S.view&&S.view!==v&&(o.push||(window.event&&window.event.isTrusted&&/click|pointerup|keydown/.test(window.event.type)))){S.navStack.push(S.view);if(S.navStack.length>20)S.navStack.shift();try{history.pushState({bad:v},'')}catch(_){}}
   S.view=v;syncBack();
-  for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['home','card','guide','faq','wth','feed','player','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'feed'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -32,7 +32,7 @@ function render(){unboot();
   renderNow();
 }
 function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
-  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,feed:renderFeed,player:renderPlayer,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
