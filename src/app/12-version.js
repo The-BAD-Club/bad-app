@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.60';
+const APP_VERSION='0.61';
 const CHANGES=[
+  ['0.61','2026-11-05','Calmer text spacing across the app (one spacing scale, more room between sections, easier-to-read paragraphs); the footer is three tidy lines (The BAD Club LLC, licence number, app version) with Sign out on the right; a small back arrow at the top takes you one step back, and the phone back gesture does the same; WTH is BAD is now About BAD'],
   ['0.60','2026-11-05','BAD X (short for BAD experience): a new Side Quest department for parties and nights out, next to Taste BADs; Side Quests can be filtered by department, and Add a Side Quest uses the one you have open'],
   ['0.59','2026-11-05','BAD × NOMANI agenda: tasting the new menu and creating content'],
   ['0.58','2026-11-05','BAD × NOMANI: a better agenda'],

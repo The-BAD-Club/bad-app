@@ -17,7 +17,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const sessions=next.length?`<section class="hsec"><h3 class="ah">Coming up</h3><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
-    <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','WTH is BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
+    <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
     ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
@@ -50,14 +50,14 @@ window.badGuestMode=function(){loadHomeMediaPublic();
     db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome()}).catch(()=>{})}
 const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;setView('home');if(want&&window.badJoin)window.badJoin(want)};
 
-/* ---------- FAQs, WTH is BAD, and the photos, videos and Instagram on Home ---------- */
+/* ---------- FAQs, About BAD, and the photos, videos and Instagram on Home ---------- */
 const STORY_HTML=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
       <p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p>
       <p>BAD is still a passion project, a community built like a brand. It started with badminton and now plays volleyball, pickleball, basketball, runs and dances too.</p>`;
 function faqList(){const c=PS();return [
   ['About BAD',[
     ['What is BAD?','The BAD Club is a sports community in Dubai. We run weekly sessions for badminton, volleyball, pickleball, basketball, running and dance, plus food and drink collabs we call Taste BADs.'],
-    ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in WTH is BAD.'],
+    ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in About BAD.'],
     ['What does BAD stand for?','BAD came from BADminton. Bold. Agile. Defiant. came later, as something to live by: bold enough to try something different, agile enough to adapt as we go, and defiant enough to question the norm.'],
     ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
     ['Is BAD a registered company?','Yes. The BAD Club LLC, License No. 2649469.01.'],
@@ -78,14 +78,14 @@ function faqList(){const c=PS();return [
   ['Anything else?',[
     ['How do I reach you?','WhatsApp us on '+phoneFmt(BAD_PHONE)+', email '+BAD_EMAIL+', send a message on Instagram at @thebad.club, or speak to any of the crew at a session.']]]]}
 function renderFaq(){const el=$('v-faq');if(!el)return;
-  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">FAQs</span><h2>Good questions.</h2><p class="muted">Everything people ask before their first BAD session.</p></div>
+  el.innerHTML=`<div class="hero"><span class="label">FAQs</span><h2>Good questions.</h2><p class="muted">Everything people ask before their first BAD session.</p></div>
   ${faqList().map(([h,qs])=>`<section class="hsec"><h3 class="ah">${esc(h)}</h3><div class="faq">${qs.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>`).join('')}
   ${contactHTML(true)}
   <div class="talkrow">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="guide">${ic('guide')}Read the Guide</button></div>`;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin())}
 function renderWth(){const el=$('v-wth');if(!el)return;
-  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">WTH is BAD</span><h2>We were all BAD players once.</h2></div>
+  el.innerHTML=`<div class="hero"><span class="label">About BAD</span><h2>We were all BAD players once.</h2></div>
   ${homePhotosHTML(true)}<section class="hsec story">${STORY_HTML}</section>
   <div class="row">${window.BAD_GUEST?`<button class="btn" data-hjoin="1">${ic('card')}Join BAD</button>`:''}<button class="btn ghost" data-goview="faq">FAQs</button><a class="btn ghost" href="${IG_URL}" target="_blank" rel="noopener">${ic('ig')}@thebad.club</a></div>`;
   el.querySelectorAll('[data-goview]').forEach(b=>b.onclick=()=>setView(b.dataset.goview));

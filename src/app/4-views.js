@@ -1,12 +1,21 @@
 /* ---------- navigation ---------- */
 const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
-document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v)});
+document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v,{tab:1})});
+/* back: every page opened from another page remembers where you came from. The small arrow at the top and the phone's own
+   back gesture both go one step back. Tapping a tab starts fresh; On Court / Off Court / Board swap in place. */
+S.navStack=[];
+function goBack(){if(!S.navStack.length)return setView('home',{tab:1});const p=S.navStack.pop();setView(p,{back:1})}
+window.addEventListener('popstate',()=>{if(S.navStack.length)goBack();else syncBack()});
+function syncBack(){const b=$('backbtn');if(b)b.hidden=!S.navStack.length}
+(function(){const b=$('backbtn');if(b)b.onclick=()=>{try{history.back()}catch(_){goBack()}}})();
 /* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
-function setView(v){if(window.BAD_GUEST&&!['home','guide','faq','wth'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+function setView(v,o){o=o||{};if(window.BAD_GUEST&&!['home','guide','faq','wth'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
   /* signed in but no card or guest pass yet: Home and registration only */
   if(noCard()&&!['home','card','create','guide','faq','wth'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
   if(notMember()&&MEMBER_VIEWS.includes(v)){toast(underReview()?'This opens once your card is approved. You can still book sessions in Play.':'This is for BAD members. You can still book sessions in Play.');v=v==='board'?'play':'home'}
-  S.view=v;
+  if(o.tab||o.swap){if(o.tab&&v!==S.view)S.navStack=[]}
+  else if(!o.back&&S.view&&S.view!==v&&(o.push||(window.event&&window.event.isTrusted&&/click|pointerup|keydown/.test(window.event.type)))){S.navStack.push(S.view);if(S.navStack.length>20)S.navStack.shift();try{history.pushState({bad:v},'')}catch(_){}}
+  S.view=v;syncBack();
   for(const id of ['home','card','guide','faq','wth','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
   const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play'}[v]||v;
@@ -115,7 +124,7 @@ async function dropGuest(sid,gi,late){const now=new Date().toISOString();
   try{await saveBooking(sid,'guest',o=>{const g=[...(o.guests||[])];if(late)g[gi]={...g[gi],out:now};else g.splice(gi,1);return {...o,guests:g}});pendingOut=null;toast(late?'Guest removed. The fee is noted under your name.':'Guest removed.')}catch(e){toast("Sorry, that didn't save.")}}
 
 const courtSwitch=v=>`<div class="seg2" role="group" aria-label="On Court, Off Court or the Board"><button data-oc="play" aria-pressed="${v==='play'}">On Court</button><button data-oc="quests" aria-pressed="${v==='quests'}">Off Court</button>${notMember()?'':`<button data-oc="board" aria-pressed="${v==='board'}">Board</button>`}</div>`;
-const bindSwitch=el=>el.querySelectorAll('[data-oc]').forEach(b=>b.onclick=()=>setView(b.dataset.oc));
+const bindSwitch=el=>el.querySelectorAll('[data-oc]').forEach(b=>b.onclick=()=>setView(b.dataset.oc,{swap:1}));
 function renderPlay(){
   const el=$('v-play'),me=myProfile();
   const used=[...new Set(Object.values(S.sessions).map(s=>s.sport||'badminton'))].filter(k=>SPORTS[k]&&!isSide(k));if(isSide(S.sport))S.sport='all';
@@ -417,7 +426,7 @@ function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclic
 function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
   const tabs=[['home','Home','Club news, what’s on, the weekly sessions, FAQs and community photos. Open to everyone.'],['card','My BAD','Your player card, your sessions, payments, points and BADges.'],['play','Play','On Court: find a session and join it in one tap. Off Court: Side Quests and collabs. Board: points and rankings, players first.'],['courts','Courts','On the day: check in, see your court and who’s next. For approved members.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
   const steps=[['card','Make your card','Your name, number, photo and the sports you play. It takes a minute.'],['play','Join a session','Pick one in Play and tap “Count me in”. Choose how you’ll pay.'],['check','Check in when you arrive','Scan the QR code at the venue, or ask an admin. Games go in order of arrival.'],['court','Play','Courts shows your court, who’s next and when you’re up. The rotation keeps everyone playing, and you play with anyone.'],['star','Log your score','After a game, one player enters the score and someone from the other team confirms.'],['coin','Collect points and BADges','Every session earns points. BADges come from the founders and crew.']];
-  el.innerHTML=`<button class="backlink" data-goview="home">${ic('arrow')}Home</button><div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
+  el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">The BAD App is your club card, your sign-ups and your rewards in one place. Here’s everything you need, in order.</p></div>
   <details class="hsec how story"><summary class="ah">Why we made BAD</summary><p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p><p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p></details>
   <section class="hsec"><h3 class="ah">Getting started</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
   <section class="hsec"><h3 class="ah">House rules</h3>${rulesHTML()}</section>
