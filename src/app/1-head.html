@@ -964,6 +964,26 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
 #v-feed,#v-player{gap:24px}
 .prof-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px}.prof-tiles .tile{min-width:0}
 .tabs button[data-v=feed]{order:0}
+.shov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:grid;align-items:end;justify-items:center}
+.shcard{width:100%;max-width:480px;background:var(--bg);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));display:grid;gap:16px;max-height:88vh;overflow:auto}
+@media(min-width:620px){.shov{align-items:center}.shcard{border-radius:24px}}
+.sh-h{display:flex;justify-content:space-between;align-items:center;gap:12px}.sh-x{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:999px;color:var(--muted)}
+.sh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.sh-o{display:grid;justify-items:center;gap:8px;padding:16px 8px;border:1px solid var(--line);border-radius:16px;background:none;color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;text-decoration:none;cursor:pointer;text-align:center}.sh-o .i{width:24px;height:24px}.sh-o:hover{border-color:var(--ink)}
+.sh-prev{margin:0;white-space:pre-wrap;font:inherit;font-size:.82rem;line-height:1.5;color:var(--muted);background:var(--soft,#111);border-radius:14px;padding:14px;max-height:180px;overflow:auto}
+.sesshero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}.sesshero h2{margin:4px 0 0}
+.sessinfo{display:grid;gap:10px}.si{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;line-height:1.45}.si a{color:inherit}
+#v-sess{gap:24px}
+.prof-card{max-width:420px;width:100%;margin:0 auto}
+.prof-card+.prof .av{display:none}.prof-card+.prof{grid-template-columns:1fr}
+.sesshero .dt{width:72px;border:1px solid var(--line);border-radius:14px;display:grid;justify-items:center;padding:10px 0 12px}.sesshero .dt small{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--muted)}.sesshero .dt b{font-family:var(--f-serif);font-weight:400;font-size:2.4rem;line-height:1}
+.sess.flash{animation:sflash 1.6s ease}@keyframes sflash{0%,40%{box-shadow:0 0 0 2px var(--ink)}100%{box-shadow:0 0 0 0 transparent}}
+#home-feed .fcompose{margin-top:4px}
+.homelinks.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.bd{display:grid;justify-items:start;gap:4px;padding:14px;border:1px solid var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0}
+.bd:hover{border-color:var(--ink)}.bd .av{margin-bottom:6px}.bd-n{font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bd-s{font-size:.78rem;color:var(--muted)}.bd-i{display:flex;gap:6px;color:var(--muted);margin-top:2px}.bd-i .i{width:15px;height:15px}
+#v-baddies{gap:20px}
 </style>
 
 <div class="wrap">
@@ -973,7 +993,6 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
     <button class="themebtn" id="theme" type="button" aria-label="Switch to light theme" title="Light or dark"><svg class="sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <nav class="tabs" aria-label="Sections">
       <button data-v="home"></button>
-      <button data-v="feed"></button>
       <button data-v="card"></button>
       <button data-v="play"></button>
       <button data-v="courts"></button>
@@ -985,7 +1004,8 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
   <section class="view" id="v-home" hidden></section>
   <section class="view" id="v-card"></section>
   <section class="view" id="v-guide" hidden></section>
-  <section class="view" id="v-feed" hidden></section>
+  <section class="view" id="v-sess" hidden></section>
+  <section class="view" id="v-baddies" hidden></section>
   <section class="view" id="v-player" hidden></section>
   <section class="view" id="v-faq" hidden></section>
   <section class="view" id="v-wth" hidden></section>

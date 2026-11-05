@@ -15,7 +15,7 @@ head=''.join(f'<script src="{FB}{m}"></script>\n' for m in ['firebase-app-compat
 head+='<script src="config.js"></script>\n'
 js="".join(open(SRC+f).read()+"\n" for f in ['0-logo.js','0-placeholders.js'])
 js+=open('src/fb-shim.js').read()+"\n"
-js+="".join(open(SRC+f).read()+"\n" for f in ['12-version.js','2-core.js','11-points.js','3-create.js','4-views.js','13-badmath.js','8-courts.js','14-scores.js','15-sports.js','17-board.js','9-checkin.js','5-admin.js','10-shop.js','16-home.js','18-feed.js','6-brand.js','7-boot.js'])
+js+="".join(open(SRC+f).read()+"\n" for f in ['12-version.js','2-core.js','11-points.js','3-create.js','4-views.js','13-badmath.js','8-courts.js','14-scores.js','15-sports.js','17-board.js','9-checkin.js','5-admin.js','10-shop.js','16-home.js','18-feed.js','19-share.js','6-brand.js','7-boot.js'])
 doc=h if h.lstrip().lower().startswith('<!doctype') else '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#000000">\n'+h
 out=doc+"\n"+head+"<script>\n"+js+"</script>\n"
 open('index.html','w').write(out)

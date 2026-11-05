@@ -970,6 +970,26 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
 #v-feed,#v-player{gap:24px}
 .prof-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px}.prof-tiles .tile{min-width:0}
 .tabs button[data-v=feed]{order:0}
+.shov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:grid;align-items:end;justify-items:center}
+.shcard{width:100%;max-width:480px;background:var(--bg);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));display:grid;gap:16px;max-height:88vh;overflow:auto}
+@media(min-width:620px){.shov{align-items:center}.shcard{border-radius:24px}}
+.sh-h{display:flex;justify-content:space-between;align-items:center;gap:12px}.sh-x{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:999px;color:var(--muted)}
+.sh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.sh-o{display:grid;justify-items:center;gap:8px;padding:16px 8px;border:1px solid var(--line);border-radius:16px;background:none;color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;text-decoration:none;cursor:pointer;text-align:center}.sh-o .i{width:24px;height:24px}.sh-o:hover{border-color:var(--ink)}
+.sh-prev{margin:0;white-space:pre-wrap;font:inherit;font-size:.82rem;line-height:1.5;color:var(--muted);background:var(--soft,#111);border-radius:14px;padding:14px;max-height:180px;overflow:auto}
+.sesshero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}.sesshero h2{margin:4px 0 0}
+.sessinfo{display:grid;gap:10px}.si{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;line-height:1.45}.si a{color:inherit}
+#v-sess{gap:24px}
+.prof-card{max-width:420px;width:100%;margin:0 auto}
+.prof-card+.prof .av{display:none}.prof-card+.prof{grid-template-columns:1fr}
+.sesshero .dt{width:72px;border:1px solid var(--line);border-radius:14px;display:grid;justify-items:center;padding:10px 0 12px}.sesshero .dt small{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--muted)}.sesshero .dt b{font-family:var(--f-serif);font-weight:400;font-size:2.4rem;line-height:1}
+.sess.flash{animation:sflash 1.6s ease}@keyframes sflash{0%,40%{box-shadow:0 0 0 2px var(--ink)}100%{box-shadow:0 0 0 0 transparent}}
+#home-feed .fcompose{margin-top:4px}
+.homelinks.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.bd{display:grid;justify-items:start;gap:4px;padding:14px;border:1px solid var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0}
+.bd:hover{border-color:var(--ink)}.bd .av{margin-bottom:6px}.bd-n{font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bd-s{font-size:.78rem;color:var(--muted)}.bd-i{display:flex;gap:6px;color:var(--muted);margin-top:2px}.bd-i .i{width:15px;height:15px}
+#v-baddies{gap:20px}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1148,6 +1168,7 @@ footer.sign .signout{grid-column:2!important;grid-row:1!important;justify-self:e
 footer.sign .ver{grid-column:1/-1!important;grid-row:3!important;justify-self:start!important;margin-top:10px;font-size:.6rem!important;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);opacity:.7;line-height:1.4}
 footer.sign .sig-line{display:none}
 .court .court-h{margin-bottom:6px}
+.homelinks.three button{padding:12px 10px;gap:8px;white-space:nowrap;justify-content:center}@media(max-width:420px){.homelinks.three button .i{display:none}}
 
 </style>
 
@@ -1159,7 +1180,6 @@ footer.sign .sig-line{display:none}
     <button class="themebtn" id="theme" type="button" aria-label="Switch to light theme" title="Light or dark"><svg class="sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <nav class="tabs" aria-label="Sections">
       <button data-v="home"></button>
-      <button data-v="feed"></button>
       <button data-v="card"></button>
       <button data-v="play"></button>
       <button data-v="courts"></button>
@@ -1171,7 +1191,8 @@ footer.sign .sig-line{display:none}
   <section class="view" id="v-home" hidden></section>
   <section class="view" id="v-card"></section>
   <section class="view" id="v-guide" hidden></section>
-  <section class="view" id="v-feed" hidden></section>
+  <section class="view" id="v-sess" hidden></section>
+  <section class="view" id="v-baddies" hidden></section>
   <section class="view" id="v-player" hidden></section>
   <section class="view" id="v-faq" hidden></section>
   <section class="view" id="v-wth" hidden></section>
@@ -1301,8 +1322,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.62';
+const APP_VERSION='0.63';
 const CHANGES=[
+  ['0.63','2026-11-06','The Feed moved onto Home under Coming up (no extra tab). Player profiles show their card. Every session can be shared: WhatsApp with all the details and a link, an Instagram Story image with a QR code, or a copied link. Each session has its own page anyone can open; visitors get Join BAD, members get Book in Play. Baddies: everyone in the community in one place (Home, or See all baddies on the Board), with search and a department filter; tap anyone to see their card'],
   ['0.62','2026-11-05','The Feed: its own tab for approved members. Post photos (up to 4) and words, tag a department, react with one BAD emoji, report a post; owners delete their own, admins hide or delete anything. Player profiles: tap a name on the Board or in the Feed to see their card, bio, departments, sessions, props and posts. Props: give a player 🔥 🧱 🤝 😂 or 🏸 once a day from their profile; it shows in the Feed. Short bio on your card. Needs the new security rules'],
   ['0.61','2026-11-05','Calmer text spacing across the app (one spacing scale, more room between sections, easier-to-read paragraphs); the footer is three tidy lines (The BAD Club LLC, licence number, app version) with Sign out on the right; a small back arrow at the top takes you one step back, and the phone back gesture does the same; WTH is BAD is now About BAD'],
   ['0.60','2026-11-05','BAD X (short for BAD experience): a new Side Quest department for parties and nights out, next to Taste BADs; Side Quests can be filtered by department, and Add a Side Quest uses the one you have open'],
@@ -1414,6 +1436,7 @@ const P={
  taste:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M8 3v6"/><path d="M17 21V3c-2 1-3 4-3 8h3"/>',
  snd:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l4 6M21 9l-4 6"/>',sndon:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
  feed:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 14l4-4 5 5M13 13l2-2 5 5"/><circle cx="15.5" cy="8.5" r="1.3"/>',dots:'<circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/>',
+ cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',share:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/>',
  spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
  quest:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  bag:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
@@ -1598,7 +1621,7 @@ const isGuestPassP=p=>!!p&&!!p.memReq&&p.memReq.type===GUEST_PASS;
 function approvalOf(uid){const a=(S.approvals||{})[uid];return a?(a.ok===true?'ok':'no'):preApproval(S.profiles[uid])?'ok':'review'}
 const notMember=()=>!!S.uid&&!S.member&&!window.BAD_GUEST;
 const underReview=()=>notMember()&&!!myProfile()&&!isGuestPass(S.uid)&&!(S.myApproval&&S.myApproval.ok===false);
-const MEMBER_VIEWS=['courts','club','board','feed','player'];
+const MEMBER_VIEWS=['courts','club','board','player','baddies'];
 function allKeys(){const m={};for(const e of S.ledger)if(!m[e.player])m[e.player]=e.name||e.player;for(const p of Object.values(S.profiles))if(p.listKey&&!m[p.listKey])m[p.listKey]=p.listName||p.nickname;return m}
 
 /* ---------- card (minimal) ---------- */
@@ -2027,7 +2050,7 @@ function gradePickHTML(){
     <p class="fine">Used only to help mix games, and shown on your card as W or M. Crew confirm it.</p></div>`}
 
 /* ---------- navigation ---------- */
-const NAV={home:['home','Home'],feed:['feed','Feed'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
+const NAV={home:['home','Home'],card:['card','My BAD'],guide:['guide','Guide'],play:['play','Play'],courts:['court','Courts'],club:['club','Club'],quests:['quest','Quests'],board:['board','Board'],shop:['bag','Shop'],admin:['admin','Admin']};
 document.querySelectorAll('.tabs button').forEach(b=>{const [i,t]=NAV[b.dataset.v];b.innerHTML=ic(i)+`<span>${t}</span>`;b.onclick=()=>setView(b.dataset.v,{tab:1})});
 /* back: every page opened from another page remembers where you came from. The small arrow at the top and the phone's own
    back gesture both go one step back. Tapping a tab starts fresh; On Court / Off Court / Board swap in place. */
@@ -2037,16 +2060,17 @@ window.addEventListener('popstate',()=>{if(S.navStack.length)goBack();else syncB
 function syncBack(){const b=$('backbtn');if(b)b.hidden=!S.navStack.length}
 (function(){const b=$('backbtn');if(b)b.onclick=()=>{try{history.back()}catch(_){goBack()}}})();
 /* visitors who aren't signed in can only see Home; any other tab asks them to sign in first, then opens that tab */
-function setView(v,o){o=o||{};if(window.BAD_GUEST&&!['home','guide','faq','wth'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
+function setView(v,o){o=o||{};if(v==='feed'){v='home';S.scrollFeed=1}
+  if(window.BAD_GUEST&&!['home','guide','faq','wth','sess'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
   /* signed in but no card or guest pass yet: Home and registration only */
-  if(noCard()&&!['home','card','create','guide','faq','wth'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
+  if(noCard()&&!['home','card','create','guide','faq','wth','sess'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
   if(notMember()&&MEMBER_VIEWS.includes(v)){toast(underReview()?'This opens once your card is approved. You can still book sessions in Play.':'This is for BAD members. You can still book sessions in Play.');v=v==='board'?'play':'home'}
   if(o.tab||o.swap){if(o.tab&&v!==S.view)S.navStack=[]}
   else if(!o.back&&S.view&&S.view!==v&&(o.push||(window.event&&window.event.isTrusted&&/click|pointerup|keydown/.test(window.event.type)))){S.navStack.push(S.view);if(S.navStack.length>20)S.navStack.shift();try{history.pushState({bad:v},'')}catch(_){}}
   S.view=v;syncBack();
-  for(const id of ['home','card','guide','faq','wth','feed','player','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
+  for(const id of ['home','card','guide','faq','wth','player','baddies','sess','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'feed'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'home',baddies:'home',sess:'play'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -2060,7 +2084,7 @@ function render(){unboot();
   renderNow();
 }
 function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
-  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,feed:renderFeed,player:renderPlayer,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
+  ({home:renderHome,card:renderCard,play:renderPlay,courts:()=>{sel=null;renderCourts()},club:renderClub,quests:renderQuests,guide:renderGuide,faq:renderFaq,wth:renderWth,player:renderPlayer,baddies:renderBaddies,sess:renderSess,board:renderBoard,shop:typeof renderShop==='function'?renderShop:()=>{},admin:typeof renderAdmin==='function'?renderAdmin:()=>{},create:renderStep}[S.view]||(()=>{}))()}
 function sportBar(cur,attr,keys){return `<div class="sports" role="group" aria-label="Filter by department"><button class="sp" data-${attr}="all" aria-pressed="${cur==='all'}">${ic('users')}All</button>${keys.map(k=>`<button class="sp" data-${attr}="${k}" aria-pressed="${cur===k}">${ic(SPORTS[k].icon)}${SPORTS[k].club}</button>`).join('')}</div>`}
 
 /* ---------- sessions logic ---------- */
@@ -2193,13 +2217,13 @@ function sessCard(sid,s){const me=myProfile();
         :`<button class="btn ghost sm" data-gnew="${sid}" style="justify-self:start">${ic('guest')}Bring a guest</button>`}</div>`:'';
     return `<article class="sess" data-sess="${esc(sid)}"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div class="bd">
       <div class="row" style="justify-content:space-between;gap:8px"><div class="ic-row">${ic(sp.icon)}<h3>${esc(s.title||sp.club)}</h3></div>${status}</div>
-      <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${isSide(s.sport)||s.kind?`<span class="tagl">${esc(EVENT_KINDS[evKind(s)])}</span>`:''}${igHandle(s.brandIg)?`<a class="linkbtn sedit" href="https://www.instagram.com/${esc(igHandle(s.brandIg))}/" target="_blank" rel="noopener">${ic('ig')}@${esc(igHandle(s.brandIg))}</a>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}${runnerWord(s)}: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
+      <div class="meta"><span>${ic('clock')}${esc(timeRange(s))}</span>${s.venue?`<span>${ic('pin')}${esc(s.venue)}</span>`:''}${isSide(s.sport)||s.kind?`<span class="tagl">${esc(EVENT_KINDS[evKind(s)])}</span>`:''}${igHandle(s.brandIg)?`<a class="linkbtn sedit" href="https://www.instagram.com/${esc(igHandle(s.brandIg))}/" target="_blank" rel="noopener">${ic('ig')}@${esc(igHandle(s.brandIg))}</a>`:''}${s.mapLink?`<a class="linkbtn sedit" href="${esc(s.mapLink)}" target="_blank" rel="noopener">${ic('pin')}Directions</a>`:''}<button class="linkbtn sedit" data-share="${esc(sid)}">${ic('share')}Share</button>${+s.fee>0?`<span>${ic('coin')}AED ${esc(s.fee)}</span>`:''}${(s.gms||[]).length?`<span>${ic('star')}${runnerWord(s)}: ${s.gms.map(u=>esc(S.profiles[u]?.nickname||'')).filter(Boolean).join(' & ')}</span>`:''}<span>${ic('users')}${r.in.length}/${r.cap}${r.wait.length?` · ${r.wait.length} waiting`:''}</span>${S.canEdit&&canRun(s.sport||'badminton')?`<button class="linkbtn sedit" data-ciqr="${esc(sid)}">${ic('eye')}Check-in QR</button>`:''}${S.canEdit&&canSport(s.sport||'badminton')?`<button class="linkbtn sedit" data-goedit="${esc(sid)}">${ic('edit')}Edit</button>`:''}</div>
       ${s.note?`<p class="snote">${esc(s.note)}</p>`:''}
       ${s.agenda?`<div class="agenda"><span class="label">Agenda</span><ol>${String(s.agenda).split(/\n+/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*[-–·:]?\s+(.*)$/i);return m?`<li><b class="num">${esc(m[1])}</b><span>${esc(m[2])}</span></li>`:`<li class="nt"><b class="num" aria-hidden="true"></b><span>${esc(l)}</span></li>`}).join('')}</ol></div>`:''}
       <div class="cap"><i style="width:${Math.min(100,r.in.length/r.cap*100)}%"></i></div>
       <div class="row" style="justify-content:space-between">${r.in.length?`<div class="faces">${r.in.slice(0,7).map(e=>e.guest?avatar(null,e.guest):avatar(S.profiles[e.uid],e.key)).join('')}${r.in.length>7?`<span class="more num">+${r.in.length-7}</span>`:''}</div>`:'<span class="fine">Be the first to join.</span>'}${actions}</div>
       ${payFor&&payFor.sid===sid?payPicker(sid,payFor.change):''}${mine&&!mine.out&&(pos>=0||wpos>=0)&&!(payFor&&payFor.sid===sid)?payInfo(sid,s,mine):''}${guests}${conf}</div></article>`}
-function bindPlay(el){bindSwitch(el);el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
+function bindPlay(el){bindSwitch(el);if(S.scrollSess){const c=el.querySelector(`[data-sess="${CSS.escape(S.scrollSess)}"]`);S.scrollSess=null;if(c){setTimeout(()=>c.scrollIntoView({block:'center',behavior:'smooth'}),60);c.classList.add('flash')}}el.querySelectorAll('[data-ciqr]').forEach(b=>b.onclick=()=>showQR(b.dataset.ciqr));el.querySelectorAll('[data-goedit]').forEach(b=>b.onclick=()=>{adminSid=b.dataset.goedit;adminPicked=true;editSid=adminSid;showNew=false;newSport=(S.sessions[adminSid]||{}).sport||'badminton';aTab='sessions';setView('admin')});
   const q=s=>el.querySelectorAll(s),now=()=>new Date().toISOString();
   q('[data-flt]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.flt;renderNow()});
   q('[data-joinask]').forEach(b=>b.onclick=()=>{const x=S.sessions[b.dataset.joinask];if(x&&!(+x.fee>0)){join(b.dataset.joinask,'cash');return}payFor={sid:b.dataset.joinask,change:false};renderNow()});/* nothing to pay: no payment question */
@@ -3230,6 +3254,7 @@ function renderBoard(){
   $('v-board').innerHTML=`${courtSwitch('board')}<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'}</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;
   bindSwitch($('v-board'));
   $('v-board').querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
+  {const h=$('v-board').querySelector('.hero');if(h&&!h.querySelector('[data-allbd]')){const b=document.createElement('button');b.className='linkbtn';b.dataset.allbd='1';b.innerHTML=ic('users')+'See all baddies';b.onclick=()=>setView('baddies',{push:1});h.appendChild(b)}}
   document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.bf;renderBoard()});
   document.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{S.boardMode=b.dataset.bm;renderBoard()});
 }
@@ -4425,19 +4450,19 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const sessions=next.length?`<section class="hsec"><h3 class="ah">Coming up</h3><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
-    <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
+    <div class="homelinks ${notMember()||window.BAD_GUEST?'two':'three'}">${[...(notMember()||window.BAD_GUEST?[]:[['baddies','users','Baddies']]),['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
     ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
     ${sessions}`
-    :`${newsHTML()}${sessions}${about}`}
+    :`${newsHTML()}${sessions}${feedSectionHTML()}${about}`}
     ${homeVideosHTML()}
     ${igHTML()}
     ${contactHTML()}
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
-  bindHero(el);
+  bindHero(el);bindHomeFeed(el);
   el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>{if(b.dataset.cm)S.clubMode=b.dataset.cm;setView(b.dataset.hgo)});
 }
 /* Club news on Home: upcoming events first, then the latest news. The full list and the Gallery are one tap away. */
@@ -4455,8 +4480,8 @@ function contactHTML(ig){return `<section class="hsec talk"><h3 class="ah">Talk 
 window.badGuestMode=function(){loadHomeMediaPublic();
   /* visitors see the real upcoming sessions (sessions are public in the security rules); if that read isn't allowed yet, the weekly list shows instead */
   const db=window.badPublicDb;if(db&&!S.pubSessions){const today=new Date().toISOString().slice(0,10);
-    db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome()}).catch(()=>{})}
-const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;setView('home');if(want&&window.badJoin)window.badJoin(want)};
+    db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome();else if(S.view==='sess')renderSess()}).catch(()=>{})}
+const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;if(want==='sess'){S.deepView=null;setView('sess');return}setView('home');if(want&&window.badJoin)window.badJoin(want)};
 
 /* ---------- FAQs, About BAD, and the photos, videos and Instagram on Home ---------- */
 const STORY_HTML=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
@@ -4565,14 +4590,17 @@ function composerHTML(){const d=S.fDraft;
       <select id="f-dept" aria-label="Department"><option value="">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}" ${d.dept===k?'selected':''}>${esc(SPORTS[k].club)}</option>`).join('')}</select>
       <button class="btn sm" id="f-go">Post</button></div></div></section>`}
 
-function renderFeed(){const el=$('v-feed');if(!el)return;
-  if(notMember()){el.innerHTML=`<div class="hero"><span class="label">Feed</span><h2>The community, live.</h2></div><div class="empty">${ic('clock')}<span>The Feed opens once your card is approved.</span></div>`;return}
-  const L=feedList();
-  el.innerHTML=`<div class="hero"><span class="label">Feed</span><h2>The community, live.</h2><p class="muted">Photos, shout-outs and props from BAD. Be kind, be BAD.</p></div>
-    ${myProfile()?composerHTML():''}
-    <div class="flist">${L.length?L.map(([id,p])=>postHTML(id,p)).join(''):`<div class="empty">${ic('photo')}<span>Nothing here yet. Post the first photo from your last session.</span></div>`}</div>`;
-  bindFeed(el)}
-
+/* the Feed lives on Home, under Coming up. Only the list refreshes when someone posts or reacts, so a half-written post is never lost. */
+S.feedShow=S.feedShow||10;
+function feedListHTML(){const L=feedList();if(!L.length)return `<div class="empty">${ic('photo')}<span>Nothing here yet. Post the first photo from your last session.</span></div>`;
+  return L.slice(0,S.feedShow).map(([id,p])=>postHTML(id,p)).join('')+(L.length>S.feedShow?`<button class="btn ghost wide" data-fmore="1">Show more</button>`:'')}
+function feedSectionHTML(){if(notMember()||!myProfile())return '';
+  return `<section class="hsec" id="home-feed"><div class="sec-h"><h3 class="ah">Feed</h3><span class="fine">Photos, shout-outs and props</span></div>${composerHTML()}<div class="flist" id="flist">${feedListHTML()}</div></section>`}
+function bindHomeFeed(el){const f=el.querySelector('#home-feed');if(!f)return;bindFeed(f);const m=f.querySelector('[data-fmore]');if(m)m.onclick=()=>{S.feedShow+=10;refreshFeedList()};
+  if(S.scrollFeed){S.scrollFeed=0;setTimeout(()=>f.scrollIntoView({block:'start',behavior:'smooth'}),80)}}
+function refreshFeedList(){const l=$('flist');if(!l)return;l.innerHTML=feedListHTML();const f=$('home-feed');bindFeed(l);const m=l.querySelector('[data-fmore]');if(m)m.onclick=()=>{S.feedShow+=10;refreshFeedList()}}
+/* after posting or changing the photos: redraw the whole Feed block (composer included) */
+function renderFeed(){if(S.view==='player')return renderPlayer();const f=$('home-feed');if(!f)return;const tmp=document.createElement('div');tmp.innerHTML=feedSectionHTML();const n=tmp.firstElementChild;if(!n)return;f.replaceWith(n);bindHomeFeed(n.parentElement||document)}
 let feedIO=null;
 function loadFeedImg(k){if(S.feedImg[k]!==undefined)return;S.feedImg[k]='';S.db.doc('feedimg/'+k).get().then(d=>{if(!d.exists)return;S.feedImg[k]=d.data().d;document.querySelectorAll(`[data-fimg="${CSS.escape(k)}"]`).forEach(f=>{f.innerHTML=`<img src="${S.feedImg[k]}" alt="" decoding="async">`})}).catch(()=>{delete S.feedImg[k]})}
 function bindFeed(el){
@@ -4617,7 +4645,9 @@ function renderPlayer(){const el=$('v-player');if(!el)return;const uid=S.profUid
   const depts=(p.sports||[]).filter(k=>SPORTS[k]).map(k=>`<span class="tagl">${ic(SPORTS[k].icon)}${esc(SPORTS[k].club)}</span>`).join('');
   const posts=feedList().filter(([,x])=>x.uid===uid&&x.kind==='post').slice(0,6);
   const today=new Date().toISOString().slice(0,10).replace(/-/g,''),given=Object.keys(S.feed).some(k=>k==='p_'+S.uid+'_'+uid+'_'+today);
-  el.innerHTML=`<section class="prof">${avatar(p,p.listKey)}<div><h2 class="prof-n">${esc(p.nickname)}</h2>
+  const stc=typeof statsFor==='function'?statsFor(p.listKey):{};
+  el.innerHTML=`<div class="prof-card">${cardHTML(p,{balance:stc.balance||0,badges:typeof badgeCount==='function'?badgeCount(uid):0,sessions:st.played})}</div>
+    <section class="prof">${avatar(p,p.listKey)}<div><h2 class="prof-n">${esc(p.nickname)}</h2>
       <div class="sub">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)).padStart(2,'0'):''}${og?` · OG 100 #${og}`:''}${lvl&&lvl.name?` · ${esc(lvl.name)}`:''}</div></div></section>
     ${p.bio?`<p class="prof-bio">${esc(p.bio)}</p>`:me?`<p class="fine">Add a short bio in My BAD so people know who you are.</p>`:''}
     ${depts?`<div class="row prof-d">${depts}</div>`:''}
@@ -4630,6 +4660,98 @@ function renderPlayer(){const el=$('v-player');if(!el)return;const uid=S.profUid
     try{const doc={uid:S.uid,kind:'props',to:uid,e,d,at:new Date().toISOString()};await S.db.doc('feed/'+id).set(doc);S.feed[id]=doc;toast(`${e} Props sent to ${p.nickname}.`);renderPlayer()}
     catch(err){b.disabled=false;toast(err&&err.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't go through.")}});
 }
+
+/* ---------- Baddies: everyone in the community, with search and a department filter ---------- */
+S.bdQ=S.bdQ||'';S.bdSport=S.bdSport||'all';
+function baddiesList(){const q=S.bdQ.trim().toLowerCase();
+  return Object.entries(S.profiles).filter(([,p])=>!p.sample&&p.nickname&&(S.bdSport==='all'||(p.sports||['badminton']).includes(S.bdSport))&&(!q||p.nickname.toLowerCase().includes(q)||String(p.number||'')===q))
+    .sort((a,b)=>a[1].nickname.localeCompare(b[1].nickname))}
+function baddiesGrid(){const L=baddiesList();
+  return L.length?`<div class="bdgrid">${L.map(([uid,p])=>{const og=typeof first100No==='function'?first100No(uid):0;
+    return `<button class="bd" data-prof="${esc(uid)}">${avatar(p,p.listKey)}<span class="bd-n">${esc(p.nickname)}</span><span class="bd-s">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)):''}${og?` · OG #${og}`:''}</span><span class="bd-i">${(p.sports||[]).filter(k=>SPORTS[k]).slice(0,4).map(k=>ic(SPORTS[k].icon)).join('')}</span></button>`}).join('')}</div>`
+    :`<div class="empty">${ic('users')}<span>No baddies match that.</span></div>`}
+function renderBaddies(){const el=$('v-baddies');if(!el)return;
+  const used=[...new Set(Object.values(S.profiles).flatMap(p=>p.sports||[]))].filter(k=>SPORTS[k]);
+  el.innerHTML=`<div class="hero"><span class="label">Baddies</span><h2>The community.</h2><p class="muted">${Object.values(S.profiles).filter(p=>!p.sample).length} baddies and counting. Tap anyone to see their card.</p></div>
+    <div class="field" style="margin:0"><label for="bd-q" class="sr">Search baddies</label><input type="search" id="bd-q" placeholder="Search by name or number" value="${esc(S.bdQ)}"></div>
+    ${sportBar(S.bdSport,'bdf',used)}<div id="bd-out">${baddiesGrid()}</div>`;
+  const bindOut=()=>el.querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
+  const qi=$('bd-q');qi.oninput=()=>{S.bdQ=qi.value;$('bd-out').innerHTML=baddiesGrid();bindOut()};
+  el.querySelectorAll('[data-bdf]').forEach(b=>b.onclick=()=>{S.bdSport=b.dataset.bdf;renderBaddies()});bindOut()}
+
+/* ---------- share a session: WhatsApp, Instagram Story, or a link ----------
+   Every session has its own page: …/bad-app/#s=<id>. Anyone can open it (sessions are public in the security rules);
+   members get a button to book, visitors get Join BAD. The Story image is drawn on the phone, 1080×1920, with a QR code. */
+const sessUrl=sid=>`${APP_URL}#s=${encodeURIComponent(sid)}`;
+const longDate=iso=>{const d=new Date(iso+'T12:00:00+04:00');return d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:'Asia/Dubai'})};
+function sessShareText(sid){const s=S.sessions[sid]||{},sp=sportOf(s.sport);
+  return [`${s.title||sp.club} · The BAD Club`,`📅 ${longDate(s.date)}`,`🕗 ${timeRange(s,true)}`,s.venue?`📍 ${s.venue}`:'',+s.fee>0?`💳 AED ${s.fee}`:'',s.note?`\n${s.note}`:'',`\nEvery level is welcome. Book your spot:`,sessUrl(sid)].filter(Boolean).join('\n')}
+const STORY_PHOTO={badminton:'assets/home/home-08.jpg',volleyball:'assets/home/home-07.jpg',taste:'assets/home/home-05.jpg',badx:'assets/home/home-06.jpg'};
+
+function shareSession(sid){const s=S.sessions[sid];if(!s)return;const text=sessShareText(sid),url=sessUrl(sid);
+  const ov=document.createElement('div');ov.className='shov';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','Share this session');
+  ov.innerHTML=`<div class="shcard"><div class="sh-h"><b>Share ${esc(s.title||sportOf(s.sport).club)}</b><button class="sh-x" aria-label="Close">${ic('x')}</button></div>
+    <div class="sh-grid">
+      <a class="sh-o" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">${ic('wa')}<span>WhatsApp</span></a>
+      <button class="sh-o" data-sh="story">${ic('ig')}<span>Instagram Story</span></button>
+      <button class="sh-o" data-sh="copy">${ic('copy')}<span>Copy link</span></button>
+      ${navigator.share?`<button class="sh-o" data-sh="more">${ic('arrow')}<span>More</span></button>`:''}</div>
+    <pre class="sh-prev">${esc(text)}</pre></div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();ov.querySelector('.sh-x').onclick=close;ov.onclick=e=>{if(e.target===ov)close()};
+  ov.querySelector('[data-sh="copy"]').onclick=async()=>{try{await navigator.clipboard.writeText(text);toast('Copied. Paste it anywhere.')}catch(_){prompt('Copy this:',url)}};
+  const more=ov.querySelector('[data-sh="more"]');if(more)more.onclick=()=>navigator.share({title:s.title,text,url}).catch(()=>{});
+  ov.querySelector('[data-sh="story"]').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.querySelector('span').textContent='Making it…';
+    try{const blob=await storyImage(sid),file=new File([blob],`BAD-${(s.title||'session').replace(/[^\w]+/g,'-')}.png`,{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});toast('In Instagram, add a Link sticker with the session link.')}
+      else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('Saved. Post it to your Story and add a Link sticker.')}
+      try{await navigator.clipboard.writeText(url)}catch(_){}}
+    catch(err){if(err&&err.name!=='AbortError')toast("Sorry, the Story image couldn't be made.")}
+    finally{b.disabled=false;b.querySelector('span').textContent='Instagram Story'}};
+}
+
+/* the Story: a club photo on top, the details big and clear underneath, a QR code that opens the session */
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+async function storyImage(sid){const s=S.sessions[sid],sp=sportOf(s.sport),W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  try{await document.fonts.ready}catch(_){}
+  const ff=getComputedStyle(document.body).fontFamily||'sans-serif',serif=getComputedStyle(document.querySelector('h2')||document.body).fontFamily||'serif';
+  g.fillStyle='#0a0a0a';g.fillRect(0,0,W,H);
+  try{const im=await loadImg(STORY_PHOTO[s.sport]||'assets/home/home-01.jpg'),ph=1100,k=Math.max(W/im.width,ph/im.height),w=im.width*k,h=im.height*k;
+    g.save();g.beginPath();g.rect(0,0,W,ph);g.clip();g.filter='grayscale(1) contrast(1.08)';g.drawImage(im,(W-w)/2,(ph-h)/2,w,h);g.restore();
+    const gr=g.createLinearGradient(0,ph*.4,0,ph);gr.addColorStop(0,'rgba(10,10,10,0)');gr.addColorStop(1,'rgba(10,10,10,1)');g.fillStyle=gr;g.fillRect(0,0,W,ph)}catch(_){}
+  g.fillStyle='#fff';g.textBaseline='alphabetic';
+  g.font=`900 64px ${ff}`;g.fillText('BAD',72,140);
+  g.font=`600 26px ${ff}`;g.globalAlpha=.7;g.fillText(sp.club.toUpperCase(),72,190);g.globalAlpha=1;
+  const wrap=(t,x,y,max,lh)=>{const words=String(t).split(/\s+/);let line='',n=0;for(const w of words){const tt=line?line+' '+w:w;if(g.measureText(tt).width>max&&line){g.fillText(line,x,y+n*lh);n++;line=w}else line=tt}g.fillText(line,x,y+n*lh);return n+1};
+  let y=1210;g.font=`400 104px ${serif}`;y+=wrap(s.title||sp.club,72,y,W-144,108)*108;
+  y+=24;const rows=[longDate(s.date),timeRange(s,true),s.venue||'',+s.fee>0?`AED ${s.fee}`:''].filter(Boolean);
+  g.font=`500 42px ${ff}`;rows.forEach(r=>{g.globalAlpha=.88;wrap(r,72,y,W-144-300,52);g.globalAlpha=1;y+=62});
+  const qr=qrData(sessUrl(sid),260);if(qr){try{const q=await loadImg(qr);g.fillStyle='#fff';const qx=W-72-280,qy=H-72-280-70;g.beginPath();g.roundRect?g.roundRect(qx,qy,280,280,24):g.rect(qx,qy,280,280);g.fill();g.drawImage(q,qx+10,qy+10,260,260)}catch(_){}}
+  g.fillStyle='#fff';g.font=`700 30px ${ff}`;g.fillText('Every level is welcome.',72,H-150);g.globalAlpha=.65;g.font=`500 28px ${ff}`;g.fillText('Scan or tap the link to book',72,H-104);g.globalAlpha=1;
+  return await new Promise(r=>c.toBlob(r,'image/png'))}
+
+/* ---------- the session page anyone can open ---------- */
+function openSession(sid){S.sessId=sid;setView('sess',{push:1})}
+function renderSess(){const el=$('v-sess');if(!el)return;const sid=S.sessId,s=S.sessions[sid];
+  if(!s){el.innerHTML=`<div class="empty">${ic('clock')}<span>Loading the session…</span></div>`;const db=window.badPublicDb||S.db;if(db&&sid&&!S._sessFetch){S._sessFetch=1;db.doc('sessions/'+sid).get().then(d=>{S._sessFetch=0;if(d.exists){S.sessions[sid]=d.data();renderSess()}else el.innerHTML=`<div class="empty">${ic('clock')}<span>This session isn't available any more.</span></div>`}).catch(()=>{S._sessFetch=0})}return}
+  const sp=sportOf(s.sport),d=dParts(s.date),past=s.date<new Date().toISOString().slice(0,10),guest=!!window.BAD_GUEST;
+  el.innerHTML=`<div class="sesshero"><div class="dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><span class="label">${ic(sp.icon)} ${esc(sp.club)}</span><h2>${esc(s.title||sp.club)}</h2></div></div>
+    <div class="sessinfo">
+      <div class="si">${ic('cal')}<span>${esc(longDate(s.date))}</span></div>
+      <div class="si">${ic('clock')}<span>${esc(timeRange(s,true))}</span></div>
+      ${s.venue?`<div class="si">${ic('pin')}<span>${esc(s.venue)}${s.mapLink?` · <a href="${esc(s.mapLink)}" target="_blank" rel="noopener">Directions</a>`:''}</span></div>`:''}
+      ${+s.fee>0?`<div class="si">${ic('coin')}<span>AED ${esc(s.fee)}</span></div>`:''}</div>
+    ${s.note?`<p class="snote">${esc(s.note)}</p>`:''}
+    ${past?`<p class="fine">This session has already happened.</p>`:guest?`<div class="row"><button class="btn bigjoin" data-sjoin="1">${ic('card')}Join BAD to book</button></div><p class="fine">Already a member? Sign in, then come back to this link.</p>`
+      :`<div class="row"><button class="btn" data-sbook="1">${ic('play')}Book in Play</button></div>`}
+    <div class="row"><button class="btn ghost" data-sshare="1">${ic('share')}Share</button></div>
+    <p class="fine">Every level is welcome. The BAD Club, Dubai.</p>`;
+  const q=k=>el.querySelector(k);
+  if(q('[data-sjoin]'))q('[data-sjoin]').onclick=()=>window.badJoin&&window.badJoin();
+  if(q('[data-sbook]'))q('[data-sbook]').onclick=()=>{S.sport=s.sport||'all';S.scrollSess=sid;setView('play')};
+  q('[data-sshare]').onclick=()=>shareSession(sid)}
+
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-share]');if(b){e.preventDefault();shareSession(b.dataset.share)}});
 
 /* ---------- brand: official BAD logos (BAD ASSETS folder, files 03 white / 04 black) built in; brand fonts by upload ---------- */
 function applyBrand(){
@@ -4665,7 +4787,9 @@ function bindBrand(){
 S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals={};
 (async function boot(){
   /* links straight to a tab: …/#shop, #quests, #play, #club, #board, #courts (used by short links like the Volume II one) */
-  {const v=(location.hash||'').match(/^#(home|feed|guide|faq|wth|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1];for(const id of ['home','card','guide','faq','wth','feed','player','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v[1]}}
+  {const sm=(location.hash||'').match(/^#s=([\w-]+)$/);if(sm){S.sessId=decodeURIComponent(sm[1]);S.view='sess';S.deepView='sess'}
+   const v=(location.hash||'').match(/^#(home|guide|faq|wth|shop|quests|play|club|board|courts)$/);if(v){S.view=v[1];S.deepView=v[1]}
+   if(sm||v)for(const id of ['home','card','guide','faq','wth','player','baddies','sess','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==S.view}
   render();
   const C=window.claude;if(!C||!C.use){S.loaded=true;render();return}
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
@@ -4721,7 +4845,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.member)db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
-  if(S.member)db.collection('feed').orderBy('at','desc').limit(80).onSnapshot(s=>{S.feed=map(s);if(['feed','player'].includes(S.view))render()},()=>{});
+  if(S.member)db.collection('feed').orderBy('at','desc').limit(80).onSnapshot(s=>{S.feed=map(s);if(S.view==='home')refreshFeedList();else if(S.view==='player')render()},()=>{});
   db.doc('config/home').onSnapshot(d=>{S.homeMedia=d.exists?d.data():{};if(['home','wth'].includes(S.view))render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};S.siteLoaded=true;render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});

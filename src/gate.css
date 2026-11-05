@@ -176,3 +176,4 @@ footer.sign .signout{grid-column:2!important;grid-row:1!important;justify-self:e
 footer.sign .ver{grid-column:1/-1!important;grid-row:3!important;justify-self:start!important;margin-top:10px;font-size:.6rem!important;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);opacity:.7;line-height:1.4}
 footer.sign .sig-line{display:none}
 .court .court-h{margin-bottom:6px}
+.homelinks.three button{padding:12px 10px;gap:8px;white-space:nowrap;justify-content:center}@media(max-width:420px){.homelinks.three button .i{display:none}}

@@ -17,19 +17,19 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const sessions=next.length?`<section class="hsec"><h3 class="ah">Coming up</h3><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
-    <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
+    <div class="homelinks ${notMember()||window.BAD_GUEST?'two':'three'}">${[...(notMember()||window.BAD_GUEST?[]:[['baddies','users','Baddies']]),['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
     ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
     ${sessions}`
-    :`${newsHTML()}${sessions}${about}`}
+    :`${newsHTML()}${sessions}${feedSectionHTML()}${about}`}
     ${homeVideosHTML()}
     ${igHTML()}
     ${contactHTML()}
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
-  bindHero(el);
+  bindHero(el);bindHomeFeed(el);
   el.querySelectorAll('[data-hgo]').forEach(b=>b.onclick=()=>{if(b.dataset.cm)S.clubMode=b.dataset.cm;setView(b.dataset.hgo)});
 }
 /* Club news on Home: upcoming events first, then the latest news. The full list and the Gallery are one tap away. */
@@ -47,8 +47,8 @@ function contactHTML(ig){return `<section class="hsec talk"><h3 class="ah">Talk 
 window.badGuestMode=function(){loadHomeMediaPublic();
   /* visitors see the real upcoming sessions (sessions are public in the security rules); if that read isn't allowed yet, the weekly list shows instead */
   const db=window.badPublicDb;if(db&&!S.pubSessions){const today=new Date().toISOString().slice(0,10);
-    db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome()}).catch(()=>{})}
-const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;setView('home');if(want&&window.badJoin)window.badJoin(want)};
+    db.collection('sessions').where('date','>=',today).get().then(s=>{if(!window.BAD_GUEST)return;const o={};s.docs.forEach(d=>o[d.id]=d.data());S.sessions=o;S.pubSessions=true;if(S.view==='home')renderHome();else if(S.view==='sess')renderSess()}).catch(()=>{})}
+const want=S.deepView&&S.deepView!=='home'?S.deepView:null;S.deepView=want;if(want==='sess'){S.deepView=null;setView('sess');return}setView('home');if(want&&window.badJoin)window.badJoin(want)};
 
 /* ---------- FAQs, About BAD, and the photos, videos and Instagram on Home ---------- */
 const STORY_HTML=`<p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p>
