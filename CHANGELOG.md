@@ -4,6 +4,7 @@ Testing period = 0.x. Version 1.0 is the launch. The same list is in the app (Ad
 
 | Version | Date | What changed |
 | --- | --- | --- |
+| 0.50 | 2026-11-05 | Talk to us on Home and the FAQs: WhatsApp (+971 56 413 1580, with a ready message) and email; ENBD FastPay added as a way to pay (sessions, Pay all and the Shop), using the same number; Careem Pay shows it too until a number is set in Admin, Settings, Payments; WhatsApp number editable in Settings |
 | 0.48 | 2026-11-05 | Home: Join BAD sits right after the video |
 | 0.47 | 2026-11-05 | Home: A COMMUNITY BUILT LIKE A BRAND in regular capitals |
 | 0.46 | 2026-11-05 | Home: A COMMUNITY BUILT LIKE A BRAND in thin capitals |

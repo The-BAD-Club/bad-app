@@ -91,6 +91,7 @@ function bagSheet(){const c=S.payCfg||{},items=S.bag,sub=items.reduce((t,i)=>t+i
     if(o.pay==='bank')det=c.iban?`<div class="paydet"><span class="fine">Account name</span><b>${esc(c.accName||'')}</b><span class="fine">IBAN</span><b class="num" id="iban-shop">${esc(c.iban)}</b><span class="fine">Amount</span><b class="num">${aed(o.total)}</b><span class="fine">Reference</span><b>Order ${esc(o.no)}</b></div>`:'<p class="fine">An admin will share the bank details with you.</p>';
     if(o.pay==='ziina')det=c.ziinaLink?`<a class="btn" href="${esc(c.ziinaLink)}" target="_blank" rel="noopener">${ic('wallet')}Pay ${aed(o.total)} with Ziina</a>`:'<p class="fine">An admin will send you a Ziina link.</p>';
     if(o.pay==='careem')det=careemDet(c,o.total);
+    if(o.pay==='fastpay')det=fastpayDet(c,o.total,o.no);
     if(o.pay==='cash')det=`<p class="fine">Please pay ${aed(o.total)} in cash when you collect.</p>`;
     return `<div class="sheet-ov" data-close="1"><div class="sheet" role="dialog" aria-label="Order placed"><button class="sheet-x" data-close="1" aria-label="Close">${ic('x')}</button><div class="sheet-b">
       <span class="label">Order ${esc(o.no)}</span><h3 class="big">Thank you. It's yours.</h3><p class="muted">${o.fulfil==='delivery'?'We will book a Porter driver and let you know when it is on the way. The delivery fee is paid to the driver.':'Collect it at '+esc(o.where||'your next session')+'. An admin will let you know when it is ready.'}</p>
