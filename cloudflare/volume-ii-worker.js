@@ -2,7 +2,7 @@
 // It sends everyone straight to the Shop tab of the BAD App, where the Volume II items now live.
 // Deploy: Cloudflare dashboard → Workers & Pages → Create → Worker → paste this file → Deploy.
 // The link will look like https://volume-ii.thebadclub-co.workers.dev (same account as FRAGMENTS RELEASE).
-const APP = 'https://the-bad-club.github.io/bad-app/';
+const APP = 'https://thebadclub.com/';
 
 export default {
   async fetch(request) {

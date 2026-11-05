@@ -2,7 +2,7 @@
 
 One player card for every BADDIE. Sign up, join sessions, earn points, and run the courts.
 
-- Live site: https://the-bad-club.github.io/bad-app/
+- Live site: https://thebadclub.com/
 - Hosting: GitHub Pages (free). Data and sign-in: Firebase Spark plan (free).
 
 ## Files
