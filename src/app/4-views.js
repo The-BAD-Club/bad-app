@@ -12,7 +12,7 @@ function syncBack(){const b=$('backbtn');if(b)b.hidden=!S.navStack.length}
 function setView(v,o){o=o||{};if(v==='feed'){v='home';S.scrollFeed=1}
   if(window.BAD_GUEST&&!['home','guide','faq','wth','sess'].includes(v)){S.deepView=v;if(window.badJoin)window.badJoin(v);return}
   /* signed in but no card or guest pass yet: Home and registration only */
-  if(noCard()&&!['home','card','create','guide','faq','wth','sess'].includes(v)){toast('Make your card or take a guest pass first. It takes a minute.');v='card'}
+  if(noCard()&&!['home','card','create','guide','faq','wth','sess'].includes(v)){toast('Join BAD first: come as a guest or make your card. It takes a minute.');v='card'}
   if(notMember()&&MEMBER_VIEWS.includes(v)){toast(underReview()?'This opens once your card is approved. You can still book as a guest in Play.':'This is for BAD members. You can still book sessions in Play.');v=v==='board'?'play':'home'}
   if(o.tab||o.swap){if(o.tab&&v!==S.view)S.navStack=[]}
   else if(!o.back&&S.view&&S.view!==v&&(o.push||(window.event&&window.event.isTrusted&&/click|pointerup|keydown/.test(window.event.type)))){S.navStack.push(S.view);if(S.navStack.length>20)S.navStack.shift();try{history.pushState({bad:v},'')}catch(_){}}
@@ -288,28 +288,26 @@ function renderCard(){
   const el=$('v-card'),p=myProfile();
   if(!p&&!S.loaded){el.innerHTML=`<div class="bootlogo"><img class="inline-logo logo-l" src="${LOGO.badK}" alt="BAD"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="BAD"></div>`;return}
   if(!p){
-    el.innerHTML=`<div class="grid2"><div class="mini">${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{balance:0,badges:0,sessions:0})}</div>
-      <div class="hero"><span class="label">One card for every BADDY</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
-        <p class="muted">Make your card. It takes a minute, and it's how you book, earn points and meet the community.</p>
-        <div class="perks">
-          <div>${ic('play')}<span><b>Join in one tap</b><small>Badminton, volleyball, pickleball and more</small></span></div>
-          <div>${ic('coin')}<span><b>Earn points</b><small>${PS().per} points for every session. ${PS().free} points is a free session</small></span></div>
-          <div>${ic('star')}<span><b>Collect BADges</b><small>A thank you from the founders and crew. Regular, Core, then Legend</small></span></div>
+    el.innerHTML=`<div class="grid2 joinwrap"><div class="mini">${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{balance:0,badges:0,sessions:0})}</div>
+      <div class="hero"><span class="label">Join BAD</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
+        <p class="muted">Have you played with BAD before?</p>
+        <div class="joinfork" role="group" aria-label="Have you played with BAD before?">
+          <button class="tile cta jf${S.joinPath==='first'?' on':''}" data-jpath="first" aria-pressed="${S.joinPath==='first'}"><span class="ic-row"><span class="ic-bub">${ic('guest')}</span><span><b>First time with BAD</b><span class="fine" style="display:block">Come as a guest. Just your name and number.</span></span>${ic('arrow')}</span></button>
+          <button class="tile cta jf" data-jpath="card"><span class="ic-row"><span class="ic-bub">${ic('card')}</span><span><b>I’ve played with BAD before</b><span class="fine" style="display:block">Make your card: your number, colour and points.</span></span>${ic('arrow')}</span></button>
         </div>
-        <button class="btn wide" id="start">${ic('card')}Make my card</button>
-        <details class="gpass" ${S.gpOpen?'open':''}><summary>${ic('guest')}Just trying BAD? Take a guest pass</summary>
-          <p class="fine">For a trial: your name and number, and you can join sessions straight away. Make your full card any time.</p>
+        ${S.joinPath==='first'?`<section class="gpass-f" aria-label="Guest pass">
+          <h3 class="ah">Come as a guest</h3><p class="fine">Pick a session straight after. After your first game, make your card to start earning points.</p>
           <div class="fgrid"><div class="field wide"><label for="gp-name">Name</label><input id="gp-name" type="text" maxlength="16" autocomplete="given-name" placeholder="What everyone calls you"></div>
           <div class="field wide"><label for="gp-mob">Mobile</label><input id="gp-mob" type="tel" maxlength="20" autocomplete="tel" placeholder="+971 5x xxx xxxx"></div>
           <div class="field wide"><label for="gp-mail">Email <span class="req">optional</span></label><input id="gp-mail" type="email" maxlength="80" autocomplete="email"></div></div>
-          <button class="btn ghost wide" id="gp-go">${ic('guest')}Start my guest pass</button></details>
+          <button class="btn wide" id="gp-go">${ic('play')}Continue as a guest</button></section>`:''}
         <p class="fine">We were all BAD players once. Every level is welcome.</p></div></div>`;
-    $('start').onclick=()=>startCreator();el.querySelector('.gpass').ontoggle=e=>{S.gpOpen=e.target.open};
-    $('gp-go').onclick=async()=>{const n=$('gp-name').value.trim().slice(0,16),m=$('gp-mob').value.trim().slice(0,20),e=$('gp-mail').value.trim().slice(0,80);
+    el.querySelectorAll('[data-jpath]').forEach(b=>b.onclick=()=>{if(b.dataset.jpath==='card'){S.playedBefore=true;startCreator();return}S.joinPath='first';renderCard();const n=$('gp-name');if(n)n.focus()});
+    const gpGo=$('gp-go');if(gpGo)gpGo.onclick=async()=>{const n=$('gp-name').value.trim().slice(0,16),m=$('gp-mob').value.trim().slice(0,20),e=$('gp-mail').value.trim().slice(0,80);
       if(!n){toast('Please add your name.');return}if(!okMobile(m)){toast('Please add a mobile number we can reach you on.');return}if(e&&!okEmail(e)){toast('That email doesn’t look right.');return}
-      const now=new Date().toISOString(),b=$('gp-go');b.disabled=true;
+      const now=new Date().toISOString(),b=gpGo;b.disabled=true;
       try{const gp={nickname:n,listName:n,listKey:keyOf(n),number:'',edition:'oncourt',photo:'',sports:['badminton'],primary:'badminton',createdAt:now,updatedAt:now,memReq:{type:GUEST_PASS,at:now}};await S.db.doc('profiles/'+S.uid).set(gp);S.profiles={...S.profiles,[S.uid]:gp};
-        await S.db.doc('contacts/'+S.uid).set({mobile:m,...(e?{email:e}:{}),updatedAt:now});toast(`Welcome, ${n}. Pick a session in Play.`);setView('play')}catch(x){b.disabled=false;toast("Sorry, that didn't save. Please try again.")}};
+        await S.db.doc('contacts/'+S.uid).set({mobile:m,...(e?{email:e}:{}),updatedAt:now});S.joinPath=null;toast(`Welcome, ${n}. Pick a session.`);setView('play')}catch(x){b.disabled=false;toast("Sorry, that didn't save. Please try again.")}};
     return;
   }
   const st=statsFor(p.listKey),pt=pointsFor(S.uid),fd=isFounder(S.uid),req=S.requests[S.uid];
@@ -446,7 +444,7 @@ function bindGallery(el){el.querySelectorAll('[data-album]').forEach(b=>b.onclic
 /* ---------- Guide: what the app is for and how to use it ---------- */
 function renderGuide(){const el=$('v-guide');if(!el)return;const c=PS(),me=S.uid,pt=me?pointsFor(me):null;
   const tabs=[['home','Home','Club news, what’s on, the weekly sessions, FAQs and community photos. Open to everyone.'],['card','My BAD','Your player card, your sessions, payments, points and BADges.'],['play','Play','On Court: find a session and join it in one tap. Off Court: collabs, food and nights out. Board: the points leaders.'],['courts','Courts','On the day: check in, see your court and who’s next. For approved members.'],['shop','Shop','Drops and Essentials, picked up at sessions.']];
-  const steps=[['card','Make your card','Your name, number, photo and what you play. It takes a minute.'],['play','Book a spot','Pick a session in Play and tap Count me in.'],['court','Show up and play','Check in when you arrive. Courts shows your court and who’s next.'],['coin','Earn points','Every session earns points. BADges come from the founders and crew.']];
+  const steps=[['card','Join BAD','First time? Come as a guest. Played with us before? Make your card.'],['play','Book a spot','Pick a session in Play and tap Count me in.'],['court','Show up and play','Check in when you arrive. Courts shows your court and who’s next.'],['coin','Earn points','Every session earns points. BADges come from the founders and crew.']];
   el.innerHTML=`<div class="hero"><span class="label">Guide</span><h2>How BAD works.</h2><p class="muted">Four steps, then you’re one of us.</p></div>
   <details class="hsec how story"><summary class="ah">Why we made BAD</summary><p><b>BAD started from BADminton.</b> We were friends who loved the game, but felt it deserved more visibility and a fresh identity here. So instead of waiting for someone else, we made our own: The BAD Club.</p><p>We know “bad” has a stigma. We own it. Everyone starts somewhere: you pick up a racket, struggle, learn and get better. <b>We were all BAD players once.</b></p></details>
   <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${steps.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
