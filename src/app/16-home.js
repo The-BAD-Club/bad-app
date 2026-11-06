@@ -62,7 +62,7 @@ function faqList(){const c=PS();return [
     ['Why is it called BAD?','Because we were all bad players once. We own the word: everyone starts somewhere, and BAD is where you get better with people who cheer you on. Read the full story in About BAD.'],
     ['What does BAD stand for?','BAD came from BADminton. Bold. Agile. Defiant. came later, as something to live by: bold enough to try something different, agile enough to adapt as we go, and defiant enough to question the norm.'],
     ['Do I need to be good to join?','No. Every level is welcome and everyone plays with everyone. Beginners join every week.'],
-    ['Is BAD a registered company?','Yes. The BAD Club LLC, License No. 2649469.01.'],
+    ['Is BAD a registered company?','Yes. The BAD Club LLC, registered in Sharjah, License No. 2649469.01. Read our Privacy policy and Terms at the bottom of any page.'],
     ['Where and when do you play?','Every week: BAD DINK on Tuesday, BADminton Wednesday, BADminton Friday and VolleyBAD on Friday. Exact times and venues are on each session in Play.']]],
   ['Joining and booking',[
     ['How do I join?','Tap Join BAD and make your player card. It is free and takes a minute. Just want to try once? Take a guest pass instead.'],
@@ -72,7 +72,7 @@ function faqList(){const c=PS();return [
     ['What if I can’t make it?','Drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies.']]],
   ['Paying',[
     ['How much is a session?','Each session shows its fee in Play before you book. You only pay for the sessions you join.'],
-    ['How do I pay?','Cash at the session, bank transfer or Ziina. Open the session in My BAD to see how and to tell us when you’ve paid.']]],
+    ['How do I pay?','Cash at the session, bank transfer, Ziina or Careem Pay. Open the session in My BAD to see how and to tell us when you’ve paid.']]],
   ['Points, BADges and your card',[
     ['How do points work?',`You get ${c.per} points for every session you play. At ${c.free} points your next session is free. Points reset if you don’t play for 6 months.`],
     ['What are BADges?','A thank you from the founders and crew for helping out, bringing friends and showing up. They never expire. More BADges means a higher level and better perks.'],

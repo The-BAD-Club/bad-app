@@ -61,12 +61,12 @@ function renderSess(){const el=$('v-sess');if(!el)return;const sid=S.sessId,s=S.
       ${+s.fee>0?`<div class="si">${ic('coin')}<span>AED ${esc(s.fee)}</span></div>`:''}</div>
     ${s.note?`<p class="snote">${esc(s.note)}</p>`:''}
     ${past?`<p class="fine">This session has already happened.</p>`:guest?`<div class="row"><button class="btn bigjoin" data-sjoin="1">${ic('card')}Join BAD to book</button></div><p class="fine">Already a member? Sign in, then come back to this link.</p>`
-      :`<div class="row"><button class="btn" data-sbook="1">${ic('play')}Book in Play</button></div>`}
+      :`<div class="row"><button class="btn" data-sbook="1">${ic('play')}Count me in</button></div>`}
     <div class="row"><button class="btn ghost" data-sshare="1">${ic('share')}Share</button></div>
     <p class="fine">Every level is welcome. The BAD Club, Dubai.</p>`;
   const q=k=>el.querySelector(k);
   if(q('[data-sjoin]'))q('[data-sjoin]').onclick=()=>window.badJoin&&window.badJoin();
-  if(q('[data-sbook]'))q('[data-sbook]').onclick=()=>{S.sport=s.sport||'all';S.scrollSess=sid;setView('play')};
+  if(q('[data-sbook]'))q('[data-sbook]').onclick=()=>{S.sport=s.sport||'all';S.scrollSess=sid;S.autoJoin=sid;setView('play')};
   q('[data-sshare]').onclick=()=>shareSession(sid)}
 
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-share]');if(b){e.preventDefault();shareSession(b.dataset.share)}});
