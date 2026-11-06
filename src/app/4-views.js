@@ -354,9 +354,10 @@ function renderCard(){
         <div><h4>${ic('star')}BADges</h4><p>BADges are our way of saying thank you. The founders and crew give them for loyalty and BAD spirit: helping run a session, bringing a friend, showing up week after week, trying a new sport with us. BADges never expire. The more you collect, the higher your level: ${PS().levels.slice(1).map(l=>esc(l.k)).join(', ').replace(/, ([^,]*)$/,', then $1')}.</p></div>
         <div><h4>${ic('badminton')}BAD levels</h4><p>${esc(LVL_NOTICE)} Levels go from F to A+, with a W or M rating, and only help us mix games.</p></div></div>
         <div class="list lvls">${PS().levels.map((l,i)=>`<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(i,{locked:!pt.top&&i>pt.levelIdx,label:l.k})}</span><span class="tagl${l.k===pt.level?' solid':''}">${esc(l.k)}${+l.at?' · '+l.at:''}</span><span class="fine">${esc(l.d||'')}</span></div>`).join('')}<div class="li" style="grid-template-columns:auto auto minmax(0,1fr)"><span class="lvimg">${badgeArt(9,{locked:!pt.top,label:topName()})}</span><span class="tagl${pt.top?' solid':''}">${esc(topName())}</span><span class="fine">${esc(PS().top.d||'Reserved for the founders of BAD. Every perk, always.')}</span></div></div></details>
+      ${installHTML()}${accountFootHTML()}
     </div></div>`;
   el.querySelectorAll('[data-gpfull]').forEach(b=>b.onclick=()=>startCreator(myProfile()));el.querySelectorAll('[data-signupqr]').forEach(b=>b.onclick=showSignupQR);
-  bindPlay(el);bindMe(el);
+  bindPlay(el);bindMe(el);bindInstall(el);bindAccountFoot(el);
   el.querySelectorAll('[data-payrow]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)S.openPay=d.dataset.payrow;else if(S.openPay===d.dataset.payrow)S.openPay=null}));
   el.querySelectorAll('[data-payall]').forEach(b=>b.onclick=()=>{S.payAll=!S.payAll;renderCard()});
   el.querySelectorAll('[data-pam]').forEach(b=>b.onclick=()=>{S.payAllM=b.dataset.pam;renderCard()});

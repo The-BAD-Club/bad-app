@@ -103,7 +103,8 @@ service cloud.firestore {
                         && (resource.data.get('listName', '') == '' || request.resource.data.get('listName', '') == resource.data.get('listName', '')))
                     || (isAdminAny() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['listName', 'updatedAt']))
                     || (isFull() && validProfile(request.resource.data));
-      allow delete: if isFull();
+      // Delete my account (My BAD) removes your own card; admins can delete any
+      allow delete: if isFull() || isSelf(id);
     }
     function validProfile(d) {
       return d.keys().hasOnly(['nickname', 'listName', 'listKey', 'number', 'edition', 'photo', 'sports', 'primary', 'types', 'levels', 'level',
@@ -289,7 +290,7 @@ service cloud.firestore {
     // ---------- private to the player and staff ----------
     match /contacts/{id} {
       allow read: if isSelf(id) || isAdminAny();
-      allow delete: if isFull();
+      allow delete: if isFull() || isSelf(id);
       allow write: if (isSelf(id) || isFull()) && request.resource.data.keys().hasOnly(['email', 'mobile', 'whatsapp', 'instagram', 'updatedAt'])
         && optStr(request.resource.data, 'email', 120) && optStr(request.resource.data, 'mobile', 30) && optStr(request.resource.data, 'instagram', 40);
     }

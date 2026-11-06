@@ -445,3 +445,14 @@ test('error reports: anyone signed in adds one, only full admins read them', asy
   await assertFails(getDoc(doc(p3, 'errors', 'e1')));
   await assertSucceeds(getDoc(doc(ctx('own', OWNER), 'errors', 'e1')));
 });
+
+test('delete my account: you can delete your own card and contacts, not someone else\'s', async () => {
+  await env.withSecurityRulesDisabled(async c => { const f = c.firestore();
+    await setDoc(doc(f, 'profiles', 'd1'), { nickname: 'D1', createdAt: '2026-01-01' }); await setDoc(doc(f, 'contacts', 'd1'), { mobile: '050' });
+    await setDoc(doc(f, 'profiles', 'd2'), { nickname: 'D2', createdAt: '2026-01-01' }); await setDoc(doc(f, 'contacts', 'd2'), { mobile: '050' }); });
+  const d1 = ctx('d1', 'd1@x.com');
+  await assertFails(deleteDoc(doc(d1, 'profiles', 'd2')));
+  await assertFails(deleteDoc(doc(d1, 'contacts', 'd2')));
+  await assertSucceeds(deleteDoc(doc(d1, 'contacts', 'd1')));
+  await assertSucceeds(deleteDoc(doc(d1, 'profiles', 'd1')));
+});

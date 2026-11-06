@@ -20,7 +20,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.uid&&!S.canEdit)db.doc('approved/'+S.uid).onSnapshot(d=>{const was=S.myApproval;S.myApproval=d.exists?d.data():null;if(S.myApproval&&S.myApproval.ok===true&&!S.member)location.reload();else if(JSON.stringify(was)!==JSON.stringify(S.myApproval))render()},()=>{});
   document.documentElement.classList.toggle('nomember',notMember());
   let pending=10;
-  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;unboot();if(typeof seedNomani==='function')setTimeout(seedNomani,3000);seedWeb();fixups();fixups2();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500);if(S.canEdit)setTimeout(()=>autoApproveExisting(),3000)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
+  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;unboot();if(typeof seedNomani==='function')setTimeout(seedNomani,3000);seedWeb();fixups();fixups2();resumeDelete();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500);if(S.canEdit)setTimeout(()=>autoApproveExisting(),3000)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
   /* hosted version: first admin sign-in on an empty database loads the starter sessions, posts and sample players */
   /* one-off content fixes, applied once by an admin's app */
   async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];
@@ -87,3 +87,6 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   window.badReport=report;
   window.addEventListener('error',e=>{if(!e||!e.message||/^Script error/.test(e.message))return;report(e.message,String(e.filename||'').split('/').pop()+':'+(e.lineno||''))});
   window.addEventListener('unhandledrejection',e=>{const r=e&&e.reason;if(r&&r.code==='permission-denied')return;report(r&&(r.message||r.code)||String(r),'promise')})})();
+
+/* welcome on first open, What's new after an update (20-launch.js) */
+window.addEventListener('load',()=>setTimeout(launchIntro,2600));

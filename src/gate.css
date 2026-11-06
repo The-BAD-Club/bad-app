@@ -190,3 +190,17 @@ footer.sign .sig-line{display:none}
 .linkbtn::after,.plink::after,.si a::after{content:'';position:absolute;inset:-10px 0}
 
 .meblk .linkbtn,.hero [data-allbd]{justify-self:start}
+
+/* v0.67: welcome, What's new, delete my account, legal links */
+.lsheet{display:grid;gap:12px;max-width:420px;padding:28px 24px 24px}
+.lsheet .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}.lsheet .row .btn{flex:1 1 140px}
+.lsheet input{width:100%;box-sizing:border-box}
+.wl-ic{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line)}.wl-ic .i{width:26px;height:26px}
+.wl-h{font-family:var(--serif,'Instrument Serif',Georgia,serif);font-weight:400;font-size:2rem;line-height:1.05;margin:0}
+.lsheet .muted{margin:0;line-height:1.5}
+.wl-dots{display:flex;gap:6px}.wl-dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.wl-dots i.on{background:var(--ink);width:18px;border-radius:3px}
+.acctfoot{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:.85rem;color:var(--muted);padding-top:6px}
+.acctfoot a{color:inherit;text-underline-offset:3px}.acctfoot .dangerl{margin-left:auto;color:#d64545}
+.btn.dangerb{background:#d64545;border-color:#d64545;color:#fff}.btn.dangerb:disabled{opacity:.4}
+.legal .legal-l{display:block;margin-top:2px}.legal .legal-l a{color:inherit;text-underline-offset:3px}
+.inst-ios p{margin:6px 0 0}.inst-ios .i{width:16px;height:16px;vertical-align:-3px}
