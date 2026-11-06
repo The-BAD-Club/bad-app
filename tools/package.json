@@ -1,0 +1,9 @@
+{
+  "name": "bad-app-tools",
+  "private": true,
+  "type": "module",
+  "description": "Server jobs run by GitHub Actions: nightly backup (more to come: snapshots, approvals, points).",
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

@@ -22,11 +22,19 @@ function renderAdmin(){
   const T=ATABS.find(t=>t[0]===aTab)||ATABS[0];
   const nav=`<nav class="anav" aria-label="Admin sections">${TABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
   const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,payments:aPayments,shop:aShop,settings:aSettings}[aTab]||aToday)(list,up);
-  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><div class="row" style="justify-content:space-between;align-items:flex-end;gap:10px"><h2>${T[1]}</h2><button class="btn ghost sm" id="a-signup">${ic('card')}Sign-up QR</button></div></div>${nav}<div class="abody">${body}${aTab==='today'&&fullAdmin()?errBoxHTML():''}</div></div>`;
+  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><div class="row" style="justify-content:space-between;align-items:flex-end;gap:10px"><h2>${T[1]}</h2><button class="btn ghost sm" id="a-signup">${ic('card')}Sign-up QR</button></div></div>${nav}<div class="abody">${body}${aTab==='today'?usageBoxHTML():''}${aTab==='today'&&fullAdmin()?errBoxHTML():''}</div></div>`;
   const sq=$('a-signup');if(sq)sq.onclick=showSignupQR;bindErrBox(el);
   bindAdmin();const act=el.querySelector('.anav [aria-current="page"]');if(act&&innerWidth<1000)act.scrollIntoView({block:'nearest',inline:'center'});
 }
 
+/* the last 7 days in numbers, worked out from what the app already has loaded (no extra reads) */
+function usageBoxHTML(){const wk=Date.now()-7*864e5,inWk=t=>{const x=Date.parse(t||'');return x&&x>=wk&&x<=Date.now()};
+  const active=new Set();let booked=0;
+  for(const [u,b] of Object.entries(S.bookings||{}))for(const [sid,x] of Object.entries((b&&b.s)||{})){if(!x)continue;if(inWk(x.at))booked++;const s=S.sessions[sid];if(s&&!x.out){const t=sessStart(s);if(t>=wk&&t<=Date.now())active.add(u)}}
+  const cards=Object.values(S.profiles||{}).filter(p=>!p.sample&&inWk(p.createdAt)).length;
+  const F=Object.values(S.feed||{}),posts=F.filter(p=>p.kind==='post'&&inWk(p.at)).length,props=F.filter(p=>p.kind==='props'&&inWk(p.at)).length;
+  const t=(n,l)=>`<div class="tile"><b class="num">${n}</b><span class="label">${l}</span></div>`;
+  return boxD('Last 7 days',`<div class="tiles usage">${t(active.size,'BADDIES played')}${t(booked,'Spots booked')}${t(cards,'New cards')}${t(posts,'Posts')}${t(props,'Props')}</div><p class="hint">From what this phone has loaded. Posts and props count the newest ones in the Feed.</p>`)}
 /* errors from players' phones (see 7-boot.js): loaded only when a full admin asks */
 function errBoxHTML(){const L=S.errs;
   return boxD(`App errors${L&&L.length?` <span class="badge num">${L.length}</span>`:''}`,L==null?`<p class="hint">Errors from players' phones land here: version, screen and message, never personal details.</p><button class="btn ghost sm" data-errload="1">Show the latest</button>`

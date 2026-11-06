@@ -243,3 +243,5 @@ footer.sign .legal-a{color:inherit;text-underline-offset:3px}
 .lsheet .prof-card{max-width:340px;margin:0 auto}
 @media (min-width:768px){.pf-cover{margin:0;border-radius:20px;height:200px}.pf-id{padding-left:20px}}
 .pf-id .av{position:relative;z-index:1;background:var(--bg)}
+
+.tiles.usage{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.tiles.usage .tile{min-width:0}
