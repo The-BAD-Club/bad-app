@@ -2,9 +2,11 @@
    Approved members only (the security rules enforce it). Posts go up straight away. One emoji reaction per person per post,
    one report per person; owners delete their own posts, admins hide or delete anything.
    Photos are shrunk on the phone and kept in their own documents (feedimg), loaded only when a post scrolls into view. */
-const FEED_EMO=['🔥','🧱','🤝','😂','🏸'];
-const PROPS=[['🔥','Smash of the night'],['🧱','The Wall'],['🤝','Good sport'],['😂','Vibes'],['🏸','Clutch']];
-const propLabel=e=>(PROPS.find(p=>p[0]===e)||['',''])[1];
+const FEED_EMO=['🔥','🧱','🤝','😂','⚡'];
+/* props work for every sport, not just badminton */
+const PROPS=[['🔥','On fire'],['🧱','The Wall'],['🤝','Good sport'],['😂','Vibes'],['⚡','Clutch']];
+const PROPS_OLD={'🏸':'Clutch'}; /* props given before v0.67 */
+const propLabel=e=>(PROPS.find(p=>p[0]===e)||[e,PROPS_OLD[e]||''])[1];
 S.feed=S.feed||{};S.feedImg=S.feedImg||{};S.fDraft=S.fDraft||{text:'',photos:[],dept:''};
 const ago=iso=>{const t=Date.parse(iso||'');if(!t)return '';const m=Math.round((Date.now()-t)/60000);if(m<1)return 'just now';if(m<60)return m+'m';const h=Math.round(m/60);if(h<24)return h+'h';const d=Math.round(h/24);if(d<7)return d+'d';return new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short'})};
 const pname=uid=>(S.profiles[uid]||{}).nickname||'A BAD member';
@@ -108,7 +110,7 @@ async function reactFeed(id,e){const p=S.feed[id];if(!p)return;const cur=(p.r||{
 /* ---------- player profiles ---------- */
 function openProfile(uid){if(!uid)return;if(S.profUid!==uid)S.pfTab='posts';S.profUid=uid;setView('player',{push:1})}
 function profStats(uid){let played=0;const b=(S.bookings[uid]||{}).s||{};for(const [sid,x] of Object.entries(b)){const s=S.sessions[sid];if(s&&sessStart(s)<Date.now()&&!x.out)played++}
-  const props={};Object.values(S.feed).forEach(p=>{if(p.kind==='props'&&p.to===uid&&!p.hidden)props[p.e]=(props[p.e]||0)+1});return {played,props}}
+  const props={};Object.values(S.feed).forEach(p=>{if(p.kind==='props'&&p.to===uid&&!p.hidden){const e=p.e==='🏸'?'⚡':p.e;props[e]=(props[e]||0)+1}});return {played,props}}
 /* props: once a day per player, from a profile or a Feed post */
 const todayKey=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dubai'}).replace(/-/g,'');
 const propsGiven=uid=>Object.keys(S.feed).some(k=>k==='p_'+S.uid+'_'+uid+'_'+todayKey());

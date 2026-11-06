@@ -1402,7 +1402,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
    and the same line to the SOP's App versions table. */
 const APP_VERSION='0.67';
 const CHANGES=[
-  ['0.67','2026-11-06','Ready for launch: a 3-screen welcome on first open and a What’s new note after updates; BAD installs to the home screen (app manifest, offline support, Add to Home Screen help on iPhone); proper link previews with a club photo and the page title BAD · The BAD Club; Privacy policy and Terms pages, linked from sign-in, the footer and My BAD; Delete my account at the bottom of My BAD (removes your card, contacts, posts and photos, then your sign-in). The Feed and profiles work like Facebook: a one-line composer that opens when tapped (tag chips instead of a menu), bold names, edge-to-edge photos you can tap to zoom, a reaction summary (You and 3 others), a React button with a pop-up picker and a Give props button on every post, short posts in bigger type, more posts loading as you scroll. Profiles get a club-photo cover, a big photo, Give props and See card buttons, a one-line stats row and Posts and Props tabs (a fan wall of props). Home for members now shows everything about BAD (FAQs, Guide, About, videos, Instagram, contact) before the Feed, which sits last.','Your next game now leads Home, My BAD reads like a profile with a Currently status everyone can see, and you can add BAD to your home screen.'],
+  ['0.67','2026-11-06','Ready for launch: a 3-screen welcome on first open and a What’s new note after updates; BAD installs to the home screen (app manifest, offline support, Add to Home Screen help on iPhone); proper link previews with a club photo and the page title BAD · The BAD Club; Privacy policy and Terms pages, linked from sign-in, the footer and My BAD; Delete my account at the bottom of My BAD (removes your card, contacts, posts and photos, then your sign-in). The Feed and profiles work like Facebook: a one-line composer that opens when tapped (tag chips instead of a menu), bold names, edge-to-edge photos you can tap to zoom, a reaction summary (You and 3 others), a React button with a pop-up picker and a Give props button on every post, props for every sport (On fire, The Wall, Good sport, Vibes, Clutch), short posts in bigger type, more posts loading as you scroll. Profiles get a club-photo cover, a big photo, Give props and See card buttons, a one-line stats row and Posts and Props tabs (a fan wall of props). Home for members now shows everything about BAD (FAQs, Guide, About, videos, Instagram, contact) before the Feed, which sits last.','Your next game now leads Home, My BAD reads like a profile with a Currently status everyone can see, and you can add BAD to your home screen.'],
   ['0.66','2026-11-06','One voice and one flow: Home leads with your next game (or Find a game), empty blocks hide and Gallery is a quiet link; visitors get one line of why under the film. My BAD reads like a profile: About me, a Currently status anyone can see, BADDY since and Last on court, then what you owe with one Pay now; membership moved down. Off Court everywhere (no more Side Quests); the BADge level Member is now Regular; warmer sign-up and review wording; Play no longer repeats My BAD; the Guide is 4 steps (scores moved to the FAQs); the Board says when points reset and its rows are cleaner; courts timers read 1h 39m; the Feed loads 20 posts at a time and tags only your own departments. Fixes: a duplicate photo function removed and the build now refuses duplicate names; errors from phones go to an admin-only list in Admin → Today; bigger tap areas for reactions and small links'],
   ['0.65','2026-11-06','BADDIES now live inside My BAD (under Your stats: faces of the community and See all); the extra BADDIES button on Home is gone. Profiles you open from BADDIES keep My BAD highlighted'],
   ['0.64','2026-11-06','Words: one member is a BADDY and many are BADDIES, everywhere in the app (the membership type that was Baddie is now BADDY; existing cards keep their status)'],
@@ -4668,9 +4668,11 @@ function loadHomeMediaPublic(){const db=window.badPublicDb;if(!db||S.homeMedia)r
    Approved members only (the security rules enforce it). Posts go up straight away. One emoji reaction per person per post,
    one report per person; owners delete their own posts, admins hide or delete anything.
    Photos are shrunk on the phone and kept in their own documents (feedimg), loaded only when a post scrolls into view. */
-const FEED_EMO=['🔥','🧱','🤝','😂','🏸'];
-const PROPS=[['🔥','Smash of the night'],['🧱','The Wall'],['🤝','Good sport'],['😂','Vibes'],['🏸','Clutch']];
-const propLabel=e=>(PROPS.find(p=>p[0]===e)||['',''])[1];
+const FEED_EMO=['🔥','🧱','🤝','😂','⚡'];
+/* props work for every sport, not just badminton */
+const PROPS=[['🔥','On fire'],['🧱','The Wall'],['🤝','Good sport'],['😂','Vibes'],['⚡','Clutch']];
+const PROPS_OLD={'🏸':'Clutch'}; /* props given before v0.67 */
+const propLabel=e=>(PROPS.find(p=>p[0]===e)||[e,PROPS_OLD[e]||''])[1];
 S.feed=S.feed||{};S.feedImg=S.feedImg||{};S.fDraft=S.fDraft||{text:'',photos:[],dept:''};
 const ago=iso=>{const t=Date.parse(iso||'');if(!t)return '';const m=Math.round((Date.now()-t)/60000);if(m<1)return 'just now';if(m<60)return m+'m';const h=Math.round(m/60);if(h<24)return h+'h';const d=Math.round(h/24);if(d<7)return d+'d';return new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short'})};
 const pname=uid=>(S.profiles[uid]||{}).nickname||'A BAD member';
@@ -4774,7 +4776,7 @@ async function reactFeed(id,e){const p=S.feed[id];if(!p)return;const cur=(p.r||{
 /* ---------- player profiles ---------- */
 function openProfile(uid){if(!uid)return;if(S.profUid!==uid)S.pfTab='posts';S.profUid=uid;setView('player',{push:1})}
 function profStats(uid){let played=0;const b=(S.bookings[uid]||{}).s||{};for(const [sid,x] of Object.entries(b)){const s=S.sessions[sid];if(s&&sessStart(s)<Date.now()&&!x.out)played++}
-  const props={};Object.values(S.feed).forEach(p=>{if(p.kind==='props'&&p.to===uid&&!p.hidden)props[p.e]=(props[p.e]||0)+1});return {played,props}}
+  const props={};Object.values(S.feed).forEach(p=>{if(p.kind==='props'&&p.to===uid&&!p.hidden){const e=p.e==='🏸'?'⚡':p.e;props[e]=(props[e]||0)+1}});return {played,props}}
 /* props: once a day per player, from a profile or a Feed post */
 const todayKey=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dubai'}).replace(/-/g,'');
 const propsGiven=uid=>Object.keys(S.feed).some(k=>k==='p_'+S.uid+'_'+uid+'_'+todayKey());
