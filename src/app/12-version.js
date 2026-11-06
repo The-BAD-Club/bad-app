@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.63';
+const APP_VERSION='0.64';
 const CHANGES=[
+  ['0.64','2026-11-06','Words: one member is a BADDY and many are BADDIES, everywhere in the app (the membership type that was Baddie is now BADDY; existing cards keep their status)'],
   ['0.63','2026-11-06','The Feed moved onto Home under Coming up (no extra tab). Player profiles show their card. Every session can be shared: WhatsApp with all the details and a link, an Instagram Story image with a QR code, or a copied link. Each session has its own page anyone can open; visitors get Join BAD, members get Book in Play. Baddies: everyone in the community in one place (Home, or See all baddies on the Board), with search and a department filter; tap anyone to see their card'],
   ['0.62','2026-11-05','The Feed: its own tab for approved members. Post photos (up to 4) and words, tag a department, react with one BAD emoji, report a post; owners delete their own, admins hide or delete anything. Player profiles: tap a name on the Board or in the Feed to see their card, bio, departments, sessions, props and posts. Props: give a player 🔥 🧱 🤝 😂 or 🏸 once a day from their profile; it shows in the Feed. Short bio on your card. Needs the new security rules'],
   ['0.61','2026-11-05','Calmer text spacing across the app (one spacing scale, more room between sections, easier-to-read paragraphs); the footer is three tidy lines (The BAD Club LLC, licence number, app version) with Sign out on the right; a small back arrow at the top takes you one step back, and the phone back gesture does the same; WTH is BAD is now About BAD'],

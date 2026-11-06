@@ -1322,8 +1322,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.63';
+const APP_VERSION='0.64';
 const CHANGES=[
+  ['0.64','2026-11-06','Words: one member is a BADDY and many are BADDIES, everywhere in the app (the membership type that was Baddie is now BADDY; existing cards keep their status)'],
   ['0.63','2026-11-06','The Feed moved onto Home under Coming up (no extra tab). Player profiles show their card. Every session can be shared: WhatsApp with all the details and a link, an Instagram Story image with a QR code, or a copied link. Each session has its own page anyone can open; visitors get Join BAD, members get Book in Play. Baddies: everyone in the community in one place (Home, or See all baddies on the Board), with search and a department filter; tap anyone to see their card'],
   ['0.62','2026-11-05','The Feed: its own tab for approved members. Post photos (up to 4) and words, tag a department, react with one BAD emoji, report a post; owners delete their own, admins hide or delete anything. Player profiles: tap a name on the Board or in the Feed to see their card, bio, departments, sessions, props and posts. Props: give a player 🔥 🧱 🤝 😂 or 🏸 once a day from their profile; it shows in the Feed. Short bio on your card. Needs the new security rules'],
   ['0.61','2026-11-05','Calmer text spacing across the app (one spacing scale, more room between sections, easier-to-read paragraphs); the footer is three tidy lines (The BAD Club LLC, licence number, app version) with Sign out on the right; a small back arrow at the top takes you one step back, and the phone back gesture does the same; WTH is BAD is now About BAD'],
@@ -1658,18 +1659,18 @@ function toBWUrl(url){return new Promise(res=>{if(!url)return res('');const img=
 /* referral codes: a member's personal code, or a club code made by admins */
 function codeInfo(raw){const c=normCode(raw);if(!c)return null;
   const a=(S.codes||{})[c];if(a)return a.off?{kind:'off',code:c}:{kind:'club',code:c,label:a.label||'BAD club code',pts:0};
-  for(const [uid,p] of Object.entries(S.profiles||{}))if(refsOf(p).some(r=>{const n=normCode(r);return n===c||n===c.replace(/^(.*\D)(\d)$/,'$10$2')}))return{kind:'member',code:c,uid,name:p.nickname||'a BADDIE'};
+  for(const [uid,p] of Object.entries(S.profiles||{}))if(refsOf(p).some(r=>{const n=normCode(r);return n===c||n===c.replace(/^(.*\D)(\d)$/,'$10$2')}))return{kind:'member',code:c,uid,name:p.nickname||'a BADDY'};
   return{kind:'none',code:c}}
 
 /* ---------- membership: players pick a type, admins verify it ---------- */
-const MEM_DEFAULT=[{k:'Guest',verify:false,d:'New, or dropping in now and then'},{k:'Baddie',verify:true,d:'Plays with us regularly'},{k:'Crew',verify:true,staff:true,d:'Helps run sessions and events'},{k:'Community Manager',verify:true,staff:true,admin:true,d:'Looks after the community'},{k:'Founder',verify:true,staff:true,admin:true,d:'Started BAD'}];
-const MEM_OLD={'Drop-in':'Guest'};
-const memTypes=()=>(S.memCfg&&S.memCfg.types&&S.memCfg.types.length)?S.memCfg.types:MEM_DEFAULT;
+const MEM_DEFAULT=[{k:'Guest',verify:false,d:'New, or dropping in now and then'},{k:'BADDY',verify:true,d:'Plays with us regularly'},{k:'Crew',verify:true,staff:true,d:'Helps run sessions and events'},{k:'Community Manager',verify:true,staff:true,admin:true,d:'Looks after the community'},{k:'Founder',verify:true,staff:true,admin:true,d:'Started BAD'}];
+const MEM_OLD={'Drop-in':'Guest','Baddie':'BADDY'};
+const memTypes=()=>(S.memCfg&&S.memCfg.types&&S.memCfg.types.length)?S.memCfg.types.map(t=>MEM_OLD[t.k]?{...t,k:MEM_OLD[t.k]}:t):MEM_DEFAULT;
 const memType=k=>memTypes().find(t=>t.k===(MEM_OLD[k]||k));
 const memPick=()=>memTypes().filter(t=>!t.staff);
 const memLabel=uid=>{const m=uid&&memStatus(uid);return m&&m.state==='verified'?m.type:'Guest'};
 function memStatus(uid){const p=S.profiles[uid]||{},v=(S.members||{})[uid]||{},want=MEM_OLD[p.memReq?.type]||p.memReq?.type||'Guest',t=memType(want);
-  if(v.type&&v.type===want)return{type:want,state:'verified',at:v.at};
+  if(v.type&&(MEM_OLD[v.type]||v.type)===want)return{type:want,state:'verified',at:v.at};
   if(!t||!t.verify)return{type:want,state:'open'};
   if(v.declined===want)return{type:want,state:'declined'};
   return{type:want,state:'pending',at:p.memReq?.at}}
@@ -2323,7 +2324,7 @@ function renderCard(){
   if(!p&&!S.loaded){el.innerHTML=`<div class="bootlogo"><img class="inline-logo logo-l" src="${LOGO.badK}" alt="BAD"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="BAD"></div>`;return}
   if(!p){
     el.innerHTML=`<div class="grid2"><div class="mini">${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{balance:0,badges:0,sessions:0})}</div>
-      <div class="hero"><span class="label">One card for every BADDIE</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
+      <div class="hero"><span class="label">One card for every BADDY</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
         <p class="muted">Please take a minute to register. It's how you join sessions, earn points and meet the community.</p>
         <div class="perks">
           <div>${ic('play')}<span><b>Join in one tap</b><small>Badminton, volleyball, pickleball and more</small></span></div>
@@ -3254,7 +3255,7 @@ function renderBoard(){
   $('v-board').innerHTML=`${courtSwitch('board')}<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'}</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;
   bindSwitch($('v-board'));
   $('v-board').querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
-  {const h=$('v-board').querySelector('.hero');if(h&&!h.querySelector('[data-allbd]')){const b=document.createElement('button');b.className='linkbtn';b.dataset.allbd='1';b.innerHTML=ic('users')+'See all baddies';b.onclick=()=>setView('baddies',{push:1});h.appendChild(b)}}
+  {const h=$('v-board').querySelector('.hero');if(h&&!h.querySelector('[data-allbd]')){const b=document.createElement('button');b.className='linkbtn';b.dataset.allbd='1';b.innerHTML=ic('users')+'See all BADDIES';b.onclick=()=>setView('baddies',{push:1});h.appendChild(b)}}
   document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.bf;renderBoard()});
   document.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{S.boardMode=b.dataset.bm;renderBoard()});
 }
@@ -3684,8 +3685,8 @@ function gmPanel(sid,s){const gms=s.gms||[],ps=Object.entries(S.profiles).filter
 /* add people by hand: a registered player, or a guest (with or without a host) */
 function addPlayerPanel(sid,r){const oc=offCourt(S.sessions[sid]);const inIds=new Set([...r.in,...r.wait].filter(e=>!e.guest).map(e=>e.uid)),ps=Object.entries(S.profiles).filter(([u,p])=>!p.sample&&!inIds.has(u)).sort((a,b)=>(a[1].nickname||'').localeCompare(b[1].nickname||'')),hosts=Object.entries(S.profiles).filter(([u])=>inIds.has(u));
   const m=S.addMode||'player';
-  return `<div class="addp"><div class="chips" role="group" aria-label="Add someone"><button type="button" class="chip sm" data-addmode="player" aria-pressed="${m==='player'}">${ic('plus')}${oc?'Add a BADDIE':'Add a player'}</button><button type="button" class="chip sm" data-addmode="guest" aria-pressed="${m==='guest'}">${ic('guest')}Add a guest</button></div>
-    ${m==='player'?`<div class="row"><select id="ap-uid" style="flex:1;min-width:180px" aria-label="Player to add"><option value="">${oc?'Pick a registered BADDIE':'Pick a registered player'}</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${p.listName&&p.listName!==p.nickname?' ('+esc(p.listName)+')':''}</option>`).join('')}</select><button class="btn sm" id="ap-go">Add</button></div>`
+  return `<div class="addp"><div class="chips" role="group" aria-label="Add someone"><button type="button" class="chip sm" data-addmode="player" aria-pressed="${m==='player'}">${ic('plus')}${oc?'Add a BADDY':'Add a player'}</button><button type="button" class="chip sm" data-addmode="guest" aria-pressed="${m==='guest'}">${ic('guest')}Add a guest</button></div>
+    ${m==='player'?`<div class="row"><select id="ap-uid" style="flex:1;min-width:180px" aria-label="Player to add"><option value="">${oc?'Pick a registered BADDY':'Pick a registered player'}</option>${ps.map(([u,p])=>`<option value="${esc(u)}">${esc(p.nickname||'')}${p.listName&&p.listName!==p.nickname?' ('+esc(p.listName)+')':''}</option>`).join('')}</select><button class="btn sm" id="ap-go">Add</button></div>`
       :`<div class="row"><input type="text" id="ag-name" maxlength="30" placeholder="Guest's name" style="flex:1;min-width:140px" aria-label="Guest's name"><select id="ag-host" style="flex:1;min-width:160px" aria-label="Guest of"><option value="">No host · BAD guest</option>${hosts.map(([u,p])=>`<option value="${esc(u)}">Guest of ${esc(p.nickname||'')}</option>`).join('')}</select><button class="btn sm" id="ag-go">Add</button></div>
       <p class="fine">With a host, the fee goes under the host's name. With no host, the guest shows on Payments under their own name.</p>`}
     <p class="fine">Added by an admin. Payment starts as cash.</p></div>`}
@@ -3850,7 +3851,7 @@ const CANCEL_WHY=['Not enough players','Venue not available','Weather','Coach or
 function sessionEmails(sid){const r=roster(sid),ids=[...new Set([...r.in,...r.wait].filter(e=>!e.guest).map(e=>e.uid))];
   return ids.map(u=>({uid:u,email:((S.contacts[u]||{}).email||'').trim(),name:nameOf(u,(S.bookings[u]||{}).key)})).filter(x=>/@/.test(x.email))}
 function cancelPanel(sid,s,r){const em=sessionEmails(sid),ppl=[...r.in,...r.wait].filter(e=>!e.guest).length;
-  const msg=`Hi BADDIE,\n\nSorry, ${s.title} on ${fmtS(s)}${s.timeTbc?'':' at '+fmtTime(s.start)} is cancelled: ${cancelWhyS.toLowerCase()}.\n\nYou won't be charged for it. We'll see you at the next one.\n\nThe BAD Club`;
+  const msg=`Hi BADDY,\n\nSorry, ${s.title} on ${fmtS(s)}${s.timeTbc?'':' at '+fmtTime(s.start)} is cancelled: ${cancelWhyS.toLowerCase()}.\n\nYou won't be charged for it. We'll see you at the next one.\n\nThe BAD Club`;
   return `<div class="confirm" style="margin-top:12px"><b>Cancel ${esc(s.title)}?</b>
     <div class="chips" role="group" aria-label="Reason">${CANCEL_WHY.map(w=>`<button class="chip sm" data-cwhy="${esc(w)}" aria-pressed="${cancelWhyS===w}">${esc(w)}</button>`).join('')}</div>
     <label class="fine" for="s-cmsg">Email to everyone who signed up (${em.length} of ${ppl} have an email on file)</label><textarea id="s-cmsg" rows="7">${esc(msg)}</textarea>
@@ -4450,7 +4451,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const sessions=next.length?`<section class="hsec"><h3 class="ah">Coming up</h3><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
-    <div class="homelinks ${notMember()||window.BAD_GUEST?'two':'three'}">${[...(notMember()||window.BAD_GUEST?[]:[['baddies','users','Baddies']]),['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
+    <div class="homelinks ${notMember()||window.BAD_GUEST?'two':'three'}">${[...(notMember()||window.BAD_GUEST?[]:[['baddies','users','BADDIES']]),['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
     ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
@@ -4669,11 +4670,11 @@ function baddiesList(){const q=S.bdQ.trim().toLowerCase();
 function baddiesGrid(){const L=baddiesList();
   return L.length?`<div class="bdgrid">${L.map(([uid,p])=>{const og=typeof first100No==='function'?first100No(uid):0;
     return `<button class="bd" data-prof="${esc(uid)}">${avatar(p,p.listKey)}<span class="bd-n">${esc(p.nickname)}</span><span class="bd-s">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)):''}${og?` · OG #${og}`:''}</span><span class="bd-i">${(p.sports||[]).filter(k=>SPORTS[k]).slice(0,4).map(k=>ic(SPORTS[k].icon)).join('')}</span></button>`}).join('')}</div>`
-    :`<div class="empty">${ic('users')}<span>No baddies match that.</span></div>`}
+    :`<div class="empty">${ic('users')}<span>No BADDIES match that.</span></div>`}
 function renderBaddies(){const el=$('v-baddies');if(!el)return;
   const used=[...new Set(Object.values(S.profiles).flatMap(p=>p.sports||[]))].filter(k=>SPORTS[k]);
-  el.innerHTML=`<div class="hero"><span class="label">Baddies</span><h2>The community.</h2><p class="muted">${Object.values(S.profiles).filter(p=>!p.sample).length} baddies and counting. Tap anyone to see their card.</p></div>
-    <div class="field" style="margin:0"><label for="bd-q" class="sr">Search baddies</label><input type="search" id="bd-q" placeholder="Search by name or number" value="${esc(S.bdQ)}"></div>
+  el.innerHTML=`<div class="hero"><span class="label">BADDIES</span><h2>The community.</h2><p class="muted">${Object.values(S.profiles).filter(p=>!p.sample).length} BADDIES and counting. Tap anyone to see their card.</p></div>
+    <div class="field" style="margin:0"><label for="bd-q" class="sr">Search BADDIES</label><input type="search" id="bd-q" placeholder="Search by name or number" value="${esc(S.bdQ)}"></div>
     ${sportBar(S.bdSport,'bdf',used)}<div id="bd-out">${baddiesGrid()}</div>`;
   const bindOut=()=>el.querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
   const qi=$('bd-q');qi.oninput=()=>{S.bdQ=qi.value;$('bd-out').innerHTML=baddiesGrid();bindOut()};
@@ -4810,7 +4811,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   /* one-off content fixes, applied once by an admin's app */
   async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];
     if(b&&b.link!=='https://bad-o-ween.thebadclub-co.workers.dev/')try{await db.doc('posts/badoween-2026').update({link:'https://bad-o-ween.thebadclub-co.workers.dev/',linkLabel:'Event site',mapLink:b.mapLink||(String(b.link||'').includes('maps')?b.link:'https://maps.app.goo.gl/LFCfLBWaK19X63vY9')})}catch(e){console.warn(e)}}
-  async function fixups2(){if(!S.canEdit)return;const a=S.posts['app-live'];if(a&&/every BAD club/.test(a.body||''))try{await db.doc('posts/app-live').update({body:a.body.replace('every BAD club','every BADDIE')})}catch(_){}}
+  async function fixups2(){if(!S.canEdit)return;const a=S.posts['app-live'];if(a&&/every BAD club|BADDIE\b/.test(a.body||''))try{await db.doc('posts/app-live').update({body:a.body.replace('every BAD club','every BADDY').replace(/BADDIE\b/g,'BADDY')})}catch(_){}}
   async function seedWeb(){if(!window.BAD_WEB||!S.canEdit||Object.keys(S.sessions||{}).length)return;
     try{const seed=await (await fetch('seed.json',{cache:'no-store'})).json();
       for(const [c,docs] of Object.entries(seed))for(const [id,d] of Object.entries(docs))await db.doc(c+'/'+id).set(d);

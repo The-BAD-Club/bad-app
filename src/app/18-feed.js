@@ -113,11 +113,11 @@ function baddiesList(){const q=S.bdQ.trim().toLowerCase();
 function baddiesGrid(){const L=baddiesList();
   return L.length?`<div class="bdgrid">${L.map(([uid,p])=>{const og=typeof first100No==='function'?first100No(uid):0;
     return `<button class="bd" data-prof="${esc(uid)}">${avatar(p,p.listKey)}<span class="bd-n">${esc(p.nickname)}</span><span class="bd-s">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)):''}${og?` · OG #${og}`:''}</span><span class="bd-i">${(p.sports||[]).filter(k=>SPORTS[k]).slice(0,4).map(k=>ic(SPORTS[k].icon)).join('')}</span></button>`}).join('')}</div>`
-    :`<div class="empty">${ic('users')}<span>No baddies match that.</span></div>`}
+    :`<div class="empty">${ic('users')}<span>No BADDIES match that.</span></div>`}
 function renderBaddies(){const el=$('v-baddies');if(!el)return;
   const used=[...new Set(Object.values(S.profiles).flatMap(p=>p.sports||[]))].filter(k=>SPORTS[k]);
-  el.innerHTML=`<div class="hero"><span class="label">Baddies</span><h2>The community.</h2><p class="muted">${Object.values(S.profiles).filter(p=>!p.sample).length} baddies and counting. Tap anyone to see their card.</p></div>
-    <div class="field" style="margin:0"><label for="bd-q" class="sr">Search baddies</label><input type="search" id="bd-q" placeholder="Search by name or number" value="${esc(S.bdQ)}"></div>
+  el.innerHTML=`<div class="hero"><span class="label">BADDIES</span><h2>The community.</h2><p class="muted">${Object.values(S.profiles).filter(p=>!p.sample).length} BADDIES and counting. Tap anyone to see their card.</p></div>
+    <div class="field" style="margin:0"><label for="bd-q" class="sr">Search BADDIES</label><input type="search" id="bd-q" placeholder="Search by name or number" value="${esc(S.bdQ)}"></div>
     ${sportBar(S.bdSport,'bdf',used)}<div id="bd-out">${baddiesGrid()}</div>`;
   const bindOut=()=>el.querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
   const qi=$('bd-q');qi.oninput=()=>{S.bdQ=qi.value;$('bd-out').innerHTML=baddiesGrid();bindOut()};
