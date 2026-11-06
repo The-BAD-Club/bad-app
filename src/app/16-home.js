@@ -26,11 +26,9 @@ function renderHome(){const el=$('v-home');if(!el)return;
     ${heroHTML("")}${cta?`<p class="hwhy">Badminton, volleyball, pickleball and more. Every week, every level.</p><div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
-    ${sessions}`
-    :`${nextBlock}${newsHTML()}${sessions}${feedSectionHTML()}${about}`}
-    ${homeVideosHTML()}
-    ${igHTML()}
-    ${contactHTML()}
+    ${sessions}${homeVideosHTML()}${igHTML()}${contactHTML()}`
+    /* members: everything about BAD first, the Feed last so it can keep scrolling */
+    :`${nextBlock}${newsHTML()}${sessions}${about}${homeVideosHTML()}${igHTML()}${contactHTML()}${feedSectionHTML()}`}
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
   bindHero(el);bindHomeFeed(el);

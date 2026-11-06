@@ -1363,7 +1363,7 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
    and the same line to the SOP's App versions table. */
 const APP_VERSION='0.67';
 const CHANGES=[
-  ['0.67','2026-11-06','Ready for launch: a 3-screen welcome on first open and a What’s new note after updates; BAD installs to the home screen (app manifest, offline support, Add to Home Screen help on iPhone); proper link previews with a club photo and the page title BAD · The BAD Club; Privacy policy and Terms pages, linked from sign-in, the footer and My BAD; Delete my account at the bottom of My BAD (removes your card, contacts, posts and photos, then your sign-in).','Your next game now leads Home, My BAD reads like a profile with a Currently status everyone can see, and you can add BAD to your home screen.'],
+  ['0.67','2026-11-06','Ready for launch: a 3-screen welcome on first open and a What’s new note after updates; BAD installs to the home screen (app manifest, offline support, Add to Home Screen help on iPhone); proper link previews with a club photo and the page title BAD · The BAD Club; Privacy policy and Terms pages, linked from sign-in, the footer and My BAD; Delete my account at the bottom of My BAD (removes your card, contacts, posts and photos, then your sign-in). Home for members now shows everything about BAD (FAQs, Guide, About, videos, Instagram, contact) before the Feed, which sits last.','Your next game now leads Home, My BAD reads like a profile with a Currently status everyone can see, and you can add BAD to your home screen.'],
   ['0.66','2026-11-06','One voice and one flow: Home leads with your next game (or Find a game), empty blocks hide and Gallery is a quiet link; visitors get one line of why under the film. My BAD reads like a profile: About me, a Currently status anyone can see, BADDY since and Last on court, then what you owe with one Pay now; membership moved down. Off Court everywhere (no more Side Quests); the BADge level Member is now Regular; warmer sign-up and review wording; Play no longer repeats My BAD; the Guide is 4 steps (scores moved to the FAQs); the Board says when points reset and its rows are cleaner; courts timers read 1h 39m; the Feed loads 20 posts at a time and tags only your own departments. Fixes: a duplicate photo function removed and the build now refuses duplicate names; errors from phones go to an admin-only list in Admin → Today; bigger tap areas for reactions and small links'],
   ['0.65','2026-11-06','BADDIES now live inside My BAD (under Your stats: faces of the community and See all); the extra BADDIES button on Home is gone. Profiles you open from BADDIES keep My BAD highlighted'],
   ['0.64','2026-11-06','Words: one member is a BADDY and many are BADDIES, everywhere in the app (the membership type that was Baddie is now BADDY; existing cards keep their status)'],
@@ -4527,11 +4527,9 @@ function renderHome(){const el=$('v-home');if(!el)return;
     ${heroHTML("")}${cta?`<p class="hwhy">Badminton, volleyball, pickleball and more. Every week, every level.</p><div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
-    ${sessions}`
-    :`${nextBlock}${newsHTML()}${sessions}${feedSectionHTML()}${about}`}
-    ${homeVideosHTML()}
-    ${igHTML()}
-    ${contactHTML()}
+    ${sessions}${homeVideosHTML()}${igHTML()}${contactHTML()}`
+    /* members: everything about BAD first, the Feed last so it can keep scrolling */
+    :`${nextBlock}${newsHTML()}${sessions}${about}${homeVideosHTML()}${igHTML()}${contactHTML()}${feedSectionHTML()}`}
   </div>`;
   el.querySelectorAll('[data-hjoin]').forEach(b=>b.onclick=()=>window.badJoin&&window.badJoin());
   bindHero(el);bindHomeFeed(el);
