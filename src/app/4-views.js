@@ -272,7 +272,7 @@ function renderCard(){
   if(!p&&!S.loaded){el.innerHTML=`<div class="bootlogo"><img class="inline-logo logo-l" src="${LOGO.badK}" alt="BAD"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="BAD"></div>`;return}
   if(!p){
     el.innerHTML=`<div class="grid2"><div class="mini">${cardHTML({nickname:'Your name',number:'',edition:'oncourt',sports:PLAYABLE},{balance:0,badges:0,sessions:0})}</div>
-      <div class="hero"><span class="label">One card for every BADDIE</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
+      <div class="hero"><span class="label">One card for every BADDY</span><h2>Welcome to <span class="sr-only">BAD</span><img class="inline-logo logo-l" src="${LOGO.badK}" alt="" aria-hidden="true"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="" aria-hidden="true">.</h2>
         <p class="muted">Please take a minute to register. It's how you join sessions, earn points and meet the community.</p>
         <div class="perks">
           <div>${ic('play')}<span><b>Join in one tap</b><small>Badminton, volleyball, pickleball and more</small></span></div>

@@ -25,7 +25,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   /* one-off content fixes, applied once by an admin's app */
   async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];
     if(b&&b.link!=='https://bad-o-ween.thebadclub-co.workers.dev/')try{await db.doc('posts/badoween-2026').update({link:'https://bad-o-ween.thebadclub-co.workers.dev/',linkLabel:'Event site',mapLink:b.mapLink||(String(b.link||'').includes('maps')?b.link:'https://maps.app.goo.gl/LFCfLBWaK19X63vY9')})}catch(e){console.warn(e)}}
-  async function fixups2(){if(!S.canEdit)return;const a=S.posts['app-live'];if(a&&/every BAD club/.test(a.body||''))try{await db.doc('posts/app-live').update({body:a.body.replace('every BAD club','every BADDIE')})}catch(_){}}
+  async function fixups2(){if(!S.canEdit)return;const a=S.posts['app-live'];if(a&&/every BAD club|BADDIE\b/.test(a.body||''))try{await db.doc('posts/app-live').update({body:a.body.replace('every BAD club','every BADDY').replace(/BADDIE\b/g,'BADDY')})}catch(_){}}
   async function seedWeb(){if(!window.BAD_WEB||!S.canEdit||Object.keys(S.sessions||{}).length)return;
     try{const seed=await (await fetch('seed.json',{cache:'no-store'})).json();
       for(const [c,docs] of Object.entries(seed))for(const [id,d] of Object.entries(docs))await db.doc(c+'/'+id).set(d);

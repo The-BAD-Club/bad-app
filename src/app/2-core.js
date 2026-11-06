@@ -263,18 +263,18 @@ function toBWUrl(url){return new Promise(res=>{if(!url)return res('');const img=
 /* referral codes: a member's personal code, or a club code made by admins */
 function codeInfo(raw){const c=normCode(raw);if(!c)return null;
   const a=(S.codes||{})[c];if(a)return a.off?{kind:'off',code:c}:{kind:'club',code:c,label:a.label||'BAD club code',pts:0};
-  for(const [uid,p] of Object.entries(S.profiles||{}))if(refsOf(p).some(r=>{const n=normCode(r);return n===c||n===c.replace(/^(.*\D)(\d)$/,'$10$2')}))return{kind:'member',code:c,uid,name:p.nickname||'a BADDIE'};
+  for(const [uid,p] of Object.entries(S.profiles||{}))if(refsOf(p).some(r=>{const n=normCode(r);return n===c||n===c.replace(/^(.*\D)(\d)$/,'$10$2')}))return{kind:'member',code:c,uid,name:p.nickname||'a BADDY'};
   return{kind:'none',code:c}}
 
 /* ---------- membership: players pick a type, admins verify it ---------- */
-const MEM_DEFAULT=[{k:'Guest',verify:false,d:'New, or dropping in now and then'},{k:'Baddie',verify:true,d:'Plays with us regularly'},{k:'Crew',verify:true,staff:true,d:'Helps run sessions and events'},{k:'Community Manager',verify:true,staff:true,admin:true,d:'Looks after the community'},{k:'Founder',verify:true,staff:true,admin:true,d:'Started BAD'}];
-const MEM_OLD={'Drop-in':'Guest'};
-const memTypes=()=>(S.memCfg&&S.memCfg.types&&S.memCfg.types.length)?S.memCfg.types:MEM_DEFAULT;
+const MEM_DEFAULT=[{k:'Guest',verify:false,d:'New, or dropping in now and then'},{k:'BADDY',verify:true,d:'Plays with us regularly'},{k:'Crew',verify:true,staff:true,d:'Helps run sessions and events'},{k:'Community Manager',verify:true,staff:true,admin:true,d:'Looks after the community'},{k:'Founder',verify:true,staff:true,admin:true,d:'Started BAD'}];
+const MEM_OLD={'Drop-in':'Guest','Baddie':'BADDY'};
+const memTypes=()=>(S.memCfg&&S.memCfg.types&&S.memCfg.types.length)?S.memCfg.types.map(t=>MEM_OLD[t.k]?{...t,k:MEM_OLD[t.k]}:t):MEM_DEFAULT;
 const memType=k=>memTypes().find(t=>t.k===(MEM_OLD[k]||k));
 const memPick=()=>memTypes().filter(t=>!t.staff);
 const memLabel=uid=>{const m=uid&&memStatus(uid);return m&&m.state==='verified'?m.type:'Guest'};
 function memStatus(uid){const p=S.profiles[uid]||{},v=(S.members||{})[uid]||{},want=MEM_OLD[p.memReq?.type]||p.memReq?.type||'Guest',t=memType(want);
-  if(v.type&&v.type===want)return{type:want,state:'verified',at:v.at};
+  if(v.type&&(MEM_OLD[v.type]||v.type)===want)return{type:want,state:'verified',at:v.at};
   if(!t||!t.verify)return{type:want,state:'open'};
   if(v.declined===want)return{type:want,state:'declined'};
   return{type:want,state:'pending',at:p.memReq?.at}}

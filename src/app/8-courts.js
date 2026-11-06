@@ -627,7 +627,7 @@ function renderBoard(){
   $('v-board').innerHTML=`${courtSwitch('board')}<div class="hero"><span class="label">Board</span><h2>The BAD board.</h2><p class="fine">${mode==='rank'?'Wins from scored games. A light competition, all in good fun.':'Lifetime points from registered members.'}</p></div>${toggle}${sportBar(f,'bf',mode==='rank'?COURT_SPORTS:PLAYABLE)}<div class="list">${body}</div>`;
   bindSwitch($('v-board'));
   $('v-board').querySelectorAll('[data-prof]').forEach(b=>b.onclick=()=>openProfile(b.dataset.prof));
-  {const h=$('v-board').querySelector('.hero');if(h&&!h.querySelector('[data-allbd]')){const b=document.createElement('button');b.className='linkbtn';b.dataset.allbd='1';b.innerHTML=ic('users')+'See all baddies';b.onclick=()=>setView('baddies',{push:1});h.appendChild(b)}}
+  {const h=$('v-board').querySelector('.hero');if(h&&!h.querySelector('[data-allbd]')){const b=document.createElement('button');b.className='linkbtn';b.dataset.allbd='1';b.innerHTML=ic('users')+'See all BADDIES';b.onclick=()=>setView('baddies',{push:1});h.appendChild(b)}}
   document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>{S.sport=b.dataset.bf;renderBoard()});
   document.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{S.boardMode=b.dataset.bm;renderBoard()});
 }
