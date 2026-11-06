@@ -20,7 +20,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.uid&&!S.canEdit)db.doc('approved/'+S.uid).onSnapshot(d=>{const was=S.myApproval;S.myApproval=d.exists?d.data():null;if(S.myApproval&&S.myApproval.ok===true&&!S.member)location.reload();else if(JSON.stringify(was)!==JSON.stringify(S.myApproval))render()},()=>{});
   document.documentElement.classList.toggle('nomember',notMember());
   let pending=10;
-  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;unboot();if(typeof seedNomani==='function')setTimeout(seedNomani,3000);seedWeb();fixups();fixups2();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500);if(S.canEdit)setTimeout(()=>autoApproveExisting(),3000)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
+  const done=()=>{if(pending>0&&--pending===0){S.loaded=true;unboot();if(typeof seedNomani==='function')setTimeout(seedNomani,3000);seedWeb();fixups();fixups2();resumeDelete();if(S.canEdit&&window.BAD_WEB)setTimeout(()=>removeSamples(true),2500);if(S.canEdit)setTimeout(()=>autoPoints(),1500);if(S.canEdit)setTimeout(()=>autoApproveExisting(),3000)}render();if(S.loaded){processCheckin();if(S.canEdit)syncCheckins()}};
   /* hosted version: first admin sign-in on an empty database loads the starter sessions, posts and sample players */
   /* one-off content fixes, applied once by an admin's app */
   async function fixups(){if(!S.canEdit)return;const b=S.posts['badoween-2026'];
@@ -60,7 +60,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.member)db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
-  if(S.member)db.collection('feed').orderBy('at','desc').limit(80).onSnapshot(s=>{S.feed=map(s);if(S.view==='home')refreshFeedList();else if(S.view==='player')render()},()=>{});
+  if(S.member)subFeed();
   db.doc('config/home').onSnapshot(d=>{S.homeMedia=d.exists?d.data():{};if(['home','wth'].includes(S.view))render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};S.siteLoaded=true;render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});
@@ -78,3 +78,15 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
     db.collection('noshows').onSnapshot(s=>{S.noshows=map(s);if(S.view==='admin')render()},()=>{});
   }
 })();
+
+/* errors from players' phones go to an admin-only list (Admin → Today): version, screen and message, never personal details.
+   At most 20 a day per phone. Permission errors are expected before rules are published, so they're skipped. */
+(function(){const day=()=>new Date().toISOString().slice(0,10);
+  function report(msg,src){try{if(!S.db||!S.uid)return;const st=JSON.parse(localStorage.getItem('badErr')||'{}');if(st.d!==day()){st.d=day();st.n=0}if(st.n>=20)return;st.n++;localStorage.setItem('badErr',JSON.stringify(st));
+    S.db.collection('errors').add({v:String(APP_VERSION).slice(0,10),view:String(S.view||'').slice(0,20),msg:String(msg||'Error').slice(0,300),src:String(src||'').slice(0,120),at:new Date().toISOString()}).catch(()=>{})}catch(e){}}
+  window.badReport=report;
+  window.addEventListener('error',e=>{if(!e||!e.message||/^Script error/.test(e.message))return;report(e.message,String(e.filename||'').split('/').pop()+':'+(e.lineno||''))});
+  window.addEventListener('unhandledrejection',e=>{const r=e&&e.reason;if(r&&r.code==='permission-denied')return;report(r&&(r.message||r.code)||String(r),'promise')})})();
+
+/* welcome on first open, What's new after an update (20-launch.js) */
+window.addEventListener('load',()=>setTimeout(launchIntro,2600));

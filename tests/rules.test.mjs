@@ -428,3 +428,31 @@ test('profiles take a short bio', async () => {
   await assertSucceeds(updateDoc(doc(p1, 'profiles', 'p1'), { bio: 'Lefty. Loves a smash.' }));
   await assertFails(updateDoc(doc(p1, 'profiles', 'p1'), { bio: 'x'.repeat(161) }));
 });
+
+test('profiles take a short Currently status', async () => {
+  await env.withSecurityRulesDisabled(async c => { await setDoc(doc(c.firestore(), 'profiles', 'p2'), { nickname: 'P2', createdAt: '2026-01-01' }); });
+  const p2 = ctx('p2', 'p2@x.com');
+  await assertSucceeds(updateDoc(doc(p2, 'profiles', 'p2'), { now: 'Looking for a doubles partner Friday' }));
+  await assertFails(updateDoc(doc(p2, 'profiles', 'p2'), { now: 'x'.repeat(61) }));
+});
+
+test('error reports: anyone signed in adds one, only full admins read them', async () => {
+  const p3 = ctx('p3', 'p3@x.com');
+  const e = { v: '0.66', view: 'home', msg: 'TypeError: x is undefined', at: '2026-11-06T10:00:00Z' };
+  await assertSucceeds(setDoc(doc(p3, 'errors', 'e1'), e));
+  await assertFails(setDoc(doc(p3, 'errors', 'e2'), { ...e, email: 'p3@x.com' }));
+  await assertFails(setDoc(doc(anon(), 'errors', 'e3'), e));
+  await assertFails(getDoc(doc(p3, 'errors', 'e1')));
+  await assertSucceeds(getDoc(doc(ctx('own', OWNER), 'errors', 'e1')));
+});
+
+test('delete my account: you can delete your own card and contacts, not someone else\'s', async () => {
+  await env.withSecurityRulesDisabled(async c => { const f = c.firestore();
+    await setDoc(doc(f, 'profiles', 'd1'), { nickname: 'D1', createdAt: '2026-01-01' }); await setDoc(doc(f, 'contacts', 'd1'), { mobile: '050' });
+    await setDoc(doc(f, 'profiles', 'd2'), { nickname: 'D2', createdAt: '2026-01-01' }); await setDoc(doc(f, 'contacts', 'd2'), { mobile: '050' }); });
+  const d1 = ctx('d1', 'd1@x.com');
+  await assertFails(deleteDoc(doc(d1, 'profiles', 'd2')));
+  await assertFails(deleteDoc(doc(d1, 'contacts', 'd2')));
+  await assertSucceeds(deleteDoc(doc(d1, 'contacts', 'd1')));
+  await assertSucceeds(deleteDoc(doc(d1, 'profiles', 'd1')));
+});

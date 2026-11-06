@@ -104,7 +104,7 @@ const SPORTS={
 };
 /* side quests: collaborations and everything Off Court. They book like sessions but live on their own tab. */
 const SIDE=Object.keys(SPORTS).filter(k=>SPORTS[k].side);const isSide=k=>!!(SPORTS[k]||{}).side;
-const ACT_DESC={badminton:'Badminton · BADminton Wednesday & Friday',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Side Quests',party:'Parties and experiences · Side Quests',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
+const ACT_DESC={badminton:'Badminton · BADminton Wednesday & Friday',volleyball:'Volleyball · Friday',pickleball:'Pickleball · Tuesday',run:'Running · BAD PACE',dance:'Dance crew · BAD HABITS',basketball:'Basketball',training:'Coaching and drills',taste:'Food & drink collabs · Off Court',party:'Parties and experiences · Off Court',retreat:'Trips and retreats',vibe:'Not playing? Come for the socials, events and good company'};
 /* what each department is, in a few lines: shown in Play, Club, Courts and the Guide */
 const DEPT_DESC={
  badminton:'Where BAD started. Rally nights with doubles on every court and a rotation that keeps everyone playing. All levels welcome, and everyone plays with everyone.',
@@ -116,15 +116,15 @@ const DEPT_DESC={
  training:'Coaching and drills to level up your game, run by BAD coaches.',
  retreat:'Trips away with the club: sport, food and time together. Limited spots, announced early.',
  vibe:'Here for the vibe. Socials and everything that brings BAD together off court.',
- taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. A Side Quest.',
- party:'BAD X, short for BAD experience: the parties and nights where every department ends up in one room. The Clubhouse, BAD-O-WEEN, the Christmas Party. A Side Quest.'};
+ taste:'Food and drink collabs with partners we love: tastings, brunches and BAD-only menus. Part of Off Court.',
+ party:'BAD X, short for BAD experience: the parties and nights where every department ends up in one room. The Clubhouse, BAD-O-WEEN, the Christmas Party. Part of Off Court.'};
 /* house rules: one set for every department, Side Quest and event. Shown in the Guide, Play and on Home */
 const HOUSE_RULES=[
  ['users','Welcome everyone','Every level, every partner, every team. Levels help us mix games and groups, they don’t choose who you play or go with.'],
  ['clock','Respect the order','Games, groups and turns go in order of arrival. Admins, crew and hosts have the final call.'],
- ['check','Check in and be on time','Check in when you arrive at a session, Side Quest or event. If you’re late, you join from when you check in.'],
+ ['check','Check in and be on time','Check in when you arrive at a session, Off Court plan or event. If you’re late, you join from when you check in.'],
  ['ticket','Drop out early','Free up to 48 hours before. From 48 to 24 hours, half the fee. Under 24 hours, the full fee. No-shows lose points.'],
- ['wallet','Pay for your spot','Sessions, Side Quests and events: cash, bank transfer, Ziina or Careem Pay, before or on the day.'],
+ ['wallet','Pay for your spot','Sessions, Off Court plans and events: cash, bank transfer, Ziina or Careem Pay, before or on the day.'],
  ['eye','Play fair','Call it honestly and redo it if you’re not sure. Log scores, times and distances truthfully.'],
  ['star','Respect everyone','No harassment, hate or aggression, at a session, at an event or online. Crew can ask anyone who crosses the line to leave.'],
  ['bag','Leave it better','Respect our venues and partners. Wear the right shoes and kit, and take your things with you.'],

@@ -14,7 +14,7 @@ function mbChip(sid,lv,p,where){const x=who(sid,p),t=typeof lvlTag==='function'&
 function mbSlot(sid,lv,p,key){return `<div class="mslot${p?' full':''}" data-drop="${key}">${p?mbChip(sid,lv,p,key):`<span class="mslot-e">${msel?'Tap to place':'Drop here'}</span>`}</div>`}
 function mboardHTML(sid,s,lv){const sp=s.sport||'badminton',size=mbSize(sp),half=size/2,bench=mbBench(lv);
   const courts=lv.courts.map((c,ci)=>{const playing=c.st==='playing',n=c.on.filter(Boolean).length;
-    return `<article class="mcourt${playing?' on':''}"><div class="mc-h"><b>${esc(c.name)}</b><span class="tagl${playing?' solid':''}">${playing?`Playing · ${elapsed(c)} min`:n?'Ready':'Free'}</span></div>
+    return `<article class="mcourt${playing?' on':''}"><div class="mc-h"><b>${esc(c.name)}</b><span class="tagl${playing?' solid':''}">${playing?`Playing · ${fmtMins(elapsed(c))}`:n?'Ready':'Free'}</span></div>
       <div class="mc-body"><div class="mside">${c.on.slice(0,half).map((p,i)=>mbSlot(sid,lv,p,`c:${ci}:${i}`)).join('')}</div><div class="mnet">${sp==='basketball'?'vs':'NET'}</div><div class="mside">${c.on.slice(half).map((p,i)=>mbSlot(sid,lv,p,`c:${ci}:${i+half}`)).join('')}</div></div>
       <div class="mc-f">${playing?`<button class="btn wide mend" data-mb="end" data-c="${ci}">${ic('check')}End game</button>`
         :`${n?`<button class="linkbtn" data-mb="clear" data-c="${ci}">Clear</button>`:`<button class="linkbtn" data-mb="rmcourt" data-c="${ci}">Remove court</button>`}<button class="btn" data-mb="start" data-c="${ci}" ${n>=2?'':'disabled'}>${ic('play')}Start</button>`}</div></article>`}).join('');

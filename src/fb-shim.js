@@ -28,7 +28,7 @@
       <button class="linkbtn" type="button" id="g-reset">Forgot password?</button>
     </form>
     <p class="fine" id="g-msg" role="status"></p>
-    <p class="fine">We only use your email to run sessions and keep your points. We never share it.</p>
+    <p class="fine">We only use your details to run BAD and never sell them. By continuing you agree to our <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
     <p class="fine gate-llc"><b>The BAD Club LLC</b> · License No. 2649469.01</p>
   </div>`;
   document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(gate));
@@ -71,6 +71,9 @@
     window.BAD_USER={uid:u.uid,email,name:u.displayName||'',photo:u.photoURL||'',admin,role,sports};
     resolveUser(window.BAD_USER);
   });
+  /* Delete my account (My BAD): Firebase only deletes a sign-in that is a few minutes old, so the app asks for a fresh sign-in first */
+  window.badAuthRecent=()=>{const u=auth.currentUser;if(!u)return false;const t=Date.parse(u.metadata&&u.metadata.lastSignInTime||'');return !t||Date.now()-t<5*60000};
+  window.badDeleteAuth=()=>auth.currentUser?auth.currentUser.delete():Promise.resolve();
   window.badSignOut=()=>auth.signOut().then(()=>{location.hash='';location.reload()});
 
   /* ---------- the API the app calls ---------- */

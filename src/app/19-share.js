@@ -30,7 +30,6 @@ function shareSession(sid){const s=S.sessions[sid];if(!s)return;const text=sessS
 }
 
 /* the Story: a club photo on top, the details big and clear underneath, a QR code that opens the session */
-function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 async function storyImage(sid){const s=S.sessions[sid],sp=sportOf(s.sport),W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
   try{await document.fonts.ready}catch(_){}
   const ff=getComputedStyle(document.body).fontFamily||'sans-serif',serif=getComputedStyle(document.querySelector('h2')||document.body).fontFamily||'serif';
