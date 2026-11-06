@@ -2,7 +2,7 @@
 
 Last updated 6 November 2026.
 
-This explains what the BAD App keeps about you, why, and what you can do about it. The app is run by The BAD Club LLC, Dubai, UAE (licence No. 2649469.01), called "BAD", "we" or "us" here.
+This explains what the BAD App keeps about you, why, and what you can do about it. The app is run by The BAD Club LLC, Sharjah, UAE (licence No. 2649469.01), called "BAD", "we" or "us" here.
 
 **What we keep**
 
@@ -38,7 +38,7 @@ You can see and change your card anytime in My BAD. You can ask us for a copy of
 
 **Children**
 
-BAD is for players 18 and over. Players aged 16 and 17 can join with a parent's or guardian's permission. We don't knowingly keep data about anyone under 16.
+BAD is for players aged 16 and over. We don't knowingly keep data about anyone younger.
 
 **Changes**
 

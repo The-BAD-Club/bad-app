@@ -2,11 +2,11 @@
 
 Last updated 6 November 2026.
 
-These terms apply when you use the BAD App or join a BAD session, Off Court plan or event. The app and club are run by The BAD Club LLC, Dubai, UAE (licence No. 2649469.01). By making an account or booking, you agree to them.
+These terms apply when you use the BAD App or join a BAD session, Off Court plan or event. The app and club are run by The BAD Club LLC, Sharjah, UAE (licence No. 2649469.01). By making an account or booking, you agree to them.
 
 **1. Joining**
 
-You make a card, and an admin approves it before the full app opens. While you wait, you can book as a guest. You must be 18, or 16 or 17 with a parent's or guardian's permission. Keep your details true and your password to yourself. We can pause or remove an account that breaks these terms or the house rules.
+You make a card, and an admin approves it before the full app opens. While you wait, you can book as a guest. You must be 16 or older. Keep your details true and your password to yourself. We can pause or remove an account that breaks these terms or the house rules.
 
 **2. Booking and paying**
 
@@ -45,6 +45,6 @@ We may update these terms. We'll change the date at the top and tell members in 
 
 **9. Law**
 
-These terms follow UAE law, as applied in Dubai, and the Dubai courts handle any dispute.
+These terms follow UAE law, as applied in Sharjah, and the Sharjah courts handle any dispute.
 
 Questions: thebadclub.co@gmail.com.
