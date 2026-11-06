@@ -60,7 +60,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.member)db.collection('grades').onSnapshot(s=>{S.grades=map(s);render()},()=>{});
   db.doc('config/membership').onSnapshot(d=>{S.memCfg=d.exists?d.data():{};render()},()=>{});
   db.doc('config/members').onSnapshot(d=>{S.members=d.exists?d.data():{};render()},()=>{});
-  if(S.member)db.collection('feed').orderBy('at','desc').limit(80).onSnapshot(s=>{S.feed=map(s);if(S.view==='home')refreshFeedList();else if(S.view==='player')render()},()=>{});
+  if(S.member)subFeed();
   db.doc('config/home').onSnapshot(d=>{S.homeMedia=d.exists?d.data():{};if(['home','wth'].includes(S.view))render()},()=>{});
   db.doc('config/site').onSnapshot(d=>{S.site=d.exists?d.data():{};S.siteLoaded=true;render()},()=>{});
   db.doc('config/payments').onSnapshot(d=>{S.payCfg=d.exists?d.data():{};render()},()=>{});
@@ -78,3 +78,12 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
     db.collection('noshows').onSnapshot(s=>{S.noshows=map(s);if(S.view==='admin')render()},()=>{});
   }
 })();
+
+/* errors from players' phones go to an admin-only list (Admin → Today): version, screen and message, never personal details.
+   At most 20 a day per phone. Permission errors are expected before rules are published, so they're skipped. */
+(function(){const day=()=>new Date().toISOString().slice(0,10);
+  function report(msg,src){try{if(!S.db||!S.uid)return;const st=JSON.parse(localStorage.getItem('badErr')||'{}');if(st.d!==day()){st.d=day();st.n=0}if(st.n>=20)return;st.n++;localStorage.setItem('badErr',JSON.stringify(st));
+    S.db.collection('errors').add({v:String(APP_VERSION).slice(0,10),view:String(S.view||'').slice(0,20),msg:String(msg||'Error').slice(0,300),src:String(src||'').slice(0,120),at:new Date().toISOString()}).catch(()=>{})}catch(e){}}
+  window.badReport=report;
+  window.addEventListener('error',e=>{if(!e||!e.message||/^Script error/.test(e.message))return;report(e.message,String(e.filename||'').split('/').pop()+':'+(e.lineno||''))});
+  window.addEventListener('unhandledrejection',e=>{const r=e&&e.reason;if(r&&r.code==='permission-denied')return;report(r&&(r.message||r.code)||String(r),'promise')})})();

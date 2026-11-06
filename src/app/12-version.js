@@ -1,8 +1,9 @@
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.65';
+const APP_VERSION='0.66';
 const CHANGES=[
+  ['0.66','2026-11-06','One voice and one flow: Home leads with your next game (or Find a game), empty blocks hide and Gallery is a quiet link; visitors get one line of why under the film. My BAD reads like a profile: About me, a Currently status anyone can see, BADDY since and Last on court, then what you owe with one Pay now; membership moved down. Off Court everywhere (no more Side Quests); the BADge level Member is now Regular; warmer sign-up and review wording; Play no longer repeats My BAD; the Guide is 4 steps (scores moved to the FAQs); the Board says when points reset and its rows are cleaner; courts timers read 1h 39m; the Feed loads 20 posts at a time and tags only your own departments. Fixes: a duplicate photo function removed and the build now refuses duplicate names; errors from phones go to an admin-only list in Admin → Today; bigger tap areas for reactions and small links'],
   ['0.65','2026-11-06','BADDIES now live inside My BAD (under Your stats: faces of the community and See all); the extra BADDIES button on Home is gone. Profiles you open from BADDIES keep My BAD highlighted'],
   ['0.64','2026-11-06','Words: one member is a BADDY and many are BADDIES, everywhere in the app (the membership type that was Baddie is now BADDY; existing cards keep their status)'],
   ['0.63','2026-11-06','The Feed moved onto Home under Coming up (no extra tab). Player profiles show their card. Every session can be shared: WhatsApp with all the details and a link, an Instagram Story image with a QR code, or a copied link. Each session has its own page anyone can open; visitors get Join BAD, members get Book in Play. Baddies: everyone in the community in one place (Home, or See all baddies on the Board), with search and a department filter; tap anyone to see their card'],

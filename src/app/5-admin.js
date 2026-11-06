@@ -22,11 +22,18 @@ function renderAdmin(){
   const T=ATABS.find(t=>t[0]===aTab)||ATABS[0];
   const nav=`<nav class="anav" aria-label="Admin sections">${TABS.map(([k,l,i])=>`<button type="button" data-at="${k}" aria-current="${aTab===k?'page':'false'}">${ic(i)}<span>${l}</span>${badge[k]?`<span class="badge num">${badge[k]}</span>`:''}</button>`).join('')}</nav>`;
   const body=({today:aToday,sessions:aSessions,players:aPlayers,points:aPoints,posts:aPosts,payments:aPayments,shop:aShop,settings:aSettings}[aTab]||aToday)(list,up);
-  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><div class="row" style="justify-content:space-between;align-items:flex-end;gap:10px"><h2>${T[1]}</h2><button class="btn ghost sm" id="a-signup">${ic('card')}Sign-up QR</button></div></div>${nav}<div class="abody">${body}</div></div>`;
-  const sq=$('a-signup');if(sq)sq.onclick=showSignupQR;
+  el.innerHTML=`<div class="admin"><div class="ahead"><span class="label">${esc(roleLabel({role:myRole(),sports:mySports()}))}</span><div class="row" style="justify-content:space-between;align-items:flex-end;gap:10px"><h2>${T[1]}</h2><button class="btn ghost sm" id="a-signup">${ic('card')}Sign-up QR</button></div></div>${nav}<div class="abody">${body}${aTab==='today'&&fullAdmin()?errBoxHTML():''}</div></div>`;
+  const sq=$('a-signup');if(sq)sq.onclick=showSignupQR;bindErrBox(el);
   bindAdmin();const act=el.querySelector('.anav [aria-current="page"]');if(act&&innerWidth<1000)act.scrollIntoView({block:'nearest',inline:'center'});
 }
 
+/* errors from players' phones (see 7-boot.js): loaded only when a full admin asks */
+function errBoxHTML(){const L=S.errs;
+  return boxD(`App errors${L&&L.length?` <span class="badge num">${L.length}</span>`:''}`,L==null?`<p class="hint">Errors from players' phones land here: version, screen and message, never personal details.</p><button class="btn ghost sm" data-errload="1">Show the latest</button>`
+    :L.length?`<div class="list">${L.map(([,e])=>`<div class="li" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="nm" style="word-break:break-word">${esc(e.msg)}</div><div class="sub">v${esc(e.v)} · ${esc(e.view||'—')}${e.src?' · '+esc(e.src):''}</div></div><span class="fine">${esc(fmtD(e.at))} ${esc(hhmm(e.at))}</span></div>`).join('')}</div><button class="btn ghost sm" data-errclear="1">${ic('check')}Clear these</button>`
+    :'<p class="hint">No errors reported. All good.</p>')}
+function bindErrBox(el){el.querySelectorAll('[data-errload]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const q=await S.db.collection('errors').orderBy('at','desc').limit(30).get();S.errs=q.docs.map(d=>[d.id,d.data()])}catch(e){S.errs=[];toast(e&&e.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't load.")}renderAdmin();const d=$('v-admin').querySelector('.panel.fold:last-child');if(d)d.open=true});
+  el.querySelectorAll('[data-errclear]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await Promise.all((S.errs||[]).map(([id])=>S.db.doc('errors/'+id).delete()));S.errs=[];toast('Cleared.')}catch(e){toast("Sorry, that didn't clear.")}renderAdmin()})}
 function aToday(list,up){
   const nx=up[0],s=nx&&S.sessions[nx[0]];
   const alerts=[];const rq=fullAdmin()?Object.keys(S.requests).length:0;
@@ -568,4 +575,4 @@ async function seedNomani(){if(S._nomani||!S.db||!S.canEdit||!S.loaded||typeof c
       const m=Object.entries(S.profiles).filter(([,p])=>!p.sample&&(norm(p.nickname)===norm(n)||norm(p.listName)===norm(n)));
       if(m.length===1)await staffBooking(m[0][0],id,o=>o?undefined:freshEntry('cash',at));
       else{const gid='g-'+slug(n)+'-nomani';await staffBooking(gid,id,()=>freshEntry('cash',at),{key:'guest-'+slug(n),name:n,guest:true,addedBy:window.BAD_USER?.email||'',s:{}})}}
-    await S.db.doc('sessions/'+id).update({seeded:true});toast('BAD × NOMANI is in Side Quests with the 12 guests.')}catch(e){console.warn('nomani',e);S._nomani=false}}
+    await S.db.doc('sessions/'+id).update({seeded:true});toast('BAD × NOMANI is in Off Court with the 12 guests.')}catch(e){console.warn('nomani',e);S._nomani=false}}

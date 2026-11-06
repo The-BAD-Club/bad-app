@@ -13,17 +13,21 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const cta=guest
     ?`<button class="btn bigjoin" data-hjoin="1">${ic('card')}Join BAD</button>`
     :'';
+  /* members: your next game first, or one button to find one */
+  const mineNext=me?upcoming().find(([sid])=>{const b=S.bookings[S.uid]?.s?.[sid];return b&&!b.out}):null;
+  const nextBlock=!me?'':mineNext?`<button class="tile nexts cta" data-hgo="card"><span class="label">You're in</span><span class="ic-row"><span class="ic-bub">${ic('ticket')}</span><span><b>${esc(mineNext[1].title||sportOf(mineNext[1].sport).club)}</b><span class="fine" style="display:block">${esc(fmtS(mineNext[1]))}${mineNext[1].timeTbc?'':' · '+esc(fmtTime(mineNext[1].start))}${mineNext[1].venue?' · '+esc(mineNext[1].venue):''}</span></span>${ic('arrow')}</span></button>`
+    :`<button class="tile nexts cta" data-hgo="play"><span class="label">No game booked</span><span class="ic-row"><span class="ic-bub">${ic('play')}</span><span><b>Find a game</b><span class="fine" style="display:block">New sessions every week</span></span>${ic('arrow')}</span></button>`;
   const first=[['card','Make your card','Free, and it takes a minute. An admin approves new cards.'],['play','Pick a session','Book your spot in Play. New? Join as a guest.'],['users','Show up and play','Check in when you arrive. Every level plays with everyone.']];
   const sessions=next.length?`<section class="hsec"><h3 class="ah">Coming up</h3><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
-    <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
+    <div class="homelinks ${guest||notMember()?'two':'three'}">${[['guide','guide','Guide'],['wth','spark','About BAD'],...(guest||notMember()?[]:[['club','photo','Gallery']])].map(([v,i,t])=>`<button data-hgo="${v}"${v==='club'?' data-cm="gallery"':''}>${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
-    ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
+    ${heroHTML("")}${cta?`<p class="hwhy">Badminton, volleyball, pickleball and more. Every week, every level.</p><div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
     <section class="hsec"><h3 class="ah">Your first time</h3><ol class="gsteps">${first.map(([i,t,d],n)=>`<li><span class="gn num">${n+1}</span><span class="ic-bub soft">${ic(i)}</span><div><b>${t}</b><span class="fine">${d}</span></div></li>`).join('')}</ol></section>
     ${sessions}`
-    :`${newsHTML()}${sessions}${feedSectionHTML()}${about}`}
+    :`${nextBlock}${newsHTML()}${sessions}${feedSectionHTML()}${about}`}
     ${homeVideosHTML()}
     ${igHTML()}
     ${contactHTML()}
@@ -36,8 +40,8 @@ function renderHome(){const el=$('v-home');if(!el)return;
 function newsHTML(){if(notMember())return '';const today=new Date().toISOString().slice(0,10),ps=Object.entries(S.posts||{});
   const ev=ps.filter(([,p])=>p.type==='event'&&(p.date||'')>=today).sort((a,b)=>a[1].date.localeCompare(b[1].date)),nw=ps.filter(([,p])=>p.type!=='event').sort((a,b)=>(b[1].postedAt||'').localeCompare(a[1].postedAt||''));
   const top=[...ev,...nw].slice(0,3);
-  const links=`<div class="row" style="gap:8px"><button class="btn ghost sm" data-hgo="club" data-cm="news">${ic('club')}All news</button><button class="btn ghost sm" data-hgo="club" data-cm="gallery">${ic('photo')}Gallery</button></div>`;
-  if(!top.length)return `<section class="hsec"><h3 class="ah">What's on</h3><p class="fine">No news right now.</p>${links}</section>`;
+  const links=`<div class="row" style="gap:8px"><button class="btn ghost sm" data-hgo="club" data-cm="news">${ic('club')}All news</button></div>`;
+  if(!top.length)return '';
   return `<section class="hsec"><h3 class="ah">What's on</h3><div class="list">${top.map(([id,p])=>{const d=p.date?dParts(p.date):null,sp=SPORTS[p.club];
     return `<button class="li act" data-hgo="club" data-cm="news" style="grid-template-columns:auto minmax(0,1fr) auto">${d?`<div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div>`:`<span class="ic-bub soft">${ic('club')}</span>`}<div><div class="nm">${esc(p.title)}</div><div class="sub">${p.type==='event'?'Event':'News'} · ${esc(sp?sp.club:'All of BAD')}</div></div>${ic('arrow')}</button>`}).join('')}</div>${links}</section>`}
 /* Talk to us: WhatsApp (with a ready message), email and Instagram. On Home and the FAQs, for visitors and members. */
@@ -65,6 +69,7 @@ function faqList(){const c=PS();return [
   ['Joining and booking',[
     ['How do I join?','Tap Join BAD and make your player card. It is free and takes a minute. Just want to try once? Take a guest pass instead.'],
     ['How do I book a session?','Open Play, pick a session and tap Count me in. You can cancel, change how you pay or bring a friend from My BAD.'],
+    ['How do scores work?','After a game, one player enters the score in Courts and someone from the other team confirms it. Scores are just for fun and help us mix games.'],
     ['What if the session is full?','You go on the waitlist. It is first come, first served and nobody skips it. Core members and up just get to sign up 48 hours earlier.'],
     ['What if I can’t make it?','Drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies.']]],
   ['Paying',[

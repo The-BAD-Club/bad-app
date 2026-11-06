@@ -31,18 +31,22 @@ function composerHTML(){const d=S.fDraft;
     <label for="f-text" class="sr">Share something</label><textarea id="f-text" rows="2" maxlength="500" placeholder="Share a moment from BAD…">${esc(d.text)}</textarea>
     ${d.photos.length?`<div class="fc-thumbs">${d.photos.map((u,i)=>`<div class="fc-th"><img src="${esc(u)}" alt=""><button class="rmx" data-frm="${i}" aria-label="Remove photo ${i+1}">${ic('x')}</button></div>`).join('')}</div>`:''}
     <div class="fc-bar"><label class="btn ghost sm fc-add${d.photos.length>=4?' off':''}">${ic('photo')}Photos<input type="file" id="f-files" accept="image/*" multiple hidden ${d.photos.length>=4?'disabled':''}></label>
-      <select id="f-dept" aria-label="Department"><option value="">All of BAD</option>${Object.keys(SPORTS).map(k=>`<option value="${k}" ${d.dept===k?'selected':''}>${esc(SPORTS[k].club)}</option>`).join('')}</select>
+      <select id="f-dept" aria-label="Department"><option value="">No tag</option>${((myProfile()||{}).sports||[]).filter(k=>SPORTS[k]).slice(0,4).map(k=>`<option value="${k}" ${d.dept===k?'selected':''}>${esc(SPORTS[k].club)}</option>`).join('')}</select>
       <button class="btn sm" id="f-go">Post</button></div></div></section>`}
 
 /* the Feed lives on Home, under Coming up. Only the list refreshes when someone posts or reacts, so a half-written post is never lost. */
-S.feedShow=S.feedShow||10;
-function feedListHTML(){const L=feedList();if(!L.length)return `<div class="empty">${ic('photo')}<span>Nothing here yet. Post the first photo from your last session.</span></div>`;
-  return L.slice(0,S.feedShow).map(([id,p])=>postHTML(id,p)).join('')+(L.length>S.feedShow?`<button class="btn ghost wide" data-fmore="1">Show more</button>`:'')}
+S.feedShow=S.feedShow||10;S.feedLim=S.feedLim||20;
+/* the Feed listens to the newest 20 posts; Show more listens to 20 more */
+function subFeed(){if(!S.member||!S.db)return;if(S.feedUnsub)S.feedUnsub();
+  S.feedUnsub=S.db.collection('feed').orderBy('at','desc').limit(S.feedLim).onSnapshot(s=>{const m={};s.forEach(d=>m[d.id]=d.data());S.feed=m;if(S.view==='home')refreshFeedList();else if(S.view==='player')render()},()=>{})}
+function feedMore(){S.feedShow+=10;if(Object.keys(S.feed).length>=S.feedLim){S.feedLim+=20;subFeed()}refreshFeedList()}
+function feedListHTML(){const L=feedList();if(!L.length)return `<div class="empty">${ic('photo')}<span>Nothing yet. Be the first to post from tonight.</span></div>`;
+  return L.slice(0,S.feedShow).map(([id,p])=>postHTML(id,p)).join('')+(L.length>S.feedShow||Object.keys(S.feed).length>=S.feedLim?`<button class="btn ghost wide" data-fmore="1">Show more</button>`:'')}
 function feedSectionHTML(){if(notMember()||!myProfile())return '';
   return `<section class="hsec" id="home-feed"><div class="sec-h"><h3 class="ah">Feed</h3><span class="fine">Photos, shout-outs and props</span></div>${composerHTML()}<div class="flist" id="flist">${feedListHTML()}</div></section>`}
-function bindHomeFeed(el){const f=el.querySelector('#home-feed');if(!f)return;bindFeed(f);const m=f.querySelector('[data-fmore]');if(m)m.onclick=()=>{S.feedShow+=10;refreshFeedList()};
+function bindHomeFeed(el){const f=el.querySelector('#home-feed');if(!f)return;bindFeed(f);const m=f.querySelector('[data-fmore]');if(m)m.onclick=feedMore;
   if(S.scrollFeed){S.scrollFeed=0;setTimeout(()=>f.scrollIntoView({block:'start',behavior:'smooth'}),80)}}
-function refreshFeedList(){const l=$('flist');if(!l)return;l.innerHTML=feedListHTML();const f=$('home-feed');bindFeed(l);const m=l.querySelector('[data-fmore]');if(m)m.onclick=()=>{S.feedShow+=10;refreshFeedList()}}
+function refreshFeedList(){const l=$('flist');if(!l)return;l.innerHTML=feedListHTML();const f=$('home-feed');bindFeed(l);const m=l.querySelector('[data-fmore]');if(m)m.onclick=feedMore}
 /* after posting or changing the photos: redraw the whole Feed block (composer included) */
 function renderFeed(){if(S.view==='player')return renderPlayer();const f=$('home-feed');if(!f)return;const tmp=document.createElement('div');tmp.innerHTML=feedSectionHTML();const n=tmp.firstElementChild;if(!n)return;f.replaceWith(n);bindHomeFeed(n.parentElement||document)}
 let feedIO=null;
@@ -93,7 +97,9 @@ function renderPlayer(){const el=$('v-player');if(!el)return;const uid=S.profUid
   el.innerHTML=`<div class="prof-card">${cardHTML(p,{balance:stc.balance||0,badges:typeof badgeCount==='function'?badgeCount(uid):0,sessions:st.played})}</div>
     <section class="prof">${avatar(p,p.listKey)}<div><h2 class="prof-n">${esc(p.nickname)}</h2>
       <div class="sub">${p.number!=null&&p.number!==''?'No. '+esc(String(p.number)).padStart(2,'0'):''}${og?` · OG 100 #${og}`:''}${lvl&&lvl.name?` · ${esc(lvl.name)}`:''}</div></div></section>
-    ${p.bio?`<p class="prof-bio">${esc(p.bio)}</p>`:me?`<p class="fine">Add a short bio in My BAD so people know who you are.</p>`:''}
+    ${p.now?`<p class="nowpub"><span class="label">Currently</span> ${esc(p.now)}</p>`:''}
+    ${p.bio?`<p class="prof-bio">${esc(p.bio)}</p>`:me?`<p class="fine">Add an About me in My BAD so people know who you are.</p>`:''}
+    ${profLine(uid,p)?`<p class="fine meline">${profLine(uid,p)}</p>`:''}
     ${depts?`<div class="row prof-d">${depts}</div>`:''}
     <div class="tiles prof-tiles"><div class="tile"><b class="num">${st.played}</b><span class="label">Sessions</span></div><div class="tile"><b class="num">${Object.values(st.props).reduce((a,b)=>a+b,0)}</b><span class="label">Props</span></div><div class="tile"><b class="num">${posts.length}</b><span class="label">Posts</span></div></div>
     ${Object.keys(st.props).length?`<section class="hsec"><h3 class="ah">Props</h3><div class="row">${PROPS.filter(([e])=>st.props[e]).map(([e,l])=>`<span class="tagl">${e} ${esc(l)} <b class="num">${st.props[e]}</b></span>`).join('')}</div></section>`:''}
