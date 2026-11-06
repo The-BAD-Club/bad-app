@@ -19,7 +19,7 @@ function setView(v,o){o=o||{};if(v==='feed'){v='home';S.scrollFeed=1}
   S.view=v;syncBack();
   for(const id of ['home','card','guide','faq','wth','player','baddies','sess','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'home',baddies:'home',sess:'play'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'card',baddies:'card',sess:'play'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -321,6 +321,8 @@ function renderCard(){
           ${queueOff('badminton')?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
           ${queueOff('badminton')?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','',`<button class="linkbtn" data-rankgo="1">See the Board${ic('arrow')}</button>`)}
         </div></section>
+      ${notMember()?'':(()=>{const all=Object.entries(S.profiles).filter(([u,x])=>!x.sample&&x.nickname&&u!==S.uid);return all.length?`<section class="hsec mybd"><div class="sec-h"><h3 class="ah">BADDIES</h3><button class="linkbtn" data-goview="baddies">See all ${all.length+1}${ic('arrow')}</button></div>
+        <button class="mybd-row" data-goview="baddies"><span class="faces">${all.slice(0,8).map(([u,x])=>avatar(x,x.listKey)).join('')}${all.length>8?`<span class="more num">+${all.length-8}</span>`:''}</span><span class="fine">Find anyone in the community and see their card.</span></button></section>`:''})()}
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
           ${memType(m.type)?.staff?'':`<details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memPick().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details>`}</section>`})()}

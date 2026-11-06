@@ -990,6 +990,7 @@ details.ci-lvl>summary::after{content:' · change';text-transform:none;letter-sp
 .bd{display:grid;justify-items:start;gap:4px;padding:14px;border:1px solid var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0}
 .bd:hover{border-color:var(--ink)}.bd .av{margin-bottom:6px}.bd-n{font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bd-s{font-size:.78rem;color:var(--muted)}.bd-i{display:flex;gap:6px;color:var(--muted);margin-top:2px}.bd-i .i{width:15px;height:15px}
 #v-baddies{gap:20px}
+.mybd-row{display:grid;gap:10px;justify-items:start;width:100%;padding:16px;border:1px solid var(--line);border-radius:18px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.mybd-row:hover{border-color:var(--ink)}
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 #gate[hidden]{display:none!important}
 html.gated .app,html.gated .tabs{visibility:hidden}
@@ -1322,8 +1323,9 @@ const PH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICA
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.64';
+const APP_VERSION='0.65';
 const CHANGES=[
+  ['0.65','2026-11-06','BADDIES now live inside My BAD (under Your stats: faces of the community and See all); the extra BADDIES button on Home is gone. Profiles you open from BADDIES keep My BAD highlighted'],
   ['0.64','2026-11-06','Words: one member is a BADDY and many are BADDIES, everywhere in the app (the membership type that was Baddie is now BADDY; existing cards keep their status)'],
   ['0.63','2026-11-06','The Feed moved onto Home under Coming up (no extra tab). Player profiles show their card. Every session can be shared: WhatsApp with all the details and a link, an Instagram Story image with a QR code, or a copied link. Each session has its own page anyone can open; visitors get Join BAD, members get Book in Play. Baddies: everyone in the community in one place (Home, or See all baddies on the Board), with search and a department filter; tap anyone to see their card'],
   ['0.62','2026-11-05','The Feed: its own tab for approved members. Post photos (up to 4) and words, tag a department, react with one BAD emoji, report a post; owners delete their own, admins hide or delete anything. Player profiles: tap a name on the Board or in the Feed to see their card, bio, departments, sessions, props and posts. Props: give a player 🔥 🧱 🤝 😂 or 🏸 once a day from their profile; it shows in the Feed. Short bio on your card. Needs the new security rules'],
@@ -2071,7 +2073,7 @@ function setView(v,o){o=o||{};if(v==='feed'){v='home';S.scrollFeed=1}
   S.view=v;syncBack();
   for(const id of ['home','card','guide','faq','wth','player','baddies','sess','play','courts','create','club','quests','board','shop','admin'])$('v-'+id).hidden=id!==v;
   /* Guide lives in Home, Off Court (quests) in Play, the Board in My BAD: their tab stays lit */
-  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'home',baddies:'home',sess:'play'}[v]||v;
+  const tabOf={create:'card',guide:'home',faq:'home',wth:'home',club:'home',quests:'play',board:'play',player:'card',baddies:'card',sess:'play'}[v]||v;
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===tabOf?'page':'false'));
   renderNow();window.scrollTo(0,0);
 }
@@ -2373,6 +2375,8 @@ function renderCard(){
           ${queueOff('badminton')?'':statT('Games',myGames.length||me.g,me.g?`${me.w} won · ${Math.round(me.w/me.g*100)}%`:'Logged on court')}
           ${queueOff('badminton')?'':S.gAll?statT('Rank',ri>=0?'#'+(ri+1):'—',ri>=0?`of ${rk.length} players`:'Add scores to get ranked'):statT('Rank','—','',`<button class="linkbtn" data-rankgo="1">See the Board${ic('arrow')}</button>`)}
         </div></section>
+      ${notMember()?'':(()=>{const all=Object.entries(S.profiles).filter(([u,x])=>!x.sample&&x.nickname&&u!==S.uid);return all.length?`<section class="hsec mybd"><div class="sec-h"><h3 class="ah">BADDIES</h3><button class="linkbtn" data-goview="baddies">See all ${all.length+1}${ic('arrow')}</button></div>
+        <button class="mybd-row" data-goview="baddies"><span class="faces">${all.slice(0,8).map(([u,x])=>avatar(x,x.listKey)).join('')}${all.length>8?`<span class="more num">+${all.length-8}</span>`:''}</span><span class="fine">Find anyone in the community and see their card.</span></button></section>`:''})()}
       ${(()=>{const m=memStatus(S.uid),tag={verified:`<span class="tagl solid">${ic('check')}Verified</span>`,pending:'<span class="tagl warn">Waiting for an admin</span>',declined:'<span class="tagl">Not confirmed</span>',open:''}[m.state];
         return `<section class="tile memb"><div class="row" style="justify-content:space-between"><span class="label">Membership</span>${tag}</div><div class="stat"><b>${esc(m.type)}</b><span class="fine">${m.state==='declined'?'We couldn’t confirm this one. Please speak to an admin.':m.state==='pending'?'We’ll confirm it soon. Thank you.':esc(memType(m.type)?.d||'')}</span></div>
           ${memType(m.type)?.staff?'':`<details><summary class="linkbtn">Change membership</summary><div class="row" style="margin-top:10px"><select id="mem-sel" style="flex:1;min-width:160px">${memPick().map(t=>`<option ${t.k===m.type?'selected':''}>${esc(t.k)}</option>`).join('')}</select><button class="btn sm" id="mem-go">Request</button></div></details>`}</section>`})()}
@@ -4451,7 +4455,7 @@ function renderHome(){const el=$('v-home');if(!el)return;
   const sessions=next.length?`<section class="hsec"><h3 class="ah">Coming up</h3><div class="list">${next.map(([sid,s])=>{const d=dParts(s.date),sp=sportOf(s.sport);return `<button class="li act hsess" data-hgo="play" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="mini-dt"><small>${d.w}</small><b class="num">${d.d}</b><small>${d.m}</small></div><div><div class="nm ic-row" style="gap:6px">${ic(sp.icon)}${esc(s.title||sp.club)}</div><div class="sub">${s.timeTbc?'Time to be confirmed':esc(fmtTime(s.start))}${s.venue?' · '+esc(s.venue):''}</div></div>${ic('arrow')}</button>`}).join('')}</div></section>`
     :`<section class="hsec"><h3 class="ah">Every week</h3><div class="week">${WEEK.map(([d,k,t])=>`<div class="wk"><span class="wk-d num">${d}</span>${ic(SPORTS[k].icon)}<b>${esc(t)}</b></div>`).join('')}</div></section>`;
   const about=`<button class="bigfaq" data-hgo="faq"><span class="ic-bub">${ic('guide')}</span><span><b>FAQs</b><small>What is BAD? Who can join? How much is it?</small></span>${ic('arrow')}</button>
-    <div class="homelinks ${notMember()||window.BAD_GUEST?'two':'three'}">${[...(notMember()||window.BAD_GUEST?[]:[['baddies','users','BADDIES']]),['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
+    <div class="homelinks two">${[['guide','guide','Guide'],['wth','spark','About BAD']].map(([v,i,t])=>`<button data-hgo="${v}">${ic(i)}${t}</button>`).join('')}</div>`;
   el.innerHTML=`<div class="phome">
     ${heroHTML("")}${cta?`<div class="joinrow">${cta}</div>`:""}
     ${guest?`${about}
