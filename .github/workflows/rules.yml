@@ -18,3 +18,31 @@ jobs:
       - run: tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-bad-app "bash tests/ci.sh"
         working-directory: .
         env: { PATH_PREFIX: tests/node_modules/.bin }
+
+  # After the tests pass on main, publish the rules to Firebase, so nobody pastes them by hand again.
+  # Skips quietly until the FIREBASE_SA secret exists (docs/server-setup.md).
+  publish:
+    needs: rules
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - id: ready
+        env: { SA: '${{ secrets.FIREBASE_SA }}' }
+        run: |
+          if [ -n "$SA" ]; then echo "ok=1" >> "$GITHUB_OUTPUT"
+          else echo "::notice::Rules not published automatically: add the FIREBASE_SA secret (see docs/server-setup.md), or publish firestore.rules by hand."; fi
+      - if: steps.ready.outputs.ok
+        uses: actions/checkout@v5
+      - if: steps.ready.outputs.ok
+        uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - if: steps.ready.outputs.ok
+        run: npm install --no-audit --no-fund
+        working-directory: tests
+      - if: steps.ready.outputs.ok
+        env: { SA: '${{ secrets.FIREBASE_SA }}' }
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" tests/node_modules/.bin/firebase deploy --only firestore:rules --project bad-app-ef601 --non-interactive
+          rm -f "$RUNNER_TEMP/sa.json"

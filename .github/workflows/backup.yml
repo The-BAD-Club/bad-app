@@ -1,0 +1,46 @@
+name: Nightly backup
+# Copies the whole database to the private repo The-BAD-Club/bad-backups every night (3:17am Dubai).
+# Each night is its own branch (d-YYYY-MM-DD) holding one file; branches older than 30 days are deleted,
+# so nothing builds up. Skips quietly until the FIREBASE_SA and BACKUP_TOKEN secrets exist (docs/server-setup.md).
+on:
+  schedule: [{ cron: '17 23 * * *' }]
+  workflow_dispatch:
+permissions: { contents: read }
+concurrency: { group: backup, cancel-in-progress: false }
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - id: ready
+        env: { SA: '${{ secrets.FIREBASE_SA }}', TOKEN: '${{ secrets.BACKUP_TOKEN }}' }
+        run: |
+          if [ -n "$SA" ] && [ -n "$TOKEN" ]; then echo "ok=1" >> "$GITHUB_OUTPUT"
+          else echo "::notice::Backup skipped: add the FIREBASE_SA and BACKUP_TOKEN secrets (see docs/server-setup.md)."; fi
+      - if: steps.ready.outputs.ok
+        uses: actions/checkout@v5
+      - if: steps.ready.outputs.ok
+        uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - if: steps.ready.outputs.ok
+        run: npm install --no-audit --no-fund
+        working-directory: tools
+      - if: steps.ready.outputs.ok
+        env: { FIREBASE_SA: '${{ secrets.FIREBASE_SA }}' }
+        run: node tools/backup.mjs "$RUNNER_TEMP/bad.json.gz"
+      - if: steps.ready.outputs.ok
+        env: { TOKEN: '${{ secrets.BACKUP_TOKEN }}' }
+        run: |
+          set -e
+          day=$(date -u +%F); repo="https://x-access-token:${TOKEN}@github.com/The-BAD-Club/bad-backups.git"
+          mkdir "$RUNNER_TEMP/bk" && cd "$RUNNER_TEMP/bk"
+          git init -q -b "d-$day" && git config user.name "BAD backup" && git config user.email "backup@thebadclub.com"
+          cp "$RUNNER_TEMP/bad.json.gz" bad.json.gz
+          printf 'BAD database backup, %s (UTC).\nRestore: node tools/restore.mjs bad.json.gz [collection]\n' "$day" > README.md
+          git add . && git commit -qm "Backup $day"
+          git push -q -f "$repo" "d-$day"
+          cutoff=$(date -u -d '30 days ago' +%F)
+          for b in $(git ls-remote --heads "$repo" | sed -n 's#.*refs/heads/d-##p'); do
+            if [[ "$b" < "$cutoff" ]]; then git push -q "$repo" --delete "d-$b"; fi
+          done
+          echo "Backup saved as branch d-$day."
