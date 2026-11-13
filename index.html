@@ -1510,6 +1510,11 @@ button.annc-i{cursor:pointer}button.annc-i:hover{text-decoration:underline;text-
 @media(min-width:760px){body:has(#v-home:not([hidden])) footer.sign{max-width:760px!important}}
 .memh{margin:18px 0 8px;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.perks .li{padding:10px 0}
 
+/* Your levels (My BAD) */
+.mylv .lvlist{display:grid;gap:8px}
+.lvrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-md,14px);padding:10px 12px}
+.lvt{display:grid;gap:4px;min-width:0}.lvt .bars{display:flex;gap:3px}.lvt .bars i{width:14px;height:4px;border-radius:2px;background:var(--line)}.lvt .bars i.on{background:var(--ink)}
+.lvnote{display:flex;gap:10px;align-items:flex-start}
 /* Live Courts */
 .bccourts{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))}
 .bccourt{border:1px solid var(--line);border-radius:var(--r-md,14px);padding:12px;display:grid;gap:10px;background:var(--bg)}
@@ -1693,8 +1698,9 @@ const PH=["assets/ph/ph-01.jpg", "assets/ph/ph-02.jpg", "assets/ph/ph-03.jpg", "
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.76';
+const APP_VERSION='0.77';
 const CHANGES=[
+  ['0.77','2026-11-13','Live Courts and levels. Courts now shows BAD COURTS live: who is on each court, the score and clock, who is next and the latest results, plus where you are. My BAD has Your levels: one scale for BADminton, VolleyBAD, BAD DINK and BAD SHOTS (Beginner, Novice, Intermediate, Semi-medial, Medial, Advanced). Log your own; a level set by crew wins.'],
   ['0.76','2026-11-12','A calmer, cleaner BAD. Home now introduces The BAD Club with one line and two buttons, then one big About BAD button, FAQ, Guide and Gallery, the next sessions, your first time in three steps, and one Talk to us footer. About BAD answers who, what, where, when, why and how: the crew’s passion project, the creatives, and why a few friends started it. Membership is now the perks of being a BADDY. The Collab and Find a creative forms are aligned and tap-friendly, and the team sees each sign-up as a tidy card. The banner moves slower and Gallery covers stay still. Copy across the app speaks in one BAD voice. Membership lists what every BADDY gets (points and free sessions, your card, collabs, a way into the crew, the Gallery, the Feed, members-only codes) before the BADge levels. BAD DINK is once a week, Tuesday or Saturday'],
   ['0.75','2026-11-12','BAD is a brand now. Home works like a website: the film plays clean (nothing on top; the words and buttons sit underneath), then About BAD, FAQ, Guide and Gallery, a bigger About BAD (we are mostly creatives and we back each other), one button to the Shop (the Shop is always white), BAD in the press, Collab with us and Looking for creatives? forms, and up to 12 reels. A moving signage strip runs across the top, and Membership (Rookie to Mythic) sits top right. The header runs edge to edge. Play has a full calendar and shows who is coming to each session; the team gets a calendar with possible events. BADDIES can comment on Feed posts and flip anyone’s card; Guests can count in on sessions but don’t collect points. My BAD asks you to verify your email. Off Court features the NOMANI × BAD, BAD-O-WEEN and THE CLUBHOUSE reels. Admins: End session on Courts, tap a session to edit it, one-time or weekly sessions, the add-player box stays open, add points to several players at once, crew loyalty and participation BADges, and payment reminders link to My BAD. Referrals give 5 points when your friend plays their first session; first-timers can add a BADDY’s code when they request a spot (BADges are for club effort and loyalty). The Gallery is for BADDIES: the team sets up each event folder in Admin → Club posts (photos, cover, Drive link) and publishes it; folders slide through their photos. Needs the new security rules and Members script'],
   ['0.74','2026-11-08','Join BAD offers two clear ways in: Continue as guest (pick a plan, request a spot) or I’ve played with BAD (sign in, make your card), plus Already a BADDY? Sign in. The Shop is open to everyone: visitors and guests can browse and order on WhatsApp; Volume II shows Few pieces left (sold out stays sold out) until the stock is updated. The Home film always plays (muted). BADDIES can share ideas from My BAD or Off Court (Any BAD ideas?); only admins see them, as a plain list in Admin → Today and in the Suggestions tab of BAD APP – Master. Guest passes no longer show up in BADDIES, the Board or the BADDY count, the Guide’s first steps follow Request Spot, and the public site no longer shows a version (it lives in Admin → What’s new). The play-style test now has five questions that work for every sport and sets a style for each one you play. The founders’ BADge is the highest one, a black badge with a silver star (no more ∞), and the level above Legend is called Mythic. Player cards show icons only (your BADge and the sports you play); points and BADge counts live in My BAD. Guests can look around (Home, Play, Off Court, Shop; no My BAD until they have a card). Any guest can tap Become a BADDY: sign up, make the card now, and it goes live once the crew marks them attended at their first game. FRAGMENTS pre-orders are paused (Interested? Message us). Shop admins can make one-time discount codes in Admin → Shop (for one BADDY, every BADDY, or anyone; everything, FRAGMENTS or shop items) and send them on WhatsApp; BADDIES see theirs in My BAD and apply them in the bag. Posting a session can repeat it every week for 4, 8 or 12 weeks. Instagram is now required for new cards too (and every guest request), and New sign-ups to approve shows it as a tap-to-open link.','Any BAD ideas? Drop them in the suggestion box from My BAD.'],
@@ -1799,6 +1805,11 @@ function badRating(uid){const r=(S.grades||{})[uid];if(r&&typeof r.ovr==='number
 const LVL_NOTICE='BAD LEVELS. SOCIAL SPORTS, NOT PRO. Each sport has its own levels, only to help us mix fair, fun games. Crew has the final call.';
 const COMMUNITY_COPY=`<p><b>ALL LEVELS. A LITTLE CHAOS. GOOD SPORTSMANSHIP.</b></p><p>First timer or court regular, you’re welcome here. We’re about fun, friendly competition. Take the game seriously, not yourself.</p><p>It’s okay to be BAD. Support each other, respect your opponents and call your lines honestly.</p><p><b>SOCIAL SPORTS, NOT PRO.</b><br>Every sport has its own BAD levels. They only help us mix fair, fun games, never to rank you. Crew may adjust your level based on how you play.</p><p>Questionable footwork? Welcome. Questionable attitude? Let’s talk. If someone crosses the line, tell crew. We’ll take it seriously.</p><p><b>PLAY HARD. BE KIND. BE BAD.</b></p>`;
 /* levels for the other sports, in each sport's own words (scale v2). Index 0 to 5; the rating is index + 1. */
+/* BAD levels for the court sports (13 Nov 2026): one scale everywhere, same as BAD COURTS. Index 0 to 5. */
+const BLV=['Beginner','Novice','Intermediate','Semi-medial','Medial','Advanced'];
+const BLV_DESC=['New to the sport or still learning the basics','Knows the rules, rallies are getting longer','Plays regularly and keeps a rally going','Solid all-round game, starting to play smart','Strong, tactical and consistent','Top of the social game, plays leagues or tournaments'];
+const BLV_SPORTS=['badminton','volleyball','pickleball','basketball'];
+const BLV_OLD_GRADE={'F':0,'E':0,'E+':1,'D':1,'D+':2,'C':2,'C+':3,'B':3,'B+':4,'A':4,'A+':5};
 const LEVELS_BY={
  volleyball:[['Beginner','Learning to pass, set and serve'],['Recreational','Keeps a rally going, plays for fun'],['Intermediate','Reliable passing, knows rotations'],['Advanced','Attacks and blocks with purpose'],['Competitive','Plays leagues or tournaments'],['Elite','Club or national level']],
  pickleball:[['2.0 Beginner','New to the game, learning the rules'],['2.5 Advanced beginner','Can rally, working on the kitchen'],['3.0 Intermediate','Dinks and drives with control'],['3.5 Advanced intermediate','Third-shot drops, good positioning'],['4.0 Advanced','Consistent, strategic, few errors'],['4.5+ Expert','Tournament level']],
@@ -1806,6 +1817,12 @@ const LEVELS_BY={
  run:[['Walk–run','Mixing walking and running'],['Easy','About 7:00/km or slower'],['Steady','About 6:00–7:00/km'],['Tempo','About 5:00–6:00/km'],['Fast','About 4:30–5:00/km'],['Elite','Faster than 4:30/km']],
  dance:[['New mover','First time in a class'],['Beginner','Picks up simple routines'],['Improver','Learns routines with practice'],['Intermediate','Picks up choreo quickly'],['Advanced','Clean, confident, adds style'],['Performer','Ready for the stage']]
 };
+for(const k of BLV_SPORTS)LEVELS_BY[k]=BLV.map((l,i)=>[l,BLV_DESC[i]]);
+/* My level for a sport: set by crew (BAD COURTS, or the old badminton grade) beats my own pick */
+function myLevel(sp,uid){uid=uid||S.uid;const st=(uid===S.uid&&S.myBlv&&S.myBlv.s||{})[sp];if(st&&BLV.includes(st.l))return {l:st.l,src:'crew'};
+  const p=(S.profiles||{})[uid]||{},own=p.lv2?p.lv2[sp]:null;
+  if(sp==='badminton'){const r=(S.grades||{})[uid];if(r&&BLV_OLD_GRADE[r.g]!=null)return {l:BLV[BLV_OLD_GRADE[r.g]],src:'crew'}}
+  if(own!=null&&BLV[own])return {l:BLV[own],src:'you'};return null}
 const TEAM_SPORTS=['volleyball','basketball','pickleball'];
 const lvlName=(sp,i)=>(LEVELS_BY[sp]&&LEVELS_BY[sp][i])?LEVELS_BY[sp][i][0]:null;
 const lvlOf=(p,sp)=>{const v=p?.levels?.[sp];return v==null||v===''?null:+v};
@@ -2352,7 +2369,7 @@ function renderStep(){
       const acts=D.sports.filter(k=>!LEVEL_FREE.includes(k));
       const typed=D.sports.filter(k=>Object.keys(TYPES[k]||{}).length);
       el.innerHTML=head(3)+`<p class="muted" style="margin-bottom:14px">Your level for each activity helps us mix games. Be honest, there's no wrong answer.</p>`+(typed.length&&!(quiz&&quiz.done)?`<div class="act-card"><div class="row"><button type="button" class="btn sm" id="q-start">${ic('star')}Find your play style</button><span class="fine">Five quick questions for every sport. No wrong answers.</span></div></div>`:'')+acts.map(sp=>{const T=TYPES[sp]||{},cur=D.types[sp]||'';return `<div class="act-card"><div class="ic-row"><span class="ic-bub">${ic(SPORTS[sp].icon)}</span><b>${SPORTS[sp].club}</b></div>
-        ${sp==='badminton'?gradePickHTML():`<div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${(LEVELS_BY[sp]||[]).map(([l,dsc],i)=>`<button type="button" data-lv2="${sp}" data-i="${i}" aria-pressed="${(D.lv2||{})[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4,5].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${esc(l)}</b><small>${esc(dsc)}</small></span></button>`).join('')}</div></div>`}
+        ${`<div class="field" style="margin:0"><span class="lbl">Level</span><div class="lvl-pick" role="group" aria-label="${SPORTS[sp].club} level">${(LEVELS_BY[sp]||[]).map(([l,dsc],i)=>`<button type="button" data-lv2="${sp}" data-i="${i}" aria-pressed="${(D.lv2||{})[sp]===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4,5].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${esc(l)}</b><small>${esc(dsc)}</small></span></button>`).join('')}</div></div>`}
         ${Object.keys(T).length?`<div class="field" style="margin:0"><span class="lbl">Play style</span>
           ${quiz&&quiz.done&&cur?`<div class="result"><span class="label">You're a</span><b class="big">${esc(cur)}</b><p>${esc(T[cur]||'')}</p></div>`:''}
           <div class="chips" role="group">${Object.entries(T).map(([k,d])=>`<button type="button" class="chip" data-ty="${sp}" data-val="${esc(k)}" aria-pressed="${k===cur}" title="${esc(d)}">${esc(k)}</button>`).join('')}</div>
@@ -2504,14 +2521,21 @@ function setView(v,o){syncSiteMode();o=o||{};if(v==='feed'){v='home';S.scrollFee
 }
 /* the logo splash stays up until we know who you are and your data has loaded, so nobody sees the registration screen by mistake */
 function unboot(){if(S.loaded||window.BAD_GUEST)document.documentElement.classList.add('booted')}
-function render(){unboot();
+/* Live Courts: the board staff run on courts.thebadclub.com (bcourts/{sid}). Only while Courts is on screen,
+   only today's court sessions: every score tap is a read for everyone watching, so nobody else listens. */
+function bcSync(){S.bc=S.bc||{};const d=S.sessData,on=d&&S.member&&S.view==='courts'&&!document.hidden;
+  const want=on?Object.entries(S.sessions||{}).filter(([,s])=>!s.cancelled&&COURT_SPORTS.includes(s.sport||'badminton')&&Math.abs(sessStart(s)-Date.now())<14*36e5).map(([id])=>id).slice(0,6):[];
+  const key=want.join(',')||'-';if(S.bcKey===key)return;S.bcKey=key;(S.bcOff||[]).forEach(f=>{try{f()}catch(_){}});S.bcOff=[];
+  for(const k of Object.keys(S.bc))if(!want.includes(k))delete S.bc[k];
+  for(const sid of want)S.bcOff.push(d.db.doc('bcourts/'+sid).onSnapshot(x=>{let b=null;if(x.exists){try{b=JSON.parse(x.data().state)}catch(_){}}if(b&&b.session&&b.session.launched)S.bc[sid]=b;else delete S.bc[sid];if(S.view==='courts')render()},()=>{delete S.bc[sid]}))}
+function render(){unboot();try{bcSync()}catch(_){}
   const ae=document.activeElement,typing=ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)&&ae.type!=='range';
   if(S.view==='create'){if($('preview'))preview();return}
   if(typing&&$('v-'+S.view)&&$('v-'+S.view).contains(ae))return;
   if(S.view==='courts')return renderCourts();
   renderNow();
 }
-function renderNow(){unboot();$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());syncSiteMode();try{renderAnnc()}catch(_){}
+function renderNow(){unboot();try{bcSync()}catch(_){}$('nav-admin').hidden=!S.canEdit;document.documentElement.classList.toggle('nocard',noCard());syncSiteMode();try{renderAnnc()}catch(_){}
   /* guests have no My BAD until they make a card: land them on Home */
   if(S.view==='card'&&document.documentElement.classList.contains('nomybad')&&!window.BAD_GUEST){S.view='home';for(const id of ['home','card'])$('v-'+id).hidden=id!=='home'}
   document.body.classList.toggle('wide',S.view==='admin'||(S.view==='courts'&&S.canEdit&&canRun(S.courtSport)&&!S.asPlayer));
@@ -2811,6 +2835,20 @@ function bindMe(el){el.querySelectorAll('[data-myprof]').forEach(b=>b.onclick=()
   el.querySelectorAll('[data-nowsave]').forEach(b=>b.onclick=async()=>{const v=($('now-in')?.value||'').trim().slice(0,60);b.disabled=true;
     try{await S.db.doc('profiles/'+S.uid).update({now:v,updatedAt:new Date().toISOString()});const p=myProfile();if(p)p.now=v;S.nowEdit=false;renderCard();toast(v?'Status updated.':'Status cleared.')}
     catch(e){b.disabled=false;toast(e&&e.code==='permission-denied'?'Please publish the latest security rules first.':"Sorry, that didn't save.")}})}
+function myLevelsHTML(p){const sp=(p.sports||[]).filter(k=>BLV_SPORTS.includes(k));if(!sp.length)return '';const miss=sp.filter(k=>!myLevel(k));
+  return `<section class="hsec mylv"><h3 class="ah">Your levels</h3>
+    ${miss.length?`<div class="note lvnote">${ic('star')}<span><b>Log your level for ${miss.map(k=>esc(SPORTS[k].club)).join(', ').replace(/, ([^,]*)$/,' and $1')}.</b> It helps the crew mix fun games. Be honest, there's no wrong answer.</span></div>`:''}
+    <div class="lvlist">${sp.map(k=>{const L=myLevel(k),i=L?BLV.indexOf(L.l):-1;return `<div class="lvrow"><span class="ic-bub soft">${ic(SPORTS[k].icon)}</span>
+      <div class="lvt"><b>${esc(SPORTS[k].club)}</b><span class="bars" aria-hidden="true">${[0,1,2,3,4,5].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="fine">${L?`${esc(L.l)} · ${L.src==='crew'?'set by crew':'your pick, crew may adjust'}`:'Not set yet'}</span></div>
+      ${L&&L.src==='crew'?'':`<button class="btn sm${L?' ghost':''}" data-mylv="${k}">${L?'Change':'Log level'}</button>`}</div>`}).join('')}</div>
+    <p class="fine">Social sports, not pro. Levels only help us mix fair, fun games. Crew has the final call.</p></section>`}
+function pickMyLevel(sp){const p=myProfile();if(!p)return;const cur=p.lv2?p.lv2[sp]:null;
+  const s=launchSheet(`<span class="label">${esc(SPORTS[sp].club)}</span><h3 class="wl-h">What's your level?</h3>
+    <div class="lvl-pick" role="group" aria-label="${esc(SPORTS[sp].club)} level">${BLV.map((l,i)=>`<button type="button" data-pk="${i}" aria-pressed="${cur===i}"><span class="bars" aria-hidden="true">${[0,1,2,3,4,5].map(j=>`<i class="${j<=i?'on':''}"></i>`).join('')}</span><span class="t"><b>${esc(l)}</b><small>${esc(BLV_DESC[i])}</small></span></button>`).join('')}</div>
+    <p class="fine">Crew may adjust it after watching you play.</p><button class="btn ghost" data-lx="1">Cancel</button>`,'Your level');
+  s.card.querySelectorAll('[data-pk]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.pk;s.card.querySelectorAll('[data-pk]').forEach(x=>x.disabled=true);
+    try{await S.db.doc('profiles/'+S.uid).update({['lv2.'+sp]:i,updatedAt:new Date().toISOString()});p.lv2={...(p.lv2||{}),[sp]:i};s.close();renderCard();toast(`${SPORTS[sp].club}: ${BLV[i]}. Saved.`)}
+    catch(e){s.card.querySelectorAll('[data-pk]').forEach(x=>x.disabled=false);toast('Sorry, that didn’t save.')}})}
 function renderCard(){
   const el=$('v-card'),p=myProfile();
   if(!p&&!S.loaded){el.innerHTML=`<div class="bootlogo"><img class="inline-logo logo-l" src="${LOGO.badK}" alt="BAD"><img class="inline-logo logo-d" src="${LOGO.badW}" alt="BAD"></div>`;return}
@@ -2854,8 +2892,9 @@ function renderCard(){
         </div></section>
       ${notMember()?'':(()=>{const all=Object.entries(S.profiles).filter(([u,x])=>isBaddy(u,x)&&u!==S.uid);return all.length?`<section class="hsec mybd"><div class="sec-h"><h3 class="ah">BADDIES</h3><button class="linkbtn" data-goview="baddies">See all ${all.length+1}${ic('arrow')}</button></div>
         <button class="mybd-row" data-goview="baddies"><span class="faces">${all.slice(0,8).map(([u,x])=>avatar(x,x.listKey)).join('')}${all.length>8?`<span class="more num">+${all.length-8}</span>`:''}</span><span class="fine">Find anyone in the community and see their card.</span></button></section>`:''})()}
+      ${myLevelsHTML(p)}
       <section class="hsec"><h3 class="ah">Your activities</h3>
-        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k];return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[k==='badminton'?gradeLabel(S.uid):(p.lv2&&p.lv2[k]!=null)?lvlName(k,p.lv2[k]):lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
+        <div class="acts">${sports.map(k=>{const sp=SPORTS[k];if(!sp)return'';const lv=p.levels?.[k],ty=p.types?.[k],ml=BLV_SPORTS.includes(k)?myLevel(k):null;return `<div class="act"><span class="ic-bub soft">${ic(sp.icon)}</span><div><b>${esc(sp.club)}</b><div class="fine">${[BLV_SPORTS.includes(k)?(ml?ml.l:''):(p.lv2&&p.lv2[k]!=null)?lvlName(k,p.lv2[k]):lv!=null&&lv!==''&&!LEVEL_FREE.includes(k)?LEVELS[lv]:'',ty].filter(Boolean).map(esc).join(' · ')||esc(sp.sport)}</div></div></div>`}).join('')}</div></section>
       ${owes?'':actH}
       ${myGames.length?`<section class="hsec"><h3 class="ah">Recent games</h3><div class="list">${myGames.slice(0,5).map(([gid,g],i)=>g.v===2?homeGameRow(gid,g):gameRow(g.sid,gid,g,i,true)).join('')}</div></section>`:''}
       ${recentHTML(S.uid)}
@@ -2892,6 +2931,7 @@ function renderCard(){
   $('copy-ref').onclick=async()=>{const t=$('my-ref').textContent;try{await navigator.clipboard.writeText(t);toast('Code copied. Thank you for sharing BAD.')}catch(e){const g=document.createRange();g.selectNodeContents($('my-ref'));const x=getSelection();x.removeAllRanges();x.addRange(g);toast('Selected. Please copy it now.')}};
   const r=$('redeem');if(r)r.onclick=requestFree;
   el.querySelectorAll('[data-givebadge]').forEach(b=>b.onclick=()=>openBadge(b.dataset.givebadge||''));
+  el.querySelectorAll('[data-mylv]').forEach(b=>b.onclick=()=>pickMyLevel(b.dataset.mylv));
   $('save-card').onclick=saveCardImage;
   {const fl=$('my-card');const flip=()=>{const on=!fl.classList.contains('on');S.flipped=on;fl.classList.toggle('on',on);fl.setAttribute('aria-pressed',on);fl.nextElementSibling.textContent=on?'Tap to see the front':'Tap the card to flip it';$('save-card').lastChild.textContent=on?'Save back':'Save card'};fl.onclick=flip;fl.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}}}
   $('share-inv').onclick=async()=>{const code=p.ref||refCode(S.uid,p),url=inviteUrl(code),text=`Join me at BAD. Use my code ${code} when you sign up.`;
@@ -3163,10 +3203,7 @@ function courtSubs(){
   for(const k of Object.keys(S.live))if(!want.includes(k))delete S.live[k];
   if(!want.length){S.gSess={};mergeGames();return}
   for(const sid of want)S.subs.off.push(d.db.doc('live/'+sid).onSnapshot(x=>{if(x.exists)S.live[sid]=x.data();else delete S.live[sid];render()},()=>{}));
-  /* Live Courts: the board staff run on courts.thebadclub.com (bcourts/{sid}), today's court sessions only to keep reads low */
-  for(const k of Object.keys(S.bc))if(!want.includes(k))delete S.bc[k];
-  for(const sid of want.filter(x=>{const s=S.sessions[x];return s&&COURT_SPORTS.includes(s.sport||'badminton')&&Math.abs(sessStart(s)-Date.now())<14*36e5}))
-    S.subs.off.push(d.db.doc('bcourts/'+sid).onSnapshot(x=>{let b=null;if(x.exists){try{b=JSON.parse(x.data().state)}catch(_){}}if(b&&b.session&&b.session.launched)S.bc[sid]=b;else delete S.bc[sid];render()},()=>{delete S.bc[sid]}));
+
   const part={games:{},results:{},awards:{},runs:{}},put=(k,i,m)=>{part[k][i]=m;return Object.assign({},...Object.values(part[k]))};
   chunks(want,10).forEach((ids,i)=>{
     S.subs.off.push(d.db.collection('games').where('sid','in',ids).onSnapshot(s=>{S.gSess=put('games',i,d.map(s));mergeGames();render()},()=>{}));
@@ -3180,7 +3217,7 @@ async function myGamesLoad(){const d=S.sessData;if(!d||!S.uid)return;
 async function allGamesLoad(){if(S.gAll||S.gAllP)return;const d=S.sessData;if(!d)return;S.gAllP=true;
   try{const s=await d.db.collection('games').get();S.gAll=d.map(s);mergeGames();render()}catch(_){}finally{S.gAllP=false}}
 {let hideT=null;
-  document.addEventListener('visibilitychange',()=>{clearTimeout(hideT);if(document.hidden)hideT=setTimeout(courtSubs,60000);else courtSubs()});
+  document.addEventListener('visibilitychange',()=>{clearTimeout(hideT);if(document.hidden)hideT=setTimeout(()=>{courtSubs();bcSync()},60000);else{courtSubs();bcSync()}});
   setInterval(courtSubs,30*60e3);
   addEventListener('online',()=>renderCourts());addEventListener('offline',()=>renderCourts())}
 
@@ -6029,6 +6066,7 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   const [db,user]=await Promise.all([C.use('db'),C.use('user')]);
   S.db=db;if(user){S.uid=await user.id();S.canEdit=await user.canEdit()}
   if(S.uid&&db)db.doc('contacts/'+S.uid).get().then(d=>{if(d.exists)S.myContact=d.data()}).catch(()=>{});
+  if(S.uid&&db)db.doc('blevels/'+S.uid).get().then(d=>{S.myBlv=d.exists?d.data():null;if(S.view==='card')renderCard()}).catch(()=>{});
   if(S.deepView)setView(S.deepView);else if(S.canEdit&&innerWidth>=1000&&S.view==='card'&&!S.pendingCI)setView('admin');
   if(S.canEdit){C.use('mcp').then(m=>{S.mcp=m});C.use('assets').then(a=>{S.assets=a})}
   if(!db){S.loaded=true;render();return}
@@ -6064,7 +6102,10 @@ S.contacts={};S.brand={};S.badges=S.badges||{};S.grades=S.grades||{};S.approvals
   if(S.member)colOr('profiles',s=>S.profiles=map(s),m=>S.profiles=m);else if(S.uid)mine('profiles',m=>S.profiles=m);else done();
   S.gallery={};if(S.member)db.collection('gallery').onSnapshot(s=>{S.gallery=map(s);if(S.view==='club'||S.view==='admin')render()},()=>{});
   S.numbers={};db.collection('numbers').onSnapshot(s=>{S.numbers=map(s);if(S.view==='create')render();backfillNumbers()},()=>{});
-  col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
+  /* points entries: the crew read them all; a member reads only their own (that's all the rules allow, and it's far fewer reads) */
+  if(S.canEdit)col('ledger',s=>S.ledger=s.docs.map(d=>({...d.data(),_id:d.id})));
+  else if(S.uid)db.collection('ledger').where('uid','==',S.uid).onSnapshot(s=>{S.ledger=s.docs.map(d=>({...d.data(),_id:d.id}));done();render()},()=>{S.ledger=[];done()});
+  else{S.ledger=[];done()}
   col('requests',s=>S.requests=map(s));
   col('sessions',s=>{S.sessions=map(s);courtSubs();if(typeof renameRallies==='function')setTimeout(renameRallies,1000)});
   if(S.member)colOr('bookings',s=>{S.bookings=map(s);if(typeof autoLinkGuests==='function')setTimeout(autoLinkGuests,800)},m=>S.bookings=m);else if(S.uid)mine('bookings',m=>S.bookings=m);else done();
