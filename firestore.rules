@@ -577,7 +577,14 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.at == request.time && (
         (request.resource.data.type == 'test' && request.resource.data.uid == uid() && id == 'test-' + uid())
         || (request.resource.data.type == 'promoted' && str(request.resource.data.sid, 80) && id == 'promo-' + request.resource.data.sid + '-' + request.resource.data.uid)
-        || (request.resource.data.type == 'session-change' && canDept(sportOf(request.resource.data.sid))));
+        || (request.resource.data.type == 'session-change' && canDept(sportOf(request.resource.data.sid)))
+        // v0.86: a new session or plan, a Club post, a testimonial for someone, and the crew's own announcements
+        || (request.resource.data.type == 'session-new' && str(request.resource.data.sid, 80) && id == 'session-new-' + request.resource.data.sid
+            && canMake(sportOf(request.resource.data.sid)) && optStr(request.resource.data, 'title', 80) && optStr(request.resource.data, 'body', 160))
+        || (request.resource.data.type == 'post' && isAdminAny() && id.matches('post-.*') && optStr(request.resource.data, 'title', 80) && optStr(request.resource.data, 'body', 160))
+        || (request.resource.data.type == 'testimonial' && isMember() && request.resource.data.from == uid() && str(request.resource.data.to, 128)
+            && id == 'testi-' + uid() + '-' + request.resource.data.to && optStr(request.resource.data, 'fromName', 40))
+        || (request.resource.data.type == 'broadcast' && isFull() && id.matches('bc-[0-9]+') && str(request.resource.data.title, 60) && str(request.resource.data.body, 160)));
     }
 
     // Shop stock from the first version, kept read-only for migration.
