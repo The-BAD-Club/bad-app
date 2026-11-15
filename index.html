@@ -1936,7 +1936,7 @@ const PH=["assets/ph/ph-01.jpg", "assets/ph/ph-02.jpg", "assets/ph/ph-03.jpg", "
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.92';
+const APP_VERSION='0.93';
 const CHANGES=[
   ['0.91','2026-11-15','About BAD now shows the BAD family: the brand, the club, On Court, Off Court and every department.'],
   ['0.90','2026-11-15','Brands we’ve played with and the crew’s own businesses, each linked to their Instagram.'],
@@ -2186,7 +2186,7 @@ const noCard=()=>!window.BAD_GUEST&&!!S.loaded&&!!S.uid&&!S.canEdit&&!(S.profile
 const MANIFESTO=`<div class="manifesto" aria-label="Bold. Agile. Defiant."><b>BOLD.</b><b>AGILE.</b><b>DEFIANT.</b></div>`;
 /* v0.79: department wordmarks (black for light screens, white for dark) */
 /* v0.81: departments that aren't running yet */
-const SOON=['dance','basketball'];const soonTag='<span class="tagl soon">Coming soon</span>';
+const SOON=['dance','basketball','retreat'];const soonTag='<span class="tagl soon">Coming soon</span>';
 const DEPT_LOGOS=['badminton','volleyball','pickleball','run','dance','basketball','training','retreat','vibe','taste','party'];
 /* stacked wordmarks (BAD over a word): BAD is 49% of the height; one-line wordmarks: BAD is the full height */
 const DEPT_STACK=['badminton','pickleball','run','dance','basketball','retreat'];
@@ -5454,7 +5454,7 @@ function renderFaq(){const el=$('v-faq');if(!el)return;
 /* About BAD: the W questions, short enough to read in a minute */
 const whenHTML=()=>`<p>Midweek is for the regulars. Fridays are for the fun. And every so often, a party you’ll talk about for weeks.</p><p>${WEEK.map(([d,,t])=>`<b>${esc(d)}</b> ${esc(t)}`).join(' · ')}. Off Court plans drop in between. Times and venues live in Play.</p>`;
 /* v0.91: the BAD family tree. Brand → community → On Court / Off Court → departments. */
-const OFF_ORDER=['taste','party','retreat','vibe'];
+const OFF_ORDER=['taste','party','vibe','retreat'];
 const lg=(k,alt,h)=>`<img class="inline-logo logo-l" src="${LOGO[k+'K']}" alt="${alt}" style="height:${h}px"><img class="inline-logo logo-d" src="${LOGO[k+'W']}" alt="${alt}" style="height:${h}px">`;
 function familyHTML(){const leaf=k=>`<button class="ft-leaf" data-ftd="${k}">${deptLogo(k)}</button>`;
   const branch=(t,sub,ks)=>`<div class="ft-br"><div class="ft-node ft-mid"><b>${t}</b><span>${sub}</span></div><div class="ft-leaves">${ks.map(leaf).join('')}</div></div>`;
