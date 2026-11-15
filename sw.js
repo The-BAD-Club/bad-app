@@ -3,7 +3,7 @@
    - Photos, icons and the Firebase library: saved copy first, refreshed in the background.
    - The database (Firestore) is never touched here: Firebase keeps its own offline copy.
    - The BAD DAY video is skipped (phones stream it in pieces). */
-const SHELL = 'bad-shell-v3', FILES = 'bad-files-v1';
+const SHELL = 'bad-shell-v4', FILES = 'bad-files-v1';
 const START = ['./', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 
 self.addEventListener('install', e => {
@@ -43,4 +43,24 @@ self.addEventListener('fetch', e => {
       return hit || fresh;
     })));
   }
+});
+
+/* v0.86 notifications: Firebase Cloud Messaging delivers here (sent by the Apps Script on the BAD Gmail).
+   Show it, and open the right page when it's tapped. */
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { notification: { body: e.data ? e.data.text() : '' } }; }
+  const n = d.notification || {}, x = d.data || {};
+  const link = (d.fcmOptions && d.fcmOptions.link) || x.link || '/';
+  e.waitUntil(self.registration.showNotification(n.title || x.title || 'The BAD Club', {
+    body: n.body || x.body || '', icon: n.icon || 'icon-192.png', badge: 'icon-192.png', tag: x.tag || undefined, data: { link }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.link) || '/', self.location.origin).href;
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => {
+    for (const w of ws) if (w.url.startsWith(self.location.origin) && 'focus' in w) { if ('navigate' in w) w.navigate(url).catch(() => {}); return w.focus(); }
+    return clients.openWindow(url);
+  }));
 });
