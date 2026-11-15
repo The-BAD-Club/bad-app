@@ -1516,6 +1516,11 @@ button.annc-i{cursor:pointer}button.annc-i:hover{text-decoration:underline;text-
 .lvrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r-md,14px);padding:10px 12px}
 .lvt{display:grid;gap:4px;min-width:0}.lvt .bars{display:flex;gap:3px}.lvt .bars i{width:14px;height:4px;border-radius:2px;background:var(--line)}.lvt .bars i.on{background:var(--ink)}
 .lvnote{display:flex;gap:10px;align-items:flex-start}
+/* BAD COURTS button (admins) */
+.bccta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;text-decoration:none;color:var(--bg,#fff);background:var(--ink,#000);border-radius:var(--r-lg,20px);padding:20px 22px;margin:4px 0 14px}
+.bccta .bcc-t{display:grid;gap:4px;min-width:0}.bccta b{font-size:22px;line-height:1.1}.bccta .label,.bccta .fine{color:inherit;opacity:.75}
+.bccta .bcc-go{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;border:1px solid currentColor}
+.bccta:hover .bcc-go{transform:translateX(2px)}
 /* Live Courts */
 .bccourts{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))}
 .bccourt{border:1px solid var(--line);border-radius:var(--r-md,14px);padding:12px;display:grid;gap:10px;background:var(--bg)}
@@ -1948,8 +1953,9 @@ const PH=["assets/ph/ph-01.jpg", "assets/ph/ph-02.jpg", "assets/ph/ph-03.jpg", "
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.94';
+const APP_VERSION='0.95';
 const CHANGES=[
+  ['0.95','2026-11-15','Courts for admins is now one button: Open BAD COURTS, where the queue, players’ photos, names and levels, and the scoreboards live. The old court board and queue are gone from this app; Check-in & Pay stays here for every department, badminton included. Players still see Live Courts.'],
   ['0.94','2026-11-15','Sessions can have a poster. It shows on the session card and page, and in the preview when you share the link. Guest-pass invites now include the join link and a referral code.'],
   ['0.91','2026-11-15','About BAD now shows the BAD family: the brand, the club, On Court, Off Court and every department.'],
   ['0.90','2026-11-15','Brands we’ve played with and the crew’s own businesses, each linked to their Instagram.'],
@@ -3487,7 +3493,7 @@ const BOARD_SPORTS=[...COURT_SPORTS,'run','dance'];
 /* queueOff(sport): the court queue (rotation, matching, games and scores) is switched off while it is rebuilt from scratch.
    Every department uses the Check-in & Pay sheet: who came, who paid, and ending the session. Set to false to bring the queue back. */
 /* badminton keeps the full 4-step process (Set up, Check in, Games, Scores); other departments use Check-in & Pay and the manual board */
-const queueOff=sp=>(sp||'badminton')!=='badminton';
+const queueOff=sp=>true; /* 15 Nov 2026: queuing moved to BAD COURTS (courts.thebadclub.com); this app keeps check-in and payments */
 const isAttend=sp=>queueOff(sp)||!COURT_SPORTS.includes(sp||'badminton');
 const SIZES={badminton:[[4,'Doubles'],[2,'Singles']],pickleball:[[4,'Doubles'],[2,'Singles']],volleyball:[[12,'6 v 6'],[10,'5 v 5'],[8,'4 v 4']],basketball:[[10,'5 v 5'],[8,'4 v 4'],[6,'3 v 3']]};
 const DEF_COURTS={badminton:2,pickleball:2,volleyball:1,basketball:1};
@@ -3765,12 +3771,12 @@ function stepper(){const n=S.courtSid?supportCount(S.courtSid):0,st=[['Set up','
 
 /* no session for this department yet: admins start today's one right here (sign-up sheet and board in one go) */
 function quickStart(sp){const att=isAttend(sp),def={basketball:['19:00','21:00',20],run:['06:30','07:30',40],dance:['19:00','20:30',30],pickleball:['19:00','21:00',16],volleyball:['19:00','22:30',18],badminton:['20:00','22:00',16]}[sp]||['19:00','21:00',20];
-  return `<div class="qstart"><span class="label">Start today's ${esc(SPORTS[sp].club)} session</span><p class="fine">${att?'Opens a sign-up and check-in sheet for today. Players can sign up in Play straight away.':'Opens today’s session and the court board. Players can sign up in Play straight away.'}</p>
+  return `<div class="qstart"><span class="label">Start today's ${esc(SPORTS[sp].club)} session</span><p class="fine">${att?'Opens a sign-up and check-in sheet for today. Players can sign up in Play straight away.':'Opens today’s session for check-in and payments. Run the courts on BAD COURTS. Players can sign up in Play straight away.'}</p>
     <div class="fgrid"><div class="field wide"><label for="qs-title">Name</label><input id="qs-title" maxlength="80" placeholder="${esc(defaultTitle(sp))}"></div>
     <div class="field"><label for="qs-start">Start</label><input type="time" id="qs-start" value="${def[0]}"></div><div class="field"><label for="qs-end">End</label><input type="time" id="qs-end" value="${def[1]}"></div>
     <div class="field"><label for="qs-cap">Max players</label><input type="number" id="qs-cap" min="2" value="${def[2]}"></div><div class="field"><label for="qs-fee">Fee (AED)</label><input type="number" id="qs-fee" min="0" value="${sp==='run'?0:40}"></div>
     ${att?'':`<div class="field"><label for="qs-courts">Courts</label><input type="number" id="qs-courts" min="1" max="8" value="${DEF_COURTS[sp]||1}"></div>`}<div class="field wide"><label for="qs-venue">Venue</label><input id="qs-venue" maxlength="80" placeholder="Where"></div></div>
-    <div class="row" style="gap:8px"><button class="btn" data-act="qsgo">${ic('play')}${att?'Open the sign-up sheet':'Open courts'}</button><button class="btn ghost sm" data-act="goadmin">Plan a later date</button></div></div>`}
+    <div class="row" style="gap:8px"><button class="btn" data-act="qsgo">${ic('play')}${att?'Open the sign-up sheet':'Open the session'}</button><button class="btn ghost sm" data-act="goadmin">Plan a later date</button></div></div>`}
 /* ---------- Check-in & Pay: the session sheet while the queue is switched off ----------
    One list of everyone signed up (and walk-ins): tap to mark who came, set how they paid, take people off.
    Payments for players and admin-added guests are their real payment records; walk-ins are noted on the sheet. */
@@ -3844,6 +3850,13 @@ function bcLiveHTML(sid,b){
     <p class="fine">Live from BAD COURTS. Who plays next is up to the crew on the night.</p>`}
 function bcTick(){if(S._bct)return;S._bct=setInterval(()=>{const els=document.querySelectorAll('[data-bct]');if(!els.length){clearInterval(S._bct);S._bct=0;return}
   const b=S.bc[S.courtSid];if(!b)return;els.forEach(e=>{const c=(b.courts||[]).find(x=>String(x.n)===e.dataset.bct);if(c)e.textContent=bcClock(c)})},1000)}
+/* Courts run on BAD COURTS (courts.thebadclub.com): admins get the button; players see Live Courts or their check-in */
+function bcCta(sid,s){const club=sportOf(s.sport).club||'',on=!!(S.bc&&S.bc[sid]);
+  return `<a class="bccta" href="https://courts.thebadclub.com/#/${esc(s.sport||'badminton')}/checkin" target="_blank" rel="noopener"><span class="bcc-t"><span class="label">${on?'Live now':'Courts, queue and scores'}</span><b>Open BAD COURTS</b><span class="fine">${on?`${esc(club)} courts are running. Players see them live in Courts.`:`Run tonight’s ${esc(club)} courts there: players’ photos, names and levels, the queue and the scoreboards.`}</span></span><span class="bcc-go">${ic('arrow')}</span></a>`}
+function bcWaitHTML(sid,lv0){const b=S.bc&&S.bc[sid];if(b)return bcLiveHTML(sid,b)+'';
+  const inn=lv0&&lv0.checkin&&lv0.checkin[S.uid],ppl=people(sid);
+  return `${ppl[S.uid]||inn?`<div class="tile you"><span class="label">You</span><b class="big">${inn?'Checked in':'Not checked in yet'}</b><span class="fine">${inn?'Checked in at '+hhmm(inn)+'. Courts show here once the crew starts them.':'Check in with the crew when you arrive.'}</span></div>`:''}
+    <div class="empty">${ic('court')}<span>Courts show here live once the crew starts them: who's on, the score, and who's next.</span></div>`}
 function renderCourts(){
   const el=$('v-courts');if(!el||S.view!=='courts')return;
   const fa=document.activeElement;if(fa&&el.contains(fa)&&fa.matches('input,textarea')){if(!el._wait){el._wait=1;fa.addEventListener('blur',()=>{el._wait=0;setTimeout(renderCourts,0)},{once:true})}return}
@@ -3860,10 +3873,9 @@ function renderCourts(){
   if(!sid){const nxt=Object.values(S.sessions).filter(x=>(x.sport||'badminton')===S.courtSport&&sessStart(x)>Date.now()).sort((a,b)=>sessStart(a)-sessStart(b))[0];
     el.innerHTML=head+`<div class="empty">${ic(SPORTS[S.courtSport].icon)}<span>${nxt?`Next ${esc(SPORTS[S.courtSport].club)} session: ${esc(nxt.title)}, ${dParts(nxt.date).w} ${dParts(nxt.date).d} ${dParts(nxt.date).m}. Courts open on the day.`:`No ${esc(SPORTS[S.courtSport].club)} session scheduled yet.`}</span>${S.canEdit&&canSport(S.courtSport)?quickStart(S.courtSport):''}</div>`;bindCourts(el);return}
   if(!org&&S.bc[sid]){el.innerHTML=head+bcLiveHTML(sid,S.bc[sid]);bindCourts(el);bcTick();return}
-  if(org&&COURT_SPORTS.includes(s.sport||'badminton')){const lk=`<a class="btn sm" href="https://courts.thebadclub.com/" target="_blank" rel="noopener">${ic('arrow')}Run tonight on BAD COURTS</a>`;
-    if(S.bc[sid]){el.innerHTML=head+`<div class="bcnote"><span>${esc(sportOf(s.sport).club||'')} courts are running on BAD COURTS. Players see them here live.</span>${lk}</div>`+bcLiveHTML(sid,S.bc[sid]);bindCourts(el);bcTick();return}
-  }
-  if(!lv0){el.innerHTML=head+`<div class="empty">${ic(sportOf(s.sport).icon)}<span>${org?`${(n=>`${n} player${n===1?' is':'s are'}`)(Object.keys(people(sid)).length)} signed up. Open the board when you're at the venue.`:'Courts appear here once the session starts.'}</span>${org?`<button class="btn" data-act="start">${ic('plus')}Open the court board</button>`:''}</div>`;bindCourts(el);return}
+  const isCourt=COURT_SPORTS.includes(s.sport||'badminton');
+  if(isCourt&&!org){el.innerHTML=head+bcWaitHTML(sid,lv0);bindCourts(el);return}
+  if(!lv0){el.innerHTML=head+(isCourt&&org?bcCta(sid,s):'')+`<div class="empty">${ic(sportOf(s.sport).icon)}<span>${org?`${(n=>`${n} player${n===1?' is':'s are'}`)(Object.keys(people(sid)).length)} signed up. ${isCourt?'Open Check-in &amp; Pay when you’re at the venue to mark who came and who paid.':'Open the board when you’re at the venue.'}`:'Courts appear here once the session starts.'}</span>${org?`<button class="btn${isCourt?' ghost':''}" data-act="start">${ic('plus')}${isCourt?'Open Check-in &amp; Pay':'Open the court board'}</button>`:''}</div>`;bindCourts(el);return}
   const lv=norm(clone(lv0)),ppl=people(sid),bench=benchOf(sid,lv),meId=S.uid,loc=locate(lv,meId);
   const att=isAttend(s.sport);if(att&&org)S.courtStep=2;
   if(att&&!org){const inn=lv.checkin[meId];
@@ -3900,6 +3912,7 @@ function renderCourts(){
       <div class="tile"><b>${ic('users')} How the bench works</b>
         <p class="fine">First come, first served: players are called in the order they checked in, and go to the back after each game. Late arrivals join at the back. Players can sit out a game and keep their place. Use Catch-up during games to call the players with the fewest games first.</p></div>
       <button class="btn wide" data-act="step" data-n="2">Next: check players in ${ic('arrow')}</button>`;
+  }else if(isCourt){body=bcCta(sid,s)+sheetHTML(sid,s,lv,ppl);
   }else if(queueOff(S.courtSport)){body=`<div class="seg2 ctabs" role="group" aria-label="Session tools"><button data-ctab="sheet" aria-pressed="${S.cTab!=='board'}">Check-in &amp; Pay</button><button data-ctab="board" aria-pressed="${S.cTab==='board'}">Courts</button></div>`+(S.cTab==='board'?mboardHTML(sid,s,lv):sheetHTML(sid,s,lv,ppl));
   }else if(S.courtStep===2){
     const arr=arrivals(lv),notYet=Object.keys(ppl).filter(p=>!lv.checkin[p]).sort((a,b)=>who(sid,a).name.localeCompare(who(sid,b).name));
@@ -3938,7 +3951,7 @@ function renderCourts(){
   if(S.courtStep===4&&(s.sport||'badminton')!=='badminton')body=baddestPickHTML(sid,lv)+body;
   /* End session is always one tap away on the court board too (not only on Check-in & Pay) */
   if(!queueOff(S.courtSport))body=endBarHTML(sid,s,lv,ppl)+body;
-  el.innerHTML=head+(att?'':stepper())+body;
+  el.innerHTML=head+(att||isCourt?'':stepper())+body;
   el.querySelectorAll('[data-lvl]').forEach(x=>x.onchange=()=>setLevel(x.dataset.lvl,x.dataset.sp,x.value));
   el.querySelectorAll('[data-lvl2]').forEach(x=>x.onchange=()=>setLevel2(x.dataset.lvl2,x.dataset.sp,x.value));
   el.querySelectorAll('[data-gp] [data-gk]').forEach(x=>x.onchange=()=>saveGrade(x.closest('[data-gp]').dataset.gp,S.courtSid,x.dataset.gk,x.value));
