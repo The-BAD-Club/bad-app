@@ -1434,6 +1434,7 @@ body{margin:0}
 .annc-track{display:flex;width:max-content;animation:annc var(--annc-d,30s) linear infinite}
 .annc:hover .annc-track,.annc:focus-within .annc-track,.annc:active .annc-track{animation-play-state:paused}
 .annc-set{display:flex;align-items:center;flex:none}
+.annc-rep{display:flex;align-items:center;flex:none}
 .annc-i{flex:none;background:none;border:0;color:inherit;font:inherit;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:9px 0;white-space:nowrap}
 button.annc-i{cursor:pointer}button.annc-i:hover{text-decoration:underline;text-underline-offset:3px}
 .annc-dot{flex:none;padding:0 22px;font-size:10px;opacity:.7}
@@ -1935,7 +1936,7 @@ const PH=["assets/ph/ph-01.jpg", "assets/ph/ph-02.jpg", "assets/ph/ph-03.jpg", "
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.91';
+const APP_VERSION='0.92';
 const CHANGES=[
   ['0.91','2026-11-15','About BAD now shows the BAD family: the brand, the club, On Court, Off Court and every department.'],
   ['0.90','2026-11-15','Brands we’ve played with and the crew’s own businesses, each linked to their Instagram.'],
@@ -6365,13 +6366,27 @@ function anncItems(){const out=[];
   return out}
 /* a moving signage strip, like a stadium ticker: the items run right to left on a loop, pause on hover or touch,
    and only rebuild when the items change (so the strip never jumps back to the start) */
-let ANNC_KEY='';
+let ANNC_KEY='',ANNC={one:'',base:30,n:0};
+/* The loop slides the track by exactly one half, so each half must be at least as wide as the strip,
+   or a blank gap shows before the second half arrives. A short set is repeated n times inside each half,
+   and the duration is scaled by n so the speed stays the same. */
+function anncBuild(el,n){const {one,base}=ANNC;ANNC.n=n;
+  const half=hid=>`<div class="annc-set"${hid?' aria-hidden="true"':''}>${Array.from({length:n},(_,i)=>`<div class="annc-rep"${!hid&&i?' aria-hidden="true"':''}>${one}</div>`).join('')}</div>`;
+  el.innerHTML=`<div class="annc-track" style="--annc-d:${base*n}s">${half(0)}${half(1)}</div>`;
+  el.querySelectorAll('[data-anni]').forEach(b=>b.onclick=()=>ANNC.L[+b.dataset.anni].go());
+  el.querySelectorAll('[aria-hidden="true"] button').forEach(b=>b.tabIndex=-1)}
+/* measure after render: width of one copy of the set vs the strip; rebuild only when the count changes */
+function anncFit(){const el=$('annc');if(!el||el.hidden||!ANNC.one)return;const W=el.clientWidth,rep=el.querySelector('.annc-rep');
+  const w=rep?rep.getBoundingClientRect().width:0;if(!W||!w)return;
+  const n=Math.max(1,Math.ceil(W/w));if(n!==ANNC.n)anncBuild(el,n)}
 function renderAnnc(){const el=$('annc');if(!el)return;const L=[...anncItems(),{t:'Bold. Agile. Defiant.'}];
   const key=L.map(x=>x.t).join('|');if(key===ANNC_KEY&&!el.hidden)return;ANNC_KEY=key;el.hidden=false;
-  const one=L.map((x,i)=>`${x.go?`<button type="button" class="annc-i" data-anni="${i}">${esc(x.t)} <span aria-hidden="true">→</span></button>`:`<span class="annc-i">${esc(x.t)}</span>`}<span class="annc-dot" aria-hidden="true">✦</span>`).join('');
-  el.innerHTML=`<div class="annc-track" style="--annc-d:${Math.max(30,Math.round(key.length/3.5))}s"><div class="annc-set">${one}</div><div class="annc-set" aria-hidden="true">${one}</div></div>`;
-  el.querySelectorAll('[data-anni]').forEach(b=>b.onclick=()=>L[+b.dataset.anni].go());
-  el.querySelectorAll('.annc-set[aria-hidden] button').forEach(b=>b.tabIndex=-1)}
+  ANNC.L=L;ANNC.base=Math.max(30,Math.round(key.length/3.5));
+  ANNC.one=L.map((x,i)=>`${x.go?`<button type="button" class="annc-i" data-anni="${i}">${esc(x.t)} <span aria-hidden="true">→</span></button>`:`<span class="annc-i">${esc(x.t)}</span>`}<span class="annc-dot" aria-hidden="true">✦</span>`).join('');
+  anncBuild(el,1);anncFit();
+  if(!ANNC.wired){ANNC.wired=1;let t;addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(anncFit,150)});
+    try{document.fonts&&document.fonts.ready.then(anncFit)}catch(_){}
+    try{new ResizeObserver(()=>{clearTimeout(t);t=setTimeout(anncFit,150)}).observe(el)}catch(_){}}}
 
 /* Membership: what every BADDY gets, then the five levels and what each one adds */
 const MEM_PERKS=c=>[
