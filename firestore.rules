@@ -115,7 +115,8 @@ service cloud.firestore {
     }
     function validProfile(d) {
       return d.keys().hasOnly(['nickname', 'listName', 'listKey', 'number', 'edition', 'photo', 'sports', 'primary', 'types', 'levels', 'level',
-                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat', 'lv2', 'bio', 'now'])
+                               'hand', 'shot', 'createdAt', 'updatedAt', 'ref', 'refs', 'referredBy', 'memReq', 'style', 'sample', 'grade', 'cat', 'lv2', 'bio', 'now',
+                               'top8', 'song', 'herefor', 'bday', 'vis'])
         && str(d.nickname, 16) && optStr(d, 'listName', 30) && optStr(d, 'listKey', 40) && optStr(d, 'number', 3)
         && optStr(d, 'photo', 400000) && optStr(d, 'bio', 160) && optStr(d, 'now', 60) && optStr(d, 'ref', 20) && optStr(d, 'referredBy', 16) && optStr(d, 'shot', 20)
         && (!('sports' in d) || (d.sports is list && d.sports.size() <= 10))
@@ -124,7 +125,13 @@ service cloud.firestore {
         && (!('memReq' in d) || (d.memReq is map && d.memReq.keys().hasOnly(['type', 'at']) && str(d.memReq.type, 30)))
         && (!('grade' in d) || d.grade in ['', 'F', 'E', 'E+', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A', 'A+'])
         && (!('cat' in d) || d.cat in ['', 'W', 'M'])
-        && (!('lv2' in d) || (d.lv2 is map && d.lv2.size() <= 10));
+        && (!('lv2' in d) || (d.lv2 is map && d.lv2.size() <= 10))
+        // v0.87 profile extras: Top 8, Walk-out song, Here for, birthday (MM-DD) and Who viewed you
+        && (!('top8' in d) || (d.top8 is list && d.top8.size() <= 8))
+        && optStr(d, 'song', 300) && (!('song' in d) || d.song == '' || d.song.matches('https://.*'))
+        && (!('herefor' in d) || (d.herefor is list && d.herefor.size() <= 6))
+        && (!('bday' in d) || d.bday == '' || (d.bday is string && d.bday.matches('[01][0-9]-[0-3][0-9]')))
+        && (!('vis' in d) || d.vis is bool);
     }
 
     // Bookings: one document per player, one entry per session. Every change names the session it touches (op.sid),
@@ -552,6 +559,14 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.uid == uid() && request.resource.data.at == request.time;
     }
 
+    // ---------- Who viewed you (v0.87): a member leaves a mark on a profile they open; only the two of them can read it ----------
+    match /views/{id} {
+      allow read: if signedIn() && (resource.data.to == uid() || resource.data.from == uid());
+      allow create, update: if isMember() && request.resource.data.from == uid() && request.resource.data.to != uid()
+        && id == uid() + '_' + request.resource.data.to && request.resource.data.keys().hasOnly(['from', 'to', 'at'])
+        && str(request.resource.data.to, 128) && str(request.resource.data.at, 40);
+      allow delete: if signedIn() && (resource.data.to == uid() || resource.data.from == uid());
+    }
     // ---------- testimonials (v0.85): one per writer per BADDY; it shows once the BADDY says OK ----------
     match /testimonials/{id} {
       allow read: if isMember();
