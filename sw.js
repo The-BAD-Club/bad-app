@@ -3,7 +3,7 @@
    - Photos, icons and the Firebase library: saved copy first, refreshed in the background.
    - The database (Firestore) is never touched here: Firebase keeps its own offline copy.
    - The BAD DAY video is skipped (phones stream it in pieces). */
-const SHELL = 'bad-shell-v2', FILES = 'bad-files-v1';
+const SHELL = 'bad-shell-v3', FILES = 'bad-files-v1';
 const START = ['./', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 
 self.addEventListener('install', e => {
