@@ -72,7 +72,22 @@ service cloud.firestore {
       return str(d.sport, 20) && str(d.title, 80) && str(d.date, 10) && (!('fee' in d) || d.fee is number) && (!('capacity' in d) || d.capacity is int)
         && (!('gms' in d) || (d.gms is list && d.gms.size() <= 4))
         && (!('waitCap' in d) || d.waitCap == null || (d.waitCap is int && d.waitCap >= 0))
-        && (!('courts' in d) || d.courts == null || (d.courts is int && d.courts >= 1 && d.courts <= 8));
+        && (!('courts' in d) || d.courts == null || (d.courts is int && d.courts >= 1 && d.courts <= 8))
+        && (!('poster' in d) || d.poster is int);
+    }
+    // v0.94 session posters: one compressed JPEG per session, kept apart so the sessions list stays light.
+    // Public like sessions (the share-link preview reads it). Only people who can make that session can change it.
+    function posterSport(sid) {
+      return exists(/databases/$(database)/documents/sessions/$(sid))
+        ? get(/databases/$(database)/documents/sessions/$(sid)).data.get('sport', '') : '';
+    }
+    match /posters/{sid} {
+      allow read: if true;
+      allow create, update: if canMake(posterSport(sid))
+        && request.resource.data.keys().hasOnly(['img', 'at', 'by'])
+        && request.resource.data.img is string && request.resource.data.img.size() < 700000
+        && request.resource.data.img.size() > 23 && request.resource.data.img[0:23] == 'data:image/jpeg;base64,';
+      allow delete: if isFull() || canMake(posterSport(sid));
     }
 
     match /posts/{id} {
