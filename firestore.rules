@@ -341,6 +341,16 @@ service cloud.firestore {
         && str(request.resource.data.d, 250000) && request.resource.data.d.matches('data:image/jpeg;base64,.*') && str(request.resource.data.at, 40);
       allow delete: if isSelf(id) || isFull();
     }
+    // v0.95 Profile Studio: each BADDY's own background, accent and finish. Members see them; only the owner changes them.
+    match /skins/{id} {
+      allow read: if isMember() || isSelf(id);
+      allow create, update: if isSelf(id) && request.resource.data.keys().hasOnly(['bg', 'img', 'mono', 'acc', 'fx', 'at'])
+        && str(request.resource.data.bg, 20) && str(request.resource.data.acc, 20) && str(request.resource.data.fx, 20)
+        && request.resource.data.mono is bool && str(request.resource.data.at, 40)
+        && (!('img' in request.resource.data) || (request.resource.data.img is string && request.resource.data.img.size() < 900000
+            && request.resource.data.img.matches('data:image/(jpeg|gif);base64,.*')));
+      allow delete: if isSelf(id) || isFull();
+    }
     // Guest spot requests: one per person per session (the id is uid_sessionId, so duplicates can't happen).
     // Guests create their own pending request and can cancel it; only the crew approves, declines or marks attended.
     match /spotreq/{id} {
