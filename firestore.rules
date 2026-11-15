@@ -34,6 +34,8 @@ service cloud.firestore {
     // Crew (admin role) support a community manager on the day: courts, check-in, scores and levels in their departments
     function isCrewFor(k) { return admRole() == 'crew' && k in adm().get('sports', []); }
     function canRun(k) { return canDept(k) || isCrewFor(k); }
+    // Adding or editing a session (v0.85): your departments, plus Off Court plans (TASTEBADS, BAD X) for the whole team
+    function canMake(k) { return canRun(k) || (isTeam() && k in ['taste', 'party']); }
     function isTeam() { return isAdminAny() || admRole() == 'crew'; }
     function isFinance() { return isFounder() || (hasAdm() && adm().get('finance', false) == true); }
     function canPay(k) { return isFinance() || isCmFor(k); }
@@ -49,7 +51,12 @@ service cloud.firestore {
     // approved members: an admin approves every new sign-up (approved/{uid}.ok). Guest passes and sign-ups under review only see their own data.
     function approvedPath() { return /databases/$(database)/documents/approved/$(uid()); }
     function isApproved() { return signedIn() && exists(approvedPath()) && get(approvedPath()).data.get('ok', false) == true; }
-    function isMember() { return isApproved() || isTeam() || isCrew(); }
+    // Play first, then join: a first-timer becomes a member once the crew has verified they attended AND they've made their card
+    function attendedPath() { return /databases/$(database)/documents/attended/$(uid()); }
+    function ownProfilePath() { return /databases/$(database)/documents/profiles/$(uid()); }
+    function attendedCard() { return signedIn() && exists(attendedPath()) && exists(ownProfilePath())
+      && get(ownProfilePath()).data.get('memReq', {}).get('type', '') != 'Guest pass'; }
+    function isMember() { return isApproved() || isTeam() || isCrew() || attendedCard(); }
     function isSelf(id) { return signedIn() && uid() == id; }
     function str(v, max) { return v is string && v.size() <= max; }
     function optStr(m, k, max) { return !(k in m) || m[k] == null || str(m[k], max); }
@@ -57,8 +64,8 @@ service cloud.firestore {
     // ---------- community data (signed-in players can read; sessions are public) ----------
     match /sessions/{sid} {
       allow read: if true;   // public: visitors see upcoming sessions on Home (no names or bookings live here)
-      allow create: if canDept(request.resource.data.get('sport', '')) && validSession(request.resource.data);
-      allow update: if canDept(resource.data.get('sport', '')) && canDept(request.resource.data.get('sport', '')) && validSession(request.resource.data);
+      allow create: if canMake(request.resource.data.get('sport', '')) && validSession(request.resource.data);
+      allow update: if canMake(resource.data.get('sport', '')) && canMake(request.resource.data.get('sport', '')) && validSession(request.resource.data);
       allow delete: if canDept(resource.data.get('sport', ''));
     }
     function validSession(d) {
@@ -212,6 +219,23 @@ service cloud.firestore {
       allow update: if (canRun(sportOf(sid)) || isGM(sid)) && request.resource.data.rev == resource.data.get('rev', 0) + 1;
       allow delete: if canDept(sportOf(sid));
     }
+    // BAD COURTS (courts.thebadclub.com): one board per session (laptop + one iPad per court, written as transactions),
+    // and each player's level per sport as set by staff (CMs, crew, admins, the session's Game Master).
+    match /bcourts/{sid} {
+      allow read: if isMember() || isTeam();
+      allow write: if canRun(sportOf(sid)) || isGM(sid);
+    }
+    match /blevels/{id} {
+      allow read: if signedIn();
+      allow write: if isTeam() || isCrew() || isGM(request.resource.data.get('sid', ''));
+    }
+    // BAD House Rules per sport (shown on courts.thebadclub.com): CMs, Game Masters, crew and admins edit them
+    match /brules/{sport} {
+      allow read: if signedIn();
+      allow write: if (isTeam() || isCrew() || isGM(request.resource.data.get('sid', '')))
+        && request.resource.data.keys().hasOnly(['text', 'sport', 'by', 'at', 'sid'])
+        && str(request.resource.data.text, 3000) && request.resource.data.by == uid();
+    }
     match /scores/{id} {
       allow read: if isMember();
       allow write: if isSelf(id) && request.resource.data.keys().hasOnly(['g']) && request.resource.data.g is map && request.resource.data.g.size() <= 500;
@@ -288,6 +312,78 @@ service cloud.firestore {
     }
 
     // ---------- private to the player and staff ----------
+    // Cover photos for profiles: one small picture per player, kept apart from profiles so lists stay light.
+    match /covers/{id} {
+      allow read: if isMember() || isSelf(id);
+      allow create, update: if isSelf(id) && request.resource.data.keys().hasOnly(['d', 'at'])
+        && str(request.resource.data.d, 250000) && request.resource.data.d.matches('data:image/jpeg;base64,.*') && str(request.resource.data.at, 40);
+      allow delete: if isSelf(id) || isFull();
+    }
+    // Guest spot requests: one per person per session (the id is uid_sessionId, so duplicates can't happen).
+    // Guests create their own pending request and can cancel it; only the crew approves, declines or marks attended.
+    match /spotreq/{id} {
+      allow read: if isTeam() || (signedIn() && resource.data.uid == uid());
+      allow create: if signedIn() && request.resource.data.keys().hasOnly(['uid', 'sid', 'status', 'at'])
+        && request.resource.data.uid == uid() && id == uid() + '_' + request.resource.data.sid
+        && str(request.resource.data.sid, 80) && exists(sessionPath(request.resource.data.sid))
+        && request.resource.data.status == 'pending' && str(request.resource.data.at, 40);
+      allow update: if
+        (isTeam() && request.resource.data.uid == resource.data.uid && request.resource.data.sid == resource.data.sid
+          && request.resource.data.keys().hasOnly(['uid', 'sid', 'status', 'at', 'by', 'decidedAt'])
+          && request.resource.data.status in ['pending', 'approved', 'declined', 'cancelled', 'attended'])
+        || (signedIn() && resource.data.uid == uid() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'at', 'decidedAt'])
+          && ((resource.data.status in ['pending', 'approved'] && request.resource.data.status == 'cancelled')
+            || (resource.data.status == 'cancelled' && request.resource.data.status == 'pending')));
+      allow delete: if isFull();
+    }
+    // Verified attendance: written only by the crew. It is what unlocks a first-timer's card. Approval never counts as attendance.
+    match /attended/{id} {
+      allow read: if isSelf(id) || isTeam();
+      allow create, update: if isTeam() && request.resource.data.keys().hasOnly(['sid', 'at', 'by']) && str(request.resource.data.sid, 80) && str(request.resource.data.at, 40);
+      allow delete: if isFull();
+    }
+    // Work with BAD forms (collab ideas, creatives wanted): anyone signed in, even an invisible guest login, can send one; admins read them.
+    match /inquiries/{id} {
+      allow create: if signedIn() && request.resource.data.kind in ['collab', 'creatives'] && request.resource.data.status == 'new'
+        && request.resource.data.uid == uid() && str(request.resource.data.name, 60) && request.resource.data.name.size() > 0
+        && str(request.resource.data.email, 120) && str(request.resource.data.phone, 20) && str(request.resource.data.details, 1200)
+        && request.resource.data.need is list && request.resource.data.need.size() <= 8
+        && request.resource.data.keys().hasOnly(['kind', 'name', 'company', 'email', 'phone', 'ig', 'when', 'need', 'details', 'budget', 'status', 'at', 'uid']);
+      allow read, update, delete: if isAdminAny();
+    }
+    // Potential events on the team calendar: the whole team can see them; admins and community managers add and remove them.
+    match /plans/{id} {
+      allow read: if isTeam();
+      allow create, update: if isAdminAny() && str(request.resource.data.title, 80) && str(request.resource.data.date, 10)
+        && request.resource.data.status in ['idea', 'likely', 'booked'];
+      allow delete: if isAdminAny();
+    }
+    // One-time discount codes (Admin → Shop). The code is the document id and hard to guess.
+    // A signed-in player can look up a code they type, and see the codes sent to them;
+    // they can spend one once (theirs, or one made for anyone); founders and the app admin make and manage them.
+    match /discounts/{code} {
+      allow get: if signedIn();
+      allow list: if isFull() || (signedIn() && resource.data.uid == uid());
+      allow create: if isFull() && request.resource.data.keys().hasOnly(['code', 'kind', 'value', 'scope', 'uid', 'note', 'expires', 'createdAt', 'by', 'used'])
+        && request.resource.data.code == code && request.resource.data.kind in ['pct', 'amt'] && request.resource.data.value is number
+        && request.resource.data.scope in ['all', 'fragments', 'shop'] && request.resource.data.used == false;
+      allow update: if isFull()
+        || (signedIn() && resource.data.used == false && (resource.data.uid == '' || resource.data.uid == uid())
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt', 'usedBy', 'order'])
+            && request.resource.data.used == true && request.resource.data.usedBy == uid());
+      allow delete: if isFull();
+    }
+    // Off Court ideas from BADDIES: any member can drop one in; only admins (not the crew, not the sender) can read them. The Apps Script copies them to the Suggestions tab.
+    match /ideas/{id} {
+      allow create: if isMember() && request.resource.data.uid == uid()
+        && request.resource.data.keys().hasOnly(['uid', 'title', 'text', 'kind', 'at', 'status'])
+        && str(request.resource.data.title, 80) && request.resource.data.title.size() > 0 && str(request.resource.data.text, 600)
+        && optStr(request.resource.data, 'kind', 30) && request.resource.data.status == 'new' && str(request.resource.data.at, 40);
+      allow read: if isAdminAny();
+      allow update: if isAdminAny() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'by', 'note'])
+        && request.resource.data.status in ['new', 'planned', 'done', 'notnow'];
+      allow delete: if isAdminAny();
+    }
     match /contacts/{id} {
       allow read: if isSelf(id) || isAdminAny();
       allow delete: if isFull() || isSelf(id);
@@ -327,7 +423,7 @@ service cloud.firestore {
     match /payments/{id} { allow read: if isAdminAny(); }                      // old per-session payments, kept for history and migration
 
     // ---------- shop ----------
-    match /products/{id} { allow read: if signedIn(); allow write: if isShop(); }
+    match /products/{id} { allow read: if true; allow write: if isShop(); }   // the Shop is open to everyone
     // One stock counter per product size. Players can only raise it, by up to 10, never past the stock,
     // and only in the same transaction that creates their own new order.
     match /stock/{id} {
@@ -402,6 +498,13 @@ service cloud.firestore {
         && optStr(request.resource.data, 'src', 120) && str(request.resource.data.at, 40);
       allow read, delete: if isFull();
     }
+    // Feed comments: members comment as themselves; they (or an admin) can delete them
+    match /fcom/{id} {
+      allow read: if isMember();
+      allow create: if isMember() && request.resource.data.uid == uid() && request.resource.data.keys().hasOnly(['pid', 'uid', 'text', 'at'])
+        && str(request.resource.data.pid, 60) && str(request.resource.data.text, 300) && request.resource.data.text.size() > 0 && str(request.resource.data.at, 40);
+      allow delete: if (signedIn() && resource.data.uid == uid()) || isAdminAny();
+    }
     match /feedimg/{id} {
       allow read: if isMember();
       allow create: if isMember() && request.resource.data.uid == uid() && request.resource.data.keys().hasOnly(['uid', 'post', 'd'])
@@ -447,6 +550,20 @@ service cloud.firestore {
     match /sopAcks/{id} {
       allow read: if (signedIn() && resource.data.uid == uid()) || isAdminAny();
       allow create: if signedIn() && request.resource.data.uid == uid() && request.resource.data.at == request.time;
+    }
+
+    // ---------- testimonials (v0.85): one per writer per BADDY; it shows once the BADDY says OK ----------
+    match /testimonials/{id} {
+      allow read: if isMember();
+      allow create: if isMember() && request.resource.data.from == uid() && request.resource.data.to != uid()
+        && id == 't_' + uid() + '_' + request.resource.data.to
+        && request.resource.data.keys().hasOnly(['from', 'to', 'text', 'at', 'ok'])
+        && str(request.resource.data.to, 128) && str(request.resource.data.text, 300) && request.resource.data.text.size() >= 3
+        && str(request.resource.data.at, 40) && request.resource.data.ok == false;
+      allow update: if (signedIn() && resource.data.to == uid() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ok']) && request.resource.data.ok is bool)
+        || (isMember() && resource.data.from == uid() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'at', 'ok'])
+            && str(request.resource.data.text, 300) && request.resource.data.text.size() >= 3 && str(request.resource.data.at, 40) && request.resource.data.ok == false);
+      allow delete: if signedIn() && (resource.data.from == uid() || resource.data.to == uid()) || isAdminAny();
     }
 
     // ---------- notifications ----------
