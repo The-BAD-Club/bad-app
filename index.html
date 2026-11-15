@@ -1898,8 +1898,9 @@ const PH=["assets/ph/ph-01.jpg", "assets/ph/ph-02.jpg", "assets/ph/ph-03.jpg", "
 /* ---------- app version and what's new ----------
    Testing period = 0.x. Version 1.0 is the launch. Add a line at the top for every release,
    and the same line to the SOP's App versions table. */
-const APP_VERSION='0.87';
+const APP_VERSION='0.88';
 const CHANGES=[
+  ['0.88','2026-11-15','BAD HABITS has its own film in Play.'],
   ['0.87','2026-11-15','Friendster, the BAD way: Top 8 BADDIES, Who viewed you, Connected (how you know someone), Here for, Walk-out song, birthdays on Home, and the Feed is now the Bulletin board. Edit them in My BAD → Edit profile. Logos for TRAIN BAD, BAD RETREAT and BAD COMMUNITY. Department names in capitals everywhere, session titles included.','New: Top 8, Who viewed you, Walk-out songs and birthdays. Set yours in My BAD → Edit profile.'],
   ['0.86','2026-11-15','Notifications: turn them on in My BAD to hear about new sessions, Club posts, testimonials and news from the crew (on iPhone, add BAD to your Home Screen first). Testimonials are front and centre: a Write a testimonial button on every profile, people you played with to write for, the latest testimonials on Home, and a ping when someone writes you one. TRAIN BAD sits On Court in Play.','Turn on notifications in My BAD so you never miss a session, a post or a new testimonial.'],
   ['0.85','2026-11-15','Testimonials: write one for any BADDY from their profile; it shows under their card once they OK it. Play lists the departments in order: BADMINTON, VOLLEYBAD, BAD DINK, BAD PACE, BAD SHOTS, BAD HABITS. Off Court starts with its departments, with the features below. Every admin can add sessions in their departments and Off Court plans. Department names in capitals, TASTEBADS as one word.','New: Testimonials. Leave one for a BADDY on their profile.'],
@@ -2856,7 +2857,7 @@ async function dropGuest(sid,gi,late){const now=new Date().toISOString();
 const courtSwitch=v=>`<div class="seg2" role="group" aria-label="On Court, Off Court or the Board"><button data-oc="play" aria-pressed="${v==='play'}">On Court</button><button data-oc="quests" aria-pressed="${v==='quests'}">Off Court</button>${notMember()?'':`<button data-oc="board" aria-pressed="${v==='board'}">Board</button>`}</div>`;
 const bindSwitch=el=>el.querySelectorAll('[data-oc]').forEach(b=>b.onclick=()=>setView(b.dataset.oc,{swap:1}));
 /* Play, one department picked: its pixel-art film under the description. Loops silently; tap the speaker for sound. It only plays while it's on screen. */
-const RALLY=['badminton','volleyball','pickleball','basketball','run','training'];
+const RALLY=['badminton','volleyball','pickleball','basketball','run','dance','training'];
 const rallyHTML=sp=>!RALLY.includes(sp)?'':`<div class="rally"><video class="rally-v" src="assets/play/${sp}-rally.mp4" poster="assets/play/${sp}-rally.jpg" loop muted playsinline webkit-playsinline preload="metadata" aria-label="${esc((SPORTS[sp]||{}).club||'BAD')} animation"></video><button class="vh-snd rally-snd" data-rsnd="1" aria-label="Turn sound on">${ic('snd')}</button></div>`;
 let rallyObs=null;
 function bindRally(el){const v=el.querySelector('.rally-v'),b=el.querySelector('[data-rsnd]');if(!v||!b)return;
@@ -2906,7 +2907,7 @@ function renderPlay(){
     <div class="row calbtns"><button class="linkbtn" data-opencal="0">${ic('cal')}Full calendar</button>${S.canEdit?`<button class="linkbtn" data-opencal="1">${ic('cal')}Team calendar</button>`:''}</div>${sportBar(S.sport,'flt',used)}${S.sport!=='all'?deptCard(S.sport)+rallyHTML(S.sport):''}`;
   const rules=`<details class="rules"><summary>${ic('clock')}How joining and dropping out works</summary><p class="fine">Plans change, and that's fine. You can drop out for free up to 48 hours before. Between 24 and 48 hours, half the fee applies. Under 24 hours, the full fee applies. On the day, please check in with an admin when you arrive: games go in order of arrival, so arriving late may mean fewer games. Guests are the responsibility of the member who brings them. You earn +${CFG.newGuest} points for every new guest you bring.</p></details>`;
   const hrules=`<details class="rules"><summary>${ic('users')}House rules</summary>${rulesHTML()}</details>`;
-  if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>${SOON.includes(S.sport)?'Coming soon. Watch this space.':S.sport!=="all"?'No sessions posted for this department yet.':'No sessions open right now.'} New ones are posted every week, so please check back soon.</span></div>`+rules+hrules;bindPlay(el);guestPlay(el);return}
+  if(!list.length){el.innerHTML=head+`<div class="empty">${ic('play')}<span>${SOON.includes(S.sport)?'Coming soon. Watch this space.':(S.sport!=="all"?'No sessions posted for this department yet.':'No sessions open right now.')+' New ones are posted every week, so please check back soon.'}</span></div>`+rules+hrules;bindPlay(el);guestPlay(el);return}
   const wk=sx=>{const t=new Date();t.setHours(0,0,0,0);const d=(sessStart(sx)-t)/864e5;return d<7-((t.getDay()+6)%7)?'This week':d<14-((t.getDay()+6)%7)?'Next week':'Later'};let lastWk='';
   el.innerHTML=head+`<div class="slist">`+list.map(([sid,s])=>{const w=wk(s),hdr=w!==lastWk?`<h3 class="wkh">${w}</h3>`:'';lastWk=w;
     return hdr+sessCard(sid,s)}).join('')+`</div>`+rules+hrules;
