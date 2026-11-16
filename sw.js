@@ -27,6 +27,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (/\.mp4$/i.test(url.pathname)) return;
+  if (url.pathname.startsWith('/empire-10ecfa/')) return; // BAD Empire page: leave it to the network, never cache it as the app page
 
   if (isPage(req, url)) {
     e.respondWith(fetch(req).then(res => {
